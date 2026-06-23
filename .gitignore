@@ -1,0 +1,41 @@
+# Local configuration and secrets
+/app/config.php
+.env
+.env.*
+!.env.example
+
+# Runtime files
+/storage/setup.lock
+/storage/*.log
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+!/storage/uploads/.htaccess
+/assets/uploads/*
+!/assets/uploads/.gitkeep
+!/assets/uploads/.htaccess
+!/assets/uploads/branding/
+/assets/uploads/branding/*
+!/assets/uploads/branding/.gitkeep
+!/assets/uploads/banners/
+/assets/uploads/banners/*
+!/assets/uploads/banners/.gitkeep
+
+# Dependencies and test artifacts
+/vendor/
+/node_modules/
+/coverage/
+/playwright-report/
+/test-results/
+
+# Archives, backups, and local tooling
+*.zip
+*.tar
+*.tar.gz
+*.sql.gz
+*.log
+*.jar
+.DS_Store
+.idea/
+.vscode/
+.codex/
+.codex-screens/
