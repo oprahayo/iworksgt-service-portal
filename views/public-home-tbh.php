@@ -101,7 +101,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
       </div>
       <div class="launch-hero-art" aria-hidden="true">
         <?php if (!empty($heroMedia['url'])): ?>
-          <img class="launch-hero-photo" src="<?= e((string) $heroMedia['url']) ?>" alt="" fetchpriority="high" width="640" height="530">
+          <img class="launch-hero-photo" src="<?= e((string) $heroMedia['url']) ?>" alt="" fetchpriority="high" width="640" height="530" decoding="async">
         <?php else: ?>
           <div class="launch-ui-preview">
             <div class="launch-preview-top"><span class="launch-preview-symbol">i<span>W</span></span><span class="launch-preview-dots"><b></b><b></b><b></b></span></div>
@@ -113,8 +113,8 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
               <div class="launch-preview-row"><i class="bi bi-window-stack"></i><span>Web &amp; digital solutions</span><i class="bi bi-arrow-up-right"></i></div>
             </div>
           </div>
-          <div class="launch-progress-card"><i class="bi bi-check-circle-fill"></i><span><strong>Stay informed</strong><small>Track your request online</small></span></div>
         <?php endif; ?>
+        <div class="launch-progress-card"><i class="bi bi-check-circle-fill"></i><span><strong>Stay informed</strong><small>Track your request online</small></span></div>
       </div>
     </div>
   </section>
