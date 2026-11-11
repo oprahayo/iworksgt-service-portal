@@ -23,7 +23,11 @@ PUBLIC_HTML="$(readlink -f "${HOME}/public_html")"
 if [[ $# -ge 1 ]]; then
   SITE_ROOT="$(readlink -f "$1")"
 else
-  mapfile -d '' MATCHES < <(find "$PUBLIC_HTML" -maxdepth 7 -type f -path '*/views/public-page.php' -print0)
+  # CageFS/cPanel terminals may not expose /dev/fd; avoid process substitution.
+  CANDIDATES_FILE="$(mktemp "${TMPDIR:-/tmp}/iworks-candidates.XXXXXXXX")"
+  find "$PUBLIC_HTML" -maxdepth 7 -type f -path '*/views/public-page.php' -print > "$CANDIDATES_FILE"
+  mapfile -t MATCHES < "$CANDIDATES_FILE"
+  rm -f "$CANDIDATES_FILE"
   [[ "${#MATCHES[@]}" -eq 1 ]] || {
     printf 'Found %s possible portal installations.\n' "${#MATCHES[@]}" >&2
     printf '  %s\n' "${MATCHES[@]:-}" >&2
