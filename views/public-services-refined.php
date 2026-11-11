@@ -49,7 +49,11 @@ $displayServices = $chosenCategory === '' ? $allServices : array_values(array_fi
 ));
 $heading = trim((string) ($serviceGridData['title'] ?? 'Our services'));
 $intro = trim((string) ($serviceGridData['subtitle'] ?? 'Choose a service, review requirements and track delivery online.'));
-$heading = $chosenCategory === '' ? ($heading ?: 'Explore iWorks services') : (string) ($categories[$chosenCategory]['name'] ?? 'Services');
+// Retain administrator-customized headings; improve old generic defaults.
+if (in_array(strtolower($heading), ['public service catalog', 'all services', 'our services'], true)) {
+    $heading = 'Services for your business';
+}
+$heading = $chosenCategory === '' ? ($heading ?: 'Services for your business') : (string) ($categories[$chosenCategory]['name'] ?? 'Services');
 $intro = $chosenCategory === '' ? ($intro ?: 'Choose a service, review requirements and track delivery online.') : 'Explore available services in this category.';
 $businessNameHref = public_url('services', ['category' => 'business-registration']);
 foreach ($allServices as $service) {
