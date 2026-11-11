@@ -17,9 +17,18 @@ if (!function_exists('public_service_bullets')) {
 
 $service = $service ?? [];
 $currency = (string) ($service['currency'] ?? default_currency());
-$safeHtml = sanitize_limited_html((string) ($service['description'] ?? ''));
-$shortDescription = trim((string) ($service['short_description'] ?? ''));
 $serviceName = trim((string) ($service['name'] ?? 'Service'));
+$rawDescription = (string) ($service['description'] ?? '');
+$shortDescription = trim((string) ($service['short_description'] ?? ''));
+// Legacy CMS copy advertised a banking service iWorks does not provide.
+// This keeps the public statement accurate until the admin updates the source record.
+if (strcasecmp($serviceName, 'Launch a Company Package') === 0) {
+    $rawDescription = str_ireplace('banking, ', '', $rawDescription);
+    $rawDescription = str_ireplace(', banking', '', $rawDescription);
+    $shortDescription = str_ireplace('banking, ', '', $shortDescription);
+    $shortDescription = str_ireplace(', banking', '', $shortDescription);
+}
+$safeHtml = sanitize_limited_html($rawDescription);
 $categoryLabel = ucwords(str_replace(['-', '_'], ' ', (string) ($service['category'] ?? 'general')));
 $bullets = public_service_bullets($service);
 $priceLabel = money((float) ($service['price'] ?? 0), $currency);
