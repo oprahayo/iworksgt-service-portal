@@ -6,6 +6,12 @@ $publicServiceCategories = is_array($publicServiceCategories ?? null) ? $publicS
 $publicPageSlug = (string) ($publicPageSlug ?? '');
 $selectedPublicCategory = trim((string) ($_GET['category'] ?? ''));
 
+// The public homepage has a dedicated lightweight, CMS-backed layout.
+if ($publicPageSlug === 'home') {
+    require __DIR__ . '/public-home-tbh.php';
+    return;
+}
+
 if (!function_exists('public_reorder_home_layout')) {
     function public_reorder_home_layout(array $layout): array
     {

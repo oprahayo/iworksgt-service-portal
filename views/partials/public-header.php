@@ -19,7 +19,7 @@ if ($metaDescription === '') {
 if ($ogImage === '') {
     $ogImage = $logo ?: $favicon;
 }
-$bodyClass = 'portal-guest page-public';
+$bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '');
 $headerAnnouncement = trim((string) ($publicHeaderConfig['announcement'] ?? ''));
 $aboutLabel = trim((string) ($publicHeaderConfig['aboutLabel'] ?? 'About'));
 $aboutHref = normalize_public_href(trim((string) ($publicHeaderConfig['aboutHref'] ?? public_url('about'))), public_url('about'));
@@ -41,6 +41,7 @@ $isUseCasesActive = $currentPublicSlug === 'case-studies';
 $isServicesActive = in_array($currentPublicSlug, ['services', 'service'], true);
 $isBlogActive = in_array($currentPublicSlug, ['blog', 'blog_post'], true);
 $isContactActive = $currentPublicSlug === 'contact';
+$isLaunchHome = $currentPublicSlug === 'home';
 ?>
 <!doctype html>
 <html lang="en">
@@ -66,6 +67,7 @@ $isContactActive = $currentPublicSlug === 'contact';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
+  <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/launch-home.css')) ?>"><?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -127,9 +129,13 @@ $isContactActive = $currentPublicSlug === 'contact';
               </div>
             </li>
             <?php if ($aboutLabel !== '' && $aboutHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"><?= e($aboutLabel) ?></a></li><?php endif; ?>
+            <?php if ($isLaunchHome): ?>
+              <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
+            <?php else: ?>
             <?php if ($managementLabel !== '' && $managementHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isManagementActive ? ' active' : '' ?>" href="<?= e($managementHref) ?>"><?= e($managementLabel) ?></a></li><?php endif; ?>
             <?php if ($useCasesLabel !== '' && $useCasesHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"><?= e($useCasesLabel) ?></a></li><?php endif; ?>
             <?php if ($blogLabel !== '' && $blogHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e($blogHref) ?>"><?= e($blogLabel) ?></a></li><?php endif; ?>
+            <?php endif; ?>
             <li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"><?= e($contactLabel) ?></a></li>
           </ul>
           <div class="public-header-cta-group norebase-header-cta">

@@ -1,0 +1,119 @@
+/* Service-first homepage; isolated from admin and authenticated portal styles. */
+.page-public-home .public-feedback-tab { display: none; }
+.iworks-launch-home { background:#fff; color:#18212b; font-family:'Outfit',sans-serif; }
+.iworks-launch-home * { box-sizing:border-box; }
+.iworks-launch-home a { text-decoration:none; }
+.iworks-launch-home .public-container { max-width:1180px; }
+.launch-hero { background:#fff; overflow:hidden; }
+.launch-hero-grid { display:grid; grid-template-columns:1.02fr .98fr; align-items:center; gap:clamp(2rem,5vw,5rem); min-height:575px; padding-top:5rem; padding-bottom:5rem; }
+.launch-eyebrow,.launch-small-label { display:inline-block; color:#ee6112; font-size:.78rem; letter-spacing:.12em; font-weight:800; line-height:1.4; text-transform:uppercase; }
+.launch-hero h1 { max-width:640px; margin:1.1rem 0 1.3rem; font-size:clamp(2.9rem,4.8vw,4.35rem); line-height:1.04; letter-spacing:-.055em; font-weight:800; color:#181b20; }
+.launch-intro { max-width:550px; margin:0 0 1.7rem; color:#66717d; font-size:1.125rem; line-height:1.7; }
+.launch-hero-actions { display:flex; flex-wrap:wrap; align-items:center; gap:1.2rem; }
+.launch-btn { min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:.8rem; padding:.85rem 1.35rem; border-radius:.55rem; font-size:.96rem; font-weight:700; transition:background-color .18s, transform .18s; }
+.launch-btn:hover { transform:translateY(-1px); }
+.launch-btn-primary { background:#fa6508; color:#fff!important; }
+.launch-btn-primary:hover { background:#e75500; }
+.launch-btn-text { color:#26303b!important; padding-left:.1rem; padding-right:.1rem; }
+.launch-btn-light { background:#fff; color:#e85d0a!important; white-space:nowrap; }
+.launch-btn-light:hover { background:#fff2e8; }
+.launch-hero-note { margin:1.65rem 0 0; color:#6f7780; font-size:.87rem; display:flex; align-items:center; gap:.5rem; }
+.launch-hero-note i { color:#119763; }
+.launch-hero-art { position:relative; display:grid; place-items:center; min-height:450px; }
+.launch-hero-art::before { content:''; position:absolute; width:min(94%,490px); aspect-ratio:1; border-radius:50%; background:#fff0e5; right:0; top:0; }
+.launch-hero-photo { position:relative; z-index:1; width:min(100%,540px); max-height:465px; object-fit:cover; border-radius:22px; }
+.launch-ui-preview { position:relative; z-index:1; width:min(100%,485px); background:#fff; border:1px solid #e8edf0; border-radius:18px; box-shadow:0 25px 70px rgba(30,36,49,.09); overflow:hidden; transform:rotate(-2deg); }
+.launch-preview-top { padding:1.05rem 1.4rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eef0f2; }
+.launch-preview-symbol { color:#fa6508; font-weight:800; font-size:1.45rem; letter-spacing:-.075em; }
+.launch-preview-symbol span { color:#14191f; }
+.launch-preview-dots { display:flex; gap:5px; }
+.launch-preview-dots b { width:7px; height:7px; background:#dce3e9; border-radius:50%; }
+.launch-preview-body { padding:2rem 1.7rem 2.25rem; }
+.launch-preview-kicker { display:block; font-size:.72rem; letter-spacing:.09em; font-weight:800; color:#e76010; }
+.launch-preview-body>strong { display:block; max-width:300px; font-size:clamp(1.5rem,2.5vw,2rem); letter-spacing:-.04em; line-height:1.12; margin:.45rem 0 1.8rem; }
+.launch-preview-row { display:flex; align-items:center; gap:.9rem; background:#f7f9fa; border:1px solid #f0f2f4; border-radius:10px; padding:1rem; margin-top:.7rem; font-size:.96rem; color:#25303b; }
+.launch-preview-row>i:first-child { font-size:1.2rem; color:#f26416; }
+.launch-preview-row>i:last-child { margin-left:auto; color:#13a474; }
+.launch-progress-card { position:absolute; z-index:2; bottom:20px; left:0; display:flex; align-items:center; gap:.65rem; padding:.8rem 1rem; background:#fff; border:1px solid #e9ecee; box-shadow:0 12px 33px rgba(22,30,40,.12); border-radius:11px; }
+.launch-progress-card>i { color:#12a56c; font-size:1.45rem; }
+.launch-progress-card strong,.launch-progress-card small { display:block; line-height:1.4; }
+.launch-progress-card strong { font-size:.83rem; }
+.launch-progress-card small { color:#78838f; font-size:.74rem; }
+.launch-register { background:#f5680f; color:#fff; }
+.launch-register-inner { display:flex; justify-content:space-between; align-items:center; gap:2rem; padding-top:2.4rem; padding-bottom:2.4rem; }
+.launch-register .launch-small-label { color:#ffe6d2; }
+.launch-register h2 { color:#fff; margin:.3rem 0 .45rem; font-size:clamp(1.5rem,2.5vw,2rem); letter-spacing:-.03em; font-weight:750; }
+.launch-register p { margin:0; color:#fff4ed; font-size:1rem; }
+.launch-section { padding:clamp(3.5rem,6vw,5.8rem) 0; }
+.launch-heading { display:flex; align-items:end; justify-content:space-between; gap:3rem; margin-bottom:2rem; }
+.launch-heading>div { max-width:660px; }
+.launch-heading h2,.launch-faq h2,.launch-bottom-cta h2 { color:#1b222b; margin:.6rem 0 0; letter-spacing:-.04em; font-weight:750; font-size:clamp(1.85rem,3vw,2.8rem); line-height:1.18; }
+.launch-heading>p { max-width:350px; line-height:1.65; color:#66717d; margin:0; }
+.launch-categories { display:flex; flex-wrap:wrap; gap:.65rem; margin-bottom:1.4rem; }
+.launch-categories a { padding:.64rem 1rem; display:inline-flex; align-items:center; gap:.55rem; border:1px solid #e9ecef; border-radius:100px; font-size:.89rem; color:#49535e; font-weight:600; background:#fff; }
+.launch-categories a:hover,.launch-categories a:focus-visible { border-color:#f26416; color:#e85d0a; }
+.launch-categories i { color:#f26416; }
+.launch-services-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.launch-service-card { display:flex; flex-direction:column; padding:1.7rem; border:1px solid #e8ecf0; border-radius:14px; min-height:247px; color:#242b34; background:#fff; transition:border-color .18s, box-shadow .18s, transform .18s; }
+.launch-service-card:hover { border-color:#f7a06b; box-shadow:0 14px 30px rgba(37,47,57,.07); transform:translateY(-2px); }
+.launch-service-icon { width:47px; height:47px; display:grid; place-items:center; border-radius:11px; background:#fff1e9; color:#f26416; font-size:1.25rem; }
+.launch-service-card h3 { font-size:1.17rem; font-weight:750; color:#242b34; margin:1rem 0 .45rem; line-height:1.25; }
+.launch-service-card p { font-size:.94rem; color:#687480; line-height:1.55; margin-bottom:1.4rem; }
+.launch-card-link { margin-top:auto; display:inline-flex; align-items:center; gap:.5rem; color:#eb610d; font-weight:700; font-size:.89rem; }
+.launch-centered-action { text-align:center; margin-top:1.8rem; }
+.launch-centered-action a { font-weight:700; color:#e65b08; display:inline-flex; align-items:center; gap:.6rem; }
+.launch-how { background:#fafaf9; }
+.launch-heading-compact { margin-bottom:2.1rem; }
+.launch-step-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.4rem; }
+.launch-step { border-top:2px solid #e2e5e8; padding:1.5rem .6rem .25rem 0; }
+.launch-step-number { color:#f26416; font-size:1.1rem; font-weight:750; }
+.launch-step h3 { color:#222831; font-size:1.2rem; font-weight:750; margin:1.05rem 0 .55rem; }
+.launch-step p { color:#67737e; font-size:.96rem; line-height:1.65; max-width:330px; }
+.launch-faq-inner { display:grid; grid-template-columns:.82fr 1.18fr; gap:clamp(2rem,5vw,5rem); }
+.launch-faq-inner>div:first-child>p { color:#65717c; margin-top:1.1rem; }
+.launch-faq-inner>div:first-child>p a { color:#ea600f; font-weight:700; }
+.launch-faq-list details { border-bottom:1px solid #e8ebef; }
+.launch-faq-list details:first-child { border-top:1px solid #e8ebef; }
+.launch-faq-list summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:1.2rem; cursor:pointer; padding:1.2rem .1rem; font-size:1rem; font-weight:650; color:#2b333e; }
+.launch-faq-list summary::-webkit-details-marker { display:none; }
+.launch-faq-list summary i { flex:0 0 auto; color:#f26416; }
+.launch-faq-list details[open] summary i { transform:rotate(45deg); }
+.launch-faq-list details p { color:#67737e; line-height:1.65; padding:0 1.5rem 1.25rem .1rem; margin:0; }
+.launch-bottom-cta { background:#f6f8fa; padding:3.15rem 0; }
+.launch-bottom-inner { display:flex; justify-content:space-between; align-items:center; gap:2rem; }
+.launch-bottom-cta h2 { margin:0 0 .6rem; font-size:clamp(1.65rem,2.7vw,2.4rem); }
+.launch-bottom-cta p { color:#66717d; margin:0; }
+.iworks-launch-home :focus-visible { outline:3px solid #f6a36f; outline-offset:3px; }
+@media (max-width:991px) {
+ .launch-hero-grid { grid-template-columns:1fr 1fr; gap:1.5rem; min-height:500px; }
+ .launch-hero h1 { font-size:clamp(2.45rem,4.3vw,3.45rem); }
+ .launch-hero-art { min-height:375px; }
+ .launch-progress-card { left:.25rem; }
+ .launch-services-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .launch-faq-inner { gap:2.4rem; }
+}
+@media (max-width:767px) {
+ .launch-hero-grid { grid-template-columns:1fr; padding-top:3.6rem; padding-bottom:3.4rem; gap:2rem; }
+ .launch-hero h1 { font-size:clamp(2.35rem,8.6vw,3.35rem); margin-top:.85rem; }
+ .launch-intro { font-size:1rem; }
+ .launch-hero-art { min-height:310px; max-width:500px; margin:0 auto; width:100%; }
+ .launch-ui-preview { width:88%; transform:rotate(-1deg); }
+ .launch-preview-body { padding:1.35rem; }
+ .launch-preview-body>strong { font-size:1.55rem; margin-bottom:1.2rem; }
+ .launch-preview-row { padding:.8rem; font-size:.85rem; }
+ .launch-progress-card { left:0; bottom:0; }
+ .launch-register-inner,.launch-bottom-inner { flex-direction:column; align-items:flex-start; gap:1.3rem; }
+ .launch-register-inner { padding-top:2rem; padding-bottom:2rem; }
+ .launch-heading { flex-direction:column; align-items:flex-start; gap:.85rem; }
+ .launch-heading>p { max-width:500px; }
+ .launch-services-grid { grid-template-columns:1fr; }
+ .launch-service-card { min-height:200px; padding:1.35rem; }
+ .launch-step-grid,.launch-faq-inner { grid-template-columns:1fr; }
+ .launch-step-grid { gap:.8rem; }
+ .launch-faq-inner { gap:1.6rem; }
+ .launch-categories { flex-wrap:nowrap; overflow-x:auto; padding-bottom:.4rem; scrollbar-width:thin; }
+ .launch-categories a { flex:0 0 auto; }
+}
+@media (prefers-reduced-motion:reduce) {
+ .iworks-launch-home .launch-btn,.iworks-launch-home .launch-service-card { transition:none; }
+}
