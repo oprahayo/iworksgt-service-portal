@@ -3,6 +3,29 @@
  * Public service catalogue — catalog data, prices, and routing remain
  * sourced from the existing portal; this file does not create an order system.
  */
+// Standalone icon helpers: this template is loaded before legacy block helpers.
+if (!function_exists('iworks_catalog_service_icon')) {
+    function iworks_catalog_service_icon(array $service): string
+    {
+        $text = strtolower((string) ($service['name'] ?? '') . ' ' . (string) ($service['category'] ?? ''));
+        foreach ([
+            'trademark' => 'bi-patch-check',
+            'registration' => 'bi-building-add',
+            'company' => 'bi-buildings',
+            'website' => 'bi-window-stack',
+            'hosting' => 'bi-globe',
+            'domain' => 'bi-globe2',
+            'graphic' => 'bi-palette',
+            'marketing' => 'bi-graph-up-arrow',
+            'seo' => 'bi-graph-up-arrow',
+            'training' => 'bi-mortarboard',
+            'tracking' => 'bi-geo-alt',
+        ] as $keyword => $icon) {
+            if (str_contains($text, $keyword)) { return $icon; }
+        }
+        return 'bi-briefcase';
+    }
+}
 $serviceGridData = [];
 foreach ($layout as $block) {
     if (is_array($block) && normalize_page_block_type((string) ($block['type'] ?? '')) === 'service_grid') {
@@ -23,7 +46,7 @@ foreach ($allServices as $service) {
         $categories[$slug] = [
             'name' => ucwords(str_replace(['-', '_'], ' ', $slug)),
             'count' => 0,
-            'icon' => public_category_icon_class($slug),
+            'icon' => 'bi-grid',
         ];
     }
     $categories[$slug]['count']++;
@@ -133,7 +156,7 @@ foreach ($allServices as $service) {
           ?>
           <article class="isc-card" data-isc-card data-search="<?= e($searchText) ?>">
             <div class="isc-card-top">
-              <span class="isc-card-icon"><i class="bi <?= e(public_service_icon_class($service)) ?>" aria-hidden="true"></i></span>
+              <span class="isc-card-icon"><i class="bi <?= e(iworks_catalog_service_icon($service)) ?>" aria-hidden="true"></i></span>
               <span class="isc-card-category"><?= e($categoryLabel) ?></span>
             </div>
             <div class="isc-card-main">
