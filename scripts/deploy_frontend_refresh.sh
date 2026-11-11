@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 
 REPOSITORY="oprahayo/iworksgt-service-portal"
-RELEASE="08a4ccfcf5e9afb97516bf6ed9a67e251eed3b35"
+RELEASE="0b1be25d868d65c8313e7db8b526e4aede418074"
 FILES=(
   'assets/css/launch-home.css'
   'assets/css/refined-services.css'
