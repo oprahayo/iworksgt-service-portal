@@ -12,6 +12,11 @@ if ($publicPageSlug === 'home') {
     return;
 }
 
+if ($publicPageSlug === 'services') {
+    require __DIR__ . '/public-services-refined.php';
+    return;
+}
+
 if (!function_exists('public_reorder_home_layout')) {
     function public_reorder_home_layout(array $layout): array
     {
