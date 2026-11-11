@@ -17,6 +17,11 @@ if ($publicPageSlug === 'services') {
     return;
 }
 
+if ($publicPageSlug === 'about') {
+    require __DIR__ . '/public-about-refined.php';
+    return;
+}
+
 if (!function_exists('public_reorder_home_layout')) {
     function public_reorder_home_layout(array $layout): array
     {
@@ -479,18 +484,30 @@ if (!function_exists('render_public_block')) {
                 </div>
               </section>
             <?php else: ?>
+              <?php
+              $labels = [
+                  'contact' => 'Contact',
+                  'blog' => 'Insights',
+                  'track' => 'Track your order',
+                  'faq' => 'FAQs',
+                  'pricing' => 'Pricing',
+                  'management' => 'Management',
+                  'case-studies' => 'Our work',
+                  'terms' => 'Terms',
+                  'privacy' => 'Privacy',
+              ];
+              $pageLabel = $labels[$publicPageSlug] ?? ucwords(str_replace('-', ' ', $publicPageSlug));
+              ?>
               <section class="public-page-crumb-hero">
                 <div class="container public-container">
                   <div class="public-page-crumb-shell">
-                    <?php if ($kicker !== ''): ?><span class="public-page-crumb-kicker"><?= e($kicker) ?></span><?php endif; ?>
-                    <h1 class="public-page-crumb-title"><?= e($headline !== '' ? $headline : ucfirst($publicPageSlug)) ?></h1>
+                    <nav class="iw-breadcrumb" aria-label="Breadcrumb">
+                      <a href="<?= e(public_url('home')) ?>">Home</a>
+                      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                      <span aria-current="page"><?= e($pageLabel) ?></span>
+                    </nav>
+                    <h1 class="public-page-crumb-title"><?= e($headline !== '' ? $headline : $pageLabel) ?></h1>
                     <?php if ($subheadline !== ''): ?><p class="public-page-crumb-subtitle"><?= e($subheadline) ?></p><?php endif; ?>
-                    <?php if (!empty($primary['label']) || !empty($secondary['label'])): ?>
-                      <div class="public-page-crumb-actions">
-                        <?php if (!empty($primary['label'])): ?><a class="btn btn-primary" href="<?= e((string) ($primary['href'] ?? '#')) ?>"><?= e((string) $primary['label']) ?></a><?php endif; ?>
-                        <?php if (!empty($secondary['label'])): ?><a class="btn btn-outline-light" href="<?= e((string) ($secondary['href'] ?? '#')) ?>"><?= e((string) $secondary['label']) ?></a><?php endif; ?>
-                      </div>
-                    <?php endif; ?>
                   </div>
                 </div>
               </section>
