@@ -31,3 +31,4 @@ jobs:
         run: |
           php tests/crypto_conversion_test.php
           php tests/public_cms_layout_test.php
+          php tests/public_services_template_test.php
