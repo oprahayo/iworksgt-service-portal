@@ -117,3 +117,35 @@
 @media (prefers-reduced-motion:reduce) {
  .iworks-launch-home .launch-btn,.iworks-launch-home .launch-service-card { transition:none; }
 }
+
+
+/* Verified process evidence and CMS-sourced portfolio — no fabricated metrics/logos. */
+.launch-evidence { background:#fff; border-top:1px solid #eceff2; border-bottom:1px solid #eceff2; }
+.launch-evidence-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.8rem; padding-top:1.65rem; padding-bottom:1.65rem; }
+.launch-evidence-grid>div { display:flex; align-items:center; gap:.85rem; min-width:0; }
+.launch-evidence-icon { display:grid; place-items:center; flex:0 0 auto; width:42px; height:42px; border-radius:50%; background:#fff0e6; color:#f26416; font-size:1.15rem; }
+.launch-evidence-grid>div>span:last-child { display:flex; flex-direction:column; gap:3px; }
+.launch-evidence-grid strong { color:#29323c; font-size:.91rem; line-height:1.3; }
+.launch-evidence-grid small { color:#79848f; font-size:.79rem; line-height:1.4; }
+.launch-hero-photo { box-shadow:0 18px 46px rgba(25,32,41,.12); }
+.launch-work { background:#fff; }
+.launch-work-more { color:#e95e08!important; font-weight:700; display:inline-flex; align-items:center; gap:.5rem; white-space:nowrap; }
+.launch-work-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.2rem; }
+.launch-work-card { background:#fff; border:1px solid #e9edf0; border-radius:15px; overflow:hidden; min-width:0; }
+.launch-work-picture { overflow:hidden; aspect-ratio:3/2; background:#f3f6f8; }
+.launch-work-picture img { display:block; width:100%; height:100%; object-fit:cover; }
+.launch-work-meta { padding:1rem 1.1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.launch-work-meta small { display:block; color:#e95e08; font-size:.75rem; font-weight:700; margin-bottom:.4rem; }
+.launch-work-meta h3 { font-size:1.05rem; font-weight:750; margin:0; color:#26313b; line-height:1.3; }
+.launch-work-meta a { color:#ec6210; font-size:1.2rem; }
+@media (max-width:991px) {
+ .launch-evidence-grid { gap:1rem; }
+ .launch-evidence-grid>div { gap:.5rem; }
+ .launch-work-grid { gap:.7rem; }
+}
+@media (max-width:767px) {
+ .launch-evidence-grid { grid-template-columns:1fr; gap:1.15rem; padding-top:1.35rem; padding-bottom:1.35rem; }
+ .launch-work-grid { grid-template-columns:1fr; gap:1rem; }
+ .launch-work-picture { aspect-ratio:16/9; }
+ .launch-work-more { margin-top:.5rem; }
+}

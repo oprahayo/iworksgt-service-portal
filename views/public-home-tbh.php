@@ -16,6 +16,22 @@ $process = $home['how_it_works'] ?? [];
 $faq = $home['faq'] ?? [];
 $featured = $home['featured_services'] ?? [];
 $banner = $home['cta_banner'] ?? [];
+$caseData = $home['case_studies'] ?? [];
+$caseItems = [];
+foreach (is_array($caseData['items'] ?? null) ? $caseData['items'] : [] as $case) {
+    if (!is_array($case)) { continue; }
+    $name = trim((string) ($case['name'] ?? ''));
+    $imageId = (int) ($case['imageId'] ?? 0);
+    $image = $imageId > 0 ? get_media_asset($imageId) : null;
+    if ($name === '' || empty($image['url'])) { continue; }
+    $caseItems[] = [
+        'name' => $name,
+        'category' => trim((string) ($case['category'] ?? 'Project')),
+        'image' => (string) $image['url'],
+        'link' => trim((string) ($case['link'] ?? '')),
+    ];
+    if (count($caseItems) >= 3) { break; }
+}
 $headline = trim((string) ($hero['headline'] ?? 'Launch and grow your business with iWorks Global.'));
 $subheadline = trim((string) ($hero['subheadline'] ?? 'Business registration, trademark and digital services delivered remotely.'));
 $heroMedia = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $hero['imageId']) : null;
@@ -85,7 +101,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
       </div>
       <div class="launch-hero-art" aria-hidden="true">
         <?php if (!empty($heroMedia['url'])): ?>
-          <img class="launch-hero-photo" src="<?= e((string) $heroMedia['url']) ?>" alt="" fetchpriority="high" width="640" height="530">
+          <img class="launch-hero-photo" src="<?= e((string) $heroMedia['url']) ?>" alt="" fetchpriority="high" width="640" height="530" decoding="async">
         <?php else: ?>
           <div class="launch-ui-preview">
             <div class="launch-preview-top"><span class="launch-preview-symbol">i<span>W</span></span><span class="launch-preview-dots"><b></b><b></b><b></b></span></div>
@@ -97,9 +113,17 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
               <div class="launch-preview-row"><i class="bi bi-window-stack"></i><span>Web &amp; digital solutions</span><i class="bi bi-arrow-up-right"></i></div>
             </div>
           </div>
-          <div class="launch-progress-card"><i class="bi bi-check-circle-fill"></i><span><strong>Stay informed</strong><small>Track your request online</small></span></div>
         <?php endif; ?>
+        <div class="launch-progress-card"><i class="bi bi-check-circle-fill"></i><span><strong>Stay informed</strong><small>Track your request online</small></span></div>
       </div>
+    </div>
+  </section>
+
+  <section class="launch-evidence" aria-label="Service process highlights">
+    <div class="container public-container launch-evidence-grid">
+      <div><span class="launch-evidence-icon"><i class="bi bi-ui-checks"></i></span><span><strong>Know what to prepare</strong><small>Clear requirements for each service</small></span></div>
+      <div><span class="launch-evidence-icon"><i class="bi bi-lock"></i></span><span><strong>Checkout through the portal</strong><small>Use the existing payment process</small></span></div>
+      <div><span class="launch-evidence-icon"><i class="bi bi-activity"></i></span><span><strong>Follow your job</strong><small>Status, updates and documents online</small></span></div>
     </div>
   </section>
 
@@ -150,6 +174,27 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
       <div class="launch-centered-action"><a href="<?= e(public_url('services')) ?>">Explore all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>
     </div>
   </section>
+
+  <?php if ($caseItems !== []): ?>
+  <section class="launch-section launch-work" aria-labelledby="launch-work-title">
+    <div class="container public-container">
+      <div class="launch-heading">
+        <div><span class="launch-small-label">SELECTED CLIENT WORK</span><h2 id="launch-work-title"><?= e(trim((string) ($caseData['title'] ?? '')) ?: 'A little of what we have built.') ?></h2></div>
+        <a class="launch-work-more" href="<?= e(public_url('case-studies')) ?>">Explore case studies <i class="bi bi-arrow-up-right"></i></a>
+      </div>
+      <div class="launch-work-grid">
+        <?php foreach ($caseItems as $case): ?>
+          <article class="launch-work-card">
+            <div class="launch-work-picture"><img src="<?= e($case['image']) ?>" alt="<?= e($case['name']) ?>" loading="lazy" width="480" height="320"></div>
+            <div class="launch-work-meta"><div><small><?= e($case['category']) ?></small><h3><?= e($case['name']) ?></h3></div>
+              <?php if ($case['link'] !== ''): ?><a href="<?= e($case['link']) ?>" rel="noopener noreferrer" target="_blank" aria-label="See project: <?= e($case['name']) ?>"><i class="bi bi-arrow-up-right"></i></a><?php endif; ?>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
 
   <section class="launch-section launch-how" id="how-it-works" aria-labelledby="launch-how-title">
     <div class="container public-container">

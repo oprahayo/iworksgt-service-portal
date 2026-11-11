@@ -19,7 +19,7 @@ if ($metaDescription === '') {
 if ($ogImage === '') {
     $ogImage = $logo ?: $favicon;
 }
-$bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '');
+$bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'services' ? ' page-public-services' : '');
 $headerAnnouncement = trim((string) ($publicHeaderConfig['announcement'] ?? ''));
 $aboutLabel = trim((string) ($publicHeaderConfig['aboutLabel'] ?? 'About'));
 $aboutHref = normalize_public_href(trim((string) ($publicHeaderConfig['aboutHref'] ?? public_url('about'))), public_url('about'));
@@ -68,6 +68,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
   <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/launch-home.css')) ?>"><?php endif; ?>
+  <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/refined-services.css')) ?>"><?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
