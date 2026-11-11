@@ -4,12 +4,13 @@
 set -Eeuo pipefail
 
 REPOSITORY="oprahayo/iworksgt-service-portal"
-RELEASE="0b1be25d868d65c8313e7db8b526e4aede418074"
+RELEASE="23d40d79b37071f8fa6a49bbcc71fd78a01d8415"
 FILES=(
   'assets/css/launch-home.css'
   'assets/css/refined-services.css'
   'views/public-home-tbh.php'
   'views/public-services-refined.php'
+  'views/public-service-detail.php'
   'views/partials/public-header.php'
   'views/public-page.php'
 )
@@ -71,6 +72,7 @@ php -l "$WORK_DIR/views/public-page.php" >/dev/null || fail 'Homepage integratio
 php -l "$WORK_DIR/views/partials/public-header.php" >/dev/null || fail 'Public header has a PHP syntax error.'
 php -l "$WORK_DIR/views/public-home-tbh.php" >/dev/null || fail 'Homepage template has a PHP syntax error.'
 php -l "$WORK_DIR/views/public-services-refined.php" >/dev/null || fail 'Services template has a PHP syntax error.'
+php -l "$WORK_DIR/views/public-service-detail.php" >/dev/null || fail 'Service detail template has a PHP syntax error.'
 
 all_equal=1
 for file in "${FILES[@]}"; do
@@ -121,6 +123,7 @@ php -l "$SITE_ROOT/views/public-page.php" >/dev/null
 php -l "$SITE_ROOT/views/partials/public-header.php" >/dev/null
 php -l "$SITE_ROOT/views/public-home-tbh.php" >/dev/null
 php -l "$SITE_ROOT/views/public-services-refined.php" >/dev/null
+php -l "$SITE_ROOT/views/public-service-detail.php" >/dev/null
 STARTED=0
 trap - ERR
 printf 'SUCCESS: Public frontend files deployed. Backup: %s\n' "$BACKUP"
