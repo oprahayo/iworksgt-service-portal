@@ -14,6 +14,8 @@ foreach ($layout as $block) {
 $hero = $home['hero'] ?? [];
 $process = $home['how_it_works'] ?? [];
 $faq = $home['faq'] ?? [];
+$featured = $home['featured_services'] ?? [];
+$banner = $home['cta_banner'] ?? [];
 $headline = trim((string) ($hero['headline'] ?? 'Launch and grow your business with iWorks Global.'));
 $subheadline = trim((string) ($hero['subheadline'] ?? 'Business registration, trademark and digital services delivered remotely.'));
 $heroMedia = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $hero['imageId']) : null;
@@ -40,6 +42,14 @@ usort($homeServices, static function (array $a, array $b) use ($priorityTerms): 
     };
     return ($rank($a) <=> $rank($b)) ?: strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
 });
+$featuredIds = array_values(array_filter(array_map('intval', is_array($featured['serviceIds'] ?? null) ? $featured['serviceIds'] : [])));
+if ($featuredIds !== []) {
+    $selectedSet = array_flip($featuredIds);
+    $selectedServices = array_values(array_filter($homeServices, static fn(array $service): bool => isset($selectedSet[(int) ($service['id'] ?? 0)])));
+    if ($selectedServices !== []) {
+        $homeServices = array_merge($selectedServices, array_values(array_filter($homeServices, static fn(array $service): bool => !isset($selectedSet[(int) ($service['id'] ?? 0)]))));
+    }
+}
 $visibleServices = array_slice($homeServices, 0, 6);
 $registrationLink = public_url('services', ['category' => 'business-registration']);
 foreach ($homeServices as $service) {
@@ -103,8 +113,8 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
   <section class="launch-section" id="our-services" aria-labelledby="launch-services-title">
     <div class="container public-container">
       <div class="launch-heading">
-        <div><span class="launch-small-label">OUR SERVICES</span><h2 id="launch-services-title">Everything your business needs to move forward.</h2></div>
-        <p>From registration and compliance to websites and brand growth, choose the support you need.</p>
+        <div><span class="launch-small-label">OUR SERVICES</span><h2 id="launch-services-title"><?= e(trim((string) ($featured['title'] ?? '')) ?: 'Everything your business needs to move forward.') ?></h2></div>
+        <p><?= e(trim((string) ($featured['subtitle'] ?? '')) ?: 'From registration and compliance to websites and brand growth, choose the support you need.') ?></p>
       </div>
       <div class="launch-categories" aria-label="Explore service areas">
         <a href="<?= e(public_url('services', ['category' => 'business-registration'])) ?>"><i class="bi bi-building"></i> Business registration</a>
@@ -143,7 +153,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
 
   <section class="launch-section launch-how" id="how-it-works" aria-labelledby="launch-how-title">
     <div class="container public-container">
-      <div class="launch-heading launch-heading-compact"><div><span class="launch-small-label">HOW IT WORKS</span><h2 id="launch-how-title">Simple from start to finish.</h2></div></div>
+      <div class="launch-heading launch-heading-compact"><div><span class="launch-small-label">HOW IT WORKS</span><h2 id="launch-how-title"><?= e(trim((string) ($process['title'] ?? '')) ?: 'Simple from start to finish.') ?></h2></div></div>
       <div class="launch-step-grid">
         <?php foreach ($steps as $i => $step): ?>
           <article class="launch-step"><span class="launch-step-number"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span><h3><?= e((string) ($step['title'] ?? '')) ?></h3><p><?= e((string) ($step['text'] ?? '')) ?></p></article>
@@ -155,7 +165,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
   <?php if ($faqItems !== []): ?>
     <section class="launch-section launch-faq" id="faq" aria-labelledby="launch-faq-title">
       <div class="container public-container launch-faq-inner">
-        <div><span class="launch-small-label">FREQUENTLY ASKED</span><h2 id="launch-faq-title">Questions? We have answers.</h2><p>Need more help? <a href="<?= e(public_url('contact')) ?>">Contact our team</a>.</p></div>
+        <div><span class="launch-small-label">FREQUENTLY ASKED</span><h2 id="launch-faq-title"><?= e(trim((string) ($faq['title'] ?? '')) ?: 'Questions? We have answers.') ?></h2><p>Need more help? <a href="<?= e(public_url('contact')) ?>">Contact our team</a>.</p></div>
         <div class="launch-faq-list">
           <?php foreach ($faqItems as $item): ?>
             <?php $question = trim((string) ($item['q'] ?? $item['question'] ?? '')); $answer = trim((string) ($item['a'] ?? $item['answer'] ?? '')); if ($question === '') { continue; } ?>
@@ -167,7 +177,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
   <?php endif; ?>
   <section class="launch-bottom-cta">
     <div class="container public-container launch-bottom-inner">
-      <div><h2>Let's get your next business task done.</h2><p>Browse a service, submit your request and track everything from your iWorks account.</p></div>
+      <div><h2><?= e(trim((string) ($banner['headline'] ?? '')) ?: "Let's get your next business task done.") ?></h2><p><?= e(trim((string) ($banner['text'] ?? '')) ?: 'Browse a service, submit your request and track everything from your iWorks account.') ?></p></div>
       <a class="launch-btn launch-btn-primary" href="<?= e(public_url('services')) ?>">Get started <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     </div>
   </section>
