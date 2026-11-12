@@ -34,6 +34,7 @@ jobs:
           bash -n scripts/deploy_businesshub_home.sh
           bash -n scripts/deploy_clean_home.sh
           bash -n scripts/deploy_clean_public_pages.sh
+          bash -n scripts/deploy_service_directory.sh
 
       - name: Run smoke tests
         run: |
