@@ -308,6 +308,14 @@ try {
         iworks_order_intent_capture($_GET);
     }
 
+    // Editorial-only accounts must never inherit access to jobs, payments,
+    // other users, settings or staff operations through broadly-allowed routes.
+    if (is_logged_in() && user_role() === 'author'
+        && !in_array((string)$page, ['dashboard','blog','profile','notifications','realtime','set_pay_currency'], true)) {
+        http_response_code(403);
+        exit('Author accounts can access Insights and their own profile only.');
+    }
+
     switch ($page) {
         case 'login':
             if (is_logged_in()) {
@@ -544,7 +552,7 @@ try {
             break;
 
         case 'blog':
-            require_roles(['admin', 'agent']);
+            require_roles(['admin', 'author']);
             $user = current_user();
             $isAdminBlog = has_role(['admin']);
             $blogAction = strtolower(trim((string) ($_GET['action'] ?? '')));
@@ -2218,7 +2226,7 @@ try {
         case 'users':
             require_roles(['admin']);
             $roleFilter = trim((string) ($_GET['role'] ?? 'all'));
-            if (!in_array($roleFilter, ['all', 'client', 'agent'], true)) {
+            if (!in_array($roleFilter, ['all', 'client', 'agent', 'author'], true)) {
                 $roleFilter = 'all';
             }
 
