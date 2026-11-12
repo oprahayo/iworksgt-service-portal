@@ -41,3 +41,4 @@ jobs:
           php tests/public_about_template_test.php
           php tests/public_photo_config_test.php
           php tests/public_businesshub_home_test.php
+          php tests/public_clean_home_test.php
