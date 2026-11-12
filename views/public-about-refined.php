@@ -73,7 +73,7 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
 
   <?php if ($founderName !== '' || $founderSummary !== ''): ?>
     <section class="iw-about-min-founder">
-      <div class="container public-container iw-about-min-founder-grid">
+      <div class="container public-container iw-about-min-founder-grid<?= $founderImageUrl !== '' ? ' has-founder-photo' : '' ?>">
         <div>
           <span class="iw-about-min-eyebrow">FROM OUR FOUNDER</span>
           <h2><?= e(trim((string) ($founder['title'] ?? '')) ?: 'We focus on getting work done clearly.') ?></h2>
