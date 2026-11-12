@@ -108,10 +108,16 @@ if ($description === '' || $description === 'Browse what you need.') {
 
     <div class="iw-service-index-list-head">
       <h2>Available services</h2>
-      <span id="iwServiceCount" aria-live="polite"><?= count($filteredServices) ?> <?= count($filteredServices) === 1 ? 'service' : 'services' ?></span>
+      <div class="iw-service-index-options">
+        <span id="iwServiceCount" aria-live="polite"><?= count($filteredServices) ?> <?= count($filteredServices) === 1 ? 'service' : 'services' ?></span>
+        <div class="iw-service-view-toggle" role="group" aria-label="Service display">
+          <button type="button" data-iw-service-view="list" aria-pressed="true" title="List view"><i class="bi bi-list-ul" aria-hidden="true"></i><span>List</span></button>
+          <button type="button" data-iw-service-view="grid" aria-pressed="false" title="Grid view"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><span>Grid</span></button>
+        </div>
+      </div>
     </div>
 
-    <div class="iw-service-index-list" id="iwServiceList">
+    <div class="iw-service-index-list" id="iwServiceList" data-layout="list">
       <?php foreach ($filteredServices as $service): ?>
         <?php
         $name = trim((string) ($service['name'] ?? 'Service'));
@@ -152,9 +158,13 @@ if ($description === '' || $description === 'Browse what you need.') {
       <a href="<?= e(public_url('services')) ?>">Show all services</a>
     </div>
 
-    <p class="iw-service-index-assist">
-      Not sure what you need? <a href="<?= e(public_url('contact')) ?>">Contact iWorks <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-    </p>
+    <section class="iw-service-custom" aria-labelledby="iwServiceCustomTitle">
+      <div>
+        <h2 id="iwServiceCustomTitle">Need something tailored?</h2>
+        <p>Can't find a service that fits? Describe your requirements and our team will guide you.</p>
+      </div>
+      <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Custom service enquiry">Request a custom service <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </section>
   </div>
 </main>
 <script>
