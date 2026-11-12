@@ -1,0 +1,54 @@
+/* Independent customer reviews: deliberately cooler than the warm CTA above. */
+.iw-reviews {
+  padding:clamp(3rem,5vw,5rem) 0;
+  background:#f5f8fa;
+  border-top:1px solid #e9eff2;
+  color:#26313c;
+}
+.iw-reviews-intro { text-align:center; max-width:720px; margin:0 auto 2.25rem; }
+.iw-reviews-google {
+  display:inline-flex; align-items:center; gap:.65rem; justify-content:center;
+  color:#29343e; text-decoration:none; font-family:Inter,-apple-system,sans-serif;
+  margin:0 auto 1.3rem;
+}
+.iw-reviews-google:hover { color:#e26212; }
+.iw-reviews-google-score { font-weight:750; font-size:1.65rem; line-height:1; letter-spacing:-.04em; }
+.iw-reviews-google-score span { font-size:.92rem; font-weight:550; color:#79838c; letter-spacing:0; }
+.iw-reviews-google-caption { border-left:1px solid #dce4e9; padding-left:.7rem; color:#55616d; font-size:.84rem; font-weight:600; }
+.iw-reviews-google-caption .bi-star-fill { color:#e8a11b; margin-right:.25rem; }
+.iw-reviews-google-caption .bi-arrow-up-right { color:#88939e; margin-left:.25rem; }
+.iw-reviews-intro h2 { margin:0 0 .6rem; font-size:clamp(1.55rem,2.8vw,2.25rem); letter-spacing:-.04em; font-weight:700; }
+.iw-reviews-intro p { color:#72808b; font-size:.94rem; margin:0; line-height:1.65; }
+.iw-review-carousel { max-width:1120px; margin:0 auto; }
+.iw-review-carousel-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:0 0 .9rem; color:#82909c; font-size:.78rem; }
+.iw-review-arrows { display:flex; gap:.4rem; }
+.iw-review-arrows button { width:39px; height:39px; display:grid; place-items:center; border-radius:50%; border:1px solid #dbe4e8; background:#fff; color:#43515e; font-size:1rem; cursor:pointer; }
+.iw-review-arrows button:hover { border-color:#df986b; color:#df5b0a; }
+.iw-review-arrows button:focus-visible,.iw-review-viewport:focus-visible { outline:2px solid #e79d6d; outline-offset:2px; }
+.iw-review-viewport { display:flex; gap:1rem; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-inline:contain; scroll-padding-inline:0; scrollbar-width:none; padding-bottom:.5rem; }
+.iw-review-viewport::-webkit-scrollbar { display:none; }
+.iw-review-slide { scroll-snap-align:start; flex:0 0 calc((100% - 2rem)/3); min-width:0; min-height:245px; margin:0; padding:1.35rem; display:flex; flex-direction:column; border:1px solid #e4eaee; border-radius:10px; background:#fff; }
+.iw-review-stars { color:#e26514; font-weight:650; font-size:.83rem; margin-bottom:.85rem; }
+.iw-review-stars i { margin-right:.25rem; }
+.iw-review-slide blockquote { font-size:.9rem; color:#3e4c58; line-height:1.7; margin:0 0 1.5rem; overflow-wrap:anywhere; }
+.iw-review-slide figcaption { display:flex; flex-direction:column; gap:.2rem; margin-top:auto; padding-top:.95rem; border-top:1px solid #eef1f3; font-size:.8rem; }
+.iw-review-slide figcaption strong { font-weight:650; color:#293642; }
+.iw-review-slide figcaption span { color:#87939d; font-size:.73rem; line-height:1.5; }
+.iw-reviews-empty { text-align:center; max-width:600px; margin:0 auto; color:#8b969f; font-size:.89rem; line-height:1.7; }
+.iw-job-feedback { background:#f9fbfc; border:1px solid #e3ebef; border-radius:9px; padding:1.4rem; }
+.iw-review-rating-options { display:flex; flex-wrap:wrap; gap:.45rem; }
+.iw-review-rating-options label { position:relative; cursor:pointer; }
+.iw-review-rating-options input { position:absolute; opacity:0; width:1px; height:1px; }
+.iw-review-rating-options span { display:grid; place-items:center; width:37px; height:38px; border:1px solid #dce3e8; border-radius:7px; background:#fff; font-size:.86rem; font-weight:600; }
+.iw-review-rating-options input:checked+span { color:#fff; border-color:#e86715; background:#e86715; }
+.iw-review-rating-options input:focus-visible+span { outline:3px solid #e8a26b; outline-offset:2px; }
+.iw-review-publish-consent { display:flex; gap:.6rem; align-items:start; margin-top:.9rem; color:#647380; font-size:.79rem; line-height:1.65; }
+.iw-review-publish-consent input { flex:0 0 auto; margin-top:.24rem; }
+@media(max-width:900px) { .iw-review-slide { flex-basis:calc((100% - 1rem)/2); } }
+@media(max-width:650px) {
+ .iw-review-slide { flex-basis:100%; min-height:220px; padding:1.2rem; }
+ .iw-reviews-google-score { font-size:1.45rem; }
+ .iw-reviews-google-caption { font-size:.79rem; }
+}
+@media(prefers-reduced-motion:no-preference) { .iw-review-viewport { scroll-behavior:smooth; } }
+@media(prefers-reduced-motion:reduce) { .iw-review-viewport { scroll-behavior:auto; } }
