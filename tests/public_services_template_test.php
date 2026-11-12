@@ -56,7 +56,7 @@ check(str_contains($html, 'data-iw-service-view="list"'), 'List toggle missing.'
 check(str_contains($html, 'data-layout="grid"'), 'Grid must be the default.');
 check(str_contains($html, 'data-iw-service-view="grid" aria-pressed="true"'), 'Grid toggle should be active initially.');
 check(str_contains($html, 'data-iw-service-view="list" aria-pressed="false"'), 'List view must remain available.');
-check(str_contains($html, "localStorage.getItem('iworks-services-view') || 'grid'"), 'Returning visitors should retain their own selected layout.');
+check(str_contains($html, "localStorage.getItem('iworks-services-view-v2') || 'grid'"), 'Returning visitors should retain their own selected layout.');
 check(str_contains($html, "data-tone="), 'Tiles need stable colour tones for graphic styling.');
 check(str_contains($html, 'Request a custom service'), 'Tailored service help CTA missing.');
 check(str_contains($html, 'id="iwServiceCategory" name="category"'), 'Native category dropdown must be available on mobile.');
