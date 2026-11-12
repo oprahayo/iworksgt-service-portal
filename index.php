@@ -1253,10 +1253,34 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
-        case 'cac_document':
-            require_roles(['client']);
+        case 'cac_review':
+            require_roles(['admin','finance','agent']);
             $user=current_user();
-            $cacRow=cac_filing_load((int)($_GET['id']??0),(int)$user['id']);
+            $filingId=(int)($_GET['id']??0);
+            cac_filing_schema();
+            $cacRaw=db_one('SELECT * FROM cac_filing_applications WHERE id=:id LIMIT 1',['id'=>$filingId]);
+            $cacRow=$cacRaw?cac_filing_decode($cacRaw):null;
+            $linkedJob=$cacRow&&!empty($cacRow['job_id'])?get_job((int)$cacRow['job_id']):null;
+            if(!$cacRow || !$linkedJob || !can_access_job($user,$linkedJob)){
+                http_response_code(403);exit('Not authorised to access this filing.');
+            }
+            $title='CAC filing '.(int)$filingId.' - '.app_name();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/staff-cac-review.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
+        case 'cac_document':
+            require_login();
+            $user=current_user();
+            $filingId=(int)($_GET['id']??0);
+            cac_filing_schema();
+            $cacRaw=db_one('SELECT * FROM cac_filing_applications WHERE id=:id LIMIT 1',['id'=>$filingId]);
+            $cacRow=$cacRaw?cac_filing_decode($cacRaw):null;
+            $allowed=$cacRow&&((int)$cacRow['client_id']===(int)$user['id']
+                || (($user['role']??'')!=='client' && !empty($cacRow['job_id'])
+                    && ($linkedJob=get_job((int)$cacRow['job_id'])) && can_access_job($user,$linkedJob)));
+            if(!$allowed){http_response_code(403);exit('Not allowed.');}
             $person=(int)($_GET['person']??-1);
             $type=(string)($_GET['type']??'');
             if (!$cacRow || $person<0 || !in_array($type,['id','photo','signature'],true)) {
