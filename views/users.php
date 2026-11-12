@@ -17,6 +17,7 @@ $serviceCatalogOptions = is_array($serviceOptions ?? null) ? $serviceOptions : [
       <a class="btn btn-sm <?= $roleFilter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?>" href="<?= e(url('users', ['role' => 'all'])) ?>">All</a>
       <a class="btn btn-sm <?= $roleFilter === 'client' ? 'btn-primary' : 'btn-outline-primary' ?>" href="<?= e(url('users', ['role' => 'client'])) ?>">Clients</a>
       <a class="btn btn-sm <?= $roleFilter === 'agent' ? 'btn-primary' : 'btn-outline-primary' ?>" href="<?= e(url('users', ['role' => 'agent'])) ?>">Agents</a>
+      <a class="btn btn-sm <?= $roleFilter === 'author' ? 'btn-primary' : 'btn-outline-primary' ?>" href="<?= e(url('users', ['role' => 'author'])) ?>">Authors</a>
     </div>
   </div>
 </div>
@@ -39,6 +40,7 @@ $serviceCatalogOptions = is_array($serviceOptions ?? null) ? $serviceOptions : [
               <select class="form-select" name="role" id="createUserRole" required>
                 <option value="client">Client</option>
                 <option value="agent">Agent</option>
+                <option value="author">Author — Insights only</option>
               </select>
             </div>
             <div class="col-md-4">
