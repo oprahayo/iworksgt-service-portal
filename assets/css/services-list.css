@@ -1,0 +1,130 @@
+/*
+ * iWorks service directory, mobile first.
+ * One list layout on every screen; no cards, shadows, masonry or mode switch.
+ */
+body.page-public .iw-service-index {
+  --iw-dir-ink:#252b32;
+  --iw-dir-muted:#717b85;
+  --iw-dir-orange:#ed6415;
+  --iw-dir-line:#e9ecee;
+  color:var(--iw-dir-ink);
+  background:#fff;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body.page-public .iw-service-index *,
+body.page-public .iw-service-index *::before,
+body.page-public .iw-service-index *::after { box-sizing:border-box; }
+body.page-public .iw-service-index a { text-decoration:none; }
+body.page-public .iw-service-index .public-container { max-width:1030px; }
+.iw-service-index-shell { padding-top:1.5rem; padding-bottom:4.5rem; }
+.iw-service-index-breadcrumb { display:flex; align-items:center; gap:.55rem; color:#8d959d; font-size:.78rem; margin:0 0 2.3rem; }
+.iw-service-index-breadcrumb a { color:#7b858f; }
+.iw-service-index-breadcrumb a:hover { color:#e65f12; }
+.iw-service-index-breadcrumb i { font-size:.6rem; }
+.iw-service-index-breadcrumb [aria-current] { color:#47515a; font-weight:550; }
+.iw-service-index-heading { margin-bottom:2rem; }
+body.page-public .iw-service-index-heading h1 {
+  font-size:clamp(2rem,3.6vw,2.85rem);
+  font-weight:700;
+  line-height:1.13;
+  letter-spacing:-.046em;
+  color:#21262c;
+  margin:0 0 .75rem;
+}
+.iw-service-index-heading p { max-width:650px; font-size:.97rem; line-height:1.7; color:#69747e; margin:0; }
+.iw-service-index-tools { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:.9rem; align-items:end; }
+.iw-service-index-search { display:block; position:relative; margin:0; }
+.iw-service-index-search>i { position:absolute; left:.94rem; top:50%; transform:translateY(-50%); color:#88929a; font-size:.95rem; pointer-events:none; }
+.iw-service-index-search input {
+  display:block;
+  width:100%;
+  height:48px;
+  padding:0 1rem 0 2.65rem;
+  font-size:.94rem;
+  color:#303b45;
+  background:#fff;
+  border:1px solid #dfe4e8;
+  border-radius:7px;
+  appearance:auto;
+  box-shadow:none;
+}
+.iw-service-index-search input::placeholder { color:#9ba4ac; }
+.iw-service-index-filter { margin:0; }
+.iw-service-index-filter label { display:none; }
+.iw-service-index-filter select {
+  display:block;
+  width:100%;
+  height:48px;
+  padding:.65rem 2rem .65rem .85rem;
+  font-size:.92rem;
+  font-weight:500;
+  border:1px solid #dfe4e8;
+  border-radius:7px;
+  color:#3c4751;
+  background:#fff;
+}
+.iw-service-index-search input:focus,
+.iw-service-index-filter select:focus { outline:2px solid #edac83; outline-offset:1px; border-color:#edac83; }
+.iw-service-index-filter noscript button { border:1px solid #ddd; padding:.4rem .8rem; margin-top:.5rem; }
+.iw-service-index-list-head { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:2rem 0 .35rem; padding-bottom:.7rem; }
+body.page-public .iw-service-index-list-head h2 { font-size:.91rem; font-weight:650; margin:0; color:#3e474f; letter-spacing:0; }
+.iw-service-index-list-head>span { color:#8b949d; font-size:.82rem; white-space:nowrap; }
+.iw-service-index-list { border-top:1px solid var(--iw-dir-line); }
+.iw-service-index-row {
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto;
+  column-gap:1.15rem;
+  align-items:center;
+  min-height:108px;
+  padding:1.28rem .35rem;
+  border-bottom:1px solid var(--iw-dir-line);
+  background:#fff;
+  color:#27313a;
+  transition:background-color .15s ease;
+}
+.iw-service-index-row:hover { background:#fcfcfc; color:#27313a; }
+.iw-service-index-row:focus-visible { outline:2px solid #edac83; outline-offset:-2px; border-radius:3px; }
+.iw-service-index-row[hidden] { display:none!important; }
+.iw-service-index-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:8px; color:#e66313; background:#fff3eb; font-size:1.14rem; align-self:start; margin-top:.35rem; }
+.iw-service-index-main { min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
+.iw-service-index-category { color:#929ba3; font-size:.71rem; line-height:1.4; margin-bottom:.28rem; }
+.iw-service-index-name { color:#222b34; font-weight:650; font-size:1.01rem; letter-spacing:-.013em; line-height:1.35; overflow-wrap:anywhere; }
+.iw-service-index-description { margin-top:.3rem; color:#76818a; font-size:.86rem; line-height:1.56; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+.iw-service-index-end { display:flex; align-items:center; justify-content:flex-end; gap:1.35rem; padding-left:1rem; }
+.iw-service-index-pricing { display:flex; flex-direction:column; align-items:flex-end; gap:.2rem; min-width:110px; }
+.iw-service-index-pricing small { color:#919aa2; font-size:.73rem; line-height:1.4; }
+.iw-service-index-pricing strong { color:#2b343d; font-size:.92rem; font-weight:650; white-space:nowrap; }
+.iw-service-index-arrow { color:#e76b1f; font-size:1.12rem; flex:0 0 auto; }
+.iw-service-index-empty { padding:3rem 1rem; text-align:center; color:#626d77; }
+.iw-service-index-empty[hidden] { display:none!important; }
+.iw-service-index-empty p { font-size:.97rem; margin:0 0 .55rem; }
+.iw-service-index-empty a { color:#e66313; font-size:.88rem; font-weight:600; }
+.iw-service-index-assist { display:flex; align-items:center; flex-wrap:wrap; gap:.4rem; margin:2.3rem 0 0; color:#76818a; font-size:.88rem; }
+.iw-service-index-assist a { color:#e26013; font-weight:650; display:inline-flex; align-items:center; gap:.35rem; }
+@media(max-width:767px) {
+ .iw-service-index-shell { padding-top:1.15rem; padding-bottom:3rem; }
+ .iw-service-index-breadcrumb { margin-bottom:1.55rem; }
+ .iw-service-index-heading { margin-bottom:1.5rem; }
+ body.page-public .iw-service-index-heading h1 { font-size:clamp(1.85rem,7.7vw,2.3rem); }
+ .iw-service-index-heading p { font-size:.92rem; line-height:1.62; }
+ .iw-service-index-tools { grid-template-columns:1fr; gap:.7rem; }
+ .iw-service-index-search input,.iw-service-index-filter select { height:46px; }
+ .iw-service-index-list-head { margin:1.75rem 0 .15rem; }
+ .iw-service-index-row {
+   grid-template-columns:36px minmax(0,1fr);
+   gap:.05rem .8rem;
+   min-height:0;
+   padding:1.05rem 0;
+ }
+ .iw-service-index-icon { width:36px; height:36px; font-size:1.03rem; margin-top:.08rem; border-radius:7px; }
+ .iw-service-index-category { display:none; }
+ .iw-service-index-name { font-size:.98rem; line-height:1.4; }
+ .iw-service-index-description { font-size:.84rem; line-height:1.48; margin-top:.33rem; -webkit-line-clamp:2; }
+ .iw-service-index-end { grid-column:2; padding:0; margin-top:.7rem; align-items:center; justify-content:space-between; width:100%; }
+ .iw-service-index-pricing { flex-direction:row; justify-content:flex-start; align-items:baseline; min-width:0; gap:.35rem; }
+ .iw-service-index-pricing strong { font-size:.87rem; }
+ .iw-service-index-pricing small { font-size:.77rem; }
+ .iw-service-index-arrow { font-size:1.05rem; padding-right:.2rem; }
+ .iw-service-index-assist { margin-top:1.8rem; line-height:1.55; }
+}
+@media(prefers-reduced-motion:reduce) { .iw-service-index-row { transition:none; } }
