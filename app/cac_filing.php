@@ -55,9 +55,12 @@ function cac_company_quote(int $directorCount): float {
 }
 function cac_filing_quote(string $kind, array $data): array {
     $people = is_array($data['people'] ?? null) ? $data['people'] : [];
+    $directors = count(array_filter($people, static fn(array $person): bool =>
+        str_contains(strtolower((string)($person['role']??'Director and shareholder')), 'director')
+    ));
     $ngn = $kind === 'business'
         ? cac_business_quote((string)($data['structure'] ?? 'sole'), count($people))
-        : cac_company_quote(count($people));
+        : cac_company_quote($directors);
     $currency = strtoupper((string) ($data['currency'] ?? 'NGN'));
     if (!in_array($currency, ['NGN','USD'], true)) $currency = 'NGN';
     $amount = $currency === 'NGN' ? $ngn : round($ngn / max(1, fx_ngn_per_usd()), 2);
@@ -112,7 +115,16 @@ function cac_filing_save(int $clientId, int $id, string $kind, array $input): in
         $row=cac_filing_load($id,$clientId);
         if (!$row || $row['kind']!==$kind || $row['status']!=='draft') throw new RuntimeException('This draft cannot be edited.');
         // Avoid attaching documents to wrong people when changing the count.
-        if (count($data['people']) < count($row['docs'])) throw new RuntimeException('Remove document entries for removed people before reducing the number of proprietors/directors.');
+        // Documents belong to a named person. Never silently reassign an ID
+        // or signature when users remove/reorder people or change their name.
+        foreach ($row['docs'] as $index=>$documentGroup) {
+            if (empty($documentGroup)) continue;
+            $originalName=trim((string)($row['data']['people'][$index]['full_name']??''));
+            $newName=trim((string)($data['people'][$index]['full_name']??''));
+            if ($newName==='' || $originalName!==$newName) {
+                throw new RuntimeException('Uploaded documents belong to '.($originalName?:'another person').'. Keep the person in the same position or contact support to reset their documents.');
+            }
+        }
         db_execute('UPDATE cac_filing_applications SET data_json=:data,updated_at=:updated WHERE id=:id AND client_id=:client',
             ['data'=>$json,'updated'=>now(),'id'=>$id,'client'=>$clientId]);
         return $id;
@@ -122,6 +134,15 @@ function cac_filing_save(int $clientId, int $id, string $kind, array $input): in
         VALUES (:client,:kind,'draft',:data,'{}',:created,:updated)",
         ['client'=>$clientId,'kind'=>$kind,'data'=>$json,'created'=>now(),'updated'=>now()]);
     return db_last_id();
+}
+function cac_ensure_private_storage(): void {
+    ensure_upload_directory();
+    $dir=upload_directory().'/cac';
+    if(!is_dir($dir)&&!mkdir($dir,0700,true)&&!is_dir($dir))throw new RuntimeException('Private document storage unavailable.');
+    $deny=$dir.'/.htaccess';
+    if(!is_file($deny)) {
+        file_put_contents($deny, "<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n",LOCK_EX);
+    }
 }
 function cac_doc_validate(string $type, array $file): string {
     if (!in_array($type,['id','photo','signature'],true)) throw new RuntimeException('Invalid document type.');
@@ -140,7 +161,7 @@ function cac_filing_save_document(int $clientId,int $id,int $personIndex,string 
     if (!$row || $row['status']!=='draft') throw new RuntimeException('This application is not editable.');
     if ($personIndex<0 || !isset($row['data']['people'][$personIndex])) throw new RuntimeException('Save person details first.');
     $ext=cac_doc_validate($type,$file);
-    ensure_upload_directory();
+    cac_ensure_private_storage();
     $dir=upload_directory().'/cac/filing_'.$id.'/person_'.$personIndex;
     if (!is_dir($dir) && !mkdir($dir,0700,true) && !is_dir($dir)) throw new RuntimeException('Storage unavailable.');
     $path=$dir.'/'.bin2hex(random_bytes(16)).'.'.$ext;
