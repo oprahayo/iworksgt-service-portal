@@ -1198,6 +1198,7 @@ try {
                     if (in_array($action, ['save_draft', 'review_draft'], true)) {
                         $data = trademark_form_values($_POST);
                         $savedId = trademark_save_draft($clientId, $appId, $data, $_FILES['mark_logo'] ?? null);
+                        $appId = $savedId; // Preserve the draft link if review validation fails.
                         if ($action === 'review_draft') {
                             $saved = trademark_find($savedId, $clientId);
                             trademark_validate_complete($saved['data'], !empty($saved['logo_filename']));
