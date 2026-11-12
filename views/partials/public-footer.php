@@ -165,7 +165,7 @@ $socialIcons = [
     <iframe id="iwPublicAuthFrame" title="Secure iWorks account access" loading="lazy"
        data-login="<?= e(portal_url('login', ['embed' => '1'])) ?>"
        data-register="<?= e(portal_url('register', ['embed' => '1'])) ?>"></iframe>
-    <p class="iw-auth-dialog-fallback">Having trouble? <a id="iwAuthDirectLink" href="<?= e(portal_url('login')) ?>">Open secure sign in</a>.</p>
+    <p class="iw-auth-dialog-fallback">Having trouble? <a id="iwAuthDirectLink" href="<?= e(portal_url('login')) ?>" data-login-direct="<?= e(portal_url('login')) ?>" data-register-direct="<?= e(portal_url('register')) ?>">Open secure sign in</a>.</p>
   </dialog>
 
   <dialog class="iw-public-dialog iw-help-dialog" id="iwPublicHelpDialog" aria-labelledby="iwPublicHelpTitle">
@@ -359,7 +359,7 @@ $socialIcons = [
     mode = mode === 'register' ? 'register' : 'login';
     var target = frame.getAttribute('data-' + mode);
     if (target && frame.getAttribute('src') !== target) frame.setAttribute('src', target);
-    direct.href = mode === 'login' ? target.replace(/([?&])embed=1(&|$)/, '$1').replace(/[?&]$/, '') : target.replace(/([?&])embed=1(&|$)/, '$1').replace(/[?&]$/, '');
+    direct.href = direct.getAttribute('data-' + mode + '-direct') || target;
     direct.textContent = mode === 'login' ? 'Open secure sign in' : 'Open registration';
     tabs.forEach(function (tab) { tab.setAttribute('aria-pressed', tab.getAttribute('data-iw-auth-tab') === mode ? 'true' : 'false'); });
   }
