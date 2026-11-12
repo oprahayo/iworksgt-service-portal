@@ -1,6 +1,5 @@
 <section class="iw-auth-panel" aria-labelledby="iwAuthTitle">
   <div class="iw-auth-header">
-    <?php if (logo_path() !== ''): ?><img src="<?= e(logo_path()) ?>" alt="<?= e(brand_name()) ?>" class="iw-auth-logo"><?php endif; ?>
     <h1 id="iwAuthTitle">Sign in</h1>
     <p>Access your orders, messages and documents.</p>
   </div>
@@ -32,9 +31,10 @@ document.querySelectorAll('[data-iw-auth-switch]').forEach(function (link) {
   link.addEventListener('click', function (event) {
     if (window.parent === window) return;
     try {
-      if (window.parent.location.origin !== window.location.origin) return;
+      if (!document.referrer) return;
+      var parentOrigin = new URL(document.referrer).origin;
       event.preventDefault();
-      window.parent.postMessage({ iwAuthSwitch: link.getAttribute('data-iw-auth-switch') }, window.location.origin);
+      window.parent.postMessage({ iwAuthSwitch: link.getAttribute('data-iw-auth-switch') }, parentOrigin);
     } catch (_err) { /* Cross-origin parent: use normal navigation in frame. */ }
   });
 });
