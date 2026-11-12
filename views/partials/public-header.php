@@ -34,9 +34,10 @@ $contactHref = normalize_public_href(trim((string) ($publicHeaderConfig['contact
 $signInLabel = trim((string) ($publicHeaderConfig['signInLabel'] ?? 'Sign In'));
 $ctaLabel = trim((string) ($publicHeaderConfig['ctaLabel'] ?? 'Talk to our experts'));
 $ctaHref = normalize_public_href(trim((string) ($publicHeaderConfig['ctaHref'] ?? public_url('services'))), public_url('services'));
-// Keep header language and destination aligned; talking to a person goes to Contact.
-if (strcasecmp($ctaLabel, 'Talk to our experts') === 0 && $ctaHref === public_url('services')) {
-    $ctaHref = public_url('contact');
+// Short, unambiguous default CTA. Customized CMS labels remain respected.
+if (strcasecmp($ctaLabel, 'Talk to our experts') === 0) {
+    $ctaLabel = 'Get started';
+    $ctaHref = public_url('services');
 }
 $currentPublicSlug = trim((string) ($publicPageSlug ?? ($page ?? 'home')));
 $isAboutActive = $currentPublicSlug === 'about';
@@ -67,22 +68,22 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
-  <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/businesshub-home.css')) ?>"><?php endif; ?>
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/refined-services.css')) ?>"><?php endif; ?>
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="dns-prefetch" href="//images.unsplash.com">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
       --brand-primary-dark: <?= e(brand_primary_dark_color()) ?>;
       --brand-accent: <?= e(brand_accent_color()) ?>;
     }
-    body { font-family: 'Outfit', sans-serif; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   </style>
 </head>
 <body class="<?= e($bodyClass) ?>">
@@ -96,52 +97,27 @@ $isLaunchHome = $currentPublicSlug === 'home';
 
   <header class="public-navbar sticky-top">
     <div class="container public-container">
-      <nav class="navbar navbar-expand-xl public-nav-shell">
-        <a class="navbar-brand d-flex align-items-center public-brand" href="<?= e(public_url('home')) ?>" aria-label="<?= e(brand_name()) ?>">
+      <nav class="navbar navbar-expand-xl public-nav-shell" aria-label="Main navigation">
+        <a class="navbar-brand d-flex align-items-center public-brand" href="<?= e(public_url('home')) ?>" aria-label="<?= e(brand_name()) ?> home">
           <?php if ($logo !== ''): ?>
-            <img src="<?= e($logo) ?>" alt="<?= e(brand_name()) ?>" class="public-logo" onerror="this.style.display='none'">
+            <img src="<?= e($logo) ?>" alt="<?= e(brand_name()) ?>" class="public-logo">
+          <?php else: ?>
+            <span class="public-wordmark"><?= e(brand_name()) ?></span>
           <?php endif; ?>
         </a>
         <div class="public-nav-actions d-xl-none">
-          <a class="btn btn-primary btn-sm" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
         </div>
         <div class="collapse navbar-collapse" id="publicNav">
-          <ul class="navbar-nav mx-auto align-items-xl-center gap-xl-3 public-nav-center">
-            <li class="nav-item public-services-dropdown" data-public-services-dropdown>
-              <a class="nav-link public-services-toggle<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>" data-public-services-toggle aria-expanded="false">
-                <span>Services</span>
-                <i class="bi bi-chevron-down"></i>
-              </a>
-              <div class="public-services-mega" data-public-services-menu hidden>
-                <div class="public-services-mega-top">
-                  <a href="<?= e(public_url('services')) ?>">Browse all services</a>
-                </div>
-                <div class="mega-menu-grid">
-                  <?php foreach ($publicServiceCategories as $category): ?>
-                    <div class="mega-column">
-                      <div class="mega-title">
-                        <a href="<?= e(public_url('services', ['category' => (string) ($category['slug'] ?? '')])) ?>"><?= e((string) ($category['label'] ?? 'Category')) ?></a>
-                        <span><?= (int) ($category['count'] ?? 0) ?></span>
-                      </div>
-                      <ul class="list-unstyled mb-0">
-                        <?php foreach (array_slice(is_array($category['services'] ?? null) ? $category['services'] : [], 0, 5) as $serviceLink): ?>
-                          <li><a href="<?= e(public_url('service', ['slug' => (string) ($serviceLink['slug'] ?? '')])) ?>"><?= e((string) ($serviceLink['name'] ?? 'Service')) ?></a></li>
-                        <?php endforeach; ?>
-                      </ul>
-                    </div>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-            </li>
-            <?php if ($aboutLabel !== '' && $aboutHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"><?= e($aboutLabel) ?></a></li><?php endif; ?>
-            <?php if ($useCasesLabel !== '' && $useCasesHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"><?= e($useCasesLabel === 'Use Cases' || $useCasesLabel === 'Case Studies' ? 'Our Work' : $useCasesLabel) ?></a></li><?php endif; ?>
-            <?php if ($blogLabel !== '' && $blogHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e($blogHref) ?>"><?= e($blogLabel) ?></a></li><?php endif; ?>
-            <li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"><?= e($contactLabel) ?></a></li>
+          <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
+            <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
+            <li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e(public_url('about')) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>>About</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= e(public_url('track')) ?>">Track order</a></li>
+            <li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e(public_url('contact')) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>>Contact</a></li>
           </ul>
-          <div class="public-header-cta-group norebase-header-cta">
+          <div class="public-header-cta-group">
             <a class="public-signin-link" href="<?= e(portal_url('login')) ?>"><?= e($signInLabel) ?></a>
             <a class="btn btn-primary btn-sm public-header-main-cta" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           </div>
@@ -149,4 +125,4 @@ $isLaunchHome = $currentPublicSlug === 'home';
       </nav>
     </div>
   </header>
-  <a class="public-feedback-tab" href="<?= e(public_url('contact')) ?>">Feedback</a>
+
