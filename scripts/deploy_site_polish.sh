@@ -88,7 +88,7 @@ fi
 umask 077
 BACKUP_DIR="${HOME}/iworks-deployment-backups"
 mkdir -p "$BACKUP_DIR"
-BACKUP="$BACKUP_DIR/site-polish-$(date -u +%Y%m%dT%H%M%SZ)-$.tar.gz"
+BACKUP="$BACKUP_DIR/site-polish-$(date -u +%Y%m%dT%H%M%SZ)-$$.tar.gz"
 PRESENT=()
 ADDED=()
 for file in "${FILES[@]}"; do
