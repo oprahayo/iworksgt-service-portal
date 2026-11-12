@@ -36,3 +36,4 @@ jobs:
           php tests/public_cms_layout_test.php
           php tests/public_services_template_test.php
           php tests/public_about_template_test.php
+          php tests/public_photo_config_test.php
