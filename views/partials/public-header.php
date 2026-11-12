@@ -119,6 +119,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/auth-compact.css')) ?>?v=20261112c">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112seo">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
