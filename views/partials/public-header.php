@@ -77,6 +77,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="dns-prefetch" href="//images.unsplash.com">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-polish.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>"><?php endif; ?>
   <style>
@@ -120,7 +121,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">
-            <a class="public-signin-link" href="<?= e(portal_url('login')) ?>"><?= e($signInLabel) ?></a>
+            <a class="public-signin-link" href="<?= e(portal_url('login')) ?>" data-iw-auth="login"><?= e($signInLabel) ?></a>
             <a class="btn btn-primary btn-sm public-header-main-cta" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           </div>
         </div>

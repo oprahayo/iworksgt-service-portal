@@ -13,6 +13,8 @@ function public_url(string $page, array $params = []): string
 function normalize_public_href(string $href, string $fallback): string { return trim($href) ?: $fallback; }
 function get_media_asset(int $id): ?array { return $id === 55 ? ['url' => '/uploads/real-client-hero.webp'] : null; }
 function flash(string $type): ?string { return null; }
+function csrf_token(): string { return 'testcsrf'; }
+function portal_url(string $page): string { return '/portal/' . $page; }
 function check_home(bool $passes, string $message): void
 {
     if (!$passes) { throw new RuntimeException($message); }
@@ -68,9 +70,17 @@ check_home(!str_contains($html, '/services/banking'), 'Banking offers must never
 check_home(!str_contains($html, '/services/custom-service'), 'Internal placeholder must never be promoted.');
 check_home(substr_count($html, 'class="iw-clean-service"') === 3, 'Home should have only three service categories.');
 check_home(substr_count($html, 'class="iw-clean-step"') === 3, 'Home should have only three steps.');
-check_home(substr_count($html, '<details>') === 3, 'Home should show at most three FAQs.');
-check_home(!str_contains($html, 'Extra lengthy question?'), 'Fourth FAQ should remain on the full FAQs page.');
-check_home(substr_count($html, '<section') <= 6, 'Avoid repeating marketing sections.');
+check_home(substr_count($html, '<details>') >= 6, 'Home should offer expanded collapsible FAQs.');
+check_home(str_contains($html, 'Can I use iWorks if I live outside Nigeria?'), 'Remote/diaspora service FAQ missing.');
+check_home(str_contains($html, 'Can I pay in naira or US dollars?'), 'Currency FAQ missing.');
+check_home(substr_count($html, '<section') <= 7, 'Avoid repeating marketing sections.');
+check_home(str_contains($html, 'Step 1') && str_contains($html, 'Step 3'), 'Connected steps need accessible labels.');
+check_home(str_contains($html, 'name="form_action" value="public_track"'), 'Home must submit to the existing track handler.');
+check_home(str_contains($html, 'name="job_code"') && str_contains($html, 'name="identifier"'), 'Tracking fields must match the handler.');
+check_home(str_contains($html, 'name="csrf_token"'), 'Track form requires CSRF protection.');
+check_home(str_contains($html, 'data-iw-help-open'), 'Human support dialog entry missing.');
+check_home(str_contains($html, 'Read Google reviews'), 'Verified review listing link missing.');
+check_home(!str_contains($html, '120 reviews'), 'Old unverified review count must not appear.');
 check_home(str_contains($html, '/track'), 'Existing portal tracking link must work.');
 check_home(str_contains($html, '/services'), 'Existing service catalogue link must work.');
 

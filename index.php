@@ -225,7 +225,9 @@ try {
             redirect(public_url($publicSlug));
         }
 
-        if ($publicSlug === 'track' && method_is('POST')) {
+        if (in_array($publicSlug, ['track', 'home'], true)
+            && method_is('POST')
+            && ($publicSlug === 'track' || (string) ($_POST['form_action'] ?? '') === 'public_track')) {
             require_csrf();
             $jobCode = trim((string) ($_POST['job_code'] ?? ''));
             $identifier = trim((string) ($_POST['identifier'] ?? ''));
@@ -301,9 +303,10 @@ try {
             }
 
             $title = 'Login - ' . app_name();
-            require __DIR__ . '/views/partials/header.php';
+            $embeddedAuth = !method_is('POST') && (string) ($_GET['embed'] ?? '') === '1';
+            require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-header.php' : '/views/partials/header.php');
             require __DIR__ . '/views/login.php';
-            require __DIR__ . '/views/partials/footer.php';
+            require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-footer.php' : '/views/partials/footer.php');
             break;
 
         case 'frontend':
@@ -745,9 +748,10 @@ try {
             }
 
             $title = 'Register - ' . app_name();
-            require __DIR__ . '/views/partials/header.php';
+            $embeddedAuth = !method_is('POST') && (string) ($_GET['embed'] ?? '') === '1';
+            require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-header.php' : '/views/partials/header.php');
             require __DIR__ . '/views/register.php';
-            require __DIR__ . '/views/partials/footer.php';
+            require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-footer.php' : '/views/partials/footer.php');
             break;
 
         case 'otp':
