@@ -1475,6 +1475,12 @@ if (!function_exists('render_public_block')) {
             $email = trim((string) ($data['email'] ?? ''));
             $phone = trim((string) ($data['phone'] ?? ''));
             $whatsapp = trim((string) ($data['whatsapp'] ?? ''));
+            if (preg_match('/^\\+?234\\s*806\\s*000\\s*0000$/', $phone)) {
+                $phone = '';
+            }
+            if (preg_match('~(?:wa\\.me|api\\.whatsapp\\.com)/(?:2348060000000)~i', $whatsapp)) {
+                $whatsapp = '';
+            }
             ?>
             <section class="public-section muted">
               <div class="container public-container">
