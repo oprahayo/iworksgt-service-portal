@@ -1241,8 +1241,12 @@ try {
                     redirect(url('trademark', ['id'=>$appId]));
                 }
             }
-            $trademarkUnit = trademark_price_usd();
-            $trademarkFxRate = (float) fx_ngn_per_usd();
+            $trademarkUnit = ($trademarkApplication && $trademarkApplication['status'] !== 'draft')
+                ? (float) ($trademarkApplication['unit_price_usd'] ?? trademark_price_usd())
+                : trademark_price_usd();
+            $trademarkFxRate = ($trademarkApplication && $trademarkApplication['status'] !== 'draft')
+                ? (float) ($trademarkApplication['fx_rate_used'] ?? fx_ngn_per_usd())
+                : (float) fx_ngn_per_usd();
             $trademarkQuote = trademark_quote(
                 $trademarkData['classes'] ?? [],
                 $trademarkData['currency'] ?? 'USD',
@@ -1389,6 +1393,12 @@ try {
             maybe_auto_close_delivered_jobs();
             $showCreateForm = ($_GET['action'] ?? '') === 'new' && has_role(['admin', 'client']);
             $serviceOptions = list_services(true);
+            // Product-specific trademark pricing requires class selection.
+            // The legacy cart must not bypass its dedicated $/class flow.
+            if (has_role(['client'])) {
+                $serviceOptions = array_values(array_filter($serviceOptions,
+                    static fn(array $service): bool => (string) ($service['slug'] ?? '') !== 'trademark'));
+            }
             $preselectedOrder = null;
             if ($showCreateForm && has_role(['client'])) {
                 $requestedService = (string) ($_GET['service'] ?? iworks_order_intent_peek());
@@ -1470,6 +1480,15 @@ try {
                         $payload['created_by'] = (int) current_user()['id'];
 
                         if (has_role(['client'])) {
+                            $requestedIds = is_array($_POST['service_ids'] ?? null) ? $_POST['service_ids'] : [];
+                            $requestedIds[] = $_POST['service_id'] ?? 0;
+                            foreach ($requestedIds as $requestedId) {
+                                if ((int) $requestedId <= 0) { continue; }
+                                $requestedService = get_service((int) $requestedId);
+                                if (($requestedService['slug'] ?? '') === 'trademark') {
+                                    throw new RuntimeException('Use the dedicated trademark application to select classes and calculate the correct fee.');
+                                }
+                            }
                             $payload['client_id'] = (int) current_user()['id'];
                             $payload['payment_status'] = 'unpaid';
                             unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'], $payload['tax_percent'], $payload['currency']);
