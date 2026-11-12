@@ -13,6 +13,7 @@ function assert_detail(bool $valid, string $reason): void { if (!$valid) { throw
 
 $service = [
   'name' => 'Launch a Company Package',
+  'slug' => 'launch-a-company-package',
   'short_description' => 'Company setup, banking, brand identity.',
   'description' => '<h3>What you get</h3><p>CAC, banking, hosting and branding support.</p>',
   'category' => 'business-registration',
