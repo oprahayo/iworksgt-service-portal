@@ -162,6 +162,12 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
             'url' => url('media'),
         ];
         $sidebarItems[] = [
+            'page' => 'editorial_showcase',
+            'label' => 'Stories & Feedback',
+            'icon' => 'bi-collection',
+            'url' => url('editorial_showcase'),
+        ];
+        $sidebarItems[] = [
             'page' => 'frontend',
             'label' => 'Website',
             'icon' => 'bi-window-stack',
