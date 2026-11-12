@@ -29,7 +29,7 @@ function iworks_client_state_label(string $state): string
     ][$state] ?? 'In progress';
 }
 
-function iworks_client_service_items(array $trademarkApplications, array $orders): array
+function iworks_client_service_items(array $trademarkApplications, array $orders, array $cacApplications = []): array
 {
     $items = [];
     $linkedJobs = [];
@@ -56,6 +56,28 @@ function iworks_client_service_items(array $trademarkApplications, array $orders
             'action' => $draft ? 'Continue application' : ($status === 'payment' ? 'Continue payment' : 'View progress'),
             'can_delete_draft' => $draft,
             'country' => 'Nigeria',
+        ];
+    }
+    foreach ($cacApplications as $filing) {
+        if (!is_array($filing)) continue;
+        $id=(int)($filing['id']??0);if($id<=0)continue;
+        $jobId=(int)($filing['job_id']??0);
+        if($jobId>0)$linkedJobs[$jobId]=true;
+        $kind=(string)($filing['kind']??'business');
+        $data=is_array($filing['data']??null)?$filing['data']:[];
+        $draft=(string)($filing['status']??'draft')==='draft';
+        $payment=(string)($filing['payment_status']??'unpaid');
+        $status=iworks_client_state($payment,(string)($filing['job_status']??'pending'),$draft);
+        $items[]=[
+            'key'=>'cac:'.$id,'kind'=>'cac','id'=>$id,
+            'name'=>trim((string)($data['first_choice']??''))?:'CAC registration',
+            'service'=>$kind==='company'?'Company incorporation · Nigeria':'Business name registration · Nigeria',
+            'reference'=>'CAC-'.$id,
+            'status'=>$status,'updated'=>(string)($filing['updated_at']??''),
+            'detail_url'=>$draft?url('cac_filing',['id'=>$id]):($status==='payment'&& !empty($filing['invoice_id'])
+                ? 'invoice.php?id='.(int)$filing['invoice_id'] : url('job',['id'=>$jobId])),
+            'action'=>$draft?'Continue application':($status==='payment'?'Continue payment':'View progress'),
+            'can_delete_draft'=>$draft,'country'=>'Nigeria'
         ];
     }
     foreach ($orders as $order) {
