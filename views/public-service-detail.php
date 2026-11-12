@@ -60,7 +60,7 @@ if ($imageUrl === '') {
             <?php if ($tax > 0): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
           </div>
           <div class="iw-detail-actions">
-            <a class="iw-detail-primary" href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             <a class="iw-detail-secondary" href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="<?= e($serviceName) ?>">Ask a question</a>
           </div>
           <p class="iw-detail-note">Submit requirements and follow updates through your iWorks account.</p>
@@ -123,7 +123,7 @@ if ($imageUrl === '') {
         <a href="<?= e((string) $searchGuide['official']) ?>" rel="noopener noreferrer" target="_blank">official Corporate Affairs Commission guidance</a>.</p>
       <?php endif; ?>
       <p class="iw-search-guide-next">Ready to proceed?
-        <a href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Start your request with iWorks</a>
+        <a href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Start your request with iWorks</a>
         or <a href="<?= e(public_url('contact')) ?>">ask a question</a>.
       </p>
     </div>
