@@ -60,7 +60,13 @@ if ($featuredIds !== []) {
         }
     }
     $pickedSet = array_fill_keys(array_keys($picked), true);
-    $services = array_merge(array_values($picked), array_values(array_filter($services, static fn(array $service): bool => !isset($pickedSet[(int) ($service['id'] ?? 0)]])));
+    $services = array_merge(
+        array_values($picked),
+        array_values(array_filter(
+            $services,
+            static fn(array $service): bool => !isset($pickedSet[(int) ($service['id'] ?? 0)])
+        ))
+    );
 }
 $findServiceUrl = static function (string $query, string $fallbackCategory = '') use ($services): string {
     foreach ($services as $service) {
