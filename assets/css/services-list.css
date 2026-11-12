@@ -156,3 +156,137 @@ body.page-public .iw-service-index-list-head h2 { font-size:.91rem; font-weight:
  .iw-service-custom { display:block; padding:1.3rem; }
  .iw-service-custom a { margin-top:1.05rem; }
 }
+
+
+/* Product-like service artwork: restrained colour, clear prices, no image downloads. */
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row {
+  --iw-tile-start:#fff1e6;
+  --iw-tile-end:#fff9f4;
+  --iw-tile-accent:#dd6216;
+  --iw-tile-icon-bg:#ffe0c7;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:linear-gradient(145deg,var(--iw-tile-start),var(--iw-tile-end));
+  border:1px solid rgba(199,157,132,.24);
+  border-radius:14px;
+  padding:1.4rem 1.3rem 1.15rem;
+  min-height:268px;
+  box-shadow:0 2px 8px rgba(32,42,51,.018);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row[data-tone="1"] {
+  --iw-tile-start:#edf6ff;
+  --iw-tile-end:#f9fcff;
+  --iw-tile-accent:#276ea1;
+  --iw-tile-icon-bg:#d9edff;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row[data-tone="2"] {
+  --iw-tile-start:#eaf7ee;
+  --iw-tile-end:#f8fcf9;
+  --iw-tile-accent:#287450;
+  --iw-tile-icon-bg:#d5f0de;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row[data-tone="3"] {
+  --iw-tile-start:#f3efff;
+  --iw-tile-end:#fbfaff;
+  --iw-tile-accent:#7252a2;
+  --iw-tile-icon-bg:#e8defb;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row::before {
+  content:"";
+  position:absolute;
+  width:160px;
+  height:160px;
+  right:-73px;
+  top:-75px;
+  border:1px solid currentColor;
+  border-radius:50%;
+  opacity:.07;
+  pointer-events:none;
+  z-index:-1;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row::after {
+  content:"";
+  position:absolute;
+  width:98px;
+  height:98px;
+  right:-37px;
+  top:-35px;
+  border:1px solid currentColor;
+  border-radius:50%;
+  opacity:.065;
+  pointer-events:none;
+  z-index:-1;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row:hover {
+  transform:translateY(-3px);
+  border-color:color-mix(in srgb,var(--iw-tile-accent) 28%,transparent);
+  box-shadow:0 15px 28px rgba(35,45,55,.09);
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-icon {
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  width:59px;
+  height:59px;
+  margin:0 0 .2rem;
+  border-radius:15px;
+  background:var(--iw-tile-icon-bg);
+  color:var(--iw-tile-accent);
+  font-size:1.72rem;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-category {
+  color:var(--iw-tile-accent);
+  font-weight:650;
+  letter-spacing:.01em;
+  margin:0 0 .35rem;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-name {
+  color:#252f38;
+  font-weight:700;
+  font-size:1.03rem;
+  letter-spacing:-.02em;
+  line-height:1.4;
+  margin:0;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-description {
+  color:#64727f;
+  margin:.55rem 0 0;
+  line-height:1.6;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-end {
+  border-top:1px solid rgba(51,67,80,.1);
+  padding-top:.9rem;
+  margin-top:auto;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-pricing strong {
+  color:#26323c;
+  font-size:.95rem;
+}
+body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-arrow {
+  color:var(--iw-tile-accent);
+  background:rgba(255,255,255,.66);
+  border:1px solid rgba(62,75,86,.1);
+  width:33px;
+  height:33px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+}
+@media(max-width:950px) {
+  body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row { min-height:245px; }
+}
+@media(max-width:650px) {
+  body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row {
+    min-height:215px;
+    padding:1.25rem 1.15rem;
+  }
+  body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-name { font-size:1rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row {
+    transition:none;
+  }
+  body.page-public .iw-service-index-list[data-layout="grid"] .iw-service-index-row:hover {transform:none;}
+}
