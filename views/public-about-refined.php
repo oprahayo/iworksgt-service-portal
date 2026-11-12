@@ -89,7 +89,8 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
   <section class="iw-inner-last">
     <div class="container public-container">
       <div><h2><?= e($bannerTitle) ?></h2><p>Explore our services or contact our team before ordering.</p></div>
-      <a href="<?= e(public_url('contact')) ?>">Contact iWorks <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      <a class="iw-clean-btn iw-clean-btn-primary iw-about-last-action" href="<?= e(public_url('contact')) ?>">Contact iWorks <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     </div>
   </section>
+  <?php require __DIR__ . '/partials/public-review-carousel.php'; ?>
 </main>
