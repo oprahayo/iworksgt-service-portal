@@ -27,6 +27,7 @@ $banner = $sections['cta_banner'] ?? [];
 $defaultHeadlines = [
     'Launch and grow your business remotely with iWorks Global.',
     'Launch and grow your business remotely with iWorks Global',
+    'Start, protect and grow your business.',
 ];
 $oldHeadline = trim((string) ($hero['headline'] ?? ''));
 $headline = $oldHeadline !== '' && !in_array($oldHeadline, $defaultHeadlines, true)
@@ -35,6 +36,7 @@ $headline = $oldHeadline !== '' && !in_array($oldHeadline, $defaultHeadlines, tr
 
 $defaultIntroductions = [
     'CAC registration, trademark filing, NAFDAC-related support, branding, growth services, and structured business operations handled in one portal.',
+    'Business registration, trademark and digital services. Simple steps, helpful support and updates in one place.',
 ];
 $oldIntroduction = trim((string) ($hero['subheadline'] ?? ''));
 $introduction = $oldIntroduction !== '' && !in_array($oldIntroduction, $defaultIntroductions, true)
