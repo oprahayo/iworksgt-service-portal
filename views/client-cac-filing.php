@@ -171,6 +171,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
             <small><?= $business ? e(ucfirst((string)($filing['structure']??'sole'))) . ' · ' . count($people) . ' proprietor(s)' : count($people) . ' director(s)/owner(s)' ?></small>
           </div>
         <?php endif; ?>
+        <button type="button" class="iw-client-button iw-client-button-soft mb-3" onclick="window.location.reload()"><i class="bi bi-arrow-clockwise"></i> Check uploaded documents & refresh review</button>
         <?php if ($cacErrors !== []): ?>
           <div class="iw-cac-validation" role="status"><strong>Before checkout:</strong>
             <ul><?php foreach (array_slice($cacErrors,0,15) as $error): ?><li><?= e((string)$error) ?></li><?php endforeach; ?></ul>
