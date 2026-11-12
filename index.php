@@ -1145,6 +1145,118 @@ try {
             ], JSON_UNESCAPED_SLASHES);
             break;
 
+        case 'applications':
+            require_roles(['client']);
+            trademark_ensure_schema();
+            $client = current_user();
+            $trademarkApplications = trademark_list((int) $client['id']);
+            $existingOrders = list_accessible_jobs($client, ['page'=>1, 'per_page'=>25, 'sort'=>'newest']);
+            $title = 'My Applications - ' . app_name();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/client-applications.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
+        case 'trademark_file':
+            require_roles(['client']);
+            trademark_ensure_schema();
+            $application = trademark_find((int) ($_GET['id'] ?? 0), (int) current_user()['id']);
+            $name = (string) ($application['logo_filename'] ?? '');
+            if (!preg_match('/^[a-f0-9]{32}\.(jpg|png|webp)$/D', $name)) {
+                http_response_code(404);
+                exit('File not found.');
+            }
+            $filePath = trademark_private_logo_dir() . '/' . $name;
+            if (!is_file($filePath)) {
+                http_response_code(404);
+                exit('File not found.');
+            }
+            $extension = (string) pathinfo($name, PATHINFO_EXTENSION);
+            $mimeType = ['jpg'=>'image/jpeg', 'png'=>'image/png', 'webp'=>'image/webp'][$extension];
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . filesize($filePath));
+            header('Cache-Control: private, no-store');
+            header('Content-Security-Policy: default-src \'none\'; sandbox');
+            header('X-Content-Type-Options: nosniff');
+            readfile($filePath);
+            exit;
+
+        case 'trademark':
+            require_roles(['client']);
+            trademark_ensure_schema();
+            $clientId = (int) current_user()['id'];
+            $appId = max(0, (int) ($_GET['id'] ?? $_POST['id'] ?? 0));
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $action = (string) ($_POST['form_action'] ?? '');
+                    if ($action === 'delete_draft') {
+                        trademark_delete_draft($appId, $clientId);
+                        flash('success', 'Draft application deleted.');
+                        redirect(url('applications'));
+                    }
+                    if (in_array($action, ['save_draft', 'review_draft'], true)) {
+                        $data = trademark_form_values($_POST);
+                        $savedId = trademark_save_draft($clientId, $appId, $data, $_FILES['mark_logo'] ?? null);
+                        if ($action === 'review_draft') {
+                            $saved = trademark_find($savedId, $clientId);
+                            trademark_validate_complete($saved['data'], !empty($saved['logo_filename']));
+                            redirect(url('trademark', ['id'=>$savedId, 'step'=>'review']));
+                        }
+                        flash('success', 'Your application draft has been saved.');
+                        redirect(url('trademark', ['id'=>$savedId]));
+                    }
+                    if ($action === 'submit_for_payment') {
+                        if ($appId <= 0) { throw new RuntimeException('Save the application before proceeding.'); }
+                        $invoiceId = trademark_checkout($appId, $clientId);
+                        iworks_order_intent_clear();
+                        flash('success', 'Review your payment options to finalise your trademark application.');
+                        redirect(url('trademark', ['id'=>$appId, 'step'=>'payment']));
+                    }
+                    throw new RuntimeException('Unknown application action.');
+                } catch (Throwable $e) {
+                    flash('error', $e->getMessage());
+                    redirect(url('trademark', $appId > 0 ? ['id'=>$appId] : []));
+                }
+            }
+            $trademarkApplication = $appId > 0 ? trademark_find($appId, $clientId) : null;
+            if ($appId > 0 && !$trademarkApplication) {
+                http_response_code(404);
+                exit('Application not found.');
+            }
+            $trademarkData = $trademarkApplication['data'] ?? [];
+            $trademarkStage = (string) ($_GET['step'] ?? 'details');
+            if (!in_array($trademarkStage, ['details','review','payment'], true)) { $trademarkStage = 'details'; }
+            if ($trademarkApplication && $trademarkApplication['status'] !== 'draft') {
+                $trademarkStage = 'payment';
+            } elseif ($trademarkStage === 'payment') {
+                $trademarkStage = 'review';
+            }
+            if ($trademarkStage === 'review') {
+                try {
+                    trademark_validate_complete($trademarkData, !empty($trademarkApplication['logo_filename']));
+                } catch (Throwable $e) {
+                    flash('error', $e->getMessage());
+                    redirect(url('trademark', ['id'=>$appId]));
+                }
+            }
+            $trademarkUnit = trademark_price_usd();
+            $trademarkFxRate = (float) fx_ngn_per_usd();
+            $trademarkQuote = trademark_quote(
+                $trademarkData['classes'] ?? [],
+                $trademarkData['currency'] ?? 'USD',
+                $trademarkUnit,
+                $trademarkFxRate
+            );
+            $trademarkMethods = $trademarkStage === 'payment'
+                ? list_available_payment_methods_for_currency((string) ($trademarkApplication['pay_currency'] ?? 'USD'))
+                : [];
+            $title = 'Trademark Application - ' . app_name();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/client-trademark.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
         case 'dashboard':
             require_login();
             $user = current_user();
@@ -1157,6 +1269,16 @@ try {
                 }
 
                 redirect(url('dashboard'));
+            }
+
+            if (($user['role'] ?? '') === 'client') {
+                trademark_ensure_schema();
+                $trademarkApplications = trademark_list((int) $user['id']);
+                $title = 'New Application - ' . app_name();
+                require __DIR__ . '/views/partials/header.php';
+                require __DIR__ . '/views/client-dashboard.php';
+                require __DIR__ . '/views/partials/footer.php';
+                break;
             }
 
             $stats = counts_for_dashboard($user);
