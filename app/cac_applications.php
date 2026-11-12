@@ -244,6 +244,36 @@ function cac_list_files(int $id,int $clientId): array
     return db_all('SELECT id,field_key,original_name,mime,file_size FROM cac_application_files
         WHERE application_id=:id AND client_id=:client ORDER BY id ASC',['id'=>$id,'client'=>$clientId]);
 }
+/**
+ * If an applicant is removed or their legal identity changes, old ID and
+ * signature attachments must NOT silently transfer to the replacement person.
+ * Keep private files only for the people currently described in the draft.
+ */
+function cac_prune_old_person_documents(int $clientId,int $id,array $before,array $after): void
+{
+    $oldPeople=is_array($before['people'] ?? null)?$before['people']:[];
+    $newPeople=is_array($after['people'] ?? null)?$after['people']:[];
+    $files=cac_list_files($id,$clientId);
+    foreach ($files as $file) {
+        $key=(string) ($file['field_key'] ?? '');
+        if (!preg_match('/^person_([0-9]+)_(?:id|photo|signature)$/D',$key,$parts)) { continue; }
+        $pos=(int) $parts[1];
+        $beforePerson=$oldPeople[$pos] ?? null;
+        $afterPerson=$newPeople[$pos] ?? null;
+        $same=is_array($beforePerson) && is_array($afterPerson)
+            && (string) ($beforePerson['full_name'] ?? '') === (string) ($afterPerson['full_name'] ?? '')
+            && (string) ($beforePerson['id_number'] ?? '') === (string) ($afterPerson['id_number'] ?? '')
+            && (string) ($beforePerson['date_of_birth'] ?? '') === (string) ($afterPerson['date_of_birth'] ?? '');
+        if ($same) { continue; }
+        db_execute('DELETE FROM cac_application_files WHERE application_id=:id AND client_id=:client AND field_key=:field',
+            ['id'=>$id,'client'=>$clientId,'field'=>$key]);
+        $name=basename((string) ($file['storage_name'] ?? ''));
+        if (preg_match('/^[a-f0-9]{36}\.(?:jpg|png|webp|pdf)$/D',$name)) {
+            @unlink(cac_private_dir().'/'.$name);
+        }
+    }
+}
+
 function cac_save_draft(int $clientId,int $id,array $data): int
 {
     $old=$id>0?cac_find($id,$clientId):null;
@@ -258,6 +288,7 @@ function cac_save_draft(int $clientId,int $id,array $data): int
         db_execute('UPDATE cac_applications SET payload_json=:data,updated_at=:updated
             WHERE id=:id AND client_id=:client AND status=:status',
             ['data'=>$json,'updated'=>now(),'id'=>$id,'client'=>$clientId,'status'=>'draft']);
+        cac_prune_old_person_documents($clientId,$id,$old['data'] ?? [],$data);
         return $id;
     }
     db_execute('INSERT INTO cac_applications (client_id,kind,status,payload_json,created_at,updated_at)
@@ -284,7 +315,7 @@ function cac_upload_file(int $clientId,int $id,string $fieldKey,?array $file): a
         throw new RuntimeException('Upload did not complete. Select the file again.');
     }
     $size=(int) ($file['size'] ?? 0);
-    if ($size<1 || $size>6*1024*1024) { throw new RuntimeException('File must be between 1 byte and 6 MB.'); }
+    if ($size<1 || $size>5*1024*1024) { throw new RuntimeException('File must be between 1 byte and 5 MB.'); }
     $mime=(new finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
     $isPhoto=str_ends_with($fieldKey,'_photo');
     $allowed=$isPhoto?['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp']:
