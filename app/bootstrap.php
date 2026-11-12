@@ -63,12 +63,14 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/domain.php';
+require_once __DIR__ . '/job_reviews.php';
 require_once __DIR__ . '/file_access.php';
 
 if (is_configured()) {
     try {
         ensure_crypto_schema_upgrades();
         ensure_media_schema_upgrades();
+        ensure_job_review_schema();
     } catch (Throwable $e) {
         // Ignore runtime schema patch failures in bootstrap.
     }
