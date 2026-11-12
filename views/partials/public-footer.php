@@ -150,6 +150,43 @@ $socialIcons = [
       </div>
     </div>
   </footer>
+
+  <!-- Authentication is framed from the portal origin, so CSRF and cookies
+       remain owned by the existing backend. A direct link is always available. -->
+  <dialog class="iw-public-dialog iw-auth-dialog" id="iwPublicAuthDialog" aria-labelledby="iwPublicAuthTitle">
+    <div class="iw-public-dialog-head">
+      <h2 id="iwPublicAuthTitle">Your iWorks account</h2>
+      <button type="button" data-iw-dialog-close aria-label="Close account window"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+    <div class="iw-auth-dialog-tabs" role="group" aria-label="Account action">
+      <button type="button" data-iw-auth-tab="login" aria-pressed="true">Sign in</button>
+      <button type="button" data-iw-auth-tab="register" aria-pressed="false">Create account</button>
+    </div>
+    <iframe id="iwPublicAuthFrame" title="Secure iWorks account access" loading="lazy"
+       data-login="<?= e(portal_url('login', ['embed' => '1'])) ?>"
+       data-register="<?= e(portal_url('register', ['embed' => '1'])) ?>"></iframe>
+    <p class="iw-auth-dialog-fallback">Having trouble? <a id="iwAuthDirectLink" href="<?= e(portal_url('login')) ?>" data-login-direct="<?= e(portal_url('login')) ?>" data-register-direct="<?= e(portal_url('register')) ?>">Open secure sign in</a>.</p>
+  </dialog>
+
+  <dialog class="iw-public-dialog iw-help-dialog" id="iwPublicHelpDialog" aria-labelledby="iwPublicHelpTitle">
+    <div class="iw-public-dialog-head">
+      <h2 id="iwPublicHelpTitle">Ask the iWorks team</h2>
+      <button type="button" data-iw-dialog-close aria-label="Close support window"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+    <p class="iw-help-dialog-intro">Tell us what you need. This message goes to our team, not an automated chatbot.</p>
+    <form method="post" action="<?= e(public_url('home')) ?>" class="iw-help-dialog-form">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="form_action" value="website_lead">
+      <label for="iwHelpName">Full name</label>
+      <input id="iwHelpName" name="full_name" autocomplete="name" maxlength="150" required>
+      <label for="iwHelpEmail">Email</label>
+      <input id="iwHelpEmail" name="email" type="email" autocomplete="email" maxlength="254" required>
+      <label for="iwHelpMessage">How can we help?</label>
+      <textarea id="iwHelpMessage" name="message" rows="4" maxlength="5000" required></textarea>
+      <button type="submit">Send enquiry <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+    </form>
+  </dialog>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     (function () {
@@ -308,5 +345,78 @@ $socialIcons = [
       });
     })();
   </script>
+<script>
+(function () {
+  'use strict';
+  var auth = document.getElementById('iwPublicAuthDialog');
+  var help = document.getElementById('iwPublicHelpDialog');
+  var frame = document.getElementById('iwPublicAuthFrame');
+  var direct = document.getElementById('iwAuthDirectLink');
+  var tabs = document.querySelectorAll('[data-iw-auth-tab]');
+  var currentTrigger = null;
+  function setAuthMode(mode) {
+    if (!frame || !direct) return;
+    mode = mode === 'register' ? 'register' : 'login';
+    var target = frame.getAttribute('data-' + mode);
+    if (target && frame.getAttribute('src') !== target) frame.setAttribute('src', target);
+    direct.href = direct.getAttribute('data-' + mode + '-direct') || target;
+    direct.textContent = mode === 'login' ? 'Open secure sign in' : 'Open registration';
+    tabs.forEach(function (tab) { tab.setAttribute('aria-pressed', tab.getAttribute('data-iw-auth-tab') === mode ? 'true' : 'false'); });
+  }
+  function show(dialog, trigger) {
+    if (!dialog || typeof dialog.showModal !== 'function') return false;
+    currentTrigger = trigger || null;
+    dialog.showModal();
+    return true;
+  }
+  document.addEventListener('click', function (event) {
+    var authTrigger = event.target.closest('[data-iw-auth]');
+    if (authTrigger) {
+      if (!auth || typeof auth.showModal !== 'function') return;
+      event.preventDefault();
+      setAuthMode(authTrigger.getAttribute('data-iw-auth'));
+      show(auth, authTrigger);
+      return;
+    }
+    var helpTrigger = event.target.closest('[data-iw-help-open]');
+    if (helpTrigger) {
+      if (!help || typeof help.showModal !== 'function') return;
+      event.preventDefault();
+      show(help, helpTrigger);
+      return;
+    }
+    var tab = event.target.closest('[data-iw-auth-tab]');
+    if (tab) { setAuthMode(tab.getAttribute('data-iw-auth-tab')); return; }
+    var close = event.target.closest('[data-iw-dialog-close]');
+    if (close) {
+      var parentDialog = close.closest('dialog');
+      if (parentDialog) parentDialog.close();
+    }
+  });
+  [auth, help].forEach(function (dialog) {
+    if (!dialog) return;
+    dialog.addEventListener('click', function (event) { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener('close', function () {
+      if (dialog === auth && frame) frame.removeAttribute('src');
+      if (currentTrigger && typeof currentTrigger.focus === 'function') currentTrigger.focus();
+    });
+  });
+  // Ambient, reduced-motion-friendly entrance animation with no external library.
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var targets = document.querySelectorAll('.iw-clean-service, .iw-clean-step, .iw-home-review-summary, .iw-about-min-story, .iw-clean-support');
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('iw-polish-in');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.08 });
+    targets.forEach(function (target) {
+      target.classList.add('iw-polish-ready');
+      observer.observe(target);
+    });
+  }
+})();
+</script>
 </body>
 </html>
