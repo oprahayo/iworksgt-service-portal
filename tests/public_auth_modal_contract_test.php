@@ -25,15 +25,18 @@ foreach (['first_name','last_name','email','phone','country','state_region','cit
 }
 assert_contract(str_contains($register, 'csrf_token'), 'Registration CSRF missing.');
 assert_contract(str_contains($register, 'target="_top"'), 'Modal registration must submit to top-level portal.');
-assert_contract(str_contains($bootstrap, 'frame-ancestors'), 'Embedded auth needs an allowlisted CSP frame policy.');
-assert_contract(str_contains($bootstrap, "in_array(\$embedPage, ['login', 'register'], true)"), 'Framing scope must exclude other pages.');
-assert_contract(str_contains($bootstrap, "['https', 'http']"), 'Configured public origin needs scheme validation.');
+assert_contract(!str_contains($bootstrap, 'frame-ancestors'), 'Native auth modal must not require a framing allowance.');
+assert_contract(!str_contains($guest, '<iframe'), 'Native modal must not embed browser-like iframe content.');
+assert_contract(str_contains($guest, "require __DIR__ . '/../login.php'"), 'Dialog must render the existing login form directly.');
+assert_contract(str_contains($guest, "require __DIR__ . '/../register.php'"), 'Dialog must render the existing registration form directly.');
+assert_contract(str_contains($guest, 'data-iw-auth-pane="login"') && str_contains($guest, 'data-iw-auth-pane="register"'), 'Auth popup must have two switchable native panels.');
+assert_contract(str_contains($guest, "new URL(authTrigger.href, window.location.href).origin !== window.location.origin"), 'Cross-origin auth must fall back to the secure portal.');
 assert_contract(str_contains($bootstrap, "header('X-Frame-Options: SAMEORIGIN')"), 'Normal pages must remain frame-protected.');
 assert_contract(str_contains($router, '/views/partials/auth-embed-header.php'), 'Modal routes must select the dedicated auth shell.');
 assert_contract(str_contains($router, '/views/partials/auth-embed-footer.php'), 'Modal routes must close the dedicated auth shell.');
 assert_contract(str_contains($router, 'authenticate_with_password('), 'Existing password verification must remain unchanged.');
 assert_contract(str_contains($router, 'start_otp_challenge('), 'OTP must remain in the login flow.');
-assert_contract(str_contains($guest, 'data-login=') && str_contains($guest, 'data-register='), 'Public modal must load portal auth forms.');
+assert_contract(str_contains($guest, 'setAuthMode(') && str_contains($guest, 'iwPublicAuthContent'), 'Native account popup needs working panel switching.');
 assert_contract(str_contains($guest, 'data-iw-dialog-close'), 'Auth modal must have a close action.');
 assert_contract(str_contains($guest, 'data-iw-help-open'), 'Support dialog should be accessible.');
 assert_contract(str_contains($header, 'data-iw-auth="login"'), 'Header sign-in must open secure popup.');
