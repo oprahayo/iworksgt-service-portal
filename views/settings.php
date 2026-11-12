@@ -119,6 +119,39 @@
 
   <div class="accordion-item">
     <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#settingCacPricing"
+        aria-expanded="false" aria-controls="settingCacPricing">
+        <i class="bi bi-building me-2"></i> CAC Registration Pricing
+      </button>
+    </h2>
+    <div class="accordion-collapse collapse" id="settingCacPricing" data-bs-parent="#settingsAccordion">
+      <div class="accordion-body">
+        <p class="small text-muted">Nigerian business name and private limited company pricing. The customer sees a live calculated quote before checkout. Existing issued invoices are not re-priced.</p>
+        <form method="post" action="<?= e(url('settings')) ?>" class="row g-3">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="form_action" value="save_cac_pricing">
+          <?php foreach ([
+            'cac_business_base_ngn'=>['Business Name · base package (₦)','26000','Includes the first proprietor'],
+            'cac_business_extra_partner_ngn'=>['Business Name · additional partner (₦)','15000','Applies per additional proprietor beyond the first'],
+            'cac_company_base_ngn'=>['Private Ltd Company · base package (₦)','0','Leave 0 to use the active company service price'],
+            'cac_company_extra_director_ngn'=>['Company · additional director (₦)','0','Per director beyond the first; set 0 to include'],
+            'cac_company_extra_shareholder_ngn'=>['Company · additional shareholder (₦)','0','Per shareholder beyond the first; set 0 to include'],
+          ] as $name=>$details): ?>
+            <div class="col-lg-6">
+              <label class="form-label" for="<?= e($name) ?>"><?= e($details[0]) ?></label>
+              <input class="form-control" type="number" min="<?= str_contains($name,'business_')?'1':'0' ?>" max="100000000" step="0.01"
+                name="<?= e($name) ?>" id="<?= e($name) ?>" value="<?= e(setting($name,$details[1])) ?>" required>
+              <small class="text-muted"><?= e($details[2]) ?></small>
+            </div>
+          <?php endforeach; ?>
+          <div class="col-12"><button type="submit" class="btn btn-primary">Save CAC price attributes</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#settingPartnerLogos" aria-expanded="false" aria-controls="settingPartnerLogos">
         Partner Logos
       </button>
