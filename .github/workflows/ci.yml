@@ -31,6 +31,7 @@ jobs:
         run: |
           bash -n scripts/deploy_site_polish.sh
           bash -n scripts/deploy_business_photos.sh
+          bash -n scripts/deploy_businesshub_home.sh
 
       - name: Run smoke tests
         run: |
@@ -39,3 +40,4 @@ jobs:
           php tests/public_services_template_test.php
           php tests/public_about_template_test.php
           php tests/public_photo_config_test.php
+          php tests/public_businesshub_home_test.php
