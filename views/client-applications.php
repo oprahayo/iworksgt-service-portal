@@ -1,58 +1,65 @@
 <?php
-$paidLinkedJobs = [];
-foreach ($trademarkApplications as $app) {
-    if (!empty($app['job_id'])) { $paidLinkedJobs[(int) $app['job_id']] = true; }
-}
+$filters = [
+  'all'=>'All', 'draft'=>'Drafts', 'payment'=>'Awaiting payment',
+  'progress'=>'In progress', 'completed'=>'Completed', 'cancelled'=>'Cancelled',
+];
+$visibleItems = $activeClientStatus === 'all' ? $clientServiceItems : array_values(array_filter(
+  $clientServiceItems, static fn(array $item): bool => $item['status'] === $activeClientStatus
+));
+$countByStatus = array_fill_keys(array_keys($filters), 0);
+$countByStatus['all'] = count($clientServiceItems);
+foreach ($clientServiceItems as $item) { $countByStatus[$item['status']] = ($countByStatus[$item['status']] ?? 0) + 1; }
 ?>
 <div class="iw-client-heading iw-client-heading-row">
-  <div><span class="iw-client-eyebrow">APPLICATIONS</span><h1>My applications</h1>
-    <p>View drafts, resume an application or continue to payment.</p></div>
-  <a class="iw-client-button" href="<?= e(url('dashboard')) ?>"><i class="bi bi-plus"></i> New application</a>
+  <div><span class="iw-client-eyebrow">YOUR WORKSPACE</span><h1>My services</h1>
+    <p>All your applications, orders and projects in one place. Each request appears once.</p>
+  </div>
+  <a class="iw-client-button" href="<?= e(url('dashboard')) ?>"><i class="bi bi-plus-lg"></i> New service</a>
 </div>
-<section class="iw-client-application-list" aria-label="Trademark applications">
-  <?php if ($trademarkApplications === [] && empty($existingOrders['items'])): ?>
-  <div class="iw-client-empty iw-client-empty-large"><i class="bi bi-inbox"></i>
-    <div><strong>No applications here yet</strong><p>When you start an application it will appear here.</p>
-      <a class="iw-client-button" href="<?= e(url('trademark')) ?>">Start trademark application</a></div></div>
-  <?php endif; ?>
-  <?php foreach ($trademarkApplications as $application): ?>
-    <?php
-      $appData = $application['data'] ?? [];
-      $draft = $application['status'] === 'draft';
-      $paid = ($application['payment_status'] ?? '') === 'paid';
-      $status = $draft ? 'Draft' : ($paid ? 'Paid' : 'Awaiting payment');
-      $target = url('trademark', ['id'=>(int) $application['id'], 'step'=>$draft ? 'details':'payment']);
-    ?>
+<nav class="iw-client-status-filters" aria-label="Filter services by status">
+  <?php foreach ($filters as $status=>$label): ?>
+    <a href="<?= e(url('applications', $status==='all'?[]:['status'=>$status])) ?>"
+      <?= $activeClientStatus === $status ? 'aria-current="page"' : '' ?>>
+      <?= e($label) ?><span><?= (int) ($countByStatus[$status] ?? 0) ?></span>
+    </a>
+  <?php endforeach; ?>
+</nav>
+<section class="iw-client-application-list" aria-label="Your service requests">
+<?php if ($visibleItems === []): ?>
+  <div class="iw-client-empty iw-client-empty-large">
+    <i class="bi bi-inbox" aria-hidden="true"></i>
+    <div><strong><?= $activeClientStatus === 'all' ? 'No services yet' : 'Nothing in this category' ?></strong>
+      <p>Start a service whenever you're ready; it will appear here.</p>
+      <a class="iw-client-button" href="<?= e(url('dashboard')) ?>">Explore services</a>
+    </div>
+  </div>
+<?php else: ?>
+  <?php foreach ($visibleItems as $item): ?>
     <article class="iw-client-application">
       <div class="iw-client-application-main">
-        <div class="iw-client-application-meta"><span class="iw-client-country">Nigeria</span><span class="iw-client-status"><?= e($status) ?></span></div>
-        <small>Trademark · TM-<?= (int) $application['id'] ?></small>
-        <h2><?= e((string) (($appData['mark_name'] ?? '') ?: 'Untitled trademark application')) ?></h2>
-        <p><?= count($appData['classes'] ?? []) ?> selected class(es) · Updated <?= e((string) $application['updated_at']) ?></p>
+        <div class="iw-client-application-meta">
+          <span class="iw-client-country"><?= e((string) $item['service']) ?></span>
+          <span class="iw-client-status" data-state="<?= e((string) $item['status']) ?>"><?= e(iworks_client_state_label((string) $item['status'])) ?></span>
+        </div>
+        <small><?= e((string) $item['reference']) ?> · Updated <?= e((string) $item['updated']) ?></small>
+        <h2><?= e((string) $item['name']) ?></h2>
       </div>
       <div class="iw-client-application-actions">
-        <a class="iw-client-button <?= $draft ? '' : 'iw-client-button-soft' ?>" href="<?= e($target) ?>"><?= $draft ? 'Continue application' : 'View payment' ?> <i class="bi bi-arrow-right"></i></a>
-        <?php if ($draft): ?>
-        <form method="post" action="<?= e(url('trademark', ['id'=>(int) $application['id']])) ?>" onsubmit="return confirm('Delete this draft application? This cannot be undone.');">
-          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-          <input type="hidden" name="form_action" value="delete_draft">
-          <input type="hidden" name="id" value="<?= (int) $application['id'] ?>">
-          <button type="submit" class="iw-client-delete"><i class="bi bi-trash3"></i> Delete draft</button>
-        </form>
+        <a class="iw-client-button <?= $item['status']==='payment'?'':'iw-client-button-soft' ?>"
+           href="<?= e((string) $item['detail_url']) ?>"><?= e((string) $item['action']) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <?php if (!empty($item['can_delete_draft'])): ?>
+          <form method="post" action="<?= e(url('trademark',['id'=>(int) $item['id']])) ?>" onsubmit="return confirm('Delete this draft application? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="form_action" value="delete_draft">
+            <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
+            <button class="iw-client-delete" type="submit"><i class="bi bi-trash3"></i> Delete draft</button>
+          </form>
         <?php endif; ?>
       </div>
     </article>
   <?php endforeach; ?>
-  <?php foreach (is_array($existingOrders['items'] ?? null) ? $existingOrders['items'] : [] as $order): ?>
-    <?php if (isset($paidLinkedJobs[(int) ($order['id'] ?? 0)])) { continue; } ?>
-    <article class="iw-client-application">
-      <div class="iw-client-application-main">
-        <div class="iw-client-application-meta"><span class="iw-client-country">Service order</span><span class="iw-client-status"><?= e(ucfirst((string) ($order['payment_status'] ?? 'unpaid'))) ?></span></div>
-        <small><?= e((string) ($order['job_code'] ?? '')) ?></small>
-        <h2><?= e((string) ($order['title'] ?? $order['service_name'] ?? 'Service')) ?></h2>
-        <p>Created <?= e((string) ($order['created_at'] ?? '')) ?></p>
-      </div>
-      <a class="iw-client-button iw-client-button-soft" href="<?= e(url('job', ['id'=>(int) $order['id']])) ?>">View order <i class="bi bi-arrow-right"></i></a>
-    </article>
-  <?php endforeach; ?>
+<?php endif; ?>
 </section>
+<?php if ((int) ($existingOrders['pagination']['total'] ?? 0) > 100): ?>
+  <p class="iw-client-archive-note">This overview displays the latest 100 service orders. Older records remain preserved in your account; contact support if you need an older order.</p>
+<?php endif; ?>
