@@ -225,7 +225,9 @@ try {
             redirect(public_url($publicSlug));
         }
 
-        if ($publicSlug === 'track' && method_is('POST')) {
+        if (in_array($publicSlug, ['track', 'home'], true)
+            && method_is('POST')
+            && ($publicSlug === 'track' || (string) ($_POST['form_action'] ?? '') === 'public_track')) {
             require_csrf();
             $jobCode = trim((string) ($_POST['job_code'] ?? ''));
             $identifier = trim((string) ($_POST['identifier'] ?? ''));
