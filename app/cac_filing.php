@@ -219,6 +219,9 @@ function cac_filing_missing(array $row): array {
                 $errors[]='Person '.($i+1).': '.$label.' must be uploaded.';
     }
     if ($row['kind']==='company') {
+        if (($d['company_type'] ?? 'private_limited') !== 'private_limited') {
+            $errors[]='Companies limited by guarantee require a specialist quote and regulatory review. Contact iWorks support before ordering.';
+        }
         if(!is_numeric($d['share_capital']??null) || (float)$d['share_capital']<=0)$errors[]='Company share capital is required.';
         // Company ownership can involve corporate shareholders; staff verifies
         // the full share/PSC structure before any CAC submission.
