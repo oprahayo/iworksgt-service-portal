@@ -138,6 +138,14 @@ try {
         }
     }
 
+    // Keep portal accounts, invoices, OAuth callbacks and dashboard URLs
+    // out of public search results. Published marketing URLs live on apex.
+    if (should_enforce_split_domain()
+        && request_host() === configured_host(portal_base_url())
+        && !in_array($page, $publicPageSlugs, true)) {
+        header('X-Robots-Tag: noindex, nofollow');
+    }
+
     if (is_logged_in()) {
         $mustChangeUser = current_user();
         if (
