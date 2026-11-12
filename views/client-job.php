@@ -201,7 +201,8 @@ $missingRequired = count(array_filter($visibleIntake, static fn(array $s): bool 
     <section class="iw-client-detail-panel iw-client-support-panel">
       <i class="bi bi-headset"></i>
       <h2>Need assistance?</h2>
-      <p>Use Messages to contact our team about this specific service. Your history stays attached to the request.</p>
+      <p>Use Messages for routine updates, or open a support ticket linked to this service.</p>
+      <a class="iw-client-button iw-client-button-soft" href="<?= e(url('support',['related_job_id'=>(int) $job['id']])) ?>"><i class="bi bi-headset"></i> Open support ticket</a>
     </section>
   </aside>
 </div>
