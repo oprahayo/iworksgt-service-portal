@@ -59,7 +59,7 @@ ob_start();
 require __DIR__ . '/../views/public-home-clean.php';
 $html = (string) ob_get_clean();
 
-check_home(str_contains($html, 'Start, protect and grow your business.'), 'Old default hero headline should become concise.');
+check_home(str_contains($html, 'Business registration and website design in Nigeria.'), 'Homepage H1 must describe Nigerian business services.');
 check_home(!str_contains($html, 'NAFDAC-related support, branding, growth services'), 'Legacy default intro should not clutter the hero.');
 check_home(str_contains($html, '/uploads/real-client-hero.webp'), 'CMS-selected hero image must take precedence.');
 check_home(str_contains($html, 'What do you need help with?'), 'Default services heading should be short.');
