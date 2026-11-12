@@ -154,7 +154,7 @@ function trademark_decode(array $row): array
 function trademark_find(int $id, int $clientId): ?array
 {
     if ($id <= 0 || $clientId <= 0) { return null; }
-    $row = db_one('SELECT tm.*, j.payment_status FROM trademark_applications tm
+    $row = db_one('SELECT tm.*, j.payment_status, j.status AS job_status FROM trademark_applications tm
         LEFT JOIN jobs j ON j.id = tm.job_id
         WHERE tm.id = :id AND tm.client_id = :client_id LIMIT 1',
         ['id'=>$id,'client_id'=>$clientId]);
@@ -291,7 +291,7 @@ function trademark_checkout(int $id, int $clientId): int
             'description'=>$description,
             'amount'=>$quote['total'],'currency'=>$quote['currency'],'pay_currency'=>$quote['currency'],
             'tax_percent'=>0,'checkout_pay_method'=>'card','payment_status'=>'unpaid',
-        ]);
+        ], ['skip_duplicate_intake' => true]);
         $invoice = get_invoice_by_job_id($jobId);
         if (!$invoice) { throw new RuntimeException('Invoice could not be generated.'); }
         db_execute('UPDATE trademark_applications

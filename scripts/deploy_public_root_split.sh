@@ -38,12 +38,12 @@ printf 'Current public index: '
 # A successful --check is therefore a useful predictor of an --apply preflight.
 
 FILES=(
-  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/domain.php
-  index.php .htaccess views/settings.php views/login.php views/register.php
+  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/client_workspace.php app/domain.php
+  index.php invoice.php .htaccess views/settings.php views/login.php views/register.php
   views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/jobs.php
-  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php
+  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php views/client-profile.php views/client-job.php
   views/partials/public-header.php views/partials/public-footer.php views/partials/header.php views/partials/client-header.php
-  assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css
+  assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css assets/css/client-checkout.css
   scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php scripts/migrate_stripe_card_vault.php
 )
 ROOT_FILES=(index.php .htaccess)
@@ -110,6 +110,10 @@ grep -Fq -- 'function stripe_vault_start_setup' "$WORK/portal/app/stripe_card_va
 grep -Fq -- "case 'card_vault':" "$WORK/portal/index.php" || fail 'Card vault route is missing'
 grep -Fq -- 'stripe_vault_customer_id' "$WORK/portal/app/domain.php" || fail 'Missing Stripe saved-card checkout integration'
 grep -Fq -- 'iw-client-services' "$WORK/portal/views/client-dashboard.php" || fail 'Missing application dashboard'
+grep -Fq -- 'iworks_client_service_items' "$WORK/portal/app/client_workspace.php" || fail 'Unified customer service records missing'
+grep -Fq -- 'iw-client-detail-grid' "$WORK/portal/views/client-job.php" || fail 'Client order tracking view missing'
+grep -Fq -- 'iw-invoice-main-grid' "$WORK/portal/invoice.php" || fail 'Redesigned payment page missing'
+grep -Fq -- 'iw-client-profile-grid' "$WORK/portal/views/client-profile.php" || fail 'Client profile missing'
 grep -Fq -- '185' "$WORK/portal/app/trademark_applications.php" || fail 'Missing price default'
 grep -Fq -- "portal.iworksgt.com/index.php" "$WORK/root/index.php" || fail 'Missing delegated public controller'
 grep -Fq -- "RewriteRule ^sitemap" "$WORK/root/.htaccess" || fail 'Missing public sitemap rewrite'

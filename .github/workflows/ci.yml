@@ -66,6 +66,7 @@ jobs:
           php tests/order_resume_contract_test.php
           php tests/trademark_pricing_test.php
           php tests/stripe_card_vault_contract_test.php
+          php tests/client_workspace_unification_test.php
 
       - name: Validate public interaction JavaScript
         run: node --check assets/js/public-ux.js

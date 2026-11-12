@@ -4812,7 +4812,7 @@ function calc_commission_amount(float $amount, float $percent): float
     return round(($amount * $percent) / 100, 2);
 }
 
-function create_job(array $input): int
+function create_job(array $input, array $trustedOptions = []): int
 {
     $service = get_service((int) $input['service_id']);
 
@@ -4977,7 +4977,11 @@ function create_job(array $input): int
     );
 
     maybe_accrue_commission($jobId);
-    maybe_prepare_job_intake_requirements($jobId, (int) $input['created_by'], 'job_created');
+    // Trademark wizard already captures all core trademark filing fields.
+    // Only server-side callers can pass this option; it is NOT read from POST.
+    if (empty($trustedOptions['skip_duplicate_intake'])) {
+        maybe_prepare_job_intake_requirements($jobId, (int) $input['created_by'], 'job_created');
+    }
 
     return $jobId;
 }

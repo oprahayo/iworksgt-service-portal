@@ -2,12 +2,10 @@
   <div><span class="iw-client-eyebrow">BILLING</span><h1>Billing & payments</h1><p>Review invoices and complete payments securely.</p></div>
   <a href="<?= e(url('dashboard')) ?>" class="iw-client-button">New application <i class="bi bi-plus"></i></a>
 </div>
-<section class="iw-client-billing-notice">
-  <i class="bi bi-shield-check" aria-hidden="true"></i>
-  <div><strong>Secure payments and saved cards</strong>
-  <p>Pay an invoice using the supported gateway for its currency. For USD payments through Stripe, you can choose to save a card securely with Stripe and use it again at checkout. We never store card numbers or CVVs in iWorks.</p>
-  <a href="<?= e(url('card_vault')) ?>" class="iw-client-button iw-client-button-soft" style="margin-top:12px">Manage saved cards <i class="bi bi-arrow-right"></i></a>
-  </div>
+<section class="iw-client-billing-notice" aria-label="Payment security">
+  <i class="bi bi-lock-fill" aria-hidden="true"></i>
+  <div><strong>Secure, provider-hosted payments</strong>
+  <a href="<?= e(url('card_vault')) ?>" class="iw-client-button iw-client-button-soft">Saved cards <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>
 </section>
 <div class="iw-client-section-top"><div><h2>Invoices</h2><p>New trademark invoices will appear here after review.</p></div></div>
 <div class="iw-client-application-list">

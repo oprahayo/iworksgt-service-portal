@@ -1,60 +1,108 @@
 <?php
-$customerName = trim((string) ($user['first_name'] ?? ''));
-if ($customerName === '') { $customerName = explode(' ', trim((string) ($user['full_name'] ?? 'Customer')))[0]; }
-$recentDrafts = array_slice(array_filter($trademarkApplications ?? [],
-    static fn(array $app): bool => ($app['status'] ?? '') === 'draft'), 0, 3);
+/** Shared customer catalog: same published service records as public website. */
+$categoryNames = [];
+foreach ($clientCatalogue as $catalogItem) {
+    $category = trim((string) ($catalogItem['category'] ?? 'general')) ?: 'general';
+    $categoryNames[$category] = ucwords(str_replace(['-','_'], ' ', $category));
+}
 ?>
 <div class="iw-client-heading">
   <div>
-    <span class="iw-client-eyebrow">YOUR WORKSPACE</span>
+    <span class="iw-client-eyebrow">NEW REQUEST</span>
     <h1>What would you like to do?</h1>
-    <p>Start an application, save your progress and pay when you're ready.</p>
+    <p>Choose a service, see the requirements and follow its progress here.</p>
   </div>
-  <a class="iw-client-subtle-link" href="<?= e(url('applications')) ?>">My applications <i class="bi bi-arrow-up-right"></i></a>
+  <a class="iw-client-subtle-link" href="<?= e(url('applications')) ?>">My services <i class="bi bi-arrow-up-right"></i></a>
 </div>
-<div class="iw-client-services">
-  <a class="iw-client-service iw-client-service-feature" href="<?= e(url('trademark')) ?>">
-    <span class="iw-client-service-icon"><i class="bi bi-patch-check"></i></span>
-    <h2>Trademark registration</h2>
-    <p>Protect your brand name or logo in Nigeria. Choose the classes you need.</p>
+<div class="iw-client-catalog-tools">
+  <label class="iw-client-catalog-search"><i class="bi bi-search" aria-hidden="true"></i>
+    <span class="visually-hidden">Search services</span>
+    <input id="clientServiceSearch" type="search" placeholder="Search services" autocomplete="off" aria-controls="clientServiceGrid"></label>
+  <label class="iw-client-catalog-filter"><span class="visually-hidden">Filter by category</span>
+    <select id="clientServiceCategory">
+      <option value="">All categories (<?= count($clientCatalogue) ?>)</option>
+      <?php foreach ($categoryNames as $category => $label): ?>
+        <option value="<?= e($category) ?>"><?= e($label) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </label>
+</div>
+<div class="iw-client-catalog-head">
+  <h2>Available services</h2><span id="clientServiceCount" aria-live="polite"><?= count($clientCatalogue) ?> services</span>
+</div>
+<div class="iw-client-services iw-client-catalog" id="clientServiceGrid">
+<?php foreach ($clientCatalogue as $index=>$service): ?>
+  <?php
+    $slug = trim((string) ($service['slug'] ?? ''));
+    $name = trim((string) ($service['name'] ?? 'Service'));
+    $category = trim((string) ($service['category'] ?? 'general')) ?: 'general';
+    $description = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($service['short_description'] ?? ''))));
+    if (stripos($name, 'launch a company package') !== false) { $description = 'Company formation, compliance, branding and launch support.'; }
+    $description = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $description));
+    if ($description === '') { $description = 'View the requirements, fees and next steps for this service.'; }
+    $price = (float) ($service['price'] ?? 0);
+    $pricing = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request quote';
+    if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
+    $startUrl = $slug === 'trademark'
+        ? url('trademark')
+        : url('jobs', ['action'=>'new', 'service'=>$slug]);
+    $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
+  ?>
+  <article class="iw-client-service iw-client-catalog-item" data-search="<?= e($searchValue) ?>" data-category="<?= e($category) ?>" data-tone="<?= (int) ($index % 4) ?>">
+    <span class="iw-client-service-icon"><i class="bi <?= e(iworks_client_service_icon($service)) ?>" aria-hidden="true"></i></span>
+    <span class="iw-client-service-category"><?= e($categoryNames[$category] ?? 'Services') ?></span>
+    <h3><?= e($name) ?></h3>
+    <p><?= e($description) ?></p>
     <div class="iw-client-service-bottom">
-      <span>From <strong>$<?= e(number_format(trademark_price_usd(), 2)) ?></strong> per class</span>
-      <span class="iw-client-service-action">Start <i class="bi bi-arrow-right"></i></span>
+      <span class="iw-client-catalog-price"><?= e($pricing) ?></span>
+      <div class="iw-client-catalog-actions">
+        <a href="<?= e(public_url('service',['slug'=>$slug])) ?>" class="iw-client-catalog-learn" aria-label="Learn more about <?= e($name) ?>">Details</a>
+        <a href="<?= e($startUrl) ?>" class="iw-client-service-action">Start <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      </div>
     </div>
-  </a>
-  <a class="iw-client-service" href="<?= e(url('jobs', ['action'=>'new', 'service'=>'company-registration'])) ?>">
-    <span class="iw-client-service-icon"><i class="bi bi-buildings"></i></span>
-    <h2>Business registration</h2>
-    <p>Form a business or company with CAC filing support.</p>
-    <div class="iw-client-service-bottom"><span>Current ordering flow</span><span class="iw-client-service-action">Proceed <i class="bi bi-arrow-right"></i></span></div>
-  </a>
-  <a class="iw-client-service" href="<?= e(url('jobs', ['action'=>'new', 'service'=>'website-design-development'])) ?>">
-    <span class="iw-client-service-icon"><i class="bi bi-window"></i></span>
-    <h2>Web & digital services</h2>
-    <p>Plan your website, branding or digital business support.</p>
-    <div class="iw-client-service-bottom"><span>Custom requirements</span><span class="iw-client-service-action">Proceed <i class="bi bi-arrow-right"></i></span></div>
-  </a>
-  <a class="iw-client-service" href="<?= e(url('jobs', ['action'=>'new'])) ?>">
-    <span class="iw-client-service-icon"><i class="bi bi-grid"></i></span>
-    <h2>All other services</h2>
-    <p>Explore our complete catalogue and choose another product.</p>
-    <div class="iw-client-service-bottom"><span>Explore catalogue</span><span class="iw-client-service-action">Browse <i class="bi bi-arrow-right"></i></span></div>
-  </a>
+  </article>
+<?php endforeach; ?>
 </div>
-<section class="iw-client-recent">
+<div class="iw-client-empty iw-client-catalog-empty" id="clientServiceEmpty" hidden>
+  <i class="bi bi-search"></i><div><strong>No matching services</strong><p>Try another search or browse all categories.</p></div>
+</div>
+<section class="iw-client-recent" aria-label="Recent customer services">
   <div class="iw-client-section-top">
-    <div><h2>Continue where you left off</h2><p>Your unpaid drafts are saved securely.</p></div>
-    <a href="<?= e(url('applications')) ?>">View all applications</a>
+    <div><h2>Recent services</h2><p>Continue a draft, complete payment or check an active request.</p></div>
+    <a href="<?= e(url('applications')) ?>">View all</a>
   </div>
-  <?php if ($recentDrafts === []): ?>
-    <div class="iw-client-empty"><i class="bi bi-file-earmark-text"></i><div><strong>No drafts yet</strong><p>Start a trademark application and come back whenever you need.</p></div></div>
+  <?php if (empty($clientRecent)): ?>
+    <div class="iw-client-empty"><i class="bi bi-file-earmark-text"></i>
+      <div><strong>No services started yet</strong><p>Select a service above and it will appear here.</p></div>
+    </div>
   <?php else: ?>
-    <?php foreach ($recentDrafts as $draft): ?>
-    <a class="iw-client-draft-line" href="<?= e(url('trademark', ['id'=>(int) $draft['id']])) ?>">
-      <span><strong><?= e((string) (($draft['data']['mark_name'] ?? '') ?: 'Untitled trademark')) ?></strong>
-      <small>Trademark · Updated <?= e((string) $draft['updated_at']) ?></small></span>
-      <span class="iw-client-status">Draft</span><i class="bi bi-arrow-right"></i>
-    </a>
+    <?php foreach ($clientRecent as $recent): ?>
+      <a class="iw-client-draft-line" href="<?= e((string) $recent['detail_url']) ?>">
+        <span><strong><?= e((string) $recent['name']) ?></strong>
+        <small><?= e((string) $recent['service']) ?> · <?= e((string) $recent['reference']) ?></small></span>
+        <span class="iw-client-status" data-state="<?= e((string) $recent['status']) ?>"><?= e(iworks_client_state_label((string) $recent['status'])) ?></span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
     <?php endforeach; ?>
   <?php endif; ?>
 </section>
+<script>
+(function(){
+  const search=document.getElementById('clientServiceSearch');
+  const cat=document.getElementById('clientServiceCategory');
+  const rows=Array.from(document.querySelectorAll('#clientServiceGrid [data-search]'));
+  const empty=document.getElementById('clientServiceEmpty');
+  const count=document.getElementById('clientServiceCount');
+  function filter(){
+    const q=(search.value||'').toLowerCase().trim();let n=0;
+    rows.forEach(function(item){
+      const ok=(!q||item.dataset.search.includes(q))&&(!cat.value||item.dataset.category===cat.value);
+      item.hidden=!ok;if(ok)n++;
+    });
+    count.textContent=n+' '+(n===1?'service':'services');
+    empty.hidden=n!==0;
+  }
+  search.addEventListener('input',filter);
+  cat.addEventListener('change',filter);
+})();
+</script>
