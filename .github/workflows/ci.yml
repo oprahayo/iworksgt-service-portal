@@ -33,6 +33,7 @@ jobs:
           bash -n scripts/deploy_business_photos.sh
           bash -n scripts/deploy_businesshub_home.sh
           bash -n scripts/deploy_clean_home.sh
+          bash -n scripts/deploy_clean_public_pages.sh
 
       - name: Run smoke tests
         run: |
