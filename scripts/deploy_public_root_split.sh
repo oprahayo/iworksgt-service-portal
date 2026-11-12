@@ -40,7 +40,7 @@ printf 'Current public index: '
 FILES=(
   app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/client_workspace.php app/cac_filing.php app/editorial.php app/domain.php
   index.php invoice.php .htaccess views/settings.php views/login.php views/register.php views/support.php views/job.php views/intake-submission.php views/users.php views/blog.php views/frontend-editor.php views/frontend-editor-blocks.php views/dashboard.php
-  views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/public-track-clean.php views/public-insights.php views/public-blog-detail.php views/public-case-studies-refined.php views/public-case-study-detail.php views/jobs.php
+  views/public-page.php views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/public-track-clean.php views/public-insights.php views/public-blog-detail.php views/public-case-studies-refined.php views/public-case-study-detail.php views/jobs.php
   views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php views/client-profile.php views/client-job.php views/client-cac-filing.php views/staff-cac-review.php views/editorial-showcase.php views/author-dashboard.php
   views/partials/public-header.php views/partials/public-footer.php views/partials/header.php views/partials/client-header.php
   assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css assets/css/client-checkout.css assets/css/editorial-brand.css assets/css/admin-editorial.css
