@@ -18,6 +18,16 @@ if ($publicPageSlug === 'services') {
     return;
 }
 
+if ($publicPageSlug === 'blog') {
+    require __DIR__ . '/public-insights.php';
+    return;
+}
+
+if ($publicPageSlug === 'case-studies') {
+    require __DIR__ . '/public-case-studies-refined.php';
+    return;
+}
+
 if ($publicPageSlug === 'about') {
     require __DIR__ . '/public-about-refined.php';
     return;
