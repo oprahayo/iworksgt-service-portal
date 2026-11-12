@@ -75,7 +75,7 @@ $activePayCurrency = active_pay_currency();
           <?php endforeach; ?></select></div>
         <button class="iw-client-button iw-client-button-soft" type="submit">Save preference</button>
       </form>
-      <a href="<?= e(url('card_vault')) ?>" class="iw-client-account-link"><i class="bi bi-credit-card"></i> Manage saved cards <i class="bi bi-arrow-right"></i></a>
+      <a href="<?= e(url('invoices').'#payment-methods') ?>" class="iw-client-account-link"><i class="bi bi-credit-card"></i> Manage payment methods <i class="bi bi-arrow-right"></i></a>
     </section>
     <section class="iw-tm-panel">
       <div class="iw-client-detail-panel-title"><h2><?= $forcePasswordResetMode?'Set a password':'Password & security' ?></h2></div>
