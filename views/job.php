@@ -78,6 +78,49 @@ if (!empty($job['managed_by_admin_name'])) {
   </div>
 <?php endif; ?>
 
+
+<?php if ($isClientOwner && $jobStatus === 'closed'): ?>
+  <section class="iw-job-feedback mb-3" aria-labelledby="iw-job-feedback-title">
+    <?php if (!empty($clientOrderReview)): ?>
+      <h2 class="h5" id="iw-job-feedback-title">Your review</h2>
+      <p class="mb-2 fw-semibold">You rated this completed order <?= (int) ($clientOrderReview['rating'] ?? 0) ?>/10.</p>
+      <?php if (trim((string) ($clientOrderReview['feedback'] ?? '')) !== ''): ?>
+        <p class="mb-2"><?= nl2br(e((string) $clientOrderReview['feedback'])) ?></p>
+      <?php endif; ?>
+      <p class="small text-muted mb-0">
+        <?= !empty($clientOrderReview['is_public'])
+          ? 'You allowed this review to appear on the iWorks website with an abbreviated name.'
+          : 'This feedback is private and will not appear on the public website.' ?>
+      </p>
+    <?php else: ?>
+      <h2 class="h5" id="iw-job-feedback-title">How was your experience?</h2>
+      <p class="small text-muted">Your order is complete. Please rate the service from 1 to 10. Your feedback helps us improve.</p>
+      <form method="post" action="<?= e(url('job', ['id' => (int) $job['id']])) ?>">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="form_action" value="submit_order_review">
+        <fieldset class="iw-review-rating-fieldset">
+          <legend class="small fw-semibold mb-2">Your rating</legend>
+          <div class="iw-review-rating-options">
+            <?php for ($rating = 1; $rating <= 10; $rating++): ?>
+              <label><input type="radio" name="rating" value="<?= $rating ?>" <?= $rating === 10 ? 'required' : '' ?>>
+                <span><?= $rating ?></span>
+              </label>
+            <?php endfor; ?>
+          </div>
+          <p class="small text-muted mt-2">1 = Very poor, 10 = Excellent</p>
+        </fieldset>
+        <label class="form-label fw-semibold small" for="iwJobReviewText">Your feedback</label>
+        <textarea id="iwJobReviewText" class="form-control" name="feedback" rows="3" maxlength="1400" placeholder="How did this service go?"></textarea>
+        <label class="iw-review-publish-consent">
+          <input type="checkbox" name="publish_consent" value="1">
+          <span>I agree to display my feedback and a shortened version of my name on the iWorks homepage and About page. Leave unchecked to send private feedback only.</span>
+        </label>
+        <button type="submit" class="btn btn-primary mt-3">Submit review</button>
+      </form>
+    <?php endif; ?>
+  </section>
+<?php endif; ?>
+
 <div class="row g-3 mb-3">
   <div class="col-md-3"><div class="card"><div class="card-body"><small class="kicker">Status</small><div><?= status_badge($job['status']) ?></div></div></div></div>
   <div class="col-md-3"><div class="card"><div class="card-body"><small class="kicker">Payment</small><div><?= status_badge($jobPaymentStatus) ?></div></div></div></div>
