@@ -25,6 +25,14 @@ if (strcasecmp($serviceName, 'Launch a Company Package') === 0) {
 $safeDescription = sanitize_limited_html($description);
 $bullets = public_service_bullets($service);
 $searchGuide = iworks_search_service_guide($service);
+$relatedServices = [];
+foreach (is_array($publicServices ?? null) ? $publicServices : [] as $candidate) {
+    if (!is_array($candidate) || (string) ($candidate['slug'] ?? '') === (string) ($service['slug'] ?? '')) { continue; }
+    if ((string) ($candidate['category'] ?? '') !== (string) ($service['category'] ?? '')) { continue; }
+    if (empty($candidate['slug']) || empty($candidate['name'])) { continue; }
+    $relatedServices[] = $candidate;
+    if (count($relatedServices) >= 3) { break; }
+}
 $price = (float) ($service['price'] ?? 0);
 $priceText = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request a quote';
 $tax = (float) ($service['tax_percent'] ?? 0);
@@ -121,6 +129,16 @@ if ($imageUrl === '') {
       <?php if (!empty($searchGuide['official'])): ?>
         <p class="iw-search-guide-source">For current government requirements, check the
         <a href="<?= e((string) $searchGuide['official']) ?>" rel="noopener noreferrer" target="_blank">official Corporate Affairs Commission guidance</a>.</p>
+      <?php endif; ?>
+      <?php if ($relatedServices !== []): ?>
+        <nav class="iw-search-guide-related" aria-label="Related services">
+          <h3>Related services</h3>
+          <ul>
+            <?php foreach ($relatedServices as $relatedService): ?>
+              <li><a href="<?= e(public_url('service', ['slug' => (string) $relatedService['slug']])) ?>"><?= e((string) $relatedService['name']) ?></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </nav>
       <?php endif; ?>
       <p class="iw-search-guide-next">Ready to proceed?
         <a href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Start your request with iWorks</a>
