@@ -1,0 +1,64 @@
+/* Final iWorks public polish: navigation, enquiry, about and seamless account dialog. */
+body.page-public .public-nav-center .nav-link {
+  background:transparent!important;
+  border:0!important;
+  border-bottom:2px solid transparent!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:.65rem .76rem!important;
+  margin:0 .05rem;
+  color:#515c65!important;
+  transition:color .16s ease,border-color .16s ease;
+}
+body.page-public .public-nav-center .nav-link:hover,
+body.page-public .public-nav-center .nav-link.active,
+body.page-public .public-nav-center .nav-link[aria-current="page"] {
+  background:transparent!important;
+  color:#e65d0c!important;
+  border-bottom-color:#f16816!important;
+}
+body.page-public .public-nav-center .nav-link:focus-visible { outline:2px solid #f09b6b; outline-offset:2px; }
+.iw-home-compliance-extra,.iw-about-licensing-note {
+  font-size:.83rem;
+  color:#78838d;
+  line-height:1.7;
+  margin:1rem 0 0;
+}
+.iw-home-compliance-extra a,.iw-about-licensing-note a { color:#e36313; font-weight:650; display:inline-flex; align-items:center; gap:.35rem; }
+.iw-about-min-intro { background:linear-gradient(122deg,#fff4e9 0,#fffaf5 32%,#fff 75%)!important; }
+.iw-about-min-hero { gap:clamp(2.4rem,5vw,5.5rem); }
+.iw-about-min-hero h1 { line-height:1.13; }
+.iw-about-team-photo { position:relative; padding:.65rem 0 0 .65rem; }
+.iw-about-team-photo:before { background:#f6bd96!important; inset:0 13% 15% 0!important; }
+.iw-about-team-photo img { box-shadow:0 14px 35px rgba(39,47,56,.10); }
+.iw-about-photo-label { position:absolute; z-index:2; bottom:1.25rem; left:1.65rem; padding:.54rem .82rem; border-radius:5px; background:rgba(255,255,255,.96); color:#27313b; font-size:.77rem; font-weight:650; box-shadow:0 4px 16px rgba(0,0,0,.08); }
+.iw-about-min-services .iw-about-licensing-note { margin-top:1.3rem; }
+.iw-inner-last { background:#faf7f4!important; }
+.iw-inner-last .iw-about-last-action { padding:.82rem 1.15rem; border-radius:7px; font-size:.9rem; color:#fff!important; background:#f56613!important; font-weight:650; }
+.iw-inner-last .iw-about-last-action:hover { background:#da560a!important; }
+.iw-help-feedback { margin:.6rem 1.3rem .8rem; font-size:.87rem; line-height:1.65; padding:.95rem 1rem; border-radius:8px; }
+.iw-help-feedback[hidden],.iw-help-dialog-form[hidden] { display:none!important; }
+.iw-help-feedback.is-success { background:#edf9f2; color:#207447; border:1px solid #cdebd9; }
+.iw-help-feedback.is-error { background:#fff2f0; color:#a04432; border:1px solid #f2d5cd; }
+.iw-auth-dialog { width:min(92vw,490px); max-width:490px; border-radius:13px; }
+.iw-auth-dialog .iw-public-dialog-head { padding:.92rem 1.25rem; background:#fff; }
+.iw-auth-dialog .iw-public-dialog-head h2 { font-size:1rem; font-weight:700; }
+.iw-auth-dialog .iw-auth-dialog-tabs { padding:.75rem 1.2rem 0; gap:.5rem; }
+.iw-auth-dialog iframe { height:min(66dvh,535px); min-height:300px; background:transparent; }
+.iw-auth-dialog .iw-auth-dialog-fallback { padding:.35rem 1.25rem .9rem; }
+.iw-auth-dialog.is-flipping iframe { transform-origin:center center; animation:iw-portal-flip .32s ease both; }
+@keyframes iw-portal-flip { 0% {opacity:.7;transform:perspective(800px) rotateY(9deg) translateX(7px)} 100% {opacity:1;transform:perspective(800px) rotateY(0) translateX(0)} }
+@media(max-width:1199px) {
+ body.page-public .public-nav-center .nav-link { padding:.72rem .7rem!important; margin:0!important; }
+}
+@media(max-width:767px) {
+ .iw-about-photo-label { bottom:1.1rem; left:1.2rem; }
+ .iw-auth-dialog { width:94vw!important; max-width:94vw!important; height:auto!important; max-height:94dvh!important; border-radius:12px!important; }
+ .iw-auth-dialog iframe { height:min(72dvh,545px)!important; }
+ .iw-auth-dialog .iw-public-dialog-head { padding:.8rem 1rem; }
+ .iw-auth-dialog .iw-auth-dialog-tabs { padding:.7rem 1rem 0; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .iw-auth-dialog.is-flipping iframe { animation:none!important; }
+ body.page-public .public-nav-center .nav-link { transition:none!important; }
+}
