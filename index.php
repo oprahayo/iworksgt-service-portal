@@ -1704,8 +1704,12 @@ try {
                             foreach ($requestedIds as $requestedId) {
                                 if ((int) $requestedId <= 0) { continue; }
                                 $requestedService = get_service((int) $requestedId);
-                                if (($requestedService['slug'] ?? '') === 'trademark') {
+                                $chosenSlug = (string) ($requestedService['slug'] ?? '');
+                                if ($chosenSlug === 'trademark') {
                                     throw new RuntimeException('Use the dedicated trademark application to select classes and calculate the correct fee.');
+                                }
+                                if (in_array($chosenSlug, ['business-name-registration-cac-nigeria','company-registration'], true)) {
+                                    throw new RuntimeException('Complete the CAC registration application and upload required documents before payment.');
                                 }
                             }
                             $payload['client_id'] = (int) current_user()['id'];
