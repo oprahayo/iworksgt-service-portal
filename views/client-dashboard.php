@@ -45,7 +45,11 @@ foreach ($clientCatalogue as $catalogItem) {
     if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
     $startUrl = $slug === 'trademark'
         ? url('trademark')
-        : url('jobs', ['action'=>'new', 'service'=>$slug]);
+        : ($slug === 'business-name-registration-cac-nigeria'
+            ? url('cac_filing', ['type'=>'business'])
+            : ($slug === 'company-registration'
+                ? url('cac_filing', ['type'=>'company'])
+                : url('jobs', ['action'=>'new', 'service'=>$slug])));
     $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
   ?>
   <article class="iw-client-service iw-client-catalog-item" data-search="<?= e($searchValue) ?>" data-category="<?= e($category) ?>" data-tone="<?= (int) ($index % 4) ?>">
