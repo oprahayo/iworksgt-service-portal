@@ -188,3 +188,11 @@ body.page-public a:focus-visible,body.page-public button:focus-visible { outline
  .iworks-launch-home .iw-journey-card,.iworks-launch-home .iw-journey-media img,
  .iw-about-page .iw-expertise-grid>a,.iw-action-primary { transition:none!important; transform:none!important; }
 }
+/* Progressive enhancement: without JS or with reduced motion, content remains fully visible. */
+@media(prefers-reduced-motion:no-preference) {
+ .iw-reveal-pending { opacity:0; transform:translateY(13px); transition:opacity .45s ease-out,transform .45s ease-out; }
+ .iw-reveal-pending.iw-reveal-visible { opacity:1; transform:translateY(0); }
+}
+@media(prefers-reduced-motion:reduce) {
+ .iw-reveal-pending { opacity:1!important; transform:none!important; transition:none!important; }
+}
