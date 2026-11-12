@@ -129,11 +129,11 @@ if ($description === '' || $description === 'Browse what you need.') {
         $href = public_url('service', ['slug' => (string) ($service['slug'] ?? '')]);
         $searchText = strtolower($name . ' ' . $short . ' ' . $categoryLabel($category));
         ?>
-        <a class="iw-service-index-row" href="<?= e($href) ?>" data-service-row data-search="<?= e($searchText) ?>" aria-label="View <?= e($name) ?> details">
+        <a class="iw-service-index-row" href="<?= e($href) ?>" data-service-row data-search="<?= e($searchText) ?>">
           <span class="iw-service-index-icon"><i class="bi <?= e(iworks_catalog_service_icon($service)) ?>" aria-hidden="true"></i></span>
           <span class="iw-service-index-main">
             <span class="iw-service-index-category"><?= e($categoryLabel($category)) ?></span>
-            <strong class="iw-service-index-name"><?= e($name) ?></strong>
+            <h3 class="iw-service-index-name"><?= e($name) ?></h3>
             <span class="iw-service-index-description"><?= e($short) ?></span>
           </span>
           <span class="iw-service-index-end">
