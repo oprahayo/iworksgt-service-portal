@@ -45,6 +45,9 @@ function iworks_order_intent_clear(): void
 function iworks_post_login_destination(?array $user): string
 {
     $slug = iworks_order_intent_peek();
+    if ($slug === 'trademark' && (string) ($user['role'] ?? '') === 'client') {
+        return url('trademark');
+    }
     if ($slug !== '' && (string) ($user['role'] ?? '') === 'client') {
         return url('jobs', ['action' => 'new', 'service' => $slug]);
     }
