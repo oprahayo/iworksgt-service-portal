@@ -41,7 +41,7 @@ done
 
 grep -Fq 'data-layout="grid"' "$WORK_DIR/views/public-services-refined.php" || fail 'Invalid release file: views/public-services-refined.php'
 grep -Fq 'data-tone=' "$WORK_DIR/views/public-services-refined.php" || fail 'Invalid release file: views/public-services-refined.php'
-grep -Fq '--iw-tile-start' "$WORK_DIR/assets/css/services-list.css" || fail 'Invalid release file: assets/css/services-list.css'
+grep -Fq -- '--iw-tile-start' "$WORK_DIR/assets/css/services-list.css" || fail 'Invalid release file: assets/css/services-list.css'
 grep -Fq 'portal_url('"'"'google_start'"'"')' "$WORK_DIR/views/login.php" || fail 'Invalid release file: views/login.php'
 grep -Fq 'portal_url('"'"'google_start'"'"')' "$WORK_DIR/views/register.php" || fail 'Invalid release file: views/register.php'
 grep -Fq 'class="iw-auth-home"' "$WORK_DIR/views/login.php" || fail 'Invalid release file: views/login.php'
