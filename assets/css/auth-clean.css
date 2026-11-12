@@ -1,0 +1,53 @@
+/* iWorks account entry. Quiet, accessible, reduced to essential fields. */
+body.iw-auth-embed, body.page-login, body.page-register {
+  --auth-orange:#ed6718; --auth-ink:#273039; --auth-muted:#727b84; --auth-line:#e6e9ed;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
+  background:radial-gradient(ellipse at 100% 0,rgba(246,125,49,.12),transparent 42%),#fbfbfb;
+  color:var(--auth-ink);
+}
+body.iw-auth-embed { margin:0; padding:0; background:#fff; }
+.iw-auth-embed-main { padding:0; }
+body.page-login .auth-main { min-height:calc(100dvh - 74px); display:grid; place-items:center; }
+body.page-login .auth-main-inner { padding:2rem 1rem; max-width:520px; }
+body.page-register>main.container { max-width:720px; padding-top:2.2rem!important; padding-bottom:2.5rem!important; }
+body.page-login .auth-page-footer { font-family:Inter,sans-serif; background:transparent!important; border:0!important; }
+body.page-register .navbar { display:none; }
+.iw-auth-panel { margin:0 auto; max-width:440px; background:#fff; padding:clamp(1.2rem,3.5vw,2.1rem); border:1px solid #eceeef; border-radius:13px; box-shadow:0 12px 45px rgba(37,49,62,.05); }
+body.iw-auth-embed .iw-auth-panel { border:0; box-shadow:none; border-radius:0; padding:1.25rem 1.5rem 1.4rem; max-width:none; }
+.iw-auth-panel.iw-auth-register { max-width:680px; }
+.iw-auth-logo { max-height:38px; max-width:150px; object-fit:contain; margin-bottom:1.15rem; }
+.iw-auth-header h1 { font-size:clamp(1.5rem,3vw,1.95rem); font-weight:700; line-height:1.25; margin:.15rem 0 .45rem; letter-spacing:-.03em; color:#222a32; }
+.iw-auth-header>p { color:#75818b; font-size:.89rem; line-height:1.6; margin:0 0 1.5rem; }
+.iw-auth-form { display:grid; gap:1rem; margin-top:1.25rem; }
+.iw-auth-form>div>label, .iw-auth-fields>div>label { display:block; margin-bottom:.4rem; font-size:.81rem; font-weight:600; color:#3d4852; }
+.iw-auth-form input:not([type="checkbox"]),.iw-auth-form select {
+  width:100%; min-width:0; height:43px; font-family:inherit;
+  padding:0 .85rem; color:#28323b; background:#fff; font-size:.89rem;
+  border:1px solid #dce2e6; border-radius:7px; outline:0;
+}
+.iw-auth-form input:focus-visible,.iw-auth-form select:focus-visible,
+.iw-auth-panel a:focus-visible,.iw-auth-form button:focus-visible { outline:2px solid #ecad87; outline-offset:2px; }
+.iw-auth-password { position:relative; }
+.iw-auth-password input { padding-right:3rem!important; }
+.iw-auth-password button { position:absolute; right:.25rem; top:50%; transform:translateY(-50%); width:38px; height:36px; display:grid; place-items:center; border:0; background:transparent; color:#7e8893; cursor:pointer; }
+.iw-auth-form-options { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.8rem; }
+.iw-auth-form-options a,.iw-auth-switch a { color:#df5b0a; font-size:.81rem; font-weight:650; text-decoration:none; }
+.iw-auth-remember { display:inline-flex; align-items:center; gap:.45rem; font-size:.79rem; font-weight:400; color:#6e7883; }
+.iw-auth-remember input { accent-color:#ef6918; }
+.iw-auth-submit { display:flex; justify-content:center; align-items:center; gap:.55rem; width:100%; min-height:44px; background:#f26614; color:#fff; border:0; border-radius:7px; font-size:.91rem; font-weight:650; cursor:pointer; }
+.iw-auth-submit:hover { background:#db580c; }
+.iw-auth-google { min-height:42px; padding:.7rem 1rem; border:1px solid #e2e6e9; border-radius:7px; display:flex; justify-content:center; align-items:center; gap:.6rem; color:#3c4650; text-decoration:none; font-size:.88rem; }
+.iw-auth-switch { text-align:center; margin:1.4rem 0 0; font-size:.83rem; color:#77818b; }
+.iw-auth-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.95rem; }
+.iw-auth-full { grid-column:1/-1; }
+.iw-auth-small { color:#858e97; font-size:.77rem; line-height:1.5; margin:0; }
+.iw-auth-message { border-radius:8px; padding:.8rem 1rem; font-size:.84rem; margin:0 0 1rem; }
+.iw-auth-message.success { background:#ecfff4; color:#1d7146; }
+.iw-auth-message.error { background:#fff1f0; color:#9b3325; }
+@media(max-width:550px) {
+ .iw-auth-panel { padding:1.2rem; border-radius:10px; }
+ .iw-auth-fields { grid-template-columns:1fr; }
+ .iw-auth-full { grid-column:auto; }
+ body.iw-auth-embed .iw-auth-panel { padding:1rem; }
+}
+@media(prefers-reduced-motion:reduce) { .iw-auth-panel { scroll-behavior:auto; } }
