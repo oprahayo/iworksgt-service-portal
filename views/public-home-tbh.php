@@ -221,7 +221,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
 
   <section class="launch-section launch-how" id="how-it-works" aria-labelledby="launch-how-title">
     <div class="container public-container">
-      <div class="launch-heading launch-heading-compact"><div><span class="launch-small-label">HOW IT WORKS</span><h2 id="launch-how-title"><?= e(trim((string) ($process['title'] ?? '')) ?: 'Simple from start to finish.') ?></h2></div></div>
+      <div class="launch-heading launch-heading-compact"><div><span class="launch-small-label">HOW IT WORKS</span><h2 id="launch-how-title"><?= e(stripos(trim((string) ($process['title'] ?? '')), 'operating in days') !== false ? 'From request to delivery, with every step visible.' : (trim((string) ($process['title'] ?? '')) ?: 'Simple from start to finish.')) ?></h2></div></div>
       <div class="launch-step-grid">
         <?php foreach ($steps as $i => $step): ?>
           <article class="launch-step"><span class="launch-step-number"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span><h3><?= e((string) ($step['title'] ?? '')) ?></h3><p><?= e((string) ($step['text'] ?? '')) ?></p></article>
