@@ -9716,7 +9716,7 @@ function list_manageable_users(string $role = 'all'): array
         $sql .= ' AND role = :role';
         $params['role'] = $role;
     } else {
-        $sql .= " AND role IN ('client', 'agent')";
+        $sql .= " AND role IN ('client', 'agent', 'author')";
     }
 
     $sql .= ' ORDER BY created_at DESC';
@@ -9738,8 +9738,8 @@ function generate_temporary_password(int $length = 10): string
 function admin_create_manageable_user(array $input, int $adminId): int
 {
     $role = strtolower(trim((string) ($input['role'] ?? 'client')));
-    if (!in_array($role, ['client', 'agent'], true)) {
-        throw new RuntimeException('Role must be client or agent.');
+    if (!in_array($role, ['client', 'agent', 'author'], true)) {
+        throw new RuntimeException('Role must be client, agent or author.');
     }
 
     $email = strtolower(trim((string) ($input['email'] ?? '')));

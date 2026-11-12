@@ -25,7 +25,7 @@ function iworks_seo_allowed_slug(string $slug): bool
 function iworks_seo_canonical(string $page, array $params = []): string
 {
     $page = trim($page);
-    if ($page === 'service' || $page === 'blog_post') {
+    if (in_array($page, ['service','blog_post','case_study'], true)) {
         $slug = trim((string) ($params['slug'] ?? ''));
         if (!iworks_seo_allowed_slug($slug)) { return ''; }
         return public_url($page, ['slug' => $slug]);
@@ -85,6 +85,11 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
             $time = strtotime((string) ($record[$field] ?? ''));
             if ($time) { $obj[$key] = gmdate('c', $time); }
         }
+    } elseif ($type === 'case_study') {
+        $name=trim((string)($record['title']??''));if($name==='')return '';
+        $obj=['@context'=>'https://schema.org','@type'=>'Article',
+              'headline'=>$name,'description'=>$description,'url'=>$canonical,
+              'mainEntityOfPage'=>$canonical,'publisher'=>$provider];
     } elseif ($type === 'home') {
         $obj = $provider + ['@context' => 'https://schema.org'];
     } else {
@@ -100,12 +105,12 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
  */
 function iworks_seo_breadcrumb_jsonld(string $type, array $record, string $canonical): string
 {
-    if ($canonical === '' || !in_array($type, ['service', 'blog_post'], true)) { return ''; }
+    if ($canonical === '' || !in_array($type, ['service', 'blog_post', 'case_study'], true)) { return ''; }
     $title = trim((string) ($record[$type === 'service' ? 'name' : 'title'] ?? ''));
     if ($title === '') { return ''; }
     $items = [
         ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => public_url('home')],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => $type === 'service' ? 'Services' : 'Insights', 'item' => public_url($type === 'service' ? 'services' : 'blog')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => $type === 'service' ? 'Services' : ($type === 'case_study' ? 'Case Studies' : 'Insights'), 'item' => public_url($type === 'service' ? 'services' : ($type === 'case_study' ? 'case-studies' : 'blog'))],
         ['@type' => 'ListItem', 'position' => 3, 'name' => $title, 'item' => $canonical],
     ];
     return json_encode([
@@ -116,7 +121,7 @@ function iworks_seo_breadcrumb_jsonld(string $type, array $record, string $canon
        | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '';
 }
 
-function iworks_seo_sitemap_xml(array $services, array $pages, array $posts): string
+function iworks_seo_sitemap_xml(array $services, array $pages, array $posts, array $cases = []): string
 {
     $urls = [];
     $add = static function (string $url, string $date = '') use (&$urls): void {
@@ -144,6 +149,11 @@ function iworks_seo_sitemap_xml(array $services, array $pages, array $posts): st
         if (!iworks_seo_allowed_slug($slug)) { continue; }
         $add(public_url('blog_post', ['slug' => $slug]), (string) ($record['updated_at'] ?? $record['published_at'] ?? ''));
     }
+    foreach ($cases as $record) {
+        $slug=trim((string)($record['slug']??''));
+        if(!iworks_seo_allowed_slug($slug))continue;
+        $add(public_url('case_study',['slug'=>$slug]),(string)($record['updated_at']??''));
+    }
     $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
     foreach ($urls as $url => $lastmod) {
@@ -162,7 +172,9 @@ function iworks_seo_public_sitemap(): string
     $posts = schema_table_exists('blog_posts')
         ? db_all("SELECT slug, updated_at, published_at FROM blog_posts WHERE status = 'published'")
         : [];
-    return iworks_seo_sitemap_xml($services, $pages, $posts);
+    $cases = schema_table_exists('iworks_case_studies')
+        ? db_all("SELECT slug,updated_at FROM iworks_case_studies WHERE status='published'") : [];
+    return iworks_seo_sitemap_xml($services, $pages, $posts, $cases);
 }
 
 function iworks_seo_robots_text(): string

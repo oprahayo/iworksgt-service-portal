@@ -20,7 +20,6 @@ $blockOptions = [
   'case_studies' => 'Case studies',
   'service_grid' => 'Service grid',
   'how_it_works' => 'How it works',
-  'featured_packages' => 'Featured packages',
   'features' => 'Feature cards',
   'benefit_cards' => 'Benefit cards',
   'testimonials' => 'Testimonials',

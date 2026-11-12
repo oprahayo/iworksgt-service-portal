@@ -96,9 +96,20 @@ $blogReturnUrl = url('blog', $blogReturnParams);
           <?php endif; ?>
 
           <div class="col-12">
-            <label class="form-label">Article content</label>
-            <textarea class="form-control" name="body_html" rows="14" placeholder="<h3>What founders should know</h3><p>Use simple HTML headings, paragraphs, lists, and links.</p>" required><?= e((string) ($formPost['body_html'] ?? '')) ?></textarea>
-            <div class="form-text">Allowed formatting is sanitized automatically. Use headings, paragraphs, lists, bold text, and links.</div>
+            <label class="form-label" for="iwBlogEditor">Article content</label>
+            <div class="iw-blog-toolbar" role="toolbar" aria-label="Article formatting">
+              <button type="button" data-iw-blog-wrap="h2">Heading 2</button>
+              <button type="button" data-iw-blog-wrap="h3">Heading 3</button>
+              <button type="button" data-iw-blog-wrap="p">Paragraph</button>
+              <button type="button" data-iw-blog-wrap="strong"><strong>Bold</strong></button>
+              <button type="button" data-iw-blog-wrap="em"><em>Italic</em></button>
+              <button type="button" data-iw-blog-wrap="ul">Bullets</button>
+              <button type="button" data-iw-blog-link><i class="bi bi-link-45deg"></i> Link</button>
+              <button type="button" data-iw-blog-preview-toggle>Preview</button>
+            </div>
+            <textarea id="iwBlogEditor" class="form-control" name="body_html" rows="14" placeholder="<h3>What founders should know</h3><p>Use simple HTML headings, paragraphs, lists, and links.</p>" required><?= e((string) ($formPost['body_html'] ?? '')) ?></textarea>
+            <div class="form-text">Select text and choose a format. Use the preview before publishing. All HTML is sanitised by the server when saved.</div>
+            <iframe class="iw-blog-editor-preview" data-iw-blog-preview hidden sandbox="" title="Article preview"></iframe>
           </div>
 
           <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -181,6 +192,49 @@ $blogReturnUrl = url('blog', $blogReturnParams);
   </div>
 </div>
 
+<?php if($isAdminBlog): ?>
 <?php render_admin_media_modal($mediaAssets, [
     'return_to' => $blogReturnUrl,
 ]); ?>
+<?php endif; ?>
+
+<script>
+(function(){
+  var editor=document.getElementById('iwBlogEditor');
+  if(!editor)return;
+  function apply(prefix,suffix,placeholder){
+    var start=editor.selectionStart||0,end=editor.selectionEnd||0;
+    var selection=editor.value.slice(start,end)||placeholder;
+    editor.setRangeText(prefix+selection+suffix,start,end,'select');
+    editor.focus();editor.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  document.querySelectorAll('[data-iw-blog-wrap]').forEach(function(button){
+    button.addEventListener('click',function(){
+      var tag=button.dataset.iwBlogWrap;
+      if(tag==='ul'){apply('<ul><li>','</li></ul>','List item');return;}
+      if(!/^(h2|h3|p|strong|em)$/.test(tag))return;
+      apply('<'+tag+'>','</'+tag+'>',tag==='p'?'New paragraph':'Selected text');
+    });
+  });
+  var link=document.querySelector('[data-iw-blog-link]');
+  if(link)link.addEventListener('click',function(){
+    var href=window.prompt('Paste the website URL (https://)');
+    if(!href)return;
+    try{
+      var parsed=new URL(href);
+      if(!['http:','https:'].includes(parsed.protocol))throw Error('Unsupported link');
+    }catch(e){alert('Enter an https:// or http:// link.');return;}
+    var escaped=href.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    apply('<a href="'+escaped+'">','</a>','Link text');
+  });
+  var preview=document.querySelector('[data-iw-blog-preview]');
+  var toggle=document.querySelector('[data-iw-blog-preview-toggle]');
+  if(preview&&toggle)toggle.addEventListener('click',function(){
+    preview.hidden=!preview.hidden;
+    if(!preview.hidden){
+      preview.srcdoc='<!doctype html><meta charset="utf-8"><style>body{font:16px/1.8 system-ui;padding:24px;color:#25313c}h2,h3{line-height:1.3}a{color:#df692d}</style>'+editor.value;
+    }
+    toggle.textContent=preview.hidden?'Preview':'Hide preview';
+  });
+})();
+</script>

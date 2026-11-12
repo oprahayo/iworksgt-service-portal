@@ -46,7 +46,12 @@ if ($user && (string) ($user['role'] ?? '') === 'client') {
 }
 
 $sidebarItems = [];
-if ($user) {
+if ($user && (string)($user['role'] ?? '') === 'author') {
+    $sidebarItems = [
+        ['page'=>'dashboard','label'=>'Dashboard','icon'=>'bi-speedometer2','url'=>url('dashboard')],
+        ['page'=>'blog','label'=>'Insights','icon'=>'bi-journal-richtext','url'=>url('blog')],
+    ];
+} elseif ($user) {
     $sidebarItems[] = [
         'page' => 'dashboard',
         'label' => 'Dashboard',
@@ -157,6 +162,12 @@ if ($user) {
             'url' => url('media'),
         ];
         $sidebarItems[] = [
+            'page' => 'editorial_showcase',
+            'label' => 'Stories & Feedback',
+            'icon' => 'bi-collection',
+            'url' => url('editorial_showcase'),
+        ];
+        $sidebarItems[] = [
             'page' => 'frontend',
             'label' => 'Website',
             'icon' => 'bi-window-stack',
@@ -200,6 +211,7 @@ if ($user) {
   <link href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.0/build/css/intlTelInput.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/reviews.css">
+  <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
     <link rel="stylesheet" href="assets/css/auth-clean.css">
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
@@ -242,7 +254,20 @@ if ($user) {
     </div>
 
     <nav class="sidebar-nav">
+      <?php
+        $portalGroups = [
+          'dashboard'=>'WORKSPACE','jobs'=>'OPERATIONS','invoices'=>'OPERATIONS',
+          'support'=>'OPERATIONS','withdrawals'=>'OPERATIONS','payments'=>'OPERATIONS','payouts'=>'OPERATIONS',
+          'messages'=>'COMMUNICATION','community'=>'COMMUNICATION',
+          'blog'=>'CONTENT','editorial_showcase'=>'CONTENT','frontend'=>'CONTENT','media'=>'CONTENT',
+          'services'=>'SERVICES','forms'=>'SERVICES',
+          'users'=>'ADMINISTRATION','settings'=>'ADMINISTRATION',
+        ];
+        $lastGroup='';
+      ?>
       <?php foreach ($sidebarItems as $item): ?>
+        <?php $group=$portalGroups[$item['page']]??'ADMINISTRATION';
+          if ($group!==$lastGroup): ?><span class="iw-admin-nav-label"><?= e($group) ?></span><?php $lastGroup=$group; endif; ?>
         <a class="sidebar-link <?= $currentPage === $item['page'] ? 'active' : '' ?>" href="<?= e($item['url']) ?>" title="<?= e($item['label']) ?>">
           <i class="bi <?= e($item['icon']) ?>"></i>
           <span class="sidebar-label"><?= e($item['label']) ?></span>

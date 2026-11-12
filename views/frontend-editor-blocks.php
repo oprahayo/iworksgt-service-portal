@@ -4,7 +4,9 @@ $blockData = is_array($block['data'] ?? null) ? $block['data'] : [];
 $index = (int) ($index ?? 0);
 $mediaAssets = is_array($mediaAssets ?? null) ? $mediaAssets : [];
 $serviceOptions = list_services(true);
-$packageOptions = list_travel_package_options(true);
+// iWorks offers business services, not travel packages. Legacy saved CMS
+// blocks remain readable without importing an unavailable travel subsystem.
+$packageOptions = [];
 $renderBlockTemplates = (bool) ($renderBlockTemplates ?? false);
 
 if (!function_exists('frontend_editor_media_options')) {

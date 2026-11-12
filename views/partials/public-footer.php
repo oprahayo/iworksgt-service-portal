@@ -448,6 +448,54 @@ $socialIcons = [
   }
 })();
 </script>
+<button type="button" class="iw-back-to-top" data-iw-to-top aria-label="Back to top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<script>
+(function(){
+  var link=document.querySelector('[data-iw-auth-status]');
+  if(link){
+    fetch(<?= json_encode(portal_url('public_auth_status')) ?>,{credentials:'include',mode:'cors',cache:'no-store'})
+      .then(function(r){return r.ok?r.json():null})
+      .then(function(data){
+        if(!data||!data.authenticated)return;
+        link.href=<?= json_encode(portal_url('dashboard')) ?>;
+        link.removeAttribute('data-iw-auth');
+        link.title='Open your dashboard';link.setAttribute('aria-label','Open your iWorks dashboard');
+        link.innerHTML='<i class="bi bi-person-circle" aria-hidden="true"></i><span class="visually-hidden">Dashboard</span>';
+        link.classList.add('iw-public-account-active');
+      }).catch(function(){});
+  }
+  var toggle=document.querySelector('[data-iw-theme-toggle]');
+  var modes=['system','light','dark'];
+  function apply(mode){
+    var dark=mode==='dark'||(mode==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.iwTheme=dark?'dark':'light';
+    document.documentElement.dataset.iwThemeMode=mode;
+    if(toggle){
+      toggle.title='Theme: '+mode;
+      toggle.setAttribute('aria-label','Theme: '+mode+'. Change color theme');
+      var icon=toggle.querySelector('i');
+      if(icon)icon.className='bi '+(mode==='system'?'bi-circle-half':mode==='dark'?'bi-moon-stars':'bi-sun');
+    }
+  }
+  var mode=document.documentElement.dataset.iwThemeMode||'system';apply(mode);
+  if(toggle)toggle.addEventListener('click',function(){
+    mode=modes[(modes.indexOf(mode)+1)%modes.length];
+    try{localStorage.setItem('iworks_theme',mode);}catch(e){}
+    apply(mode);
+  });
+  var scheme=window.matchMedia('(prefers-color-scheme: dark)');
+  if(scheme.addEventListener)scheme.addEventListener('change',function(){if(mode==='system')apply(mode)});
+  var top=document.querySelector('[data-iw-to-top]');
+  if(top){
+    function refresh(){top.classList.toggle('iw-visible',window.scrollY>480);}
+    window.addEventListener('scroll',refresh,{passive:true});
+    refresh();
+    top.addEventListener('click',function(){
+      window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    });
+  }
+})();
+</script>
 <script defer src="<?= e(public_absolute_url('assets/js/public-ux.js')) ?>?v=20261112b"></script>
 </body>
 </html>

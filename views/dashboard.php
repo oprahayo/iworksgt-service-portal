@@ -1,6 +1,10 @@
 <?php
 $user = current_user();
-$heroKicker = 'Control Center';
+if (($user['role'] ?? '') === 'author') {
+    require __DIR__ . '/author-dashboard.php';
+    return;
+}
+$heroKicker = 'Workspace';
 $heroMessage = 'Book services, track progress, and keep delivery fully remote.';
 
 if (($user['role'] ?? '') === 'agent') {
@@ -15,7 +19,7 @@ if (role_has_admin_or_finance_access((string) ($user['role'] ?? ''))) {
 
 if (($user['role'] ?? '') === 'super_admin') {
     $heroKicker = 'Super Admin Hub';
-    $heroMessage = 'Manage packages, users, homepage content, and travel operations from one dashboard.';
+    $heroMessage = 'Manage registrations, customer services, editorial content and platform operations.';
 }
 ?>
 <?php if (!empty($blockingAnnouncement)): ?>
@@ -48,13 +52,34 @@ if (($user['role'] ?? '') === 'super_admin') {
 <script>document.body.classList.add('announcement-open');</script>
 <?php endif; ?>
 
-<div class="dashboard-page<?= $user['role'] === 'client' ? ' dashboard-page-client' : '' ?>">
+<div class="dashboard-page<?= $user['role'] === 'client' ? ' dashboard-page-client' : '' ?><?= $user['role']==='admin'?' iw-admin-workspace':'' ?>">
 <div class="brand-hero mb-4">
   <small class="kicker text-white-50"><?= e($heroKicker) ?></small>
   <h1 class="h4 mt-2 mb-1">Hello, <?= e($user['full_name']) ?></h1>
   <p class="mb-0 text-white-50"><?= e($heroMessage) ?></p>
 </div>
 
+<?php if($user['role']==='admin'): ?>
+  <section class="iw-admin-launchpad" aria-label="Administration shortcuts">
+    <div class="iw-admin-section-head"><div><span>QUICK ACCESS</span><h2>Manage iWorks</h2></div></div>
+    <div class="iw-admin-launchpad-grid">
+      <?php foreach([
+        ['Jobs & fulfilment','Track service orders and delivery','jobs','bi-briefcase'],
+        ['Payments & invoices','Keep collections and billing organised','payments','bi-credit-card'],
+        ['Customers & authors','Manage account access and authors','users','bi-people'],
+        ['Insights','Write and publish business articles','blog','bi-journal-richtext'],
+        ['Case studies & feedback','Publish genuine client success stories','editorial_showcase','bi-collection'],
+        ['Website editor','Update public page sections and graphics','frontend','bi-layout-text-window-reverse']
+      ] as $shortcut): ?>
+        <a href="<?= e(url($shortcut[2])) ?>" class="iw-admin-launchpad-link">
+          <span class="iw-admin-launchpad-icon"><i class="bi <?= e($shortcut[3]) ?>"></i></span>
+          <strong><?= e($shortcut[0]) ?></strong><small><?= e($shortcut[1]) ?></small>
+          <i class="bi bi-arrow-up-right iw-admin-launchpad-arrow"></i>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </section>
+<?php endif; ?>
 <div class="row g-3 mb-4">
   <?php foreach ($stats as $label => $value): ?>
     <div class="col-6 col-lg-3">
@@ -86,6 +111,7 @@ if (($user['role'] ?? '') === 'super_admin') {
 </div>
 <?php endif; ?>
 
+<?php if($user['role']!=='admin'): ?>
 <div class="card mb-4">
   <div class="card-body">
     <h2 class="h5">Quick actions</h2>
@@ -96,7 +122,7 @@ if (($user['role'] ?? '') === 'super_admin') {
       <?php endif; ?>
       <?php if (has_role(['admin', 'finance'])): ?>
         <a class="btn btn-outline-secondary" href="<?= e(url('services')) ?>">Manage services</a>
-        <a class="btn btn-outline-secondary" href="<?= e(url('packages')) ?>">Manage packages</a>
+
         <a class="btn btn-outline-secondary" href="<?= e(url('payouts')) ?>">Commission payouts</a>
       <?php endif; ?>
       <?php if ($user['role'] === 'agent'): ?>
@@ -112,6 +138,7 @@ if (($user['role'] ?? '') === 'super_admin') {
     </div>
   </div>
 </div>
+<?php endif; ?>
 
 <?php if ($user['role'] === 'client'): ?>
 <section class="dashboard-banner-strip-wrap">

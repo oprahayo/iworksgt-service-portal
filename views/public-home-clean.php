@@ -143,6 +143,8 @@ $faqs = array_slice($faqs, 0, 8);
 
 $featuredInsights = [];
 try { $featuredInsights = list_blog_posts_public(4); } catch (Throwable $e) { $featuredInsights = []; }
+$homeCases = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 5) : [];
+$homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 3) : [];
 
 $bannerTitle = trim((string) ($banner['headline'] ?? ''));
 if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right support stack.') {
@@ -293,13 +295,20 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       </div>
       <div class="iw-home-insights-carousel" id="iwHomeInsights" tabindex="0" aria-label="Recent insights" aria-roledescription="carousel">
         <?php foreach ($featuredInsights as $insight): ?>
+          <?php $insightImage = trim((string)($insight['featured_image']['url']??'')); ?>
           <article class="iw-home-insight">
-            <a href="<?= e(public_url('blog_post',['slug'=>(string) ($insight['slug'] ?? '')])) ?>">
-              <span class="iw-home-insight-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span>
-              <span class="iw-home-insight-category">INSIGHTS</span>
-              <h3><?= e((string) ($insight['title'] ?? 'Business insight')) ?></h3>
-              <p><?= e(mb_safe_trim(trim((string) ($insight['excerpt'] ?? '')), 125)) ?></p>
-              <strong>Read article <i class="bi bi-arrow-right" aria-hidden="true"></i></strong>
+            <a href="<?= e(public_url('blog_post',['slug'=>(string)($insight['slug']??'')])) ?>">
+              <div class="iw-home-insight-media <?= $insightImage===''?'iw-editorial-abstract':'' ?>">
+                <?php if($insightImage!==''): ?><img src="<?= e($insightImage) ?>" loading="lazy" alt="">
+                <?php else: ?><i class="bi bi-journal-richtext" aria-hidden="true"></i><?php endif; ?>
+                <span class="iw-home-read-overlay">Read article <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+              </div>
+              <div class="iw-home-insight-copy">
+                <span class="iw-home-insight-category"><?= e((string)($insight['tag']?:'INSIGHTS')) ?></span>
+                <h3><?= e((string)($insight['title']??'Business insight')) ?></h3>
+                <p><?= e(mb_safe_trim(trim((string)($insight['excerpt']??'')),125)) ?></p>
+                <strong>Read insight <i class="bi bi-arrow-right" aria-hidden="true"></i></strong>
+              </div>
             </a>
           </article>
         <?php endforeach; ?>
@@ -335,6 +344,85 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     }
   })();
   </script>
+  <?php endif; ?>
+
+  <section class="iw-home-benefits" aria-labelledby="iw-benefits-title">
+    <div class="container public-container">
+      <div class="iw-home-benefits-head"><span>WHY iWORKS</span><h2 id="iw-benefits-title">Business support that moves with you.</h2></div>
+      <div class="iw-home-benefits-grid">
+        <article><div class="iw-benefit-art iw-benefit-art-document" aria-hidden="true">
+          <span class="iw-benefit-art-orbit"></span><i class="bi bi-file-earmark-check"></i><span class="iw-benefit-art-stamp"><i class="bi bi-patch-check-fill"></i></span></div>
+          <h3>Guided registrations</h3><p>A clear application process, with everything needed for your filing in one place.</p></article>
+        <article><div class="iw-benefit-art iw-benefit-art-progress" aria-hidden="true">
+          <span class="iw-benefit-art-orbit"></span><i class="bi bi-clipboard-data"></i><span class="iw-benefit-art-stamp"><i class="bi bi-chat-square-dots"></i></span></div>
+          <h3>Visible progress</h3><p>Track your order, review updates and communicate with the team handling your request.</p></article>
+        <article><div class="iw-benefit-art iw-benefit-art-payment" aria-hidden="true">
+          <span class="iw-benefit-art-orbit"></span><i class="bi bi-credit-card-2-front"></i><span class="iw-benefit-art-stamp"><i class="bi bi-shield-lock-fill"></i></span></div>
+          <h3>Flexible payment options</h3><p>Pay through the supported provider for your invoice currency and manage billing online.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <?php if($homeFeedback): ?>
+    <section class="iw-home-feedback" aria-labelledby="iw-home-feedback-title"><div class="container public-container">
+      <div class="iw-editorial-section-head"><div><span>CLIENT VOICES</span><h2 id="iw-home-feedback-title">Feedback from our customers</h2></div></div>
+      <div class="iw-home-feedback-grid">
+        <?php foreach($homeFeedback as $feedback): ?>
+          <article class="iw-home-feedback-card">
+            <div class="iw-feedback-logo">
+              <?php if(!empty($feedback['logo_url'])): ?><img src="<?= e((string)$feedback['logo_url']) ?>" alt="<?= e((string)$feedback['company']) ?>" loading="lazy">
+              <?php else: ?><strong><?= e((string)($feedback['company']?:'iWorks client')) ?></strong><?php endif; ?>
+            </div>
+            <blockquote><?= e((string)$feedback['quote_text']) ?></blockquote>
+            <div class="iw-feedback-person">
+              <span class="iw-feedback-avatar">
+                <?php if(!empty($feedback['portrait_url'])): ?><img src="<?= e((string)$feedback['portrait_url']) ?>" alt="" loading="lazy">
+                <?php else: ?><i class="bi bi-person" aria-hidden="true"></i><?php endif; ?>
+              </span>
+              <span><strong><?= e((string)$feedback['customer_name']) ?></strong>
+                <small><?= e(trim((string)$feedback['position'].' · '.(string)$feedback['company'],' ·')) ?></small></span>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      </div>
+    </div></section>
+  <?php endif; ?>
+
+  <?php if($homeCases): ?>
+    <section class="iw-home-case-stories" aria-labelledby="iw-home-cases-title"><div class="container public-container">
+      <div class="iw-home-case-head"><span>CASE STUDIES</span><h2 id="iw-home-cases-title">Stories of real progress.</h2></div>
+      <div class="iw-home-case-carousel" id="iwHomeCases">
+      <?php foreach($homeCases as $idx=>$story): ?>
+        <article class="iw-home-case-slide" <?= $idx>0?'hidden':'' ?>>
+          <div class="iw-home-case-copy"><span><?= e((string)$story['category']) ?></span>
+            <h3><?= e((string)$story['title']) ?></h3>
+            <p><?= e((string)$story['summary']) ?></p>
+            <a href="<?= e(public_url('case_study',['slug'=>(string)$story['slug']])) ?>">Read case study <i class="bi bi-arrow-up-right"></i></a>
+          </div>
+          <div class="iw-home-case-visual">
+            <?php if(!empty($story['logo_url'])): ?><img src="<?= e((string)$story['logo_url']) ?>" alt="<?= e((string)$story['client_name']) ?>" loading="lazy">
+            <?php else: ?><i class="bi bi-building-check" aria-hidden="true"></i><?php endif; ?>
+            <small><?= e((string)$story['client_name']) ?></small>
+            <?php if(!empty($story['outcome'])): ?><strong><?= e((string)$story['outcome']) ?></strong><?php endif; ?>
+          </div>
+        </article>
+      <?php endforeach; ?>
+      </div>
+      <div class="iw-home-case-actions"><a href="<?= e(public_url('case-studies')) ?>">All case studies <i class="bi bi-arrow-right"></i></a>
+        <div><button type="button" data-iw-case-prev aria-label="Previous case study"><i class="bi bi-arrow-left"></i></button>
+          <button type="button" data-iw-case-next aria-label="Next case study"><i class="bi bi-arrow-right"></i></button></div></div>
+    </div></section>
+    <script>
+    (function(){
+      var slides=Array.from(document.querySelectorAll('#iwHomeCases .iw-home-case-slide'));
+      if(!slides.length)return;var at=0;
+      function show(next){at=(next+slides.length)%slides.length;slides.forEach(function(slide,i){slide.hidden=i!==at;});}
+      var prev=document.querySelector('[data-iw-case-prev]');
+      var next=document.querySelector('[data-iw-case-next]');
+      if(prev)prev.addEventListener('click',function(){show(at-1)});
+      if(next)next.addEventListener('click',function(){show(at+1)});
+    })();
+    </script>
   <?php endif; ?>
 
   <section class="iw-clean-last" aria-labelledby="iw-clean-last-title">

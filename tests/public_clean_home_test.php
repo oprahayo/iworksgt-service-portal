@@ -73,7 +73,8 @@ check_home(substr_count($html, 'class="iw-clean-step"') === 3, 'Home should have
 check_home(substr_count($html, '<details>') >= 6, 'Home should offer expanded collapsible FAQs.');
 check_home(str_contains($html, 'Can I use iWorks if I live outside Nigeria?'), 'Remote/diaspora service FAQ missing.');
 check_home(str_contains($html, 'Can I pay in naira or US dollars?'), 'Currency FAQ missing.');
-check_home(substr_count($html, '<section') <= 7, 'Avoid repeating marketing sections.');
+check_home(substr_count($html, '<section') <= 8, 'Keep marketing sections concise, including the requested illustrated benefits.');
+check_home(substr_count($html, 'class="iw-home-benefits"') === 1, 'Illustrated benefit section must appear once.');
 check_home(str_contains($html, 'Step 1') && str_contains($html, 'Step 3'), 'Connected steps need accessible labels.');
 check_home(str_contains($html, 'name="form_action" value="public_track"'), 'Home must submit to the existing track handler.');
 check_home(str_contains($html, 'name="job_code"') && str_contains($html, 'name="identifier"'), 'Tracking fields must match the handler.');
