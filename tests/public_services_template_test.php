@@ -44,7 +44,7 @@ check(str_contains($html, 'NGN 26,000'), 'Catalog pricing must use the published
 check(str_contains($html, 'USD 800'), 'Mixed currencies must keep their own ISO currency code.');
 check(str_contains($html, 'Request a quote'), 'Zero-priced custom requests must not say free.');
 check(!str_contains($html, 'Bank Account Opening'), 'Banking services must remain excluded.');
-check(substr_count($html, 'data-service-row data-search=') === 5, 'Each published service should render one flat linked row.');
+check(substr_count($html, 'data-service-row data-tone=') === 5, 'Each published service should render one flat linked row.');
 check(str_contains($html, '<a class="iw-service-index-row"'), 'Each directory row should be one tap target.');
 check(str_contains($html, '<h3 class="iw-service-index-name"'), 'Service titles must be keyboard and screen-reader friendly headings.');
 $directoryCss = (string) file_get_contents(__DIR__ . '/../assets/css/services-list.css');
@@ -66,7 +66,7 @@ require __DIR__ . '/../views/public-services-refined.php';
 $growthHtml = (string) ob_get_clean();
 check(str_contains($growthHtml, 'Website Design &amp; Development'), 'Selected category should render its service.');
 check(!str_contains($growthHtml, 'Launch a Company Package'), 'Selected category should not show services from another category.');
-check(substr_count($growthHtml, 'data-service-row data-search=') === 1, 'Category route should render only matching service rows.');
+check(substr_count($growthHtml, 'data-service-row data-tone=') === 1, 'Category route should render only matching service rows.');
 check(str_contains($growthHtml, '<option value="growth" selected'), 'Category dropdown should reflect the URL-selected category.');
 check(!str_contains($growthHtml, 'Bank Account Opening'), 'A category must not leak another category.');
 
