@@ -47,6 +47,14 @@ foreach ($clientServiceItems as $item) { $countByStatus[$item['status']] = ($cou
       <div class="iw-client-application-actions">
         <a class="iw-client-button <?= $item['status']==='payment'?'':'iw-client-button-soft' ?>"
            href="<?= e((string) $item['detail_url']) ?>"><?= e((string) $item['action']) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <?php if (($item['kind'] ?? '') === 'job' && ($item['status'] ?? '') === 'payment'): ?>
+          <form method="post" action="<?= e(url('applications')) ?>" onsubmit="return confirm('Delete this pending unpaid service request? This action cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="form_action" value="delete_pending_service">
+            <input type="hidden" name="job_id" value="<?= (int) $item['id'] ?>">
+            <button class="iw-client-delete" type="submit"><i class="bi bi-trash3"></i> Delete pending request</button>
+          </form>
+        <?php endif; ?>
         <?php if (!empty($item['can_delete_draft'])): ?>
           <form method="post" action="<?= e(url('trademark',['id'=>(int) $item['id']])) ?>" onsubmit="return confirm('Delete this draft application? This cannot be undone.');">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
