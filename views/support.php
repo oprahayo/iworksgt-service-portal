@@ -205,6 +205,17 @@
                 </select>
               </div>
               <div class="col-12">
+                <label class="form-label" for="supportRelatedServices">Related services (optional)</label>
+                <select class="form-select" id="supportRelatedServices" name="related_job_ids[]" multiple size="4" aria-describedby="supportRelatedHint">
+                  <?php foreach ($supportServices ?? [] as $relatedJob): ?>
+                    <option value="<?= (int) ($relatedJob['id'] ?? 0) ?>">
+                      <?= e((string) ($relatedJob['job_code'] ?? '')) ?> · <?= e((string) ($relatedJob['service_name'] ?? $relatedJob['title'] ?? 'Service')) ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+                <small id="supportRelatedHint" class="text-muted">Select one or more of your orders (Ctrl/Cmd + click on desktop). Our support team will see their references in your ticket.</small>
+              </div>
+              <div class="col-12">
                 <label class="form-label">Subject</label>
                 <input class="form-control" name="subject" id="supportCreateSubject" required>
               </div>
