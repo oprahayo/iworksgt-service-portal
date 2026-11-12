@@ -1214,6 +1214,129 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
+        case 'cac_file':
+            require_login();
+            cac_ensure_schema();
+            $fileId = max(0,(int) ($_GET['id'] ?? 0));
+            $file = db_one('SELECT f.*, a.job_id,a.client_id AS owner_id
+                FROM cac_application_files f
+                JOIN cac_applications a ON a.id=f.application_id
+                WHERE f.id=:id LIMIT 1',['id'=>$fileId]);
+            if (!$file) { http_response_code(404); exit('File not found.'); }
+            $viewer=current_user();
+            $owner=(int) ($viewer['id'] ?? 0)===(int) $file['owner_id'];
+            $isStaff=in_array((string) ($viewer['role'] ?? ''),['admin','finance','agent'],true);
+            $job=$isStaff && (int) ($file['job_id'] ?? 0)>0 ? get_job((int) $file['job_id']) : null;
+            if (!$owner && (!$isStaff || !$job || !can_access_job($viewer,$job))) {
+                http_response_code(403);exit('Access denied.');
+            }
+            $name=basename((string) ($file['storage_name'] ?? ''));
+            if (!preg_match('/^[a-f0-9]{36}\.(?:jpg|png|webp|pdf)$/D',$name)) {
+                http_response_code(404);exit('File not found.');
+            }
+            $full=cac_private_dir().'/'.$name;
+            if (!is_file($full)) { http_response_code(404);exit('File not found.'); }
+            $type=(string) $file['mime'];
+            if (!in_array($type,['image/jpeg','image/png','image/webp','application/pdf'],true)) {
+                http_response_code(404);exit('Unsupported document.');
+            }
+            header('Content-Type: '.$type);
+            header('Content-Length: '.filesize($full));
+            header('Content-Disposition: attachment; filename="cac-document-'.(int) $file['id'].'.'.pathinfo($name,PATHINFO_EXTENSION).'"');
+            header('Cache-Control: private, no-store');
+            header('X-Content-Type-Options: nosniff');
+            header("Content-Security-Policy: default-src 'none'; sandbox");
+            readfile($full);
+            exit;
+
+        case 'cac':
+            require_roles(['client']);
+            cac_ensure_schema();
+            $cacUser=current_user();
+            $cacClient=(int) $cacUser['id'];
+            $cacId=max(0,(int) ($_GET['id'] ?? $_POST['id'] ?? 0));
+            $cacAsync=method_is('POST') && (
+                (string) ($_POST['ajax'] ?? '')==='1'
+                || str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')),'application/json')
+            );
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $action=(string) ($_POST['form_action'] ?? '');
+                    if ($action==='delete_draft') {
+                        cac_delete_draft($cacId,$cacClient);
+                        flash('success','Unsubmitted CAC draft deleted.');
+                        redirect(url('applications'));
+                    }
+                    if ($action==='upload_file') {
+                        $uploaded=cac_upload_file($cacClient,$cacId,
+                            (string) ($_POST['field_key'] ?? ''),$_FILES['document'] ?? null);
+                        header('Content-Type: application/json; charset=utf-8');
+                        header('Cache-Control: no-store');
+                        echo json_encode(['success'=>true]+$uploaded,JSON_UNESCAPED_SLASHES);
+                        exit;
+                    }
+                    if (in_array($action,['save_draft','review_draft'],true)) {
+                        $posted=cac_form_values($_POST);
+                        $cacId=cac_save_draft($cacClient,$cacId,$posted);
+                        if ($cacAsync) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            header('Cache-Control: no-store');
+                            echo json_encode(['success'=>true,'id'=>$cacId],JSON_UNESCAPED_SLASHES);
+                            exit;
+                        }
+                        if ($action==='review_draft') {
+                            $saved=cac_find($cacId,$cacClient);
+                            $files=cac_list_files($cacId,$cacClient);
+                            cac_validate($saved['data'],array_column($files,'field_key'));
+                            redirect(url('cac',['id'=>$cacId,'step'=>'review']));
+                        }
+                        flash('success','Application draft saved.');
+                        redirect(url('cac',['id'=>$cacId]));
+                    }
+                    if ($action==='submit_for_payment') {
+                        $invoiceId=cac_checkout($cacClient,$cacId);
+                        iworks_order_intent_clear();
+                        flash('success','Application saved and invoice created. Complete payment to start processing.');
+                        redirect(url('cac',['id'=>$cacId,'step'=>'payment']));
+                    }
+                    throw new RuntimeException('Unknown CAC application action.');
+                } catch (Throwable $e) {
+                    if ($cacAsync) {
+                        http_response_code(422);
+                        header('Content-Type: application/json; charset=utf-8');
+                        header('Cache-Control: no-store');
+                        echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
+                        exit;
+                    }
+                    flash('error',$e->getMessage());
+                    redirect(url('cac',$cacId>0?['id'=>$cacId]:['kind'=>cac_kind((string) ($_POST['kind'] ?? 'business_name'))]));
+                }
+            }
+            $cacApplication=$cacId>0?cac_find($cacId,$cacClient):null;
+            if ($cacId>0 && !$cacApplication) { http_response_code(404);exit('Application not found.'); }
+            $cacKind=$cacApplication ? (string) $cacApplication['kind']
+                : cac_kind((string) ($_GET['kind'] ?? 'business_name'));
+            $cacData=$cacApplication['data'] ?? ['kind'=>$cacKind,'currency'=>'NGN','people'=>[]];
+            $cacFiles=$cacApplication ? cac_list_files($cacId,$cacClient) : [];
+            $cacStage=(string) ($_GET['step'] ?? 'details');
+            if (!in_array($cacStage,['details','review','payment'],true)) { $cacStage='details'; }
+            if ($cacApplication && $cacApplication['status']!=='draft') {
+                $cacStage='payment';
+            } else if ($cacStage==='payment') { $cacStage='review'; }
+            if ($cacStage==='review') {
+                try { cac_validate($cacData,array_column($cacFiles,'field_key')); }
+                catch (Throwable $e) {
+                    flash('error',$e->getMessage());
+                    redirect(url('cac',$cacId>0?['id'=>$cacId]:['kind'=>$cacKind]));
+                }
+            }
+            $title=($cacKind==='company'?'Company incorporation':'Business name registration').' - '.app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/client-cac.php';
+            require __DIR__.'/views/partials/footer.php';
+            break;
+
         case 'trademark_file':
             require_roles(['client']);
             trademark_ensure_schema();
