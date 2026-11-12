@@ -56,6 +56,7 @@ jobs:
           php tests/public_review_carousel_test.php
           php tests/public_layout_finish_test.php
           php tests/google_oauth_contract_test.php
+          php tests/public_seo_mobile_test.php
 
       - name: Validate public interaction JavaScript
         run: node --check assets/js/public-ux.js
