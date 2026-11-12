@@ -1831,6 +1831,50 @@ try {
                 $action = (string) ($_POST['form_action'] ?? '');
 
                 try {
+                    if ($action === 'upload_intake_file') {
+                        header('Content-Type: application/json; charset=utf-8');
+                        if ((string) ($user['role'] ?? '') !== 'client'
+                            || (int) $intakeSubmission['client_user_id'] !== (int) $user['id']
+                            || !intake_client_can_edit($intakeSubmission)) {
+                            http_response_code(403);
+                            echo json_encode(['success'=>false,'message'=>'You cannot upload documents to this form.']);
+                            break;
+                        }
+                        try {
+                            $fieldKey = trim((string) ($_POST['field_key'] ?? ''));
+                            $schema = normalize_intake_schema(intake_decode_json_array((string) ($intakeSubmission['schema_snapshot_json'] ?? '')));
+                            $fields = intake_schema_fields_map($schema);
+                            if ($fieldKey === '' || !isset($fields[$fieldKey]) || (string) ($fields[$fieldKey]['type'] ?? '') !== 'file') {
+                                throw new RuntimeException('Invalid document field.');
+                            }
+                            $upload = $_FILES['intake_file'] ?? null;
+                            if (!is_array($upload)) { throw new RuntimeException('Choose a document to upload.'); }
+                            validate_intake_upload_file($upload);
+                            $currentAnswers = intake_decode_json_array((string) ($intakeSubmission['data_json'] ?? ''));
+                            save_intake_submission_draft($submissionId, (int) $user['id'], $currentAnswers, [$fieldKey => [$upload]]);
+                            $saved = get_intake_submission($submissionId);
+                            $allFiles = intake_decode_json_array((string) ($saved['files_json'] ?? ''));
+                            $fieldFiles = is_array($allFiles[$fieldKey] ?? null) ? $allFiles[$fieldKey] : [];
+                            $fileIndex = count($fieldFiles) - 1;
+                            if ($fileIndex < 0) { throw new RuntimeException('Upload could not be confirmed.'); }
+                            $entry = $fieldFiles[$fileIndex];
+                            echo json_encode([
+                                'success'=>true,
+                                'file'=>[
+                                    'index'=>$fileIndex,
+                                    'name'=>(string) ($entry['original_name'] ?? 'Document'),
+                                    'size'=>(int) ($entry['size'] ?? 0),
+                                    'url'=>'download.php?intake_submission_id=' . $submissionId
+                                        . '&field_key=' . rawurlencode($fieldKey) . '&file_index=' . $fileIndex,
+                                ],
+                            ], JSON_UNESCAPED_SLASHES);
+                        } catch (Throwable $uploadError) {
+                            http_response_code(422);
+                            echo json_encode(['success'=>false,'message'=>$uploadError->getMessage()]);
+                        }
+                        break;
+                    }
+
                     if (in_array($action, ['autosave_intake', 'submit_intake'], true)) {
                         if ((string) ($user['role'] ?? '') !== 'client' || (int) $intakeSubmission['client_user_id'] !== (int) $user['id']) {
                             throw new RuntimeException('Only client owner can submit this intake form.');
