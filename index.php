@@ -2799,6 +2799,21 @@ try {
                         flash('success', 'Partner logo removed from the website strip.');
                     }
 
+                    if ($action === 'save_cac_pricing') {
+                        foreach ([
+                            'cac_business_base_ngn' => 26000,
+                            'cac_business_partner_extra_ngn' => 15000,
+                            'cac_company_extra_director_ngn' => 0,
+                        ] as $key=>$default) {
+                            $value = filter_var($_POST[$key] ?? $default, FILTER_VALIDATE_FLOAT);
+                            if ($value === false || !is_finite((float)$value) || $value < 0 || $value > 100000000) {
+                                throw new RuntimeException('CAC pricing entries must be non-negative and below ₦100 million.');
+                            }
+                            set_setting($key, number_format((float)$value,2,'.',''));
+                        }
+                        flash('success', 'CAC service pricing updated.');
+                    }
+
                     if ($action === 'save_rules') {
                         $minimum = max((float) ($_POST['withdrawal_minimum'] ?? 20000), 1);
                         $cooldown = max((int) ($_POST['withdrawal_cooldown_days'] ?? 14), 1);
