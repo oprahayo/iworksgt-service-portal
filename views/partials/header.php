@@ -195,6 +195,7 @@ if ($user) {
   <link rel="stylesheet" href="assets/css/reviews.css">
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
     <link rel="stylesheet" href="assets/css/auth-clean.css">
+    <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <style>
     :root {
