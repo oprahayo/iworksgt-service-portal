@@ -145,7 +145,7 @@ if ($description === '' || $description === 'Browse what you need.') {
         $currency = strtoupper(trim((string) ($service['currency'] ?? default_currency())));
         $amount = $currency . ' ' . number_format($price, (abs($price - round($price)) < 0.001 ? 0 : 2));
         if ((string) ($service['slug'] ?? '') === 'trademark') {
-            $price = trademark_price_usd();
+            $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
             $amount = 'USD ' . number_format($price, 2) . ' / class';
         }
         $href = public_url('service', ['slug' => (string) ($service['slug'] ?? '')]);
