@@ -34,6 +34,10 @@ $contactHref = normalize_public_href(trim((string) ($publicHeaderConfig['contact
 $signInLabel = trim((string) ($publicHeaderConfig['signInLabel'] ?? 'Sign In'));
 $ctaLabel = trim((string) ($publicHeaderConfig['ctaLabel'] ?? 'Talk to our experts'));
 $ctaHref = normalize_public_href(trim((string) ($publicHeaderConfig['ctaHref'] ?? public_url('services'))), public_url('services'));
+// Keep header language and destination aligned; talking to a person goes to Contact.
+if (strcasecmp($ctaLabel, 'Talk to our experts') === 0 && $ctaHref === public_url('services')) {
+    $ctaHref = public_url('contact');
+}
 $currentPublicSlug = trim((string) ($publicPageSlug ?? ($page ?? 'home')));
 $isAboutActive = $currentPublicSlug === 'about';
 $isManagementActive = $currentPublicSlug === 'management';
@@ -69,6 +73,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
   <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/launch-home.css')) ?>"><?php endif; ?>
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/refined-services.css')) ?>"><?php endif; ?>
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -130,13 +135,8 @@ $isLaunchHome = $currentPublicSlug === 'home';
               </div>
             </li>
             <?php if ($aboutLabel !== '' && $aboutHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"><?= e($aboutLabel) ?></a></li><?php endif; ?>
-            <?php if ($isLaunchHome): ?>
-              <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
-            <?php else: ?>
-            <?php if ($managementLabel !== '' && $managementHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isManagementActive ? ' active' : '' ?>" href="<?= e($managementHref) ?>"><?= e($managementLabel) ?></a></li><?php endif; ?>
-            <?php if ($useCasesLabel !== '' && $useCasesHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"><?= e($useCasesLabel) ?></a></li><?php endif; ?>
+            <?php if ($useCasesLabel !== '' && $useCasesHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"><?= e($useCasesLabel === 'Use Cases' || $useCasesLabel === 'Case Studies' ? 'Our Work' : $useCasesLabel) ?></a></li><?php endif; ?>
             <?php if ($blogLabel !== '' && $blogHref !== ''): ?><li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e($blogHref) ?>"><?= e($blogLabel) ?></a></li><?php endif; ?>
-            <?php endif; ?>
             <li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"><?= e($contactLabel) ?></a></li>
           </ul>
           <div class="public-header-cta-group norebase-header-cta">
