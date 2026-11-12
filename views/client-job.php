@@ -8,6 +8,7 @@ $canUpload = can_user_upload_files_to_job($user, $job);
 $canManageFiles = can_user_manage_job_files($user, $job);
 $clientThreadLocked = in_array($state, ['delivered','closed','cancelled'], true);
 $clientCanRevise = can_client_request_job_revision($job);
+$cacLinkedApplication = function_exists('cac_find_for_job') ? cac_find_for_job((int) $job['id'],(int) $user['id']) : null;
 $visibleIntake = [];
 $legacyTrademarkIntake = [];
 foreach (is_array($intakeSubmissions ?? null) ? $intakeSubmissions : [] as $submission) {
@@ -63,6 +64,8 @@ $missingRequired = count(array_filter($visibleIntake, static fn(array $s): bool 
       <div class="iw-client-detail-panel-title"><h2>Service information</h2>
         <?php if (!empty($wizardTrademark)): ?>
           <a href="<?= e(url('trademark',['id'=>(int) $wizardTrademark['id'],'step'=>'payment'])) ?>">View trademark application <i class="bi bi-arrow-up-right"></i></a>
+        <?php elseif (!empty($cacLinkedApplication)): ?>
+          <a href="<?= e(url('cac',['id'=>(int) $cacLinkedApplication['id'],'step'=>'payment'])) ?>">View CAC application <i class="bi bi-arrow-up-right"></i></a>
         <?php endif; ?>
       </div>
       <div class="iw-client-request-description"><?= nl2br(e((string) ($job['description'] ?: 'Details will appear here.'))) ?></div>
