@@ -236,6 +236,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
           <input id="iwHomeIdentifier" name="identifier" required maxlength="254" placeholder="Email or phone" autocomplete="off">
           <button class="iw-clean-btn iw-clean-btn-primary" type="submit">Track an existing order <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
         </form>
+        <a class="iw-home-track-alt" href="<?= e(public_url('track')) ?>">Open the full tracking page <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
         <?php if (!empty($publicTrackResult)): ?>
           <div class="iw-home-track-result" role="status">
             <strong><?= e((string) ($publicTrackResult['service_name'] ?? 'Service')) ?></strong>
