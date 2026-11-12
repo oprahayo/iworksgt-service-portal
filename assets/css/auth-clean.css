@@ -51,3 +51,30 @@ body.iw-auth-embed .iw-auth-panel { border:0; box-shadow:none; border-radius:0; 
  body.iw-auth-embed .iw-auth-panel { padding:1rem; }
 }
 @media(prefers-reduced-motion:reduce) { .iw-auth-panel { scroll-behavior:auto; } }
+
+/* An embedded panel is part of the parent dialog, not a second web page. */
+body.iw-auth-embed .iw-auth-header h1 { display:none; }
+body.iw-auth-embed .iw-auth-header>p { display:none; }
+body.iw-auth-embed .iw-auth-form { margin-top:.15rem; }
+body.iw-auth-embed .iw-auth-switch { margin-top:1rem; }
+.iw-auth-register .iw-register-progress { font-size:.73rem; font-weight:650; letter-spacing:.025em; color:#e36512; margin:0 0 .15rem; }
+.iw-auth-register .iw-auth-step { min-width:0; border:0; padding:0; margin:0; }
+.iw-auth-register .iw-auth-step-title { color:#2c3740; font-size:.95rem; font-weight:650; margin:0 0 1rem; padding:0; float:none; width:auto; }
+.iw-auth-register.js-stepped .iw-auth-step[hidden] { display:none!important; }
+.iw-auth-register .iw-register-controls { display:flex; align-items:center; gap:.7rem; }
+.iw-auth-register .iw-register-controls [hidden] { display:none!important; }
+.iw-auth-register .iw-auth-back { min-height:43px; padding:0 .9rem; border-radius:7px; border:1px solid #dfe5e9; color:#475560; background:#fff; display:inline-flex; align-items:center; gap:.45rem; font-size:.83rem; cursor:pointer; }
+.iw-auth-register .iw-auth-submit { flex:1; }
+.iw-auth-register .iw-auth-fields { gap:.7rem .85rem; }
+.iw-auth-register .iw-auth-fields>div>label { font-size:.76rem; margin-bottom:.35rem; }
+.iw-auth-register .iw-auth-form input:not([type="checkbox"]),.iw-auth-register .iw-auth-form select { height:39px; font-size:.85rem; }
+.iw-auth-register .iw-auth-small { margin:0; }
+body.iw-auth-embed .iw-auth-panel.iw-auth-register { padding:.95rem 1.15rem; }
+@media(max-width:550px) {
+  body.iw-auth-embed .iw-auth-panel.iw-auth-register { padding:.65rem .9rem; }
+  .iw-auth-register .iw-auth-fields { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.55rem .7rem; }
+  .iw-auth-register .iw-auth-full { grid-column:1/-1; }
+  .iw-auth-register .iw-auth-fields>div>label { font-size:.73rem; }
+  .iw-auth-register .iw-auth-step-title { font-size:.88rem; margin-bottom:.7rem; }
+  .iw-auth-register .iw-auth-form input:not([type="checkbox"]),.iw-auth-register .iw-auth-form select { height:38px; }
+}

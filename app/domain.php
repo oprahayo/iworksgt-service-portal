@@ -4637,6 +4637,12 @@ function maybe_auto_close_delivered_jobs(): void
             true
         );
         maybe_accrue_commission($jobId);
+        create_notification(
+            (int) $job['client_id'],
+            'Your order is complete — leave a review',
+            'Order ' . (string) ($job['job_code'] ?? '') . ' has been closed. Rate the experience on your order page.',
+            url('job', ['id' => $jobId])
+        );
     }
 }
 
@@ -5407,7 +5413,23 @@ function update_job_status(int $jobId, string $newStatus, int $changedBy, ?strin
         $job['agent_id'] ? (int) $job['agent_id'] : null,
     ]));
     foreach ($targets as $targetId) {
-        create_notification($targetId, 'Job status updated', 'Status changed to ' . str_replace('_', ' ', $newStatus) . '.', url('job', ['id' => $jobId]));
+        if ($targetId === (int) $job['client_id'] && $newStatus === 'closed') {
+            create_notification(
+                $targetId,
+                'Your order is complete — leave a review',
+                'Order ' . (string) ($job['job_code'] ?? '') . ' is complete. Please rate your experience on its order page.',
+                url('job', ['id' => $jobId])
+            );
+        } elseif ($targetId === (int) $job['client_id'] && $newStatus === 'delivered') {
+            create_notification(
+                $targetId,
+                'Your order has been delivered',
+                'Your work is ready. Check your order to accept delivery or request a revision.',
+                url('job', ['id' => $jobId])
+            );
+        } else {
+            create_notification($targetId, 'Job status updated', 'Status changed to ' . str_replace('_', ' ', $newStatus) . '.', url('job', ['id' => $jobId]));
+        }
     }
 
     if ($statusNote === null || trim($statusNote) === '') {

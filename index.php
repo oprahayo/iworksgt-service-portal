@@ -209,6 +209,7 @@ try {
 
         if (method_is('POST') && (string) ($_POST['form_action'] ?? '') === 'website_lead') {
             require_csrf();
+            $isAsyncLead = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
             try {
                 save_website_lead([
                     'full_name' => (string) ($_POST['full_name'] ?? ''),
@@ -218,8 +219,20 @@ try {
                     'message' => (string) ($_POST['message'] ?? ''),
                     'page_slug' => $publicSlug,
                 ]);
-                flash('success', 'Your message has been sent. We will get back to you shortly.');
+                $message = 'Your enquiry has been sent. Our team will respond as soon as possible.';
+                if ($isAsyncLead) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['ok' => true, 'message' => $message]);
+                    exit;
+                }
+                flash('success', $message);
             } catch (Throwable $e) {
+                if ($isAsyncLead) {
+                    http_response_code(422);
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['ok' => false, 'message' => 'We could not send your message. Check the details and try again.']);
+                    exit;
+                }
                 flash('error', $e->getMessage());
             }
             redirect(public_url($publicSlug));
@@ -1457,6 +1470,17 @@ try {
                         }
                     }
 
+                    if ($action === 'submit_order_review') {
+                        submit_job_review(
+                            $jobId,
+                            $user,
+                            (int) ($_POST['rating'] ?? 0),
+                            (string) ($_POST['feedback'] ?? ''),
+                            (string) ($_POST['publish_consent'] ?? '') === '1'
+                        );
+                        flash('success', 'Thank you. Your order review has been saved.');
+                    }
+
                     if ($action === 'accept_delivery' && $user['role'] === 'client') {
                         client_accept_job_delivery($jobId, (int) $user['id']);
                         flash('success', 'Delivery accepted and job closed.');
@@ -1501,6 +1525,9 @@ try {
             }
 
             $job = get_job($jobId);
+            $clientOrderReview = ((string) ($user['role'] ?? '') === 'client' && (int) ($job['client_id'] ?? 0) === (int) $user['id'])
+                ? job_review_for_order($jobId)
+                : null;
             $comments = list_comments($jobId);
             $files = list_job_files($jobId);
             $logs = list_status_logs($jobId);

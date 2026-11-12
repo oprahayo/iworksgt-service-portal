@@ -50,7 +50,11 @@ check(str_contains($html, '<h3 class="iw-service-index-name"'), 'Service titles 
 $directoryCss = (string) file_get_contents(__DIR__ . '/../assets/css/services-list.css');
 check(str_contains($directoryCss, '@media(max-width:767px)'), 'Mobile row layout must be explicitly defined.');
 check(str_contains($directoryCss, '.iw-service-index-row[hidden]'), 'Search must be able to hide rows despite grid display styling.');
-check(!str_contains($directoryCss, 'grid-template-columns:repeat(3,'), 'Directory must not revert to a multi-card desktop grid.');
+check(str_contains($directoryCss, '.iw-service-index-list[data-layout="grid"]'), 'Optional grid layout must be scoped to user-selected mode.');
+check(str_contains($html, 'data-iw-service-view="grid"'), 'Grid toggle missing.');
+check(str_contains($html, 'data-iw-service-view="list"'), 'List toggle missing.');
+check(str_contains($html, 'data-layout="list"'), 'List must remain the default.');
+check(str_contains($html, 'Request a custom service'), 'Tailored service help CTA missing.');
 check(str_contains($html, 'id="iwServiceCategory" name="category"'), 'Native category dropdown must be available on mobile.');
 check(str_contains($html, 'type="search"'), 'Directory search must be available.');
 check(!str_contains($html, 'isc-grid') && !str_contains($html, 'isc-card'), 'Old card grid and layout switch must be removed.');

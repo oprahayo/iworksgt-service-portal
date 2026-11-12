@@ -46,6 +46,7 @@ $isUseCasesActive = $currentPublicSlug === 'case-studies';
 $isServicesActive = in_array($currentPublicSlug, ['services', 'service'], true);
 $isBlogActive = in_array($currentPublicSlug, ['blog', 'blog_post'], true);
 $isContactActive = $currentPublicSlug === 'contact';
+$isTrackActive = $currentPublicSlug === 'track';
 $isLaunchHome = $currentPublicSlug === 'home';
 ?>
 <!doctype html>
@@ -78,6 +79,8 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-polish.css')) ?>">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/reviews.css')) ?>">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/ux-finish.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>"><?php endif; ?>
   <style>
@@ -117,7 +120,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
             <?php if ($aboutLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>><?= e($aboutLabel) ?></a></li><?php endif; ?>
-            <li class="nav-item"><a class="nav-link" href="<?= e(public_url('track')) ?>">Track order</a></li>
+            <li class="nav-item"><a class="nav-link<?= $isTrackActive ? ' active' : '' ?>" href="<?= e(public_url('track')) ?>"<?= $isTrackActive ? ' aria-current="page"' : '' ?>>Track order</a></li>
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">

@@ -186,7 +186,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <a class="iw-clean-service" href="<?= e($trademarkUrl) ?>">
           <span class="iw-clean-service-icon"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
           <h3>Licences &amp; compliance</h3>
-          <p>Trademarks, regulatory documentation, licensing and ongoing filings.</p>
+          <p>Trademark, NAFDAC documentation, export licensing and regulatory filings.</p>
           <span>Explore services <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
         </a>
         <a class="iw-clean-service" href="<?= e($websiteUrl) ?>">
@@ -197,6 +197,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </a>
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      <p class="iw-home-compliance-extra">Need assistance with an export licence or NAFDAC registration? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Export licence or NAFDAC registration">Ask about licensing <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     </div>
   </section>
 
@@ -282,24 +283,5 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     </div>
   </section>
 
-  <section class="iw-home-reviews iw-clean-section" aria-labelledby="iw-home-reviews-title" data-iw-reveal>
-    <div class="container public-container">
-      <div class="iw-clean-section-head iw-home-reviews-head">
-        <span class="iw-clean-overline">INDEPENDENT CUSTOMER FEEDBACK</span>
-        <h2 id="iw-home-reviews-title">Real reviews. A real track record.</h2>
-        <p>See what customers say about iWorks on our public business listing.</p>
-      </div>
-      <div class="iw-home-review-summary">
-        <div class="iw-home-review-score">
-          <span class="iw-home-stars" aria-label="Rated 4.8 out of 5 stars on Google"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span>
-          <strong>4.8/5 on Google</strong>
-          <small>19 public reviews · checked November 2026; rating may change</small>
-        </div>
-        <a class="iw-clean-btn iw-home-review-link" href="https://www.google.com/maps/search/?api=1&amp;query=iWorks%20Global%20Technologies%20Ado-Ekiti&amp;query_place_id=ChIJqXoe-eP6RxARiguk7ysp-8g" target="_blank" rel="noopener noreferrer">
-          Read Google reviews <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-        </a>
-      </div>
-      <p class="iw-home-review-footnote">Reviews relate to iWorks Global Technologies, now iWORKS GLOBAL LTD. The rating is a dated public listing snapshot, not a live feed.</p>
-    </div>
-  </section>
+  <?php require __DIR__ . '/partials/public-review-carousel.php'; ?>
 </main>

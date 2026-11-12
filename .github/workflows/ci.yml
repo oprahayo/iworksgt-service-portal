@@ -36,6 +36,7 @@ jobs:
           bash -n scripts/deploy_clean_public_pages.sh
           bash -n scripts/deploy_service_directory.sh
           bash -n scripts/deploy_interactive_public.sh
+          bash -n scripts/deploy_verified_reviews.sh
 
       - name: Run smoke tests
         run: |
@@ -49,3 +50,8 @@ jobs:
           php tests/public_inner_forms_test.php
           php tests/public_service_detail_clean_test.php
           php tests/public_auth_modal_contract_test.php
+          php tests/job_review_workflow_test.php
+          php tests/public_review_carousel_test.php
+
+      - name: Validate public interaction JavaScript
+        run: node --check assets/js/public-ux.js

@@ -40,8 +40,9 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
           <p><?= e($description) ?></p>
           <a href="<?= e(public_url('services')) ?>" class="iw-inner-primary">Explore services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
         </div>
-        <figure>
-          <img src="<?= e($heroImageUrl) ?>" width="560" height="420" alt="Business collaboration" fetchpriority="high" decoding="async">
+        <figure class="iw-about-team-photo">
+          <img src="<?= e($heroImageUrl) ?>" width="560" height="420" alt="Business professionals collaborating around a meeting table" fetchpriority="high" decoding="async">
+          <span class="iw-about-photo-label">Supporting founders since 2016</span>
           <?php if (empty($heroImage['url'])): ?><figcaption>Illustrative business photography</figcaption><?php endif; ?>
         </figure>
       </div>
@@ -66,6 +67,7 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
         <a href="<?= e(public_url('services', ['category' => 'trademark'])) ?>"><i class="bi bi-patch-check" aria-hidden="true"></i><h3>Licences &amp; compliance</h3><p>Trademarks, NAFDAC documentation, export licence and BPP-related filing support.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
         <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>Web &amp; digital</h3><p>Websites, development, hosting, branding and digital marketing.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
       </div>
+      <p class="iw-about-licensing-note">Need assistance with export licensing, NAFDAC documentation or another regulatory filing? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Licensing and compliance">Ask about compliance <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     </div>
   </section>
 
@@ -89,7 +91,8 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
   <section class="iw-inner-last">
     <div class="container public-container">
       <div><h2><?= e($bannerTitle) ?></h2><p>Explore our services or contact our team before ordering.</p></div>
-      <a href="<?= e(public_url('contact')) ?>">Contact iWorks <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      <a class="iw-clean-btn iw-clean-btn-primary iw-about-last-action" href="<?= e(public_url('contact')) ?>">Contact iWorks <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     </div>
   </section>
+  <?php require __DIR__ . '/partials/public-review-carousel.php'; ?>
 </main>
