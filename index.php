@@ -1147,6 +1147,31 @@ try {
 
         case 'applications':
             require_roles(['client']);
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    if ((string) ($_POST['form_action'] ?? '') !== 'delete_unpaid_order') {
+                        throw new RuntimeException('Unknown request.');
+                    }
+                    $clientId=(int) current_user()['id'];
+                    $jobId=max(0,(int) ($_POST['job_id'] ?? 0));
+                    $target=$jobId>0?get_job($jobId):null;
+                    if (!$target || (int) ($target['client_id'] ?? 0)!==$clientId
+                        || (string) ($target['status'] ?? '')!=='pending') {
+                        throw new RuntimeException('Only your own unpaid, unprocessed requests can be deleted.');
+                    }
+                    // Linked wizard submissions use their own immutable invoice histories.
+                    if (iworks_client_trademark_for_job($jobId,$clientId)
+                        || cac_find_for_job($jobId,$clientId)) {
+                        throw new RuntimeException('This submitted application cannot be deleted here. Contact support to withdraw it.');
+                    }
+                    delete_unpaid_job_for_client($jobId,$clientId);
+                    flash('success','Unpaid service request deleted.');
+                } catch (Throwable $e) {
+                    flash('error',$e->getMessage());
+                }
+                redirect(url('applications'));
+            }
             trademark_ensure_schema();
             $client = current_user();
             $trademarkApplications = trademark_list((int) $client['id']);
@@ -2756,6 +2781,29 @@ try {
                         set_setting('trademark_price_usd_per_class', number_format((float) $trademarkPrice, 2, '.', ''));
 
                         flash('success', 'Business rules updated.');
+                    }
+
+                    if ($action === 'save_cac_pricing') {
+                        $priceFields = [
+                            'cac_business_base_ngn'=>26000,
+                            'cac_business_extra_partner_ngn'=>15000,
+                            'cac_company_base_ngn'=>0,
+                            'cac_company_extra_director_ngn'=>0,
+                            'cac_company_extra_shareholder_ngn'=>0,
+                        ];
+                        $validated=[];
+                        foreach ($priceFields as $key=>$fallback) {
+                            $value=filter_var($_POST[$key] ?? $fallback,FILTER_VALIDATE_FLOAT);
+                            if ($value===false || !is_finite((float) $value) || $value<0 || $value>100000000) {
+                                throw new RuntimeException('Invalid CAC fee for '.$key.'.');
+                            }
+                            if (in_array($key,['cac_business_base_ngn','cac_business_extra_partner_ngn'],true) && $value<1) {
+                                throw new RuntimeException('Business Name base and partner fees must be greater than zero.');
+                            }
+                            $validated[$key]=number_format((float) $value,2,'.','');
+                        }
+                        foreach ($validated as $key=>$value) { set_setting($key,$value); }
+                        flash('success','CAC registration pricing saved. New quotes use these amounts.');
                     }
 
                     if ($action === 'save_payment_method') {
