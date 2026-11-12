@@ -149,8 +149,9 @@ function trademark_decode(array $row): array
 function trademark_find(int $id, int $clientId): ?array
 {
     if ($id <= 0 || $clientId <= 0) { return null; }
-    $row = db_one('SELECT * FROM trademark_applications
-        WHERE id = :id AND client_id = :client_id LIMIT 1',
+    $row = db_one('SELECT tm.*, j.payment_status FROM trademark_applications tm
+        LEFT JOIN jobs j ON j.id = tm.job_id
+        WHERE tm.id = :id AND tm.client_id = :client_id LIMIT 1',
         ['id'=>$id,'client_id'=>$clientId]);
     return $row ? trademark_decode($row) : null;
 }
@@ -158,7 +159,9 @@ function trademark_find(int $id, int $clientId): ?array
 function trademark_list(int $clientId): array
 {
     return array_map('trademark_decode', db_all(
-        'SELECT * FROM trademark_applications WHERE client_id = :client_id ORDER BY updated_at DESC, id DESC LIMIT 100',
+        'SELECT tm.*, j.payment_status FROM trademark_applications tm
+        LEFT JOIN jobs j ON j.id = tm.job_id
+        WHERE tm.client_id = :client_id ORDER BY tm.updated_at DESC, tm.id DESC LIMIT 100',
         ['client_id'=>$clientId]
     ));
 }
