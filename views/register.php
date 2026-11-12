@@ -7,7 +7,11 @@ $oldStateValue = (string) old_input('state_region');
 <section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
   <a class="iw-auth-home" href="<?= e(public_url('home')) ?>" aria-label="Back to iWorks homepage"><i class="bi bi-house-door" aria-hidden="true"></i><span>Home</span></a>
   <div class="iw-auth-header">
-    <h1 id="iwRegisterTitle">Create an account</h1>
+    <?php if (!empty($iwEmbeddedPublicAuth)): ?>
+      <h2 id="iwRegisterTitle">Create an account</h2>
+    <?php else: ?>
+      <h1 id="iwRegisterTitle">Create an account</h1>
+    <?php endif; ?>
     <p>One account to order services, share documents and track your work.</p>
   </div>
   <form class="iw-auth-form" id="iwRegisterForm" method="post" action="<?= e(url('register')) ?>" target="_top">

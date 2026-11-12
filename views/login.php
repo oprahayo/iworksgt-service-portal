@@ -1,7 +1,11 @@
 <section class="iw-auth-panel" aria-labelledby="iwAuthTitle">
   <a class="iw-auth-home" href="<?= e(public_url('home')) ?>" aria-label="Back to iWorks homepage"><i class="bi bi-house-door" aria-hidden="true"></i><span>Home</span></a>
   <div class="iw-auth-header">
-    <h1 id="iwAuthTitle">Sign in</h1>
+    <?php if (!empty($iwEmbeddedPublicAuth)): ?>
+      <h2 id="iwAuthTitle">Sign in</h2>
+    <?php else: ?>
+      <h1 id="iwAuthTitle">Sign in</h1>
+    <?php endif; ?>
     <p>Access your orders, messages and documents.</p>
   </div>
   <form class="iw-auth-form" method="post" action="<?= e(url('login')) ?>" target="_top">

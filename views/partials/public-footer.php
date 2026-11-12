@@ -161,6 +161,7 @@ $socialIcons = [
       <button type="button" data-iw-auth-tab="login" aria-pressed="true">Sign in</button>
       <button type="button" data-iw-auth-tab="register" aria-pressed="false">Create account</button>
     </div>
+    <?php $iwEmbeddedPublicAuth = true; ?>
     <div class="iw-auth-dialog-content" id="iwPublicAuthContent">
       <div class="iw-auth-pane" data-iw-auth-pane="login">
         <?php require __DIR__ . '/../login.php'; ?>
@@ -169,6 +170,7 @@ $socialIcons = [
         <?php require __DIR__ . '/../register.php'; ?>
       </div>
     </div>
+    <?php unset($iwEmbeddedPublicAuth); ?>
     <p class="iw-auth-dialog-fallback">Having trouble? <a id="iwAuthDirectLink" href="<?= e(portal_url('login')) ?>" data-login-direct="<?= e(portal_url('login')) ?>" data-register-direct="<?= e(portal_url('register')) ?>">Open secure sign in</a>.</p>
   </dialog>
 

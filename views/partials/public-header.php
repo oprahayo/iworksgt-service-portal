@@ -19,6 +19,26 @@ if ($metaDescription === '') {
 if ($ogImage === '') {
     $ogImage = $logo ?: $favicon;
 }
+$seoPageType = (string) ($publicPageSlug ?? $page ?? 'home');
+if ($seoPageType === 'service' && is_array($service ?? null)) {
+    $metaDescription = iworks_seo_excerpt((string) ($service['short_description'] ?? $service['description'] ?? ''));
+} elseif ($seoPageType === 'blog_post' && is_array($blogPost ?? null)) {
+    $metaDescription = iworks_seo_excerpt((string) ($blogPost['excerpt'] ?? ''));
+} else {
+    $metaDescription = iworks_seo_excerpt($metaDescription);
+}
+if ($metaDescription === '') {
+    $metaDescription = 'Business registration, licensing, compliance, web development and digital services from iWORKS GLOBAL LTD.';
+}
+$seoIndexable = http_response_code() !== 404 && !in_array($seoPageType, ['track'], true);
+$seoCanonicalUrl = $seoIndexable ? iworks_seo_canonical($seoPageType, $_GET) : '';
+$seoRecord = $seoPageType === 'service'
+    ? (is_array($service ?? null) ? $service : [])
+    : ($seoPageType === 'blog_post' ? (is_array($blogPost ?? null) ? $blogPost : []) : []);
+$seoJsonLd = $seoIndexable
+    ? iworks_seo_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl, $metaDescription)
+    : '';
+$seoOgImage = $ogImage !== '' ? public_absolute_url($ogImage) : '';
 $bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'services' ? ' page-public-services' : '');
 $headerAnnouncement = trim((string) ($publicHeaderConfig['announcement'] ?? ''));
 $aboutLabel = trim((string) ($publicHeaderConfig['aboutLabel'] ?? 'About'));
@@ -56,13 +76,25 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($publicTitle) ?></title>
   <meta name="description" content="<?= e($metaDescription) ?>">
+  <?php if (!$seoIndexable): ?>
+    <meta name="robots" content="noindex,follow">
+  <?php endif; ?>
+  <?php if ($seoCanonicalUrl !== ''): ?>
+    <link rel="canonical" href="<?= e($seoCanonicalUrl) ?>">
+  <?php endif; ?>
   <?php if ($seoTagsText !== ''): ?>
     <meta name="keywords" content="<?= e($seoTagsText) ?>">
   <?php endif; ?>
   <meta name="theme-color" content="<?= e(brand_primary_color()) ?>">
   <meta property="og:title" content="<?= e($publicTitle) ?>">
   <meta property="og:description" content="<?= e($metaDescription) ?>">
-  <?php if ($ogImage !== ''): ?><meta property="og:image" content="<?= e($ogImage) ?>"><?php endif; ?>
+  <meta property="og:type" content="<?= $seoPageType === 'blog_post' ? 'article' : 'website' ?>">
+  <?php if ($seoCanonicalUrl !== ''): ?><meta property="og:url" content="<?= e($seoCanonicalUrl) ?>"><?php endif; ?>
+  <?php if ($seoOgImage !== ''): ?><meta property="og:image" content="<?= e($seoOgImage) ?>"><?php endif; ?>
+  <meta name="twitter:card" content="<?= $seoOgImage !== '' ? 'summary_large_image' : 'summary' ?>">
+  <meta name="twitter:title" content="<?= e($publicTitle) ?>">
+  <meta name="twitter:description" content="<?= e($metaDescription) ?>">
+  <?php if ($seoJsonLd !== ''): ?><script type="application/ld+json"><?= $seoJsonLd ?></script><?php endif; ?>
   <?php if ($favicon !== ''): ?>
     <link rel="icon" type="image/png" href="<?= e($favicon) ?>">
     <link rel="apple-touch-icon" href="<?= e($favicon) ?>">
@@ -87,6 +119,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/auth-compact.css')) ?>?v=20261112c">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112seo">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
