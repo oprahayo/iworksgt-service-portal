@@ -1,5 +1,9 @@
 <?php
 $user = current_user();
+if (($user['role'] ?? '') === 'author') {
+    require __DIR__ . '/author-dashboard.php';
+    return;
+}
 $heroKicker = 'Control Center';
 $heroMessage = 'Book services, track progress, and keep delivery fully remote.';
 
