@@ -3,6 +3,15 @@ declare(strict_types=1);
 
 // A fast, dependency-free render check for the public homepage.
 function normalize_page_block_type(string $type): string { return $type; }
+function mb_safe_trim(string $value,int $length): string { return substr(trim($value),0,$length); }
+function list_blog_posts_public(int $limit = 12): array {
+    $posts=[];
+    for($i=1;$i<=4;$i++) {
+        $posts[]=['id'=>$i,'title'=>'Business insight '.$i,'excerpt'=>'Practical registration guidance',
+            'tag'=>'Registration','url'=>'/blog/insight-'.$i,'featured_image'=>null];
+    }
+    return array_slice($posts,0,$limit);
+}
 function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function public_url(string $page, array $params = []): string
 {
@@ -69,11 +78,12 @@ check_home(str_contains($html, '/services/hosting'), 'Admin-selected growth serv
 check_home(!str_contains($html, '/services/banking'), 'Banking offers must never be promoted.');
 check_home(!str_contains($html, '/services/custom-service'), 'Internal placeholder must never be promoted.');
 check_home(substr_count($html, 'class="iw-clean-service"') === 3, 'Home should have only three service categories.');
+check_home(str_contains($html,'iwLaunchInsightsTrack') && substr_count($html,'class="iw-launch-insight-card"')===4,'Homepage should feature exactly four published insights.');
 check_home(substr_count($html, 'class="iw-clean-step"') === 3, 'Home should have only three steps.');
 check_home(substr_count($html, '<details>') >= 6, 'Home should offer expanded collapsible FAQs.');
 check_home(str_contains($html, 'Can I use iWorks if I live outside Nigeria?'), 'Remote/diaspora service FAQ missing.');
 check_home(str_contains($html, 'Can I pay in naira or US dollars?'), 'Currency FAQ missing.');
-check_home(substr_count($html, '<section') <= 7, 'Avoid repeating marketing sections.');
+check_home(substr_count($html, '<section') <= 8, 'Avoid repeating marketing sections while including Insights.');
 check_home(str_contains($html, 'Step 1') && str_contains($html, 'Step 3'), 'Connected steps need accessible labels.');
 check_home(str_contains($html, 'name="form_action" value="public_track"'), 'Home must submit to the existing track handler.');
 check_home(str_contains($html, 'name="job_code"') && str_contains($html, 'name="identifier"'), 'Tracking fields must match the handler.');
