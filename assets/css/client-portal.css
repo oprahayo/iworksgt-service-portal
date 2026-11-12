@@ -371,3 +371,49 @@ body.iw-client-page a{text-decoration:none}
 .iw-client-page .iw-client-delete{min-height:42px;border-radius:7px}
 @media(max-width:1024px){.iw-billing-layout{grid-template-columns:minmax(0,1fr)}.iw-billing-methods{grid-row:1}}
 @media(max-width:620px){.iw-client-topbar .iw-client-top-home{font-size:12px}.iw-client-topbar .iw-client-topbar-right a{padding:8px}.iw-client-topbar .iw-client-topbar-right a span{display:none}}
+
+/* CAC filing workflow — practical forms for registration preparation. */
+.iw-cac-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(245px,300px);gap:23px;align-items:start;max-width:1220px}
+.iw-cac-main,.iw-cac-sidebar{min-width:0}
+.iw-cac-sidebar{position:sticky;top:108px}
+.iw-cac-sidebar .iw-tm-panel{padding:22px}
+.iw-cac-sidebar .iw-tm-panel h2{font-size:15px;display:flex;align-items:center;gap:8px}
+.iw-cac-sidebar .iw-tm-panel h2 i{color:#e96f34}
+.iw-cac-sidebar .iw-tm-panel p{color:#74828b;font-size:12px;line-height:1.7}
+.iw-cac-stage{display:flex;align-items:center;gap:12px;color:#52616b;font-size:12px;padding:12px 0;border-bottom:1px solid #edf0f2}
+.iw-cac-stage span{width:28px;height:28px;border:1px solid #f8cfb8;display:grid;place-items:center;border-radius:50%;color:#cf622c;background:#fff6f0;font-weight:750}
+.iw-cac-explain{font-size:12px;color:#77858e;line-height:1.7;margin:12px 0 20px}
+.iw-cac-checkbox{font-size:12px;color:#455761;display:flex;align-items:flex-start;gap:10px;line-height:1.65;margin:13px 0}
+.iw-cac-checkbox input{width:17px;height:17px;flex:0 0 17px;margin-top:2px;accent-color:#ed7439}
+.iw-cac-person{border:1px solid #e8ecef;border-radius:10px;padding:17px 17px 12px;margin:0 0 15px;min-width:0}
+.iw-cac-person legend{float:none;width:auto;padding:0 9px;font-size:13px;font-weight:750;color:#2c3b45}
+.iw-cac-person .iw-client-delete{margin:3px 0}
+.iw-cac-save{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:0 0 26px;flex-wrap:wrap}
+.iw-cac-doc-person{border:1px solid #edf0f2;border-radius:10px;padding:17px;margin:0 0 15px}
+.iw-cac-doc-person h3{font-size:14px;font-weight:750;color:#2a3943;margin:0 0 16px}
+.iw-cac-doc-person h3 small{font-size:11px;color:#86939c;font-weight:400;margin-left:7px}
+.iw-cac-doc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.iw-cac-doc-label{display:flex;flex-direction:column;min-width:0;gap:8px;border:1px solid #e9ecef;border-radius:9px;background:#fcfcfd;padding:12px;min-height:125px}
+.iw-cac-doc-label span{font-weight:700;font-size:12px;color:#394852;display:flex;gap:8px;align-items:center}
+.iw-cac-doc-label span i{font-size:17px;color:#e97036}
+.iw-cac-doc-label input{font-size:11px;max-width:100%;min-width:0}
+.iw-cac-doc-label small{font-size:10px;line-height:1.5;color:#87929b;overflow-wrap:anywhere}
+.iw-cac-doc-label .iw-cac-success,.iw-cac-success{color:#228358!important;font-weight:700}
+.iw-cac-failed{color:#b44432!important}
+.iw-cac-draw{margin-top:18px;border-top:1px solid #eef1f3;padding-top:14px}
+.iw-cac-draw summary{cursor:pointer;display:flex;align-items:center;gap:8px;color:#d46732;font-size:12px;font-weight:700;min-height:42px}
+.iw-cac-draw p{font-size:11px;line-height:1.6;color:#7f8c95}
+.iw-cac-draw canvas{display:block;width:100%;max-width:540px;max-height:175px;border:1px dashed #d3dbe0;border-radius:7px;background:#fff;touch-action:none;cursor:crosshair}
+.iw-cac-sign-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.iw-cac-total{border:1px solid #f9dfcf;background:#fff7f1;border-radius:9px;padding:18px;display:flex;flex-direction:column;gap:5px;margin-bottom:20px}
+.iw-cac-total span{font-size:11px;color:#886b5d}
+.iw-cac-total strong{font-size:27px;letter-spacing:-.035em;color:#e76d32}
+.iw-cac-total small{font-size:11px;color:#8b7166}
+.iw-cac-validation{background:#fff8f5;border:1px solid #f8ded2;color:#99513b;border-radius:8px;font-size:12px;padding:15px;margin:12px 0 17px}
+.iw-cac-validation ul{margin:7px 0 0;padding-left:18px}
+.iw-cac-validation li{margin:5px 0}
+.iw-cac-review .iw-client-delete{margin-top:14px}
+.iw-cac-review .iw-client-button:disabled{opacity:.48;cursor:not-allowed}
+.iw-cac-layout .iw-tm-field input,.iw-cac-layout .iw-tm-field select,.iw-cac-layout .iw-tm-field textarea{font-size:14px}
+@media(max-width:1040px){.iw-cac-layout{grid-template-columns:minmax(0,1fr)}.iw-cac-sidebar{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.iw-cac-sidebar .iw-tm-panel{margin:0}}
+@media(max-width:680px){.iw-cac-doc-grid{grid-template-columns:1fr}.iw-cac-sidebar{grid-template-columns:1fr}.iw-cac-person{padding:14px 11px}.iw-cac-doc-person{padding:12px}.iw-cac-layout .iw-tm-fields{grid-template-columns:1fr}.iw-cac-save .iw-client-button{width:100%}}
