@@ -192,9 +192,22 @@ body.page-public .iw-service-index .iw-service-custom {
   margin:2.25rem 0 0;
   padding:clamp(1.4rem,3vw,2.2rem);
   border:0;
-  border-radius:10px;
-  background:linear-gradient(110deg,#ed6111 0%,#fa7c29 100%);
+  border-radius:0;
+  position:relative;
+  isolation:isolate;
+  background:transparent;
   color:#fff;
+}
+body.page-public .iw-service-index .iw-service-custom::before {
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:50%;
+  width:100vw;
+  transform:translateX(-50%);
+  background:linear-gradient(110deg,#ed6111 0%,#fa7c29 100%);
+  z-index:-1;
 }
 body.page-public .iw-service-index .iw-service-custom h2,
 body.page-public .iw-service-index .iw-service-custom p { color:#fff; }
