@@ -88,7 +88,7 @@ body.page-public .iw-service-index-list-head h2 { font-size:.91rem; font-weight:
 .iw-service-index-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:8px; color:#e66313; background:#fff3eb; font-size:1.14rem; align-self:start; margin-top:.35rem; }
 .iw-service-index-main { min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
 .iw-service-index-category { color:#929ba3; font-size:.71rem; line-height:1.4; margin-bottom:.28rem; }
-.iw-service-index-name { color:#222b34; font-weight:650; font-size:1.01rem; letter-spacing:-.013em; line-height:1.35; overflow-wrap:anywhere; }
+.iw-service-index-name { color:#222b34; font-weight:650; font-size:1.01rem; letter-spacing:-.013em; line-height:1.35; overflow-wrap:anywhere; margin:0; }
 .iw-service-index-description { margin-top:.3rem; color:#76818a; font-size:.86rem; line-height:1.56; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
 .iw-service-index-end { display:flex; align-items:center; justify-content:flex-end; gap:1.35rem; padding-left:1rem; }
 .iw-service-index-pricing { display:flex; flex-direction:column; align-items:flex-end; gap:.2rem; min-width:110px; }
