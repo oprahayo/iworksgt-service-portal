@@ -60,7 +60,7 @@ check(str_contains($router, "if (\$page === 'seo_sitemap')"), 'Missing sitemap r
 check(str_contains($rewrite, 'sitemap\\.xml'), 'Apache must rewrite /sitemap.xml.');
 check(str_contains($rewrite, 'robots\\.txt'), 'Apache must rewrite /robots.txt.');
 check(str_contains($guest, 'iwEmbeddedPublicAuth'), 'Popup authentication headings must not add extra public H1 tags.');
-echo "public_seo_mobile_test passed\n";
+
 
 $marketing = iworks_search_service_meta(['slug'=>'business-name-registration-cac-nigeria']);
 check(str_contains($marketing['title'], 'Register a Business Name in Nigeria'), 'Business name search intent missing.');
@@ -75,3 +75,4 @@ $header = file_get_contents(dirname(__DIR__) . '/views/partials/public-header.ph
 check(str_contains($header, 'iworks_search_service_meta'), 'Public header must load service-specific metadata.');
 $detail = file_get_contents(dirname(__DIR__) . '/views/public-service-detail.php');
 check(str_contains($detail, 'iw-search-guide'), 'Service detail must include search guidance.');
+echo "public_seo_mobile_test passed\n";
