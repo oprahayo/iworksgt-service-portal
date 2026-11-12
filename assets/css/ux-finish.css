@@ -2,7 +2,6 @@
 body.page-public .public-nav-center .nav-link {
   background:transparent!important;
   border:0!important;
-  border-bottom:2px solid transparent!important;
   border-radius:0!important;
   box-shadow:none!important;
   padding:.65rem .76rem!important;
@@ -15,7 +14,6 @@ body.page-public .public-nav-center .nav-link.active,
 body.page-public .public-nav-center .nav-link[aria-current="page"] {
   background:transparent!important;
   color:#e65d0c!important;
-  border-bottom-color:#f16816!important;
 }
 body.page-public .public-nav-center .nav-link:focus-visible { outline:2px solid #f09b6b; outline-offset:2px; }
 .iw-home-compliance-extra,.iw-about-licensing-note {
