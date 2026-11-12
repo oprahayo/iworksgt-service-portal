@@ -52,8 +52,8 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
     <div class="container public-container iw-about-min-story-grid">
       <h2>What we're about</h2>
       <div>
-        <p>iWorks began as a technology and business-services operation in 2016 and now operates as iWORKS GLOBAL LTD. We help entrepreneurs and organisations handle the practical tasks involved in starting, operating and growing a business.</p>
-        <p>Our portal brings service requirements, payments, updates and deliverables into one place. Clients can work with us remotely and follow the progress of each request.</p>
+        <p>iWorks began as a technology and business-services operation in 2016 and now operates as iWORKS GLOBAL LTD. We help entrepreneurs and organisations start, operate and grow their businesses, including Nigerian founders at home and abroad.</p>
+        <p>Our portal brings service requirements, payments, updates and deliverables into one place. Clients can work with us remotely, submit documents and follow each request through delivery.</p>
       </div>
     </div>
   </section>
@@ -62,9 +62,9 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
     <div class="container public-container">
       <h2>What we do</h2>
       <div class="iw-about-min-service-grid">
-        <a href="<?= e(public_url('services', ['category' => 'business-registration'])) ?>"><i class="bi bi-building" aria-hidden="true"></i><h3>Business registration</h3><p>Business names, companies and CAC filings.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
-        <a href="<?= e(public_url('services', ['category' => 'trademark'])) ?>"><i class="bi bi-patch-check" aria-hidden="true"></i><h3>Trademark &amp; compliance</h3><p>Brand protection and ongoing filings.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
-        <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>Web &amp; digital</h3><p>Websites, hosting, branding and marketing.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
+        <a href="<?= e(public_url('services', ['category' => 'business-registration'])) ?>"><i class="bi bi-building" aria-hidden="true"></i><h3>Business formation &amp; registration</h3><p>Business names, companies and Corporate Affairs Commission filings in Nigeria.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
+        <a href="<?= e(public_url('services', ['category' => 'trademark'])) ?>"><i class="bi bi-patch-check" aria-hidden="true"></i><h3>Licences &amp; compliance</h3><p>Trademarks, NAFDAC documentation, export licence and BPP-related filing support.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
+        <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>Web &amp; digital</h3><p>Websites, development, hosting, branding and digital marketing.</p><span>Explore <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
       </div>
     </div>
   </section>
