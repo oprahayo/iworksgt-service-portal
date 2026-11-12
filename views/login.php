@@ -1,4 +1,5 @@
 <section class="iw-auth-panel" aria-labelledby="iwAuthTitle">
+  <a class="iw-auth-home" href="<?= e(public_url('home')) ?>" aria-label="Back to iWorks homepage"><i class="bi bi-house-door" aria-hidden="true"></i><span>Home</span></a>
   <div class="iw-auth-header">
     <h1 id="iwAuthTitle">Sign in</h1>
     <p>Access your orders, messages and documents.</p>
@@ -12,7 +13,7 @@
       <a href="<?= e(url('forgot_password')) ?>" target="_top">Forgot password?</a>
     </div>
     <button class="iw-auth-submit" type="submit">Sign in <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-    <?php if (google_auth_ready()): ?><a class="iw-auth-google" href="<?= e(url('google_start')) ?>" target="_top"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a><?php endif; ?>
+    <?php if (google_auth_ready()): ?><a class="iw-auth-google" href="<?= e(portal_url('google_start')) ?>"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a><?php endif; ?>
   </form>
   <p class="iw-auth-switch">New to iWorks? <a href="<?= e(url('register', !empty($_GET['embed']) ? ['embed'=>'1'] : [])) ?>"<?= !empty($_GET['embed']) ? ' data-iw-auth-switch="register"' : '' ?>>Create an account</a></p>
 </section>
