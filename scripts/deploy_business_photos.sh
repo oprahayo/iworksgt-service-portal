@@ -6,7 +6,10 @@ REPOSITORY="oprahayo/iworksgt-service-portal"
 RELEASE="87f4f689a23484f01814594833e72b2979c5c1ca"
 FILES=(
   'app/public-photo-config.php'
+  'assets/css/launch-home.css'
+  'assets/css/refined-services.css'
   'assets/css/public-unified.css'
+  'views/public-services-refined.php'
   'views/public-home-tbh.php'
   'views/public-about-refined.php'
   'views/public-service-detail.php'
@@ -35,6 +38,9 @@ for file in "${FILES[@]}"; do
 done
 
 grep -Fq 'function iworks_stock_photo_url' "$WORK_DIR/app/public-photo-config.php" || fail 'Photo config invalid'
+grep -Fq 'iworks-launch-home' "$WORK_DIR/assets/css/launch-home.css" || fail 'Homepage stylesheet invalid'
+grep -Fq 'iworks-services-page' "$WORK_DIR/assets/css/refined-services.css" || fail 'Services stylesheet invalid'
+grep -Fq 'isc-grid' "$WORK_DIR/views/public-services-refined.php" || fail 'Services template invalid'
 grep -Fq 'photo-1772588627327-1eeddcf73c11' "$WORK_DIR/app/public-photo-config.php" || fail 'Registration photo ID missing'
 grep -Fq 'iw-journey-media' "$WORK_DIR/views/public-home-tbh.php" || fail 'Homepage markup invalid'
 grep -Fq 'iworks_stock_photo_url' "$WORK_DIR/views/public-about-refined.php" || fail 'About photo markup missing'
