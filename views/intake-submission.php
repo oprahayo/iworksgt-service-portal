@@ -817,6 +817,14 @@ foreach ($steps as $step) {
     var maxBytes = 12 * 1024 * 1024;
 
     if (!state.transfer) {
+      // iOS Safari can lack a constructible DataTransfer. Still upload
+      // directly; do not silently discard the selected government ID.
+      var compatibleFiles = Array.prototype.slice.call(fileList);
+      state.uploadQueue = (state.uploadQueue || Promise.resolve()).then(async function(){
+        for (var f=0;f<compatibleFiles.length;f++) {
+          await uploadIntakeFile(wrap, compatibleFiles[f]);
+        }
+      });
       return;
     }
 
