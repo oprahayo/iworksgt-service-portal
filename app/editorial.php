@@ -192,3 +192,19 @@ function iworks_blog_moderate_comment(int $id,string $action):void {
         db_execute("UPDATE iworks_blog_comments SET status='approved' WHERE id=:id",['id'=>$id]);
     } else throw new RuntimeException('Invalid moderation action.');
 }
+
+function iworks_blog_page(int $page=1,int $per=9):array {
+    if(!schema_table_exists('blog_posts'))return ['items'=>[],'page'=>1,'pages'=>1,'total'=>0];
+    $per=max(1,min(24,$per));
+    $total=(int)(db_one("SELECT COUNT(*) AS c FROM blog_posts WHERE status='published'")['c']??0);
+    $pages=max(1,(int)ceil($total/$per));
+    $page=min(max(1,$page),$pages);
+    $offset=($page-1)*$per;
+    $rows=db_all("SELECT b.*,u.full_name AS author_full_name,u.first_name AS author_first_name,
+      u.last_name AS author_last_name,u.email AS author_email
+      FROM blog_posts b LEFT JOIN users u ON u.id=b.author_id
+      WHERE b.status='published'
+      ORDER BY COALESCE(b.published_at,b.updated_at,b.created_at) DESC,b.id DESC
+      LIMIT ".$per." OFFSET ".$offset);
+    return ['items'=>array_map('blog_post_payload',$rows),'page'=>$page,'pages'=>$pages,'total'=>$total];
+}
