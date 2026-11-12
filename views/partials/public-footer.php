@@ -173,7 +173,8 @@ $socialIcons = [
       <h2 id="iwPublicHelpTitle">Ask the iWorks team</h2>
       <button type="button" data-iw-dialog-close aria-label="Close support window"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     </div>
-    <p class="iw-help-dialog-intro">Tell us what you need. This message goes to our team, not an automated chatbot.</p>
+    <p class="iw-help-dialog-intro">Ask about a service or describe what you need. You'll receive a confirmation here when your message is sent.</p>
+    <div id="iwHelpFeedback" role="status" aria-live="polite" hidden></div>
     <form method="post" action="<?= e(public_url('home')) ?>" class="iw-help-dialog-form">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="form_action" value="website_lead">
@@ -362,6 +363,13 @@ $socialIcons = [
     direct.href = direct.getAttribute('data-' + mode + '-direct') || target;
     direct.textContent = mode === 'login' ? 'Open secure sign in' : 'Open registration';
     tabs.forEach(function (tab) { tab.setAttribute('aria-pressed', tab.getAttribute('data-iw-auth-tab') === mode ? 'true' : 'false'); });
+    var heading = document.getElementById('iwPublicAuthTitle');
+    if (heading) heading.textContent = mode === 'register' ? 'Create your account' : 'Sign in to iWorks';
+    if (auth) {
+      auth.classList.remove('is-flipping');
+      void auth.offsetWidth;
+      auth.classList.add('is-flipping');
+    }
   }
   function show(dialog, trigger) {
     if (!dialog || typeof dialog.showModal !== 'function') return false;
@@ -418,5 +426,6 @@ $socialIcons = [
   }
 })();
 </script>
+<script defer src="<?= e(public_absolute_url('assets/js/public-ux.js')) ?>"></script>
 </body>
 </html>
