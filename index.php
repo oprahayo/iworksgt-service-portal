@@ -1196,7 +1196,8 @@ try {
                     $vaultAction = (string) ($_POST['form_action'] ?? '');
                     if ($vaultAction === 'save_card') {
                         $vaultCheckoutUrl = stripe_vault_start_setup(
-                            $vaultUser, (string) ($_POST['save_card_consent'] ?? '') === '1'
+                            $vaultUser, (string) ($_POST['save_card_consent'] ?? '') === '1',
+                            (string) ($_POST['return_to'] ?? '') === 'invoices'
                         );
                         redirect($vaultCheckoutUrl);
                     }
@@ -1205,12 +1206,14 @@ try {
                             $vaultUserId, trim((string) ($_POST['payment_method_id'] ?? ''))
                         );
                         flash('success', 'Saved card removed from Stripe.');
-                        redirect(url('card_vault'));
+                        redirect((string) ($_POST['return_to'] ?? '')==='invoices'
+                            ? url('invoices').'#payment-methods' : url('card_vault'));
                     }
                     throw new RuntimeException('Unknown saved-card action.');
                 } catch (Throwable $e) {
-                    flash('error', $e->getMessage());
-                    redirect(url('card_vault'));
+                    flash('error', iworks_client_safe_payment_error($e->getMessage()));
+                    redirect((string) ($_POST['return_to'] ?? '')==='invoices'
+                        ? url('invoices').'#payment-methods' : url('card_vault'));
                 }
             }
             $setupSessionId = trim((string) ($_GET['session_id'] ?? ''));
@@ -1222,7 +1225,11 @@ try {
                     flash('error', $e->getMessage());
                 }
                 // No Stripe session IDs are retained in browser navigation.
-                redirect(url('card_vault'));
+                redirect((string) ($_GET['billing'] ?? '')==='1'
+                    ? url('invoices').'#payment-methods' : url('card_vault'));
+            }
+            if ((string) ($_GET['billing'] ?? '')==='1') {
+                redirect(url('invoices').'#payment-methods');
             }
             $vaultEnabled = stripe_vault_available();
             $savedCards = [];
@@ -2088,6 +2095,14 @@ try {
             ];
             $invoiceResult = list_invoices_for_user($user, $invoiceFilters);
             $invoices = $invoiceResult['items'] ?? [];
+            $vaultEnabled = false; $savedCards = []; $vaultNotice = '';
+            if ((string) ($user['role'] ?? '')==='client') {
+                $vaultEnabled = stripe_vault_available();
+                if ($vaultEnabled) {
+                    try { $savedCards = stripe_vault_list_cards((int) $user['id']); }
+                    catch (Throwable $e) { $vaultNotice = 'Saved payment methods could not be loaded at the moment.'; }
+                }
+            }
             $invoicePagination = $invoiceResult['pagination'] ?? [
                 'page' => (int) $invoiceFilters['page'],
                 'per_page' => (int) $invoiceFilters['per_page'],
