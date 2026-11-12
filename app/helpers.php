@@ -177,6 +177,10 @@ function public_url(string $page = 'home', array $params = []): string
         $slug = trim((string) ($params['slug'] ?? ''));
         $path = 'services' . ($slug !== '' ? '/' . rawurlencode($slug) : '');
         unset($params['slug']);
+    } elseif ($page === 'case_study') {
+        $slug = trim((string)($params['slug'] ?? ''));
+        $path = 'case-studies' . ($slug !== '' ? '/' . rawurlencode($slug) : '');
+        unset($params['slug']);
     } elseif ($page === 'insight_post') {
         $slug = trim((string) ($params['slug'] ?? ''));
         $path = 'blog' . ($slug !== '' ? '/' . rawurlencode($slug) : '');
