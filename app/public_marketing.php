@@ -53,7 +53,7 @@ function iworks_search_service_guide(array $service): array
                 ['Can I register a business name in Nigeria remotely?', 'The CAC provides online registration processes. iWorks can support remote coordination; specific identity or document checks still apply.'],
                 ['Is a business name the same as a limited company?', 'No. Business name registration and company incorporation are different legal registration types with different filing requirements.'],
             ],
-            'official' => 'https://cac.gov.ng/services/business-name',
+            'official' => 'https://icrp.cac.gov.ng/support/faq/',
         ];
     }
     if ($slug === 'company-registration') {
@@ -68,7 +68,7 @@ function iworks_search_service_guide(array $service): array
             'questions' => [
                 ['Can I register my Nigerian company from abroad?', 'iWorks can help coordinate the filing remotely, while official documentation and identity requirements remain applicable.'],
             ],
-            'official' => 'https://cac.gov.ng/services/company-registration',
+            'official' => 'https://icrp.cac.gov.ng/support/faq/',
         ];
     }
     if ($slug === 'website-design-development') {
