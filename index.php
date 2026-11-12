@@ -712,7 +712,7 @@ try {
             }
 
             $blogPosts = list_blog_posts_manage((int) $user['id'], $isAdminBlog);
-            $mediaAssets = list_media_assets(200);
+            $mediaAssets = $isAdminBlog ? list_media_assets(200) : [];
             $title = 'Insights - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
             require __DIR__ . '/views/blog.php';
