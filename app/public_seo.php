@@ -56,7 +56,7 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
         $price = (float) ($record['price'] ?? 0);
         $currency = strtoupper(trim((string) ($record['currency'] ?? 'NGN')));
         if ((string) ($record['slug'] ?? '') === 'trademark') {
-            $price = trademark_price_usd();
+            $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
             $currency = 'USD';
             $obj['description'] = trim((string) ($obj['description'] ?? '')) . ' Service fee USD '
                 . number_format($price, 2, '.', '') . ' per selected Nice class.';
