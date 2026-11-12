@@ -45,6 +45,7 @@ assert_public(str_contains($track,'JOB-2026-001'), 'Verified tracking result sho
 assert_public(str_contains($track,'Business registration'), 'Tracking service summary missing.');
 assert_public(str_contains($track,'/portal/login'), 'Authenticated details link should remain.');
 assert_public(!str_contains($track,'name="message"'), 'Track form should not include the contact form.');
-assert_public(substr_count($track,'<section') === 2, 'Track should remain compact.');
+assert_public(substr_count($track,'<section') === 3, 'Track page should have form and one concise new-service promotion.');
+assert_public(str_contains($track,'iw-launch-track-promo') && str_contains($track,'/services'), 'Track must show relevant catalogue CTA.');
 
 echo "public_inner_forms_test passed\n";
