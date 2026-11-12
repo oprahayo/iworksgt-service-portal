@@ -46,6 +46,11 @@ check(str_contains($html, 'Request a quote'), 'Zero-priced custom requests must 
 check(!str_contains($html, 'Bank Account Opening'), 'Banking services must remain excluded.');
 check(substr_count($html, 'data-service-row data-search=') === 5, 'Each published service should render one flat linked row.');
 check(str_contains($html, '<a class="iw-service-index-row"'), 'Each directory row should be one tap target.');
+check(str_contains($html, '<h3 class="iw-service-index-name"'), 'Service titles must be keyboard and screen-reader friendly headings.');
+$directoryCss = (string) file_get_contents(__DIR__ . '/../assets/css/services-list.css');
+check(str_contains($directoryCss, '@media(max-width:767px)'), 'Mobile row layout must be explicitly defined.');
+check(str_contains($directoryCss, '.iw-service-index-row[hidden]'), 'Search must be able to hide rows despite grid display styling.');
+check(!str_contains($directoryCss, 'grid-template-columns:repeat(3,'), 'Directory must not revert to a multi-card desktop grid.');
 check(str_contains($html, 'id="iwServiceCategory" name="category"'), 'Native category dropdown must be available on mobile.');
 check(str_contains($html, 'type="search"'), 'Directory search must be available.');
 check(!str_contains($html, 'isc-grid') && !str_contains($html, 'isc-card'), 'Old card grid and layout switch must be removed.');
