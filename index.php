@@ -1157,6 +1157,60 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
+        case 'card_vault':
+            require_roles(['client']);
+            $vaultUser = current_user();
+            $vaultUserId = (int) $vaultUser['id'];
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $vaultAction = (string) ($_POST['form_action'] ?? '');
+                    if ($vaultAction === 'save_card') {
+                        $vaultCheckoutUrl = stripe_vault_start_setup(
+                            $vaultUser, (string) ($_POST['save_card_consent'] ?? '') === '1'
+                        );
+                        redirect($vaultCheckoutUrl);
+                    }
+                    if ($vaultAction === 'remove_card') {
+                        stripe_vault_remove_card(
+                            $vaultUserId, trim((string) ($_POST['payment_method_id'] ?? ''))
+                        );
+                        flash('success', 'Saved card removed from Stripe.');
+                        redirect(url('card_vault'));
+                    }
+                    throw new RuntimeException('Unknown saved-card action.');
+                } catch (Throwable $e) {
+                    flash('error', $e->getMessage());
+                    redirect(url('card_vault'));
+                }
+            }
+            $setupSessionId = trim((string) ($_GET['session_id'] ?? ''));
+            if ($setupSessionId !== '') {
+                try {
+                    stripe_vault_confirm_setup($vaultUserId, $setupSessionId);
+                    flash('success', 'Card saved with Stripe. It is ready for future Stripe checkout.');
+                } catch (Throwable $e) {
+                    flash('error', $e->getMessage());
+                }
+                // No Stripe session IDs are retained in browser navigation.
+                redirect(url('card_vault'));
+            }
+            $vaultEnabled = stripe_vault_available();
+            $savedCards = [];
+            $vaultNotice = '';
+            if ($vaultEnabled) {
+                try {
+                    $savedCards = stripe_vault_list_cards($vaultUserId);
+                } catch (Throwable $e) {
+                    $vaultNotice = 'Saved cards could not be loaded right now. Please try again later.';
+                }
+            }
+            $title = 'Saved Cards - ' . app_name();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/client-card-vault.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
         case 'trademark_file':
             require_roles(['client']);
             trademark_ensure_schema();
