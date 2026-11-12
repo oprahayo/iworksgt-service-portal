@@ -99,4 +99,32 @@ if ($imageUrl === '') {
       </aside>
     </div>
   </section>
+  <?php if ($searchGuide !== []): ?>
+  <section class="iw-search-guide" aria-label="Service guidance">
+    <div class="container public-container">
+      <h2><?= e((string) $searchGuide['heading']) ?></h2>
+      <p class="iw-search-guide-lead"><?= e((string) $searchGuide['intro']) ?></p>
+      <ol class="iw-search-guide-steps">
+        <?php foreach ($searchGuide['steps'] as $step): ?>
+        <li><strong><?= e((string) $step[0]) ?></strong><p><?= e((string) $step[1]) ?></p></li>
+        <?php endforeach; ?>
+      </ol>
+      <h3>Frequently asked questions</h3>
+      <dl class="iw-search-guide-questions">
+        <?php foreach ($searchGuide['questions'] as $entry): ?>
+        <dt><?= e((string) $entry[0]) ?></dt>
+        <dd><?= e((string) $entry[1]) ?></dd>
+        <?php endforeach; ?>
+      </dl>
+      <?php if (!empty($searchGuide['official'])): ?>
+        <p class="iw-search-guide-source">For current government requirements, check the
+        <a href="<?= e((string) $searchGuide['official']) ?>" rel="noopener noreferrer" target="_blank">official Corporate Affairs Commission guidance</a>.</p>
+      <?php endif; ?>
+      <p class="iw-search-guide-next">Ready to proceed?
+        <a href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Start your request with iWorks</a>
+        or <a href="<?= e(public_url('contact')) ?>">ask a question</a>.
+      </p>
+    </div>
+  </section>
+  <?php endif; ?>
 </main>
