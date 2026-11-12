@@ -43,9 +43,14 @@ foreach ($clientCatalogue as $catalogItem) {
     $price = (float) ($service['price'] ?? 0);
     $pricing = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request quote';
     if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
-    $startUrl = $slug === 'trademark'
-        ? url('trademark')
-        : url('jobs', ['action'=>'new', 'service'=>$slug]);
+    if ($slug === 'business-name-registration-cac-nigeria') { $pricing = 'From ' . money(cac_price_setting('cac_business_base_ngn',26000),'NGN'); }
+    if ($slug === 'company-registration') { $pricing = cac_company_default_ngn() > 0 ? 'From ' . money(cac_company_default_ngn(),'NGN') : 'Request quote'; }
+    $startUrl = match ($slug) {
+        'trademark' => url('trademark'),
+        'business-name-registration-cac-nigeria' => url('cac',['kind'=>'business_name']),
+        'company-registration' => url('cac',['kind'=>'company']),
+        default => url('jobs',['action'=>'new','service'=>$slug]),
+    };
     $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
   ?>
   <article class="iw-client-service iw-client-catalog-item" data-search="<?= e($searchValue) ?>" data-category="<?= e($category) ?>" data-tone="<?= (int) ($index % 4) ?>">
