@@ -89,8 +89,10 @@ done
 STARTED=0
 trap - ERR
 printf 'SUCCESS: real business photo update installed. Backup: %s\n' "$BACKUP"
-if curl --fail --location --silent --show-error --max-time 25 "https://portal.iworksgt.com/about?photo_release=$(date +%s)" | grep -Fq 'photo-1769740333462-9a63bfa914bc'; then
+RESPONSE_FILE="$(mktemp "${TMPDIR:-/tmp}/iworks-photocheck.XXXXXXXX")"
+if curl --fail --location --silent --show-error --max-time 25 "https://portal.iworksgt.com/about?photo_release=$(date +%s)" -o "$RESPONSE_FILE" && grep -Fq 'photo-1769740333462-9a63bfa914bc' "$RESPONSE_FILE"; then
   printf 'LIVE VERIFIED: About page uses real meeting photo.\n'
 else
   printf 'NOTICE: Live page marker not found. Verify deployment path and clear page cache.\n'
 fi
+rm -f "$RESPONSE_FILE"
