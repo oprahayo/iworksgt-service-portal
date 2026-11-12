@@ -403,7 +403,11 @@ $favicon = favicon_path();
           <?php $isVisible = (int) $method['id'] === $initialMethodId; ?>
           <div class="method <?= $isVisible ? '' : 'hidden' ?>" data-method-panel="<?= (int) $method['id'] ?>" data-method-pool="<?= e($pool) ?>">
             <strong><?= e($method['display_name']) ?></strong>
-            <div class="small muted mb-2"><?= nl2br(e($method['details'] ?? 'No instructions configured yet.')) ?></div>
+            <?php if ($isGateway && $user['role'] === 'client'): ?>
+              <div class="small muted mb-2">Your payment details are handled by the secure payment provider.</div>
+            <?php else: ?>
+              <div class="small muted mb-2"><?= nl2br(e($method['details'] ?? 'No instructions configured yet.')) ?></div>
+            <?php endif; ?>
             <?php if ($isGateway): ?>
               <div class="gateway-note">Continue to the payment provider. Your service starts after payment is verified.</div>
             <?php endif; ?>
