@@ -141,6 +141,7 @@ foreach ($moreFaqs as $item) {
 }
 $faqs = array_slice($faqs, 0, 8);
 
+$launchInsights = list_blog_posts_public(4);
 $bannerTitle = trim((string) ($banner['headline'] ?? ''));
 if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right support stack.') {
     $bannerTitle = 'Ready to get started?';
@@ -199,12 +200,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </a>
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-      <nav class="iw-home-intent-links" aria-label="Popular business services">
-        <a href="<?= e(public_url('service', ['slug' => 'business-name-registration-cac-nigeria'])) ?>">Register a business name in Nigeria</a>
-        <a href="<?= e(public_url('service', ['slug' => 'company-registration'])) ?>">Register a company with CAC</a>
-        <a href="<?= e(public_url('service', ['slug' => 'website-design-development'])) ?>">Design a website remotely</a>
-      </nav>
-      <p class="iw-home-compliance-extra">Need assistance with an export licence or NAFDAC registration? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Export licence or NAFDAC registration">Ask about licensing <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+      <p class="iw-home-help-inline">Don't see what you need? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open>Ask our team about a tailored service <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     </div>
   </section>
 
@@ -212,7 +208,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     <div class="container public-container">
       <div class="iw-clean-section-head">
         <h2 id="iw-clean-process-title">How it works</h2>
-        <p>Choose, submit and track—everything moves through your portal.</p>
+        <p>Tell us about your business, securely upload documents, review your quote and pay before processing starts.</p>
       </div>
       <div class="iw-clean-step-grid">
         <?php foreach (array_slice($steps, 0, 3) as $index => $step): ?>
@@ -282,6 +278,76 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       </div>
     </section>
   <?php endif; ?>
+
+  <section class="iw-clean-section iw-launch-insights" aria-labelledby="iw-launch-insights-title">
+    <div class="container public-container">
+      <div class="iw-launch-insights-head">
+        <div><span class="iw-clean-overline">THE iWORKS JOURNAL</span>
+          <h2 id="iw-launch-insights-title">Insights for growing businesses</h2>
+          <p>Practical guidance on registration, compliance and digital growth in Nigeria.</p></div>
+        <div class="iw-launch-insights-actions">
+          <button type="button" data-iw-insights-prev aria-label="Previous insight"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+          <button type="button" data-iw-insights-next aria-label="Next insight"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          <a href="<?= e(public_url('blog')) ?>">All insights <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <?php if ($launchInsights): ?>
+      <div class="iw-launch-insights-track" id="iwLaunchInsightsTrack" tabindex="0" aria-label="Published business insights">
+        <?php foreach ($launchInsights as $post): ?>
+          <?php
+            $postTitle = (string) ($post['title'] ?? 'Insight');
+            $postSummary = (string) ($post['excerpt'] ?? '');
+            $postImage = trim((string) ($post['featured_image']['url'] ?? ''));
+            $postLink = (string) ($post['url'] ?? public_url('blog'));
+          ?>
+          <article class="iw-launch-insight-card">
+            <a href="<?= e($postLink) ?>">
+              <?php if ($postImage!==''): ?>
+                <img src="<?= e($postImage) ?>" alt="" loading="lazy" decoding="async" width="600" height="330">
+              <?php else: ?><span class="iw-launch-insight-graphic"><i class="bi bi-journal-text" aria-hidden="true"></i></span><?php endif; ?>
+              <div><span><?= e((string) ($post['tag'] ?: 'Business insights')) ?></span>
+                <h3><?= e($postTitle) ?></h3>
+                <p><?= e(mb_safe_trim($postSummary,170)) ?></p>
+                <strong>Read insight <i class="bi bi-arrow-up-right" aria-hidden="true"></i></strong>
+              </div>
+            </a>
+          </article>
+        <?php endforeach; ?>
+      </div>
+      <?php else: ?>
+        <div class="iw-launch-insights-empty">
+          <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+          <p>Our business insights library is being prepared.</p>
+          <a href="<?= e(public_url('blog')) ?>">Explore insights <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        </div>
+      <?php endif; ?>
+    </div>
+  </section>
+  <script>
+  (function(){
+    const track=document.getElementById('iwLaunchInsightsTrack');
+    if(!track)return;
+    const prev=document.querySelector('[data-iw-insights-prev]'),next=document.querySelector('[data-iw-insights-next]');
+    const slides=Array.from(track.children);
+    if(slides.length<2){prev.hidden=true;next.hidden=true;return;}
+    function move(direction){
+      const first=slides[0],width=first.getBoundingClientRect().width+18;
+      const max=track.scrollWidth-track.clientWidth;
+      if(direction>0 && track.scrollLeft>=max-12)track.scrollTo({left:0,behavior:'smooth'});
+      else if(direction<0 && track.scrollLeft<=12)track.scrollTo({left:max,behavior:'smooth'});
+      else track.scrollBy({left:direction*width,behavior:'smooth'});
+    }
+    prev.addEventListener('click',()=>move(-1));
+    next.addEventListener('click',()=>move(1));
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    let paused=false;
+    track.addEventListener('mouseenter',()=>paused=true);
+    track.addEventListener('mouseleave',()=>paused=false);
+    track.addEventListener('focusin',()=>paused=true);
+    track.addEventListener('focusout',()=>paused=false);
+    window.setInterval(function(){if(!paused&&!document.hidden)move(1);},5500);
+  })();
+  </script>
 
   <section class="iw-clean-last" aria-labelledby="iw-clean-last-title">
     <div class="container public-container iw-clean-last-inner">
