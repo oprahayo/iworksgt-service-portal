@@ -38,7 +38,8 @@ assert_contract(str_contains($router, 'authenticate_with_password('), 'Existing 
 assert_contract(str_contains($router, 'start_otp_challenge('), 'OTP must remain in the login flow.');
 assert_contract(str_contains($guest, 'setAuthMode(') && str_contains($guest, 'iwPublicAuthContent'), 'Native account popup needs working panel switching.');
 assert_contract(str_contains($guest, 'data-iw-dialog-close'), 'Auth modal must have a close action.');
-assert_contract(str_contains($guest, 'data-iw-help-open'), 'Support dialog should be accessible.');
+assert_contract(str_contains($guest, "require __DIR__ . '/public-assistance.php'"), 'Public support widget must replace the legacy modal.');
+assert_contract(str_contains(file_get_contents($root.'/assets/js/public-assistance.js'), 'data-iw-help-open'), 'Existing support links must open the new assistance widget.');
 assert_contract(str_contains($header, 'data-iw-auth="login"'), 'Header sign-in must open secure popup.');
 assert_contract(str_contains($authCss, '.iw-auth-embed'), 'Small embedded auth styling is missing.');
 echo "public_auth_modal_contract_test passed\n";
