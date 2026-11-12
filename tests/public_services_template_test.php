@@ -53,7 +53,11 @@ check(str_contains($directoryCss, '.iw-service-index-row[hidden]'), 'Search must
 check(str_contains($directoryCss, '.iw-service-index-list[data-layout="grid"]'), 'Optional grid layout must be scoped to user-selected mode.');
 check(str_contains($html, 'data-iw-service-view="grid"'), 'Grid toggle missing.');
 check(str_contains($html, 'data-iw-service-view="list"'), 'List toggle missing.');
-check(str_contains($html, 'data-layout="list"'), 'List must remain the default.');
+check(str_contains($html, 'data-layout="grid"'), 'Grid must be the default.');
+check(str_contains($html, 'data-iw-service-view="grid" aria-pressed="true"'), 'Grid toggle should be active initially.');
+check(str_contains($html, 'data-iw-service-view="list" aria-pressed="false"'), 'List view must remain available.');
+check(str_contains($html, "localStorage.getItem('iworks-services-view') || 'grid'"), 'Returning visitors should retain their own selected layout.');
+check(str_contains($html, "data-tone="), 'Tiles need stable colour tones for graphic styling.');
 check(str_contains($html, 'Request a custom service'), 'Tailored service help CTA missing.');
 check(str_contains($html, 'id="iwServiceCategory" name="category"'), 'Native category dropdown must be available on mobile.');
 check(str_contains($html, 'type="search"'), 'Directory search must be available.');
