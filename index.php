@@ -1315,7 +1315,9 @@ try {
                         if ($cacAsync) {
                             header('Content-Type: application/json; charset=utf-8');
                             header('Cache-Control: no-store');
-                            echo json_encode(['success'=>true,'id'=>$cacId],JSON_UNESCAPED_SLASHES);
+                            echo json_encode(['success'=>true,'id'=>$cacId,
+                                'uploaded_keys'=>array_column(cac_list_files($cacId,$cacClient),'field_key')
+                            ],JSON_UNESCAPED_SLASHES);
                             exit;
                         }
                         if ($action==='review_draft') {
