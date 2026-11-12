@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../app/public-photo-config.php';
 if (!function_exists('public_service_bullets')) {
     function public_service_bullets(array $service): array
     {
@@ -35,7 +36,19 @@ $priceLabel = money((float) ($service['price'] ?? 0), $currency);
 $taxPercent = (float) ($service['tax_percent'] ?? 0);
 $featuredImage = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
 $featuredImageUrl = trim((string) ($featuredImage['url'] ?? ''));
-$serviceInitial = strtoupper(substr($serviceName !== '' ? $serviceName : 'S', 0, 1));
+$categoryText = strtolower((string) ($service['category'] ?? '') . ' ' . $serviceName);
+$stockVisual = 'consultation';
+if (str_contains($categoryText, 'registration') || str_contains($categoryText, 'company') || str_contains($categoryText, 'cac')) {
+    $stockVisual = 'registration';
+} elseif (str_contains($categoryText, 'trademark') || str_contains($categoryText, 'compliance')) {
+    $stockVisual = 'strategy';
+} elseif (str_contains($categoryText, 'growth') || str_contains($categoryText, 'web') || str_contains($categoryText, 'domain') || str_contains($categoryText, 'hosting') || str_contains($categoryText, 'digital')) {
+    $stockVisual = 'digital';
+} elseif (str_contains($categoryText, 'training')) {
+    $stockVisual = 'meeting';
+} elseif (str_contains($categoryText, 'track')) {
+    $stockVisual = 'tracking';
+}
 $fallback = '<h3>What you get</h3><p>Structured service delivery with clear requirements, invoice flow, and tracked updates inside the portal.</p><h4>Requirements</h4><p>After checkout, complete the intake form and upload the required documents for processing.</p><h4>Processing time</h4><p>Processing timelines depend on service scope and regulatory workload.</p>';
 $renderedHtml = $safeHtml !== '' ? $safeHtml : $fallback;
 ?>
@@ -87,9 +100,7 @@ $renderedHtml = $safeHtml !== '' ? $safeHtml : $fallback;
               <?php if ($featuredImageUrl !== ''): ?>
                 <img src="<?= e($featuredImageUrl) ?>" alt="<?= e($serviceName) ?>" loading="lazy">
               <?php else: ?>
-                <div class="service-detail-hero-placeholder">
-                  <span><?= e($serviceInitial) ?></span>
-                </div>
+                <img src="<?= e(iworks_stock_photo_url($stockVisual, 1000)) ?>" alt="" loading="lazy" width="800" height="560" decoding="async">
               <?php endif; ?>
             </div>
             <div class="service-detail-hero-card-body">
