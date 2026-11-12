@@ -253,7 +253,20 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
     </div>
 
     <nav class="sidebar-nav">
+      <?php
+        $portalGroups = [
+          'dashboard'=>'WORKSPACE','jobs'=>'OPERATIONS','invoices'=>'OPERATIONS',
+          'support'=>'OPERATIONS','withdrawals'=>'OPERATIONS','payments'=>'OPERATIONS','payouts'=>'OPERATIONS',
+          'messages'=>'COMMUNICATION','community'=>'COMMUNICATION',
+          'blog'=>'CONTENT','editorial_showcase'=>'CONTENT','frontend'=>'CONTENT','media'=>'CONTENT',
+          'services'=>'SERVICES','forms'=>'SERVICES',
+          'users'=>'ADMINISTRATION','settings'=>'ADMINISTRATION',
+        ];
+        $lastGroup='';
+      ?>
       <?php foreach ($sidebarItems as $item): ?>
+        <?php $group=$portalGroups[$item['page']]??'ADMINISTRATION';
+          if ($group!==$lastGroup): ?><span class="iw-admin-nav-label"><?= e($group) ?></span><?php $lastGroup=$group; endif; ?>
         <a class="sidebar-link <?= $currentPage === $item['page'] ? 'active' : '' ?>" href="<?= e($item['url']) ?>" title="<?= e($item['label']) ?>">
           <i class="bi <?= e($item['icon']) ?>"></i>
           <span class="sidebar-label"><?= e($item['label']) ?></span>
