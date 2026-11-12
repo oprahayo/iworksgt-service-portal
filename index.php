@@ -2002,6 +2002,14 @@ try {
                     ? (int) ($_GET['per_page'] ?? 10)
                     : 10,
             ];
+            if (($user['role'] ?? '') === 'client') {
+                $billingCards = [];
+                $billingVaultAvailable = stripe_vault_available();
+                if ($billingVaultAvailable) {
+                    try { $billingCards = stripe_vault_list_cards((int) $user['id']); }
+                    catch (Throwable $e) { $billingVaultAvailable = false; }
+                }
+            }
             $invoiceResult = list_invoices_for_user($user, $invoiceFilters);
             $invoices = $invoiceResult['items'] ?? [];
             $invoicePagination = $invoiceResult['pagination'] ?? [
