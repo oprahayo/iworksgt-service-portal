@@ -121,6 +121,11 @@ if (!empty($job['managed_by_admin_name'])) {
   </section>
 <?php endif; ?>
 
+<?php if (in_array((string) ($user['role'] ?? ''), ['admin','finance','agent'], true)
+  && function_exists('cac_find_for_job')): ?>
+  <?php require __DIR__ . '/partials/cac-staff-summary.php'; ?>
+<?php endif; ?>
+
 <div class="row g-3 mb-3">
   <div class="col-md-3"><div class="card"><div class="card-body"><small class="kicker">Status</small><div><?= status_badge($job['status']) ?></div></div></div></div>
   <div class="col-md-3"><div class="card"><div class="card-body"><small class="kicker">Payment</small><div><?= status_badge($jobPaymentStatus) ?></div></div></div></div>

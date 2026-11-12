@@ -38,13 +38,13 @@ printf 'Current public index: '
 # A successful --check is therefore a useful predictor of an --apply preflight.
 
 FILES=(
-  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/client_workspace.php app/domain.php
+  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/cac_applications.php app/support_links.php app/client_workspace.php app/domain.php
   index.php invoice.php .htaccess views/settings.php views/login.php views/register.php
-  views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/jobs.php
-  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php views/client-profile.php views/client-job.php
+  views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/public-track-clean.php views/jobs.php views/job.php views/support.php
+  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php views/client-profile.php views/client-job.php views/client-cac.php views/partials/cac-person.php views/partials/cac-staff-summary.php
   views/partials/public-header.php views/partials/public-footer.php views/partials/header.php views/partials/client-header.php
-  assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css assets/css/client-checkout.css
-  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php scripts/migrate_stripe_card_vault.php
+  assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css assets/css/client-checkout.css assets/css/public-launch.css assets/js/cac-application.js
+  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php scripts/migrate_stripe_card_vault.php scripts/migrate_cac_applications.php
 )
 ROOT_FILES=(index.php .htaccess)
 WORK="$(mktemp -d)"
@@ -92,7 +92,10 @@ for file in "${FILES[@]}"; do
   curl -fsSL --retry 3 --connect-timeout 15 --max-time 75 \
     "https://raw.githubusercontent.com/$REPOSITORY/$RELEASE/$file" -o "$WORK/portal/$file" || fail "Cannot fetch $file"
   [[ -s "$WORK/portal/$file" ]] || fail "Empty release file: $file"
-  case "$file" in *.php) php -l "$WORK/portal/$file" >/dev/null || fail "Invalid PHP $file";; esac
+  case "$file" in
+    *.php) php -l "$WORK/portal/$file" >/dev/null || fail "Invalid PHP $file";;
+    *.js) if command -v node >/dev/null; then node --check "$WORK/portal/$file" >/dev/null || fail "Invalid JavaScript $file"; fi;;
+  esac
 done
 for file in "${ROOT_FILES[@]}"; do
   curl -fsSL --retry 3 --connect-timeout 15 --max-time 75 \
@@ -114,6 +117,12 @@ grep -Fq -- 'iworks_client_service_items' "$WORK/portal/app/client_workspace.php
 grep -Fq -- 'iw-client-detail-grid' "$WORK/portal/views/client-job.php" || fail 'Client order tracking view missing'
 grep -Fq -- 'iw-invoice-main-grid' "$WORK/portal/invoice.php" || fail 'Redesigned payment page missing'
 grep -Fq -- 'iw-client-profile-grid' "$WORK/portal/views/client-profile.php" || fail 'Client profile missing'
+grep -Fq -- "case 'cac':" "$WORK/portal/index.php" || fail 'CAC registration route missing'
+grep -Fq -- 'function cac_checkout' "$WORK/portal/app/cac_applications.php" || fail 'CAC application checkout missing'
+grep -Fq -- 'support_link_ticket_jobs' "$WORK/portal/app/support_links.php" || fail 'Support ticket linked services missing'
+grep -Fq -- 'Successfully attached:' "$WORK/portal/assets/js/cac-application.js" || fail 'Upload success acknowledgment missing'
+grep -Fq -- 'iwLaunchInsightsTrack' "$WORK/portal/views/public-home-clean.php" || fail 'Insights carousel missing'
+grep -Fq -- 'Payment methods' "$WORK/portal/views/client-billing.php" || fail 'Billing payment methods missing'
 grep -Fq -- '185' "$WORK/portal/app/trademark_applications.php" || fail 'Missing price default'
 grep -Fq -- "portal.iworksgt.com/index.php" "$WORK/root/index.php" || fail 'Missing delegated public controller'
 grep -Fq -- "RewriteRule ^sitemap" "$WORK/root/.htaccess" || fail 'Missing public sitemap rewrite'
@@ -161,6 +170,7 @@ php -l "$PUBLIC_ROOT/index.php" >/dev/null
 # No existing jobs, payments or customer tables are altered by this migration.
 php "$PORTAL_ROOT/scripts/migrate_trademark_applications.php" || fail 'Trademark schema migration failed; deployment rolled back'
 php "$PORTAL_ROOT/scripts/migrate_stripe_card_vault.php" || fail 'Stripe vault mapping schema migration failed; deployment rolled back'
+php "$PORTAL_ROOT/scripts/migrate_cac_applications.php" || fail 'CAC registration/support schema migration failed; deployment rolled back'
 STARTED=0
 printf '\nLOCAL INSTALL COMPLETED (backups: %s)\n' "$BACKUP_DIR"
 printf 'Important: cPanel domain forwarding or higher-level redirects may still send iworksgt.com to portal.\n'

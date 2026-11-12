@@ -135,15 +135,16 @@ function stripe_vault_ensure_customer(array $user): string
 }
 
 /** The card itself is entered on Stripe-hosted checkout, not the iWorks site. */
-function stripe_vault_start_setup(array $user, bool $consent): string
+function stripe_vault_start_setup(array $user, bool $consent, bool $returnToBilling = false): string
 {
     if (!$consent) {
         throw new RuntimeException('Please confirm you want to save your card for future checkout.');
     }
     $userId = (int) ($user['id'] ?? 0);
     $customerId = stripe_vault_ensure_customer($user);
-    $successUrl = portal_absolute_url(url('card_vault')) . '&session_id={CHECKOUT_SESSION_ID}';
-    $cancelUrl = portal_absolute_url(url('card_vault'));
+    $returnPage = $returnToBilling ? url('card_vault', ['billing'=>1]) : url('card_vault');
+    $successUrl = portal_absolute_url($returnPage) . '&session_id={CHECKOUT_SESSION_ID}';
+    $cancelUrl = portal_absolute_url($returnPage);
     $response = stripe_vault_api('POST', '/v1/checkout/sessions', [
         'mode' => 'setup',
         'customer' => $customerId,

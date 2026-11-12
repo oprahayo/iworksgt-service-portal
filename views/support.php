@@ -100,6 +100,13 @@
           <div>
             <h2 class="h5 mb-1"><?= e($activeTicket['ticket_code']) ?> - <?= e($activeTicket['subject']) ?></h2>
             <div class="small text-muted">Category: <?= e($activeTicket['category']) ?> | Priority: <?= e(ucwords((string) $activeTicket['priority'])) ?></div>
+            <?php if (!empty($ticketLinkedOrders)): ?>
+              <div class="iw-support-ticket-jobs"><strong>Related services:</strong>
+                <?php foreach ($ticketLinkedOrders as $linked): ?>
+                  <a href="<?= e(url('job',['id'=>(int) $linked['id']])) ?>"><?= e((string) ($linked['service_name'] ?? 'Service')) ?> · <?= e((string) $linked['job_code']) ?></a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <?= status_badge((string) $activeTicket['status']) ?>
@@ -187,6 +194,24 @@
           <input type="hidden" name="form_action" value="create_ticket">
           <div class="modal-body">
             <div class="row g-2">
+              <?php if (!empty($supportOrderOptions)): ?>
+              <div class="col-12">
+                <fieldset class="iw-support-linked">
+                  <legend>Related services (optional)</legend>
+                  <p>Select one or more orders so support understands what this ticket concerns.</p>
+                  <div class="iw-support-order-choices">
+                    <?php foreach ($supportOrderOptions as $relatedOrder): ?>
+                      <label>
+                        <input type="checkbox" name="job_ids[]" value="<?= (int) $relatedOrder['id'] ?>"
+                          <?= (int) ($_GET['related_job_id'] ?? 0)===(int) $relatedOrder['id']?'checked':'' ?>>
+                        <span><strong><?= e((string) ($relatedOrder['service_name'] ?? $relatedOrder['title'] ?? 'Service')) ?></strong>
+                        <small><?= e((string) ($relatedOrder['job_code'] ?? '')) ?></small></span>
+                      </label>
+                    <?php endforeach; ?>
+                  </div>
+                </fieldset>
+              </div>
+              <?php endif; ?>
               <div class="col-md-6">
                 <label class="form-label">Category</label>
                 <select class="form-select" name="category">

@@ -16,7 +16,7 @@ $clientLogo = logo_path();
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
-  <link rel="stylesheet" href="assets/css/client-portal.css?v=20261112c">
+  <link rel="stylesheet" href="assets/css/client-portal.css?v=20261112d">
 </head>
 <body class="portal-authenticated iw-client-page <?= e($pageBodyClass ?? '') ?>">
 <div class="portal-layout iw-client-layout">
@@ -33,9 +33,8 @@ $clientLogo = logo_path();
     </div>
     <nav class="iw-client-menu" aria-label="Customer navigation">
       <a class="<?= $clientRoute === 'dashboard' ? 'active' : '' ?>" href="<?= e(url('dashboard')) ?>"><i class="bi bi-plus-square"></i> New application</a>
-      <a class="<?= in_array($clientRoute, ['applications','trademark','job','jobs'], true) ? 'active' : '' ?>" href="<?= e(url('applications')) ?>"><i class="bi bi-folder2-open"></i> My services</a>
+      <a class="<?= in_array($clientRoute, ['applications','trademark','cac','job','jobs'], true) ? 'active' : '' ?>" href="<?= e(url('applications')) ?>"><i class="bi bi-folder2-open"></i> My services</a>
       <a class="<?= $clientRoute === 'invoices' ? 'active' : '' ?>" href="<?= e(url('invoices')) ?>"><i class="bi bi-receipt"></i> Billing</a>
-      <a class="<?= $clientRoute === 'card_vault' ? 'active' : '' ?>" href="<?= e(url('card_vault')) ?>"><i class="bi bi-credit-card-2-front"></i> Saved cards</a>
       <a class="<?= $clientRoute === 'profile' ? 'active' : '' ?>" href="<?= e(url('profile')) ?>"><i class="bi bi-person"></i> Profile</a>
     </nav>
     <div class="iw-client-side-foot">

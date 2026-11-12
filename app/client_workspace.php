@@ -29,7 +29,7 @@ function iworks_client_state_label(string $state): string
     ][$state] ?? 'In progress';
 }
 
-function iworks_client_service_items(array $trademarkApplications, array $orders): array
+function iworks_client_service_items(array $trademarkApplications, array $orders, array $cacApplications = []): array
 {
     $items = [];
     $linkedJobs = [];
@@ -58,6 +58,30 @@ function iworks_client_service_items(array $trademarkApplications, array $orders
             'country' => 'Nigeria',
         ];
     }
+    foreach ($cacApplications as $app) {
+        if (!is_array($app)) { continue; }
+        $id = (int) ($app['id'] ?? 0);
+        if ($id <= 0) { continue; }
+        $jobId = (int) ($app['job_id'] ?? 0);
+        if ($jobId > 0) { $linkedJobs[$jobId] = true; }
+        $draft = (string) ($app['status'] ?? 'draft') === 'draft';
+        $payment = (string) ($app['payment_status'] ?? 'unpaid');
+        $status = iworks_client_state($payment, (string) ($app['job_status'] ?? 'pending'), $draft);
+        $kind = (string) ($app['kind'] ?? 'business_name');
+        $name = trim((string) ($app['data']['name1'] ?? ''));
+        $items[] = [
+            'key'=>'cac:'.$id,'kind'=>'cac','id'=>$id,
+            'name'=>$name!==''?$name:'CAC registration application',
+            'service'=>$kind==='company'?'Company formation · Nigeria':'Business name registration · Nigeria',
+            'reference'=>'CAC-'.$id,'status'=>$status,
+            'updated'=>(string) ($app['updated_at'] ?? $app['created_at'] ?? ''),
+            'detail_url'=>$draft || $status==='payment'
+                ? url('cac',['id'=>$id]+($draft?[]:['step'=>'payment']))
+                : url('job',['id'=>$jobId]),
+            'action'=>$draft?'Continue application':($status==='payment'?'Continue payment':'View progress'),
+            'can_delete_draft'=>$draft,'country'=>'Nigeria',
+        ];
+    }
     foreach ($orders as $order) {
         if (!is_array($order)) { continue; }
         $id = (int) ($order['id'] ?? 0);
@@ -77,6 +101,7 @@ function iworks_client_service_items(array $trademarkApplications, array $orders
             'detail_url' => url('job', ['id' => $id]),
             'action' => $status === 'payment' ? 'Review & pay' : 'View progress',
             'can_delete_draft' => false,
+            'can_delete_unpaid' => $status === 'payment' && in_array((string) ($order['status'] ?? 'pending'), ['pending'], true),
             'country' => '',
         ];
     }

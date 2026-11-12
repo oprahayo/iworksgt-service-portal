@@ -87,6 +87,9 @@ foreach (['trademark','domain-web-hosting','incorporated-trustees','graphics-des
     check(iworks_search_service_meta(['slug'=>$slug]) !== [], 'Missing SEO metadata for ' . $slug);
 }
 $home = file_get_contents(dirname(__DIR__) . '/views/public-home-clean.php');
-check(str_contains($home, 'iw-home-intent-links'), 'Home should link directly to top search-intent service pages.');
+check(str_contains($home, "public_url('service'") && str_contains($home, 'iw-clean-service'),
+    'Homepage service category cards must retain real crawlable service links for SEO.');
+check(!str_contains($home,'iw-home-intent-links'),
+    'Do not display duplicated SEO keyword-anchor clutter beneath the service categories.');
 check(str_contains($header, 'iworks_seo_breadcrumb_jsonld'), 'Public HTML must render structured breadcrumb.');
 echo "public_seo_mobile_test passed\n";

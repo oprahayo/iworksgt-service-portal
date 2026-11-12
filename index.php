@@ -1147,11 +1147,37 @@ try {
 
         case 'applications':
             require_roles(['client']);
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    if ((string) ($_POST['form_action'] ?? '') !== 'delete_unpaid_order') {
+                        throw new RuntimeException('Unknown request.');
+                    }
+                    $clientId=(int) current_user()['id'];
+                    $jobId=max(0,(int) ($_POST['job_id'] ?? 0));
+                    $target=$jobId>0?get_job($jobId):null;
+                    if (!$target || (int) ($target['client_id'] ?? 0)!==$clientId
+                        || (string) ($target['status'] ?? '')!=='pending') {
+                        throw new RuntimeException('Only your own unpaid, unprocessed requests can be deleted.');
+                    }
+                    // Linked wizard submissions use their own immutable invoice histories.
+                    if (iworks_client_trademark_for_job($jobId,$clientId)
+                        || cac_find_for_job($jobId,$clientId)) {
+                        throw new RuntimeException('This submitted application cannot be deleted here. Contact support to withdraw it.');
+                    }
+                    delete_unpaid_job_for_client($jobId,$clientId);
+                    flash('success','Unpaid service request deleted.');
+                } catch (Throwable $e) {
+                    flash('error',$e->getMessage());
+                }
+                redirect(url('applications'));
+            }
             trademark_ensure_schema();
             $client = current_user();
             $trademarkApplications = trademark_list((int) $client['id']);
+            $cacApplications = cac_list((int) $client['id']);
             $existingOrders = list_accessible_jobs($client, ['page'=>1, 'per_page'=>100, 'sort'=>'newest']);
-            $clientServiceItems = iworks_client_service_items($trademarkApplications, $existingOrders['items'] ?? []);
+            $clientServiceItems = iworks_client_service_items($trademarkApplications, $existingOrders['items'] ?? [], $cacApplications);
             $activeClientStatus = strtolower(trim((string) ($_GET['status'] ?? 'all')));
             if (!in_array($activeClientStatus, ['all','draft','payment','progress','completed','cancelled'], true)) { $activeClientStatus='all'; }
             $title = 'My Services - ' . app_name();
@@ -1170,7 +1196,8 @@ try {
                     $vaultAction = (string) ($_POST['form_action'] ?? '');
                     if ($vaultAction === 'save_card') {
                         $vaultCheckoutUrl = stripe_vault_start_setup(
-                            $vaultUser, (string) ($_POST['save_card_consent'] ?? '') === '1'
+                            $vaultUser, (string) ($_POST['save_card_consent'] ?? '') === '1',
+                            (string) ($_POST['return_to'] ?? '') === 'invoices'
                         );
                         redirect($vaultCheckoutUrl);
                     }
@@ -1179,12 +1206,14 @@ try {
                             $vaultUserId, trim((string) ($_POST['payment_method_id'] ?? ''))
                         );
                         flash('success', 'Saved card removed from Stripe.');
-                        redirect(url('card_vault'));
+                        redirect((string) ($_POST['return_to'] ?? '')==='invoices'
+                            ? url('invoices').'#payment-methods' : url('card_vault'));
                     }
                     throw new RuntimeException('Unknown saved-card action.');
                 } catch (Throwable $e) {
-                    flash('error', $e->getMessage());
-                    redirect(url('card_vault'));
+                    flash('error', iworks_client_safe_payment_error($e->getMessage()));
+                    redirect((string) ($_POST['return_to'] ?? '')==='invoices'
+                        ? url('invoices').'#payment-methods' : url('card_vault'));
                 }
             }
             $setupSessionId = trim((string) ($_GET['session_id'] ?? ''));
@@ -1196,7 +1225,11 @@ try {
                     flash('error', $e->getMessage());
                 }
                 // No Stripe session IDs are retained in browser navigation.
-                redirect(url('card_vault'));
+                redirect((string) ($_GET['billing'] ?? '')==='1'
+                    ? url('invoices').'#payment-methods' : url('card_vault'));
+            }
+            if ((string) ($_GET['billing'] ?? '')==='1') {
+                redirect(url('invoices').'#payment-methods');
             }
             $vaultEnabled = stripe_vault_available();
             $savedCards = [];
@@ -1212,6 +1245,131 @@ try {
             require __DIR__ . '/views/partials/header.php';
             require __DIR__ . '/views/client-card-vault.php';
             require __DIR__ . '/views/partials/footer.php';
+            break;
+
+        case 'cac_file':
+            require_login();
+            cac_ensure_schema();
+            $fileId = max(0,(int) ($_GET['id'] ?? 0));
+            $file = db_one('SELECT f.*, a.job_id,a.client_id AS owner_id
+                FROM cac_application_files f
+                JOIN cac_applications a ON a.id=f.application_id
+                WHERE f.id=:id LIMIT 1',['id'=>$fileId]);
+            if (!$file) { http_response_code(404); exit('File not found.'); }
+            $viewer=current_user();
+            $owner=(int) ($viewer['id'] ?? 0)===(int) $file['owner_id'];
+            $isStaff=in_array((string) ($viewer['role'] ?? ''),['admin','finance','agent'],true);
+            $job=$isStaff && (int) ($file['job_id'] ?? 0)>0 ? get_job((int) $file['job_id']) : null;
+            if (!$owner && (!$isStaff || !$job || !can_access_job($viewer,$job))) {
+                http_response_code(403);exit('Access denied.');
+            }
+            $name=basename((string) ($file['storage_name'] ?? ''));
+            if (!preg_match('/^[a-f0-9]{36}\.(?:jpg|png|webp|pdf)$/D',$name)) {
+                http_response_code(404);exit('File not found.');
+            }
+            $full=cac_private_dir().'/'.$name;
+            if (!is_file($full)) { http_response_code(404);exit('File not found.'); }
+            $type=(string) $file['mime'];
+            if (!in_array($type,['image/jpeg','image/png','image/webp','application/pdf'],true)) {
+                http_response_code(404);exit('Unsupported document.');
+            }
+            header('Content-Type: '.$type);
+            header('Content-Length: '.filesize($full));
+            header('Content-Disposition: attachment; filename="cac-document-'.(int) $file['id'].'.'.pathinfo($name,PATHINFO_EXTENSION).'"');
+            header('Cache-Control: private, no-store');
+            header('X-Content-Type-Options: nosniff');
+            header("Content-Security-Policy: default-src 'none'; sandbox");
+            readfile($full);
+            exit;
+
+        case 'cac':
+            require_roles(['client']);
+            cac_ensure_schema();
+            $cacUser=current_user();
+            $cacClient=(int) $cacUser['id'];
+            $cacId=max(0,(int) ($_GET['id'] ?? $_POST['id'] ?? 0));
+            $cacAsync=method_is('POST') && (
+                (string) ($_POST['ajax'] ?? '')==='1'
+                || str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')),'application/json')
+            );
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $action=(string) ($_POST['form_action'] ?? '');
+                    if ($action==='delete_draft') {
+                        cac_delete_draft($cacId,$cacClient);
+                        flash('success','Unsubmitted CAC draft deleted.');
+                        redirect(url('applications'));
+                    }
+                    if ($action==='upload_file') {
+                        $uploaded=cac_upload_file($cacClient,$cacId,
+                            (string) ($_POST['field_key'] ?? ''),$_FILES['document'] ?? null);
+                        header('Content-Type: application/json; charset=utf-8');
+                        header('Cache-Control: no-store');
+                        echo json_encode(['success'=>true]+$uploaded,JSON_UNESCAPED_SLASHES);
+                        exit;
+                    }
+                    if (in_array($action,['save_draft','review_draft'],true)) {
+                        $posted=cac_form_values($_POST);
+                        $cacId=cac_save_draft($cacClient,$cacId,$posted);
+                        if ($cacAsync) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            header('Cache-Control: no-store');
+                            echo json_encode(['success'=>true,'id'=>$cacId,
+                                'uploaded_keys'=>array_column(cac_list_files($cacId,$cacClient),'field_key')
+                            ],JSON_UNESCAPED_SLASHES);
+                            exit;
+                        }
+                        if ($action==='review_draft') {
+                            $saved=cac_find($cacId,$cacClient);
+                            $files=cac_list_files($cacId,$cacClient);
+                            cac_validate($saved['data'],array_column($files,'field_key'));
+                            redirect(url('cac',['id'=>$cacId,'step'=>'review']));
+                        }
+                        flash('success','Application draft saved.');
+                        redirect(url('cac',['id'=>$cacId]));
+                    }
+                    if ($action==='submit_for_payment') {
+                        $invoiceId=cac_checkout($cacClient,$cacId);
+                        iworks_order_intent_clear();
+                        flash('success','Application saved and invoice created. Complete payment to start processing.');
+                        redirect(url('cac',['id'=>$cacId,'step'=>'payment']));
+                    }
+                    throw new RuntimeException('Unknown CAC application action.');
+                } catch (Throwable $e) {
+                    if ($cacAsync) {
+                        http_response_code(422);
+                        header('Content-Type: application/json; charset=utf-8');
+                        header('Cache-Control: no-store');
+                        echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
+                        exit;
+                    }
+                    flash('error',$e->getMessage());
+                    redirect(url('cac',$cacId>0?['id'=>$cacId]:['kind'=>cac_kind((string) ($_POST['kind'] ?? 'business_name'))]));
+                }
+            }
+            $cacApplication=$cacId>0?cac_find($cacId,$cacClient):null;
+            if ($cacId>0 && !$cacApplication) { http_response_code(404);exit('Application not found.'); }
+            $cacKind=$cacApplication ? (string) $cacApplication['kind']
+                : cac_kind((string) ($_GET['kind'] ?? 'business_name'));
+            $cacData=$cacApplication['data'] ?? ['kind'=>$cacKind,'currency'=>'NGN','people'=>[]];
+            $cacFiles=$cacApplication ? cac_list_files($cacId,$cacClient) : [];
+            $cacStage=(string) ($_GET['step'] ?? 'details');
+            if (!in_array($cacStage,['details','review','payment'],true)) { $cacStage='details'; }
+            if ($cacApplication && $cacApplication['status']!=='draft') {
+                $cacStage='payment';
+            } else if ($cacStage==='payment') { $cacStage='review'; }
+            if ($cacStage==='review') {
+                try { cac_validate($cacData,array_column($cacFiles,'field_key')); }
+                catch (Throwable $e) {
+                    flash('error',$e->getMessage());
+                    redirect(url('cac',$cacId>0?['id'=>$cacId]:['kind'=>$cacKind]));
+                }
+            }
+            $title=($cacKind==='company'?'Company incorporation':'Business name registration').' - '.app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/client-cac.php';
+            require __DIR__.'/views/partials/footer.php';
             break;
 
         case 'trademark_file':
@@ -1336,9 +1494,10 @@ try {
             if (($user['role'] ?? '') === 'client') {
                 trademark_ensure_schema();
                 $trademarkApplications = trademark_list((int) $user['id']);
+                $cacApplications = cac_list((int) $user['id']);
                 $clientCatalogue = iworks_client_catalogue(list_services(true));
                 $recentOrders = list_accessible_jobs($user, ['page'=>1, 'per_page'=>25, 'sort'=>'newest']);
-                $clientRecent = array_slice(iworks_client_service_items($trademarkApplications, $recentOrders['items'] ?? []), 0, 4);
+                $clientRecent = array_slice(iworks_client_service_items($trademarkApplications, $recentOrders['items'] ?? [], $cacApplications), 0, 4);
                 $title = 'New Application - ' . app_name();
                 require __DIR__ . '/views/partials/header.php';
                 require __DIR__ . '/views/client-dashboard.php';
@@ -1938,6 +2097,14 @@ try {
             ];
             $invoiceResult = list_invoices_for_user($user, $invoiceFilters);
             $invoices = $invoiceResult['items'] ?? [];
+            $vaultEnabled = false; $savedCards = []; $vaultNotice = '';
+            if ((string) ($user['role'] ?? '')==='client') {
+                $vaultEnabled = stripe_vault_available();
+                if ($vaultEnabled) {
+                    try { $savedCards = stripe_vault_list_cards((int) $user['id']); }
+                    catch (Throwable $e) { $vaultNotice = 'Saved payment methods could not be loaded at the moment.'; }
+                }
+            }
             $invoicePagination = $invoiceResult['pagination'] ?? [
                 'page' => (int) $invoiceFilters['page'],
                 'per_page' => (int) $invoiceFilters['per_page'],
@@ -2409,6 +2576,9 @@ try {
                     $action = (string) ($_POST['form_action'] ?? '');
 
                     if ($action === 'create_ticket' && $user['role'] === 'client') {
+                        $linkedJobIds=support_client_job_ids(
+                            (int) $user['id'],$_POST['job_ids'] ?? []
+                        );
                         $ticketId = create_support_ticket(
                             (int) $user['id'],
                             (string) ($_POST['subject'] ?? ''),
@@ -2417,6 +2587,7 @@ try {
                             (string) ($_POST['category'] ?? 'general'),
                             $_FILES['attachment'] ?? null
                         );
+                        support_link_ticket_jobs($ticketId,(int) $user['id'],$linkedJobIds);
                         flash('success', 'Support ticket created successfully.');
                         redirect(url('support', ['ticket_id' => $ticketId]));
                     }
@@ -2451,6 +2622,10 @@ try {
             }
 
             $tickets = list_support_tickets_for_user($user, $ticketFilters);
+            $supportOrderOptions=($user['role'] ?? '')==='client'
+                ? (list_accessible_jobs($user,['page'=>1,'per_page'=>100,'sort'=>'newest'])['items'] ?? [])
+                : [];
+            $ticketLinkedOrders=[];
             $activeTicket = null;
             $ticketMessages = [];
             $requestedTicketId = (int) ($_GET['ticket_id'] ?? 0);
@@ -2459,6 +2634,7 @@ try {
                 if ($ticket && can_access_support_ticket($user, $ticket)) {
                     $activeTicket = $ticket;
                     $ticketMessages = list_support_ticket_messages($requestedTicketId);
+                    $ticketLinkedOrders=support_linked_jobs($requestedTicketId,$user);
                 }
             }
 
@@ -2631,6 +2807,29 @@ try {
                         set_setting('trademark_price_usd_per_class', number_format((float) $trademarkPrice, 2, '.', ''));
 
                         flash('success', 'Business rules updated.');
+                    }
+
+                    if ($action === 'save_cac_pricing') {
+                        $priceFields = [
+                            'cac_business_base_ngn'=>26000,
+                            'cac_business_extra_partner_ngn'=>15000,
+                            'cac_company_base_ngn'=>0,
+                            'cac_company_extra_director_ngn'=>0,
+                            'cac_company_extra_shareholder_ngn'=>0,
+                        ];
+                        $validated=[];
+                        foreach ($priceFields as $key=>$fallback) {
+                            $value=filter_var($_POST[$key] ?? $fallback,FILTER_VALIDATE_FLOAT);
+                            if ($value===false || !is_finite((float) $value) || $value<0 || $value>100000000) {
+                                throw new RuntimeException('Invalid CAC fee for '.$key.'.');
+                            }
+                            if (in_array($key,['cac_business_base_ngn','cac_business_extra_partner_ngn'],true) && $value<1) {
+                                throw new RuntimeException('Business Name base and partner fees must be greater than zero.');
+                            }
+                            $validated[$key]=number_format((float) $value,2,'.','');
+                        }
+                        foreach ($validated as $key=>$value) { set_setting($key,$value); }
+                        flash('success','CAC registration pricing saved. New quotes use these amounts.');
                     }
 
                     if ($action === 'save_payment_method') {
