@@ -90,6 +90,19 @@
       if (!resp.ok || !body.success || !body.id) {
         throw new Error(body.message || 'Could not save. Please retry.');
       }
+      // Server owns the list of attached documents. A changed identity or
+      // removed partner invalidates the old files, never silently reuses them.
+      if (Array.isArray(body.uploaded_keys)) {
+        const current = new Set(body.uploaded_keys);
+        Array.from(uploadedFields).forEach(function(key) {
+          if (current.has(key)) return;
+          uploadedFields.delete(key);
+          const row = Array.from(document.querySelectorAll('[data-cac-file-field]'))
+            .find(function(el){return el.dataset.cacFileField === key;});
+          if (row) uploadedState(row,'Document needs re-upload after applicant details changed.',false);
+        });
+        current.forEach(function(key){ uploadedFields.add(key); });
+      }
       idInput.value = String(body.id);
       cfg.id = Number(body.id);
       const locationUrl = 'index.php?page=cac&id='+encodeURIComponent(body.id);
@@ -206,6 +219,8 @@
       const member=remove.closest('[data-cac-person]');
       if(member && member===people.lastElementChild && countPeople()>1){
         if(window.confirm('Remove this applicant? You will need to save the draft again.')){
+          const index = Number(member.dataset.personIndex);
+          ['id','photo','signature'].forEach(function(doc){ uploadedFields.delete('person_'+index+'_'+doc); });
           member.remove();updateRemove();tell('Applicant removed. Save the draft to keep this change.',false);
         }
       }
