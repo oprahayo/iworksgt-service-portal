@@ -52,7 +52,6 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
             'description' => $description !== '' ? $description : iworks_seo_excerpt((string) ($record['short_description'] ?? $record['description'] ?? '')),
             'url' => $canonical,
             'provider' => $provider,
-            'areaServed' => 'NG',
         ];
         $price = (float) ($record['price'] ?? 0);
         $currency = strtoupper(trim((string) ($record['currency'] ?? 'NGN')));
