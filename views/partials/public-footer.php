@@ -443,6 +443,6 @@ $socialIcons = [
   }
 })();
 </script>
-<script defer src="<?= e(public_absolute_url('assets/js/public-ux.js')) ?>"></script>
+<script defer src="<?= e(public_absolute_url('assets/js/public-ux.js')) ?>?v=20261112b"></script>
 </body>
 </html>
