@@ -36,7 +36,7 @@ $html = (string) ob_get_clean();
 must_contain(str_contains($html, 'About our company'), 'CMS headline should be rendered.');
 must_contain(str_contains($html, 'Home</a>'), 'Compact breadcrumb should link home.');
 must_contain(str_contains($html, 'aria-current="page">About'), 'Breadcrumb should identify current page.');
-must_contain(str_contains($html, 'photo-1769740333462-9a63bfa914bc'), 'About should display one relevant business photo.');
+must_contain(str_contains($html, 'photo-1739298061707-cefee19941b7'), 'About should display one relevant business photo.');
 must_contain(substr_count($html, '<section') <= 5, 'About page should remain concise.');
 must_contain(str_contains($html, 'What we do'), 'About should explain service areas.');
 must_contain(!str_contains($html, 'Support for every stage of business.'), 'Remove redundant old service sections.');
