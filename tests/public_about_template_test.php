@@ -43,4 +43,11 @@ must_contain(str_contains($html, 'Example Founder'), 'CMS founder identity shoul
 must_contain(str_contains($html, '/services?category=growth'), 'Digital services must link to the live catalog.');
 must_contain(!str_contains($html, 'Trusted by millions'), 'Unverified trust claims must not appear.');
 
+foreach (['register', 'digital', 'tracking'] as $visual) {
+    $path = __DIR__ . '/../assets/illustrations/' . $visual . '.svg';
+    must_contain(is_file($path), 'The ' . $visual . ' illustration must exist.');
+    $contents = (string) file_get_contents($path);
+    must_contain(str_contains($contents, '<svg') && str_contains($contents, '</svg>'), 'SVG asset must have a valid root wrapper.');
+}
+
 echo "public_about_template_test passed\n";
