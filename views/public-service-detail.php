@@ -4,6 +4,7 @@
  * sanitized description, currency, tax and portal login/order entry.
  */
 require_once __DIR__ . '/../app/public-photo-config.php';
+require_once __DIR__ . '/../app/public_marketing.php';
 if (!function_exists('public_service_bullets')) {
     function public_service_bullets(array $service): array
     {
