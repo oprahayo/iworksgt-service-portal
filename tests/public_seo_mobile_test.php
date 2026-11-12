@@ -16,6 +16,7 @@ function public_url(string $page = 'home', array $params = []): string {
 function public_absolute_url(string $path): string { return 'https://portal.iworksgt.com/' . ltrim($path, '/'); }
 function check(bool $pass, string $reason): void { if (!$pass) throw new RuntimeException($reason); }
 require dirname(__DIR__) . '/app/public_seo.php';
+require dirname(__DIR__) . '/app/public_marketing.php';
 $snippet = iworks_seo_excerpt('<h3>Corporate Affairs Commission registration</h3><p>Custom website and remote filing support.</p>');
 check(!str_contains($snippet, '<'), 'Description must not contain HTML.');
 check(iworks_seo_excerpt(str_repeat('business ', 35)) !== str_repeat('business ', 35), 'Long descriptions must be shortened.');
@@ -60,3 +61,17 @@ check(str_contains($rewrite, 'sitemap\\.xml'), 'Apache must rewrite /sitemap.xml
 check(str_contains($rewrite, 'robots\\.txt'), 'Apache must rewrite /robots.txt.');
 check(str_contains($guest, 'iwEmbeddedPublicAuth'), 'Popup authentication headings must not add extra public H1 tags.');
 echo "public_seo_mobile_test passed\n";
+
+$marketing = iworks_search_service_meta(['slug'=>'business-name-registration-cac-nigeria']);
+check(str_contains($marketing['title'], 'Register a Business Name in Nigeria'), 'Business name search intent missing.');
+check(str_contains($marketing['description'], 'CAC'), 'Business registration snippet missing CAC context.');
+$website = iworks_search_service_meta(['slug'=>'website-design-development']);
+check(str_contains($website['title'], 'Website Design in Nigeria'), 'Remote web design title missing.');
+check(iworks_search_service_meta(['slug'=>'unknown-catalog-item']) === [], 'Unknown services should retain CMS metadata.');
+$guidance = iworks_search_service_guide(['slug'=>'business-name-registration-cac-nigeria']);
+check(count($guidance['steps']) === 3 && count($guidance['questions']) === 2, 'CAC service guide must be substantive.');
+check(str_starts_with($guidance['official'], 'https://cac.gov.ng/'), 'CAC source must use official website.');
+$header = file_get_contents(dirname(__DIR__) . '/views/partials/public-header.php');
+check(str_contains($header, 'iworks_search_service_meta'), 'Public header must load service-specific metadata.');
+$detail = file_get_contents(dirname(__DIR__) . '/views/public-service-detail.php');
+check(str_contains($detail, 'iw-search-guide'), 'Service detail must include search guidance.');
