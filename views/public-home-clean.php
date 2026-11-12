@@ -252,9 +252,12 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
   <?php if ($faqs !== []): ?>
     <section class="iw-clean-section iw-clean-faq" aria-labelledby="iw-clean-faq-title">
       <div class="container public-container iw-clean-faq-inner">
-        <div>
-          <h2 id="iw-clean-faq-title">Common questions</h2>
-          <p>Need something else? <a href="mailto:support@iworksgt.com" class="iw-home-help-link" data-iw-help-open>Talk to our team <i class="bi bi-chat-dots" aria-hidden="true"></i></a></p>
+        <div class="iw-clean-faq-intro">
+          <img src="https://images.pexels.com/photos/8866777/pexels-photo-8866777.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900" alt="Customer support professional available to answer business enquiries" width="780" height="960" loading="lazy" decoding="async">
+          <div class="iw-clean-faq-intro-content">
+            <h2 id="iw-clean-faq-title">Common questions</h2>
+            <p>Need something else? <a href="mailto:support@iworksgt.com" class="iw-home-help-link" data-iw-help-open>Talk to our team <i class="bi bi-chat-dots" aria-hidden="true"></i></a></p>
+          </div>
         </div>
         <div class="iw-clean-faq-items">
           <?php foreach ($faqs as $item): ?>
