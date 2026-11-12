@@ -27,6 +27,9 @@ jobs:
       - name: Lint PHP files
         run: find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
 
+      - name: Validate cPanel deployment script
+        run: bash -n scripts/deploy_site_polish.sh
+
       - name: Run smoke tests
         run: |
           php tests/crypto_conversion_test.php
