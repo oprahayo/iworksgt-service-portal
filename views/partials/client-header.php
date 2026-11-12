@@ -16,7 +16,7 @@ $clientLogo = logo_path();
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
-  <link rel="stylesheet" href="assets/css/client-portal.css?v=20261112a">
+  <link rel="stylesheet" href="assets/css/client-portal.css?v=20261112b">
 </head>
 <body class="portal-authenticated iw-client-page <?= e($pageBodyClass ?? '') ?>">
 <div class="portal-layout iw-client-layout">
