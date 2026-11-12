@@ -56,7 +56,10 @@ foreach ($clientServiceItems as $item) { $countByStatus[$item['status']] = ($cou
           </form>
         <?php endif; ?>
         <?php if (!empty($item['can_delete_draft'])): ?>
-          <form method="post" action="<?= e(url('trademark',['id'=>(int) $item['id']])) ?>" onsubmit="return confirm('Delete this draft application? This cannot be undone.');">
+          <form method="post" action="<?= e(($item['kind'] ?? '') === 'cac'
+              ? url('cac_filing',['id'=>(int) $item['id']])
+              : url('trademark',['id'=>(int) $item['id']])) ?>"
+              onsubmit="return confirm('Delete this draft and its saved attachments? This cannot be undone.');">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="form_action" value="delete_draft">
             <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
