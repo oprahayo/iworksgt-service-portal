@@ -893,6 +893,10 @@ function google_oauth_authorization_url(): string
     if (!google_auth_ready()) {
         throw new RuntimeException('Google authentication is not configured in admin settings.');
     }
+    $redirectIssues = google_oauth_redirect_problems();
+    if ($redirectIssues !== []) {
+        throw new RuntimeException('Google sign-in callback configuration needs correction: ' . implode(' ', $redirectIssues));
+    }
 
     $state = bin2hex(random_bytes(24));
     $_SESSION['google_oauth_state'] = $state;
