@@ -5,7 +5,7 @@
 # bash scripts/deploy_public_root_split.sh --apply "$HOME/public_html" "$HOME/public_html/portal.iworksgt.com"
 set -Eeuo pipefail
 REPOSITORY="oprahayo/iworksgt-service-portal"
-RELEASE="8d1c6d73b9df0240fa97a89ecb8d9c523c8da97c"
+RELEASE="bd05a138a0a145d0d7805e83a8212d958564a845"
 MODE="$1"
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 [[ "$MODE" == '--check' || "$MODE" == '--apply' ]] || fail 'Usage: --check or --apply PUBLIC_ROOT PORTAL_ROOT'
