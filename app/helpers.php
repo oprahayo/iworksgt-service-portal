@@ -100,13 +100,25 @@ function should_enforce_split_domain(): bool
 
 function portal_base_url(): string
 {
-    $base = app_config()['app']['portal_base_url'] ?? base_url();
-    return rtrim((string) $base, '/');
+    $base = trim((string) (app_config()['app']['portal_base_url'] ?? base_url()));
+    // The live installation has two virtual hosts. Keep all authenticated
+    // actions and Google OAuth callbacks on the isolated portal origin.
+    if (in_array(request_host(), ['iworksgt.com', 'www.iworksgt.com', 'portal.iworksgt.com'], true)
+        && in_array(configured_host($base), ['iworksgt.com', 'portal.iworksgt.com'], true)) {
+        return 'https://portal.iworksgt.com';
+    }
+    return rtrim($base, '/');
 }
 
 function public_base_url(): string
 {
     $configured = trim((string) (app_config()['app']['public_base_url'] ?? ''));
+    // The apex is the sole canonical origin for the company website. This
+    // also corrects an older saved public_base_url pointing at the portal.
+    if (in_array(request_host(), ['iworksgt.com', 'www.iworksgt.com', 'portal.iworksgt.com'], true)
+        || configured_host(portal_base_url()) === 'portal.iworksgt.com') {
+        return 'https://iworksgt.com';
+    }
     if ($configured !== '') {
         return rtrim($configured, '/');
     }
