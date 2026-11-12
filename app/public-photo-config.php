@@ -15,7 +15,7 @@ if (!function_exists('iworks_stock_photo_url')) {
             'registration' => 'photo-1772588627327-1eeddcf73c11',
             'digital' => 'photo-1778146476147-5f8d4bd03c79',
             'tracking' => 'photo-1651684195895-38708dc94cfa',
-            'meeting' => 'photo-1769740333462-9a63bfa914bc',
+            'meeting' => 'photo-1739298061707-cefee19941b7',
             'strategy' => 'photo-1758518729908-d4220a678d81',
             'developer' => 'photo-1730130054404-c2bd8e7038c2',
         ];
