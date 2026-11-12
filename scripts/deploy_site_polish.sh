@@ -133,11 +133,13 @@ if [[ "${IWORKS_DEPLOY_SKIP_LIVE_CHECK:-0}" != '1' ]]; then
     label="$1"
     url="$2"
     marker="$3"
-    if curl --fail --location --silent --show-error --max-time 25 "$url?iworks_release_check=$(date +%s)" | grep -Fq "$marker"; then
+    response_file="$(mktemp "${TMPDIR:-/tmp}/iworks-response.XXXXXXXX")"
+    if curl --fail --location --silent --show-error --max-time 25 "$url?iworks_release_check=$(date +%s)" -o "$response_file" && grep -Fq "$marker" "$response_file"; then
       printf 'LIVE VERIFIED: %s\n' "$label"
     else
       printf 'NOTICE: %s response did not contain the marker; check cache or routing.\n' "$label"
     fi
+    rm -f "$response_file"
   }
   check_page 'Homepage visuals' 'https://portal.iworksgt.com/' 'From a great idea to a business that works'
   check_page 'About page' 'https://portal.iworksgt.com/about' 'Less back-and-forth'
