@@ -105,7 +105,7 @@ grep -Fq -- 'iw-search-guide' "$WORK/portal/views/public-service-detail.php" || 
 grep -Fq -- 'iworks_seo_breadcrumb_jsonld' "$WORK/portal/app/public_seo.php" || fail 'Missing SEO breadcrumb contract'
 grep -Fq -- 'function trademark_checkout' "$WORK/portal/app/trademark_applications.php" || fail 'Missing trademark application checkout'
 grep -Fq -- 'function stripe_vault_start_setup' "$WORK/portal/app/stripe_card_vault.php" || fail 'Missing secure provider-backed card vault'
-grep -Fq -- 'case '\''card_vault'\'':' "$WORK/portal/index.php" || fail 'Card vault route is missing'
+grep -Fq -- "case 'card_vault':" "$WORK/portal/index.php" || fail 'Card vault route is missing'
 grep -Fq -- 'stripe_vault_customer_id' "$WORK/portal/app/domain.php" || fail 'Missing Stripe saved-card checkout integration'
 grep -Fq -- 'New application' "$WORK/portal/views/client-dashboard.php" || fail 'Missing application dashboard'
 grep -Fq -- '185' "$WORK/portal/app/trademark_applications.php" || fail 'Missing price default'
