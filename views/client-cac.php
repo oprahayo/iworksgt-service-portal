@@ -120,9 +120,11 @@ $hasRecord = (int) ($record['id'] ?? 0) > 0;
           <textarea id="cacActivity" name="activity" rows="3" required placeholder="Describe the actual business activity"><?= e((string) ($data['activity'] ?? '')) ?></textarea></div>
         <?php if ($kind==='company'): ?>
           <div class="iw-tm-field"><label for="cacCapital">Proposed issued share capital (NGN) <span>*</span></label>
-            <input id="cacCapital" name="share_capital" type="number" min="1" step="1" value="<?= e((string) ($data['share_capital'] ?? '')) ?>"></div>
+            <input id="cacCapital" name="share_capital" type="number" min="100000" step="1" required value="<?= e((string) ($data['share_capital'] ?? '100000')) ?>">
+            <small>Standard minimum for a Nigerian private company is NGN 100,000; regulated activities can require more.</small></div>
           <div class="iw-tm-field"><label for="cacShares">Number of issued shares</label>
-            <input id="cacShares" name="share_count" type="number" min="1" step="1" value="<?= e((string) ($data['share_count'] ?? '')) ?>"></div>
+            <input id="cacShares" name="share_count" type="number" min="1" step="1" required value="<?= e((string) ($data['share_count'] ?? '100000')) ?>">
+            <small>Allocate the full number of issued shares among the shareholders below.</small></div>
         <?php endif; ?>
         <div class="iw-tm-field iw-tm-field-full">
           <label class="iw-cac-check"><input name="same_address" value="1" type="checkbox" id="cacSameAddress" <?= !empty($data['same_address'])?'checked':'' ?>>
