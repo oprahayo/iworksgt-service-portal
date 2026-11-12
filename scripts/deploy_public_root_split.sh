@@ -38,13 +38,13 @@ printf 'Current public index: '
 # A successful --check is therefore a useful predictor of an --apply preflight.
 
 FILES=(
-  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/client_workspace.php app/domain.php
-  index.php invoice.php .htaccess views/settings.php views/login.php views/register.php
-  views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/jobs.php
-  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php views/client-profile.php views/client-job.php
+  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/client_workspace.php app/cac_filing.php app/domain.php
+  index.php invoice.php .htaccess views/settings.php views/login.php views/register.php views/support.php views/job.php views/intake-submission.php
+  views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/public-track-clean.php views/jobs.php
+  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php views/client-profile.php views/client-job.php views/client-cac-filing.php views/staff-cac-review.php
   views/partials/public-header.php views/partials/public-footer.php views/partials/header.php views/partials/client-header.php
   assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css assets/css/client-checkout.css
-  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php scripts/migrate_stripe_card_vault.php
+  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php scripts/migrate_stripe_card_vault.php scripts/migrate_cac_filings.php
 )
 ROOT_FILES=(index.php .htaccess)
 WORK="$(mktemp -d)"
@@ -110,6 +110,10 @@ grep -Fq -- 'function stripe_vault_start_setup' "$WORK/portal/app/stripe_card_va
 grep -Fq -- "case 'card_vault':" "$WORK/portal/index.php" || fail 'Card vault route is missing'
 grep -Fq -- 'stripe_vault_customer_id' "$WORK/portal/app/domain.php" || fail 'Missing Stripe saved-card checkout integration'
 grep -Fq -- 'iw-client-services' "$WORK/portal/views/client-dashboard.php" || fail 'Missing application dashboard'
+grep -Fq -- "case 'cac_filing':" "$WORK/portal/index.php" || fail 'CAC prepayment route is missing'
+grep -Fq -- 'function cac_filing_checkout' "$WORK/portal/app/cac_filing.php" || fail 'CAC invoice workflow missing'
+grep -Fq -- 'iw-cac-layout' "$WORK/portal/views/client-cac-filing.php" || fail 'CAC registration interface missing'
+grep -Fq -- 'upload_intake_file' "$WORK/portal/index.php" || fail 'Immediate intake upload route missing'
 grep -Fq -- 'iworks_client_service_items' "$WORK/portal/app/client_workspace.php" || fail 'Unified customer service records missing'
 grep -Fq -- 'iw-client-detail-grid' "$WORK/portal/views/client-job.php" || fail 'Client order tracking view missing'
 grep -Fq -- 'iw-invoice-main-grid' "$WORK/portal/invoice.php" || fail 'Redesigned payment page missing'
@@ -161,6 +165,7 @@ php -l "$PUBLIC_ROOT/index.php" >/dev/null
 # No existing jobs, payments or customer tables are altered by this migration.
 php "$PORTAL_ROOT/scripts/migrate_trademark_applications.php" || fail 'Trademark schema migration failed; deployment rolled back'
 php "$PORTAL_ROOT/scripts/migrate_stripe_card_vault.php" || fail 'Stripe vault mapping schema migration failed; deployment rolled back'
+php "$PORTAL_ROOT/scripts/migrate_cac_filings.php" || fail 'CAC schema migration failed; deployment rolled back'
 STARTED=0
 printf '\nLOCAL INSTALL COMPLETED (backups: %s)\n' "$BACKUP_DIR"
 printf 'Important: cPanel domain forwarding or higher-level redirects may still send iworksgt.com to portal.\n'

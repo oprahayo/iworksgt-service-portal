@@ -224,7 +224,8 @@ foreach ($steps as $step) {
                             <div class="fw-semibold small">Drag and drop <?= $fieldMultiple ? 'files' : 'a file' ?> here</div>
                             <div class="small text-muted">or click to browse (PNG, JPG, JPEG, PDF up to 12MB each)</div>
                           </div>
-                          <div class="intake-upload-list mt-2" data-selected-file-list></div>
+                          <div class="intake-upload-list mt-2" data-selected-file-list aria-live="polite"></div>
+                          <p class="small text-muted mt-1" data-upload-message role="status">Files upload and save automatically when selected. A green check confirms successful storage.</p>
 
                           <?php if (!empty($files[$fieldKey]) && is_array($files[$fieldKey])): ?>
                             <div class="intake-existing-file-list mt-2" data-existing-file-list>
@@ -742,10 +743,68 @@ foreach ($steps as $step) {
       html += '<button class="btn btn-sm btn-outline-danger py-0 px-2 js-remove-selected-file" type="button" data-remove-index="' + index + '">Remove</button>';
       html += '</div>';
       html += '<div class="small text-muted">' + escapeHtml(formatFileSize(file.size || 0)) + '</div>';
-      html += '<div class="progress intake-upload-progress mt-1"><div class="progress-bar bg-success" role="progressbar" style="width:100%"></div></div>';
+      html += '<div class="small" style="color:#a65b21"><span aria-hidden="true">◷</span> Uploading to secure storage…</div>';
       html += '</div>';
     });
     state.list.innerHTML = html;
+  }
+
+  // Each selection is uploaded server-side immediately. A local green bar is
+  // not proof that a file reached the server.
+  async function uploadIntakeFile(wrap, file) {
+    var fieldKey = wrap.getAttribute('data-field-key') || '';
+    var state = uploaderStates[fieldKey];
+    if (!state || !file) return;
+    state.busy = true;
+    var message = wrap.querySelector('[data-upload-message]');
+    if (message) message.textContent = 'Uploading ' + file.name + '…';
+    var body = new FormData();
+    body.append('csrf_token', form.querySelector('[name="csrf_token"]').value);
+    body.append('form_action', 'upload_intake_file');
+    body.append('field_key', fieldKey);
+    body.append('intake_file', file, file.name);
+    try {
+      var response = await fetch(form.action, {method:'POST', credentials:'same-origin', body:body});
+      var result = await response.json();
+      if (!response.ok || !result.success || !result.file) {
+        throw new Error(result.message || 'Document could not be uploaded.');
+      }
+      var existing = wrap.querySelector('[data-existing-file-list]');
+      if (!existing) {
+        existing = document.createElement('div');
+        existing.className = 'intake-existing-file-list mt-2';
+        existing.setAttribute('data-existing-file-list','');
+        state.list.after(existing);
+      }
+      // The server response supplies the persisted file index, not a local guess.
+      var row = document.createElement('div');
+      row.className = 'intake-existing-file-row';
+      row.setAttribute('data-existing-file-row','');
+      var link = document.createElement('a');
+      link.className = 'text-decoration-none flex-grow-1';
+      link.href = result.file.url;
+      link.textContent = '✓ ' + result.file.name + ' (' + formatFileSize(result.file.size) + ')';
+      var label = document.createElement('label');
+      label.className = 'form-check-label small text-muted';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className='form-check-input me-1 js-intake-remove-file';
+      cb.name = 'remove_files[' + fieldKey + '][]';
+      cb.value = String(result.file.index);
+      label.append(cb, document.createTextNode('Remove'));
+      row.append(link,label);
+      existing.append(row);
+      if (message) message.textContent = '✓ Uploaded and saved successfully.';
+      state.list.innerHTML = '';
+      setInlineError(wrap, '');
+      updateRequiredDocsChecklist();
+    } catch(err) {
+      setInlineError(wrap, (err && err.message) ? err.message : 'Upload failed. Try again.');
+      if (message) message.textContent = 'Upload failed. Choose the file again.';
+    } finally {
+      state.busy = false;
+      state.input.value='';
+      updateRequiredDocsChecklist();
+    }
   }
 
   function addFilesToUploader(wrap, fileList) {
@@ -758,6 +817,14 @@ foreach ($steps as $step) {
     var maxBytes = 12 * 1024 * 1024;
 
     if (!state.transfer) {
+      // iOS Safari can lack a constructible DataTransfer. Still upload
+      // directly; do not silently discard the selected government ID.
+      var compatibleFiles = Array.prototype.slice.call(fileList);
+      state.uploadQueue = (state.uploadQueue || Promise.resolve()).then(async function(){
+        for (var f=0;f<compatibleFiles.length;f++) {
+          await uploadIntakeFile(wrap, compatibleFiles[f]);
+        }
+      });
       return;
     }
 
@@ -790,9 +857,18 @@ foreach ($steps as $step) {
     syncUploaderInput(state);
     renderUploaderList(state);
     updateExistingFileVisualState(wrap);
-    setInlineError(wrap, '');
     updateRequiredDocsChecklist();
-    queueAutosave();
+    // Automatically save each accepted document and show a success check ONLY
+    // after the server confirms it. No pretend 100% upload progress.
+    var pendingFiles = Array.prototype.slice.call(state.transfer.files);
+    state.transfer = makeDataTransfer();
+    syncUploaderInput(state);
+    state.uploadQueue = (state.uploadQueue || Promise.resolve()).then(async function(){
+      for (var i=0;i<pendingFiles.length;i++) {
+        await uploadIntakeFile(wrap, pendingFiles[i]);
+      }
+    });
+
   }
 
   function initFileUploader(wrap) {
@@ -816,14 +892,16 @@ foreach ($steps as $step) {
       dropzone: dropzone,
       list: list,
       transfer: transfer,
-      multiple: uploader.getAttribute('data-multiple') === '1'
+      multiple: uploader.getAttribute('data-multiple') === '1',
+      busy: false,
+      uploadQueue: Promise.resolve()
     };
 
     renderUploaderList(uploaderStates[fieldKey]);
 
     input.addEventListener('change', function () {
-      addFilesToUploader(wrap, input.files);
-      input.value = '';
+      // Do not reset input before reading selected File objects.
+      addFilesToUploader(wrap, Array.prototype.slice.call(input.files || []));
     });
 
     dropzone.addEventListener('click', function () {
@@ -1252,7 +1330,12 @@ foreach ($steps as $step) {
   }
 
   function runAutosave() {
-    if (!formActionField || !ajaxField) return;
+    if (!formActionField || !ajaxField || form.dataset.saving === '1') return;
+    if (Object.keys(uploaderStates).some(function (k) { return uploaderStates[k].busy; })) {
+      queueAutosave();
+      return;
+    }
+    form.dataset.saving = '1';
     formActionField.value = 'autosave_intake';
     ajaxField.value = '1';
 
@@ -1285,6 +1368,7 @@ foreach ($steps as $step) {
       .finally(function () {
         formActionField.value = 'submit_intake';
         ajaxField.value = '0';
+        form.dataset.saving = '0';
       });
   }
 
@@ -1398,6 +1482,11 @@ foreach ($steps as $step) {
 
   form.addEventListener('submit', function (event) {
     var action = formActionField ? formActionField.value : 'submit_intake';
+    if (Object.keys(uploaderStates).some(function(k){return uploaderStates[k].busy;})) {
+      event.preventDefault();
+      if (autosaveStatus) autosaveStatus.textContent = 'Please allow your documents to finish uploading before continuing.';
+      return;
+    }
     if (action === 'submit_intake' && !validateAllSteps()) {
       event.preventDefault();
       return;

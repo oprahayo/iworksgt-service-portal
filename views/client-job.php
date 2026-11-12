@@ -66,6 +66,9 @@ $missingRequired = count(array_filter($visibleIntake, static fn(array $s): bool 
         <?php endif; ?>
       </div>
       <div class="iw-client-request-description"><?= nl2br(e((string) ($job['description'] ?: 'Details will appear here.'))) ?></div>
+      <?php if (!empty($cacLinked)): ?>
+        <a class="iw-client-button iw-client-button-soft mt-3" href="<?= e(url('cac_filing',['id'=>(int)$cacLinked['id']])) ?>"><i class="bi bi-file-earmark-check"></i> View CAC registration submission</a>
+      <?php endif; ?>
     </section>
 
     <?php if (!empty($visibleIntake) && !$isClosed): ?>

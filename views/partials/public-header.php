@@ -140,7 +140,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/auth-compact.css')) ?>?v=20261112c">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
-  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112seo4">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112launch1">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -179,10 +179,11 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
             <?php if ($aboutLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>><?= e($aboutLabel) ?></a></li><?php endif; ?>
             <li class="nav-item"><a class="nav-link<?= $isTrackActive ? ' active' : '' ?>" href="<?= e(public_url('track')) ?>"<?= $isTrackActive ? ' aria-current="page"' : '' ?>>Track order</a></li>
+            <li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e(public_url('blog')) ?>"<?= $isBlogActive ? ' aria-current="page"' : '' ?>>Insights</a></li>
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">
-            <a class="public-signin-link" href="<?= e(portal_url('login')) ?>" data-iw-auth="login"><?= e($signInLabel) ?></a>
+            <a class="public-signin-link iw-header-account-icon" href="<?= e(portal_url('login')) ?>" data-iw-auth="login" title="Sign in to your account" aria-label="Sign in to your iWorks account"><i class="bi bi-person-circle" aria-hidden="true"></i><span class="visually-hidden"><?= e($signInLabel) ?></span></a>
             <a class="btn btn-primary btn-sm public-header-main-cta" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           </div>
         </div>
