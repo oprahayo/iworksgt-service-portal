@@ -1858,7 +1858,11 @@ try {
             ];
             $title = 'Invoices - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
-            require __DIR__ . '/views/invoices.php';
+            if (($user['role'] ?? '') === 'client') {
+                require __DIR__ . '/views/client-billing.php';
+            } else {
+                require __DIR__ . '/views/invoices.php';
+            }
             require __DIR__ . '/views/partials/footer.php';
             break;
 
