@@ -31,7 +31,7 @@ $defaultHeadlines = [
 $oldHeadline = trim((string) ($hero['headline'] ?? ''));
 $headline = $oldHeadline !== '' && !in_array($oldHeadline, $defaultHeadlines, true)
     ? $oldHeadline
-    : 'Start, protect and grow your business.';
+    : 'Business registration and website design in Nigeria.';
 
 $defaultIntroductions = [
     'CAC registration, trademark filing, NAFDAC-related support, branding, growth services, and structured business operations handled in one portal.',
@@ -39,7 +39,7 @@ $defaultIntroductions = [
 $oldIntroduction = trim((string) ($hero['subheadline'] ?? ''));
 $introduction = $oldIntroduction !== '' && !in_array($oldIntroduction, $defaultIntroductions, true)
     ? $oldIntroduction
-    : 'Business registration, trademark and digital services. Simple steps, helpful support and updates in one place.';
+    : 'Register a business name or company in Nigeria with CAC filing support. Request website design, trademarks and digital services remotely, and track progress online.';
 
 $heroAsset = !empty($hero['imageId']) ? get_media_asset((int) $hero['imageId']) : null;
 $heroImage = trim((string) ($heroAsset['url'] ?? '')) ?: iworks_stock_photo_url('consultation', 1100);
@@ -197,6 +197,11 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </a>
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      <nav class="iw-home-intent-links" aria-label="Popular business services">
+        <a href="<?= e(public_url('service', ['slug' => 'business-name-registration-cac-nigeria'])) ?>">Register a business name in Nigeria</a>
+        <a href="<?= e(public_url('service', ['slug' => 'company-registration'])) ?>">Register a company with CAC</a>
+        <a href="<?= e(public_url('service', ['slug' => 'website-design-development'])) ?>">Design a website remotely</a>
+      </nav>
       <p class="iw-home-compliance-extra">Need assistance with an export licence or NAFDAC registration? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Export licence or NAFDAC registration">Ask about licensing <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     </div>
   </section>
