@@ -6,6 +6,9 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+# Search engine discovery endpoints.
+RewriteRule ^sitemap\.xml$ index.php?page=seo_sitemap [L,QSA]
+RewriteRule ^robots\.txt$ index.php?page=seo_robots [L,QSA]
 RewriteRule ^index\.html$ index.php?page=home [R=302,L,QSA]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
