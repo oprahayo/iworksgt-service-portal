@@ -1364,10 +1364,9 @@ if (!function_exists('render_public_block')) {
             $limit = $publicPageSlug === 'blog' ? 12 : 3;
             $items = public_blog_highlight_items(is_array($data['items'] ?? null) ? $data['items'] : [], $limit);
             $fallbackImages = [
-                'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80',
-                'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80',
-                'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80',
-                'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80',
+                public_absolute_url('assets/illustrations/register.svg'),
+                public_absolute_url('assets/illustrations/digital.svg'),
+                public_absolute_url('assets/illustrations/tracking.svg'),
             ];
             ?>
             <section class="public-section marketing-blog-section" id="insights">
@@ -1397,7 +1396,14 @@ if (!function_exists('render_public_block')) {
                         $imageUrl = trim((string) ($image['url'] ?? ''));
                     }
                     if ($imageUrl === '') {
-                        $imageUrl = $fallbackImages[$index % count($fallbackImages)];
+                        $topic = strtolower($tag . ' ' . $cardTitle);
+                        if (str_contains($topic, 'registration') || str_contains($topic, 'cac') || str_contains($topic, 'incorporat')) {
+                            $imageUrl = $fallbackImages[0];
+                        } elseif (str_contains($topic, 'web') || str_contains($topic, 'brand') || str_contains($topic, 'marketing') || str_contains($topic, 'trademark')) {
+                            $imageUrl = $fallbackImages[1];
+                        } else {
+                            $imageUrl = $fallbackImages[2];
+                        }
                     }
                     ?>
                     <article class="blog-card marketing-blog-card">
