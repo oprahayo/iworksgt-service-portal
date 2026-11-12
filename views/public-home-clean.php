@@ -143,8 +143,8 @@ $faqs = array_slice($faqs, 0, 8);
 
 $featuredInsights = [];
 try { $featuredInsights = list_blog_posts_public(4); } catch (Throwable $e) { $featuredInsights = []; }
-$homeCases = iworks_editorial_cases(true, 5);
-$homeFeedback = iworks_editorial_reviews(true, 3);
+$homeCases = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 5) : [];
+$homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 3) : [];
 
 $bannerTitle = trim((string) ($banner['headline'] ?? ''));
 if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right support stack.') {
