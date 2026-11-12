@@ -141,6 +141,7 @@ function login_user(int $userId): void
 
 function logout_user(): void
 {
+    unset($_SESSION['iworks_pending_order']);
     unset($_SESSION['user_id']);
     reset_current_user_cache();
 }
