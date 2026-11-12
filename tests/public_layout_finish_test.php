@@ -33,7 +33,10 @@ must_have(str_contains($about, 'has-founder-photo'), 'Founder image direction mu
 must_have(str_contains($fixes, '.iw-about-min-founder-grid.has-founder-photo>img'), 'Founder photo must be on the left.');
 must_have(str_contains($fixes, 'width:100vw'), 'Custom-services CTA should be full bleed.');
 must_have(str_contains($services, "function selectView(value)"), 'Directory grid toggle must run locally with the service page.');
-must_have(str_contains($services, 'data-layout="list"'), 'Services must open in familiar list view.');
+must_have(str_contains($services, 'data-layout="grid"'), 'Grid must be the default view.');
+must_have(str_contains($source('assets/css/services-list.css'), 'data-tone="1"'), 'Product tiles need distinct colour artwork.');
+must_have(str_contains($source('assets/css/auth-compact.css'), 'height:fit-content!important'), 'Login popup must shrink to its form content.');
+must_have(str_contains($source('views/login.php'), 'class="iw-auth-home"'), 'Standalone sign-in requires a home shortcut.');
 must_have(!str_contains($js, "var serviceList = document.getElementById('iwServiceList')"), 'Grid must not be bound twice.');
 must_have(!str_contains($footer, '<iframe'), 'No iframe or browser-like frame in the auth popup.');
 must_have(str_contains($footer, "require __DIR__ . '/../login.php'"), 'Reuse existing login backend form.');
