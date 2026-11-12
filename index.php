@@ -23,6 +23,10 @@ if ($page === null) {
             $page = 'blog_post';
             $_GET['slug'] = urldecode((string) ($matches[1] ?? ''));
             $requestedPrettyPublicPage = true;
+        } elseif (preg_match('~^case-studies/([^/]+)$~',$rawPath,$matches)) {
+            $page='case_study';
+            $_GET['slug']=urldecode((string)$matches[1]);
+            $requestedPrettyPublicPage=true;
         } elseif (in_array($rawPath, ['packages', 'start-now', 'startnow'], true)) {
             $page = 'services';
             $requestedPrettyPublicPage = true;
@@ -113,7 +117,7 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study'];
 
     if (should_enforce_split_domain()) {
         $requestHost = request_host();
@@ -125,6 +129,8 @@ try {
                 $target = public_url('service', ['slug' => (string) ($_GET['slug'] ?? '')] + current_query_params_without_page(['slug']));
             } elseif ($page === 'blog_post') {
                 $target = public_url('blog_post', ['slug' => (string) ($_GET['slug'] ?? '')] + current_query_params_without_page(['slug']));
+            } elseif ($page === 'case_study') {
+                $target = public_url('case_study', ['slug' => (string) ($_GET['slug'] ?? '')] + current_query_params_without_page(['slug']));
             } else {
                 $target = public_url($page, current_query_params_without_page());
             }
@@ -196,6 +202,23 @@ try {
         if ($page === 'blog_post') {
             $blogSlug = trim((string) ($_GET['slug'] ?? ''));
             $blogPost = get_blog_post_public_by_slug($blogSlug);
+            if ($blogPost && method_is('POST')) {
+                require_csrf();
+                try {
+                    $publicAction=(string)($_POST['form_action']??'');
+                    if ($publicAction==='blog_like') {
+                        iworks_blog_toggle_like((int)$blogPost['id']);
+                    } elseif ($publicAction==='blog_comment') {
+                        iworks_blog_submit_comment($_POST,(int)$blogPost['id']);
+                        flash('success','Thank you. Your comment is awaiting review.');
+                    } else {
+                        throw new RuntimeException('Invalid article action.');
+                    }
+                } catch(Throwable $e) {
+                    flash('error',$e->getMessage());
+                }
+                redirect(public_url('blog_post',['slug'=>$blogSlug]));
+            }
             if (!$blogPost) {
                 http_response_code(404);
                 $title = 'Not Found - ' . app_name();
@@ -219,11 +242,43 @@ try {
             $publicHeaderConfig = get_public_header_config();
             $publicServices = list_public_services_catalog();
             $publicServiceCategories = list_public_service_categories();
+            $relatedBlogPosts = array_values(array_filter(list_blog_posts_public(8),
+                static fn(array $row):bool=>(int)($row['id']??0)!==(int)$blogPost['id']));
+            $blogComments=iworks_blog_comments((int)$blogPost['id']);
+            $blogLikes=iworks_blog_likes((int)$blogPost['id']);
+            $blogLiked=iworks_blog_liked((int)$blogPost['id']);
             $publicPageSlug = 'blog_post';
             $publicFooterData = get_public_footer_data('blog');
             require __DIR__ . '/views/partials/public-header.php';
             require __DIR__ . '/views/public-blog-detail.php';
             require __DIR__ . '/views/partials/public-footer.php';
+            return;
+        }
+
+
+        if ($page === 'case_study') {
+            $caseRecord=iworks_editorial_case_slug(trim((string)($_GET['slug']??'')));
+            if (!$caseRecord) {
+                http_response_code(404);
+                $title='Not found - '.app_name();
+                $pageSeo=[];
+                $publicFooterData=get_public_footer_data('case-studies');
+                $publicHeaderConfig=get_public_header_config();
+                require __DIR__.'/views/partials/public-header.php';
+                require __DIR__.'/views/public-404.php';
+                require __DIR__.'/views/partials/public-footer.php';
+                return;
+            }
+            $title=(string)$caseRecord['title'].' - '.app_name();
+            $pageSeo=['metaTitle'=>(string)$caseRecord['title'].' | iWorks Case Studies',
+                'metaDescription'=>(string)($caseRecord['summary']??''),
+                'ogImage'=>(string)($caseRecord['image_url']??'')];
+            $publicHeaderConfig=get_public_header_config();
+            $publicFooterData=get_public_footer_data('case-studies');
+            $publicPageSlug='case_study';
+            require __DIR__.'/views/partials/public-header.php';
+            require __DIR__.'/views/public-case-study-detail.php';
+            require __DIR__.'/views/partials/public-footer.php';
             return;
         }
 
@@ -317,6 +372,61 @@ try {
     }
 
     switch ($page) {
+        case 'public_auth_status':
+            if (!method_is('GET')) {http_response_code(405);exit;}
+            $origin=(string)($_SERVER['HTTP_ORIGIN']??'');
+            $allowedOrigin=rtrim(public_base_url(),'/');
+            if ($origin!=='' && hash_equals($allowedOrigin,$origin)) {
+                header('Access-Control-Allow-Origin: '.$allowedOrigin);
+                header('Access-Control-Allow-Credentials: true');
+                header('Vary: Origin');
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store, private');
+            echo json_encode(['authenticated'=>is_logged_in()
+                && (string)(current_user()['account_state']??'active')==='active'
+                && (string)(current_user()['status']??'active')==='active']);
+            exit;
+
+        case 'editorial_showcase':
+            require_roles(['admin']);
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $action=(string)($_POST['form_action']??'');
+                    $id=(int)($_POST['id']??0);
+                    if($action==='save_case') {
+                        iworks_editorial_save_case($_POST,$_FILES,(int)current_user()['id']);
+                        flash('success','Case study saved.');
+                    } elseif($action==='delete_case') {
+                        iworks_editorial_delete_case($id);
+                        flash('success','Case study deleted.');
+                    } elseif($action==='save_review') {
+                        iworks_editorial_save_review($_POST,$_FILES,(int)current_user()['id']);
+                        flash('success','Customer feedback saved.');
+                    } elseif($action==='delete_review') {
+                        iworks_editorial_delete_review($id);
+                        flash('success','Customer feedback deleted.');
+                    } elseif($action==='approve_comment'||$action==='delete_comment') {
+                        iworks_blog_moderate_comment($id,$action==='approve_comment'?'approve':'delete');
+                        flash('success','Blog comment updated.');
+                    } else {
+                        throw new RuntimeException('Invalid editorial action.');
+                    }
+                } catch(Throwable $e){flash('error',$e->getMessage());}
+                redirect(url('editorial_showcase', ['tab'=>(string)($_POST['tab']??'cases')]));
+            }
+            $caseRecords=iworks_editorial_cases(false,100);
+            $reviewRecords=iworks_editorial_reviews(false,100);
+            $pendingBlogComments=iworks_blog_comments_queue();
+            $editCaseRecord=iworks_editorial_case((int)($_GET['case_id']??0));
+            $editReviewRecord=iworks_editorial_review((int)($_GET['review_id']??0));
+            $title='Case Studies & Feedback - '.app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/editorial-showcase.php';
+            require __DIR__.'/views/partials/footer.php';
+            break;
+
         case 'login':
             if (is_logged_in()) {
                 redirect(iworks_post_login_destination(current_user()));
