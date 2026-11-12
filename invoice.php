@@ -133,7 +133,8 @@ $favicon = favicon_path();
   <?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -476,6 +477,14 @@ $favicon = favicon_path();
     <?php endif; ?>
   </div>
   <script>
+    (function () {
+      const meta = document.querySelector('.iw-invoice-customer-details');
+      if (meta) {
+        let wasOpen = false;
+        window.addEventListener('beforeprint', function () { wasOpen = meta.open; meta.open = true; });
+        window.addEventListener('afterprint', function () { meta.open = wasOpen; });
+      }
+    })();
     (function () {
       var backBtn = document.getElementById('invoiceBackBtn');
       if (!backBtn) return;
