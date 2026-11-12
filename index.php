@@ -1937,6 +1937,9 @@ try {
             $logs = list_status_logs($jobId);
             $agentOptions = has_role(['admin']) ? list_users_by_role('agent') : [];
             $invoice = get_invoice_by_job_id($jobId);
+            $cacLinked = schema_table_exists('cac_filing_applications')
+                ? db_one('SELECT id,client_id,kind FROM cac_filing_applications WHERE job_id=:job LIMIT 1',['job'=>$jobId])
+                : null;
             $intakeSubmissions = list_job_intake_submissions_for_user($jobId, $user);
             $intakeSummary = intake_job_completion_summary($jobId);
 
