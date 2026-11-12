@@ -347,3 +347,62 @@ body.iw-client-page a{text-decoration:none}
  .iw-client-billing-notice>div{flex-direction:column;align-items:flex-start;gap:6px}
  .iw-client-billing-notice .iw-client-button{margin:3px 0 0!important}
 }
+
+/* 2026 launch refinement: tint service cards, larger navigation and CAC intake. */
+.iw-client-services.iw-client-catalog .iw-client-catalog-item{background:linear-gradient(140deg,var(--svc-bg),#fff 84%);border-color:color-mix(in srgb,var(--svc-accent) 24%,#e6e9ed);box-shadow:0 2px 12px rgba(26,34,42,.035)}
+.iw-client-catalog-item[data-tone="0"]{--svc-bg:#fff1e8;--svc-accent:#c45d2b}
+.iw-client-catalog-item[data-tone="1"]{--svc-bg:#e9f3ff;--svc-accent:#256ca6}
+.iw-client-catalog-item[data-tone="2"]{--svc-bg:#e9f8f0;--svc-accent:#207b60}
+.iw-client-catalog-item[data-tone="3"]{--svc-bg:#f3ecff;--svc-accent:#7353a6}
+.iw-client-services.iw-client-catalog .iw-client-service-icon{background:color-mix(in srgb,var(--svc-accent) 11%,#fff);border:1px solid color-mix(in srgb,var(--svc-accent) 15%,#fff)}
+.iw-client-catalog-item .iw-client-service-category{color:var(--svc-accent)}
+.iw-client-catalog-item .iw-client-service-action{color:var(--svc-accent)}
+.iw-client-top-home{font-size:14px!important;font-weight:700;min-height:44px;display:flex;align-items:center;gap:7px}
+.iw-client-topbar-right>a[aria-label="Sign out"]{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:9px;background:#f5f6f7;color:#303e49;font-size:21px}
+.iw-client-topbar-right>a[aria-label="Sign out"]:hover{background:#fff0e7;color:#d65d25}
+.iw-client-side-foot a{font-size:14px!important;min-height:48px}
+.iw-cac-layout{display:grid;grid-template-columns:minmax(195px,245px) minmax(0,900px);gap:clamp(18px,3vw,42px);align-items:start}
+.iw-cac-sidebar{position:sticky;top:115px}
+.iw-cac-content{min-width:0}
+.iw-cac-person{margin:0 0 18px;padding:22px 20px 20px;border:1px solid #e4e8eb;border-radius:10px;min-width:0;background:#fff}
+.iw-cac-person legend{float:none;width:100%;margin-bottom:20px}
+.iw-cac-person-title{display:flex;align-items:center;justify-content:space-between;gap:13px;font-size:14px;font-weight:750;color:#20303a}
+.iw-cac-person-number{border-left:3px solid #f17437;padding-left:11px}
+.iw-cac-remove-person{border:0;background:transparent;color:#ad523f;padding:9px;font-size:12px;cursor:pointer}
+.iw-cac-person .iw-tm-field{min-width:0}
+.iw-cac-person .iw-tm-field input{max-width:100%}
+.iw-cac-uploads{margin-top:22px;border-top:1px solid #e9ecf0;padding-top:17px;display:flex;flex-direction:column;gap:11px}
+.iw-cac-upload-row{background:#fafbfc;border:1px solid #e8ecef;border-radius:9px;padding:13px 15px;min-width:0}
+.iw-cac-upload-title{display:flex;align-items:center;gap:11px}
+.iw-cac-upload-title>i{width:34px;height:34px;display:grid;place-items:center;border-radius:8px;color:#e36e34;background:#fff0e7;font-size:16px;flex:0 0 34px}
+.iw-cac-upload-title strong,.iw-cac-upload-title small{display:block}
+.iw-cac-upload-title strong{color:#283842;font-size:12px;font-weight:700}
+.iw-cac-upload-title small{font-size:10px;color:#84919b;margin-top:3px}
+.iw-cac-upload-control{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.iw-cac-upload-trigger,.iw-cac-sign-open{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #e4e7ea;border-radius:7px;padding:9px 12px;min-height:40px;background:#fff;color:#354651;font-weight:650;font-size:12px;cursor:pointer}
+.iw-cac-upload-trigger input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.iw-cac-upload-trigger:focus-within,.iw-cac-sign-open:focus-visible{outline:2px solid #e47336;outline-offset:2px}
+.iw-cac-upload-status{font-size:11px;display:flex;align-items:center;gap:7px;color:#9b6d53;overflow-wrap:anywhere;word-break:break-word}
+.iw-cac-upload-status i{flex:0 0 auto}
+.iw-cac-upload-status.is-uploaded{color:#1d7754;font-weight:700}
+.iw-cac-upload-status.is-error{color:#b34032}
+.iw-cac-upload-progress{height:4px;background:#e9edf0;overflow:hidden;border-radius:10px;margin-top:10px}
+.iw-cac-upload-progress>span{display:block;background:#2c9b6b;height:100%;width:2%;transition:width .1s linear}
+.iw-cac-sign-pad{border-top:1px solid #e4e8ea;padding:15px 0 0}
+.iw-cac-sign-pad p{font-size:11px;color:#73838f;margin-bottom:9px}
+.iw-cac-sign-pad canvas{display:block;width:100%;max-width:550px;aspect-ratio:55/19;background:#fff;border:1px dashed #9babb5;border-radius:8px;touch-action:none;cursor:crosshair}
+.iw-cac-sign-actions{display:flex;gap:12px;margin-top:11px}
+.iw-cac-sign-actions [data-sign-clear]{border:1px solid #dde2e6;border-radius:7px;color:#54636e;background:#fff;padding:9px 13px;font-size:12px}
+.iw-cac-sign-actions .iw-client-button{min-height:40px}
+.iw-cac-people-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:9px}
+.iw-cac-check{display:flex;gap:12px;align-items:flex-start;font-size:12px;line-height:1.6;color:#41515d;font-weight:600;cursor:pointer}
+.iw-cac-check input{width:18px;height:18px;flex:0 0 18px;margin-top:1px;accent-color:#f17a3d}
+.iw-cac-review-line{display:flex;justify-content:space-between;gap:18px;padding:13px 0;border-bottom:1px solid #edf0f2;font-size:12px}
+.iw-cac-review-line span{color:#81919c;flex:0 0 32%}
+.iw-cac-review-line strong{color:#2a3945;text-align:right;font-weight:700;overflow-wrap:anywhere}
+.iw-cac-review-actions,.iw-cac-form-actions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin:22px 0}
+.iw-cac-review-actions>form,.iw-cac-form-actions>div{display:flex;align-items:center;flex-wrap:wrap;gap:11px}
+.iw-cac-form-actions>div:last-child{margin-left:auto}
+#cacSaveStatus{font-size:12px;color:#81909a}
+@media(max-width:990px){.iw-cac-layout{grid-template-columns:minmax(0,1fr)}.iw-cac-sidebar{position:static;display:grid;grid-template-columns:1fr 1fr;gap:18px}.iw-cac-sidebar .iw-tm-steps{margin-bottom:0}}
+@media(max-width:590px){.iw-cac-sidebar{display:flex;flex-direction:column}.iw-cac-sidebar .iw-tm-steps{display:flex;width:100%;gap:7px}.iw-cac-sidebar .iw-tm-steps li{flex:1;padding:3px 0;min-height:42px;align-items:center}.iw-cac-sidebar .iw-tm-steps li:after{display:none}.iw-cac-sidebar .iw-tm-steps li div{display:none}.iw-cac-person{padding:16px 12px}.iw-cac-upload-row{padding:13px 10px}.iw-cac-review-line{flex-direction:column;gap:3px}.iw-cac-review-line strong{text-align:left}.iw-cac-form-actions>div,.iw-cac-review-actions>*{width:100%}.iw-cac-form-actions .iw-client-button,.iw-cac-review-actions .iw-client-button{flex:1}}
