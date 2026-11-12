@@ -72,11 +72,12 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
-  <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/refined-services.css')) ?>"><?php endif; ?>
+  <!-- Minimal public inner-page styles are applied after the shared site styles. -->
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="dns-prefetch" href="//images.unsplash.com">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
