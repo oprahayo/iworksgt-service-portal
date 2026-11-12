@@ -117,7 +117,27 @@ if ($steps === []) {
         ['title' => 'Follow progress', 'text' => 'Get updates and final files in your portal.'],
     ];
 }
-$faqs = array_slice(array_values(array_filter(is_array($faq['items'] ?? null) ? $faq['items'] : [], 'is_array')), 0, 3);
+$faqs = array_values(array_filter(is_array($faq['items'] ?? null) ? $faq['items'] : [], 'is_array'));
+// Keep CMS questions first, then fill gaps with common remote-business questions.
+$moreFaqs = [
+    ['q' => 'Can I use iWorks if I live outside Nigeria?', 'a' => 'Yes. We support customers abroad who need to register, manage or grow a Nigerian business remotely. We will explain any document or regulator requirements before proceeding.'],
+    ['q' => 'Can I complete the process remotely?', 'a' => 'Our services are designed for remote ordering, document submission and progress tracking. We will notify you if a specific authority requires additional verification.'],
+    ['q' => 'Can I pay in naira or US dollars?', 'a' => 'iWorks supports NGN and USD where the selected service and checkout gateway allow. You will see the available currency and payment options before confirming your order.'],
+    ['q' => 'How do I check my order status?', 'a' => 'Enter your job ID and the email or phone used for your order. You can also sign in to view updates and documents.'],
+    ['q' => 'What do I need before ordering?', 'a' => 'Each service page explains its requirements. You can provide your information and upload documents during the ordering process.'],
+];
+$existingQuestions = [];
+foreach ($faqs as $item) {
+    $q = trim((string) ($item['q'] ?? $item['question'] ?? ''));
+    if ($q !== '') { $existingQuestions[] = strtolower($q); }
+}
+foreach ($moreFaqs as $item) {
+    if (!in_array(strtolower($item['q']), $existingQuestions, true)) {
+        $faqs[] = $item;
+        $existingQuestions[] = strtolower($item['q']);
+    }
+}
+$faqs = array_slice($faqs, 0, 8);
 
 $bannerTitle = trim((string) ($banner['headline'] ?? ''));
 if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right support stack.') {
@@ -160,18 +180,18 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <a class="iw-clean-service" href="<?= e($businessUrl) ?>">
           <span class="iw-clean-service-icon"><i class="bi bi-building" aria-hidden="true"></i></span>
           <h3>Business registration</h3>
-          <p>Business names, companies and CAC filing support.</p>
+          <p>Business names, companies and Corporate Affairs Commission filings in Nigeria.</p>
           <span>Explore registration <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
         </a>
         <a class="iw-clean-service" href="<?= e($trademarkUrl) ?>">
           <span class="iw-clean-service-icon"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
-          <h3>Trademark &amp; compliance</h3>
-          <p>Protect your brand and manage essential filings.</p>
+          <h3>Licences &amp; compliance</h3>
+          <p>Trademarks, regulatory documentation, licensing and ongoing filings.</p>
           <span>Explore services <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
         </a>
         <a class="iw-clean-service" href="<?= e($websiteUrl) ?>">
           <span class="iw-clean-service-icon"><i class="bi bi-window" aria-hidden="true"></i></span>
-          <h3>Websites &amp; digital</h3>
+          <h3>Web &amp; digital services</h3>
           <p>Web development, hosting, design and marketing.</p>
           <span>Explore digital <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
         </a>
@@ -184,12 +204,12 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     <div class="container public-container">
       <div class="iw-clean-section-head">
         <h2 id="iw-clean-process-title">How it works</h2>
-        <p>Three straightforward steps, with no unnecessary paperwork upfront.</p>
+        <p>Choose, submit and track—everything moves through your portal.</p>
       </div>
       <div class="iw-clean-step-grid">
         <?php foreach (array_slice($steps, 0, 3) as $index => $step): ?>
           <div class="iw-clean-step">
-            <span><?= str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) ?></span>
+            <span>Step <?= $index + 1 ?></span>
             <h3><?= e((string) ($step['title'] ?? '')) ?></h3>
             <p><?= e((string) ($step['text'] ?? '')) ?></p>
           </div>
@@ -207,7 +227,22 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <span class="iw-clean-overline">WHY iWORKS</span>
         <h2 id="iw-clean-support-title">Support that stays with you.</h2>
         <p>Find what you need, send your details and follow your job without juggling messages and files across different platforms.</p>
-        <a class="iw-clean-text-link" href="<?= e(public_url('track')) ?>">Track an existing order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <form class="iw-home-track" method="post" action="<?= e(public_url('home')) ?>">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="form_action" value="public_track">
+          <label for="iwHomeJobId">Job ID</label>
+          <input id="iwHomeJobId" name="job_code" required maxlength="80" placeholder="Your job ID" autocomplete="off">
+          <label for="iwHomeIdentifier">Email or phone used for the order</label>
+          <input id="iwHomeIdentifier" name="identifier" required maxlength="254" placeholder="Email or phone" autocomplete="off">
+          <button class="iw-clean-btn iw-clean-btn-primary" type="submit">Track an existing order <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </form>
+        <?php if (!empty($publicTrackResult)): ?>
+          <div class="iw-home-track-result" role="status">
+            <strong><?= e((string) ($publicTrackResult['service_name'] ?? 'Service')) ?></strong>
+            <span>Job <?= e((string) ($publicTrackResult['job_code'] ?? '')) ?> · <?= e(ucfirst((string) ($publicTrackResult['status'] ?? 'pending'))) ?></span>
+            <a href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Sign in to see full details</a>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </section>
@@ -217,7 +252,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       <div class="container public-container iw-clean-faq-inner">
         <div>
           <h2 id="iw-clean-faq-title">Common questions</h2>
-          <p>Need something else? <a href="<?= e(public_url('contact')) ?>">Talk to our team.</a></p>
+          <p>Need something else? <button type="button" class="iw-home-help-link" data-iw-help-open>Talk to our team <i class="bi bi-chat-dots" aria-hidden="true"></i></button></p>
         </div>
         <div class="iw-clean-faq-items">
           <?php foreach ($faqs as $item): ?>
@@ -243,6 +278,27 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <p>Browse a service or speak with our team.</p>
       </div>
       <a class="iw-clean-btn iw-clean-btn-primary" href="<?= e(public_url('services')) ?>">Explore services <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    </div>
+  </section>
+
+  <section class="iw-home-reviews iw-clean-section" aria-labelledby="iw-home-reviews-title" data-iw-reveal>
+    <div class="container public-container">
+      <div class="iw-clean-section-head iw-home-reviews-head">
+        <span class="iw-clean-overline">INDEPENDENT CUSTOMER FEEDBACK</span>
+        <h2 id="iw-home-reviews-title">Real reviews. A real track record.</h2>
+        <p>See what customers say about iWorks on our public business listing.</p>
+      </div>
+      <div class="iw-home-review-summary">
+        <div class="iw-home-review-score">
+          <span class="iw-home-stars" aria-label="Rated 4.8 out of 5 stars on Google"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span>
+          <strong>4.8/5 on Google</strong>
+          <small>19 public reviews · checked November 2026; rating may change</small>
+        </div>
+        <a class="iw-clean-btn iw-home-review-link" href="https://www.google.com/maps/search/?api=1&amp;query=iWorks%20Global%20Technologies%20Ado-Ekiti&amp;query_place_id=ChIJqXoe-eP6RxARiguk7ysp-8g" target="_blank" rel="noopener noreferrer">
+          Read Google reviews <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      <p class="iw-home-review-footnote">Reviews relate to iWorks Global Technologies, now iWORKS GLOBAL LTD. The rating is a dated public listing snapshot, not a live feed.</p>
     </div>
   </section>
 </main>
