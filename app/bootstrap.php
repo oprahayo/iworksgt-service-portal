@@ -51,6 +51,7 @@ require_once __DIR__ . '/domain.php';
 require_once __DIR__ . '/job_reviews.php';
 require_once __DIR__ . '/public_seo.php';
 require_once __DIR__ . '/public_marketing.php';
+require_once __DIR__ . '/order_intent.php';
 require_once __DIR__ . '/file_access.php';
 
 if (is_configured()) {

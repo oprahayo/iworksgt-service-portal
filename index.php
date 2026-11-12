@@ -138,6 +138,14 @@ try {
         }
     }
 
+    // Keep portal accounts, invoices, OAuth callbacks and dashboard URLs
+    // out of public search results. Published marketing URLs live on apex.
+    if (should_enforce_split_domain()
+        && request_host() === configured_host(portal_base_url())
+        && !in_array($page, $publicPageSlugs, true)) {
+        header('X-Robots-Tag: noindex, nofollow');
+    }
+
     if (is_logged_in()) {
         $mustChangeUser = current_user();
         if (
@@ -294,10 +302,16 @@ try {
         return;
     }
 
+    // The selected public service must survive the portal's authentication
+    // lifecycle, including redirecting through Google's separate origin.
+    if (in_array($page, ['login', 'register', 'google_start'], true) && !method_is('POST')) {
+        iworks_order_intent_capture($_GET);
+    }
+
     switch ($page) {
         case 'login':
             if (is_logged_in()) {
-                redirect(url('dashboard'));
+                redirect(iworks_post_login_destination(current_user()));
             }
 
             if (!method_is('POST')) {
@@ -320,7 +334,7 @@ try {
                             login_user((int) $user['id']);
                             mark_email_verified((int) $user['id']);
                             flash('success', 'Welcome back. Email OTP is temporarily disabled until mail settings are enabled.');
-                            redirect(url('dashboard'));
+                            redirect(iworks_post_login_destination(current_user()));
                         }
 
                         start_otp_challenge((int) $user['id'], 'verify_email');
@@ -332,13 +346,13 @@ try {
                     if (has_valid_trusted_device((int) $user['id'])) {
                         login_user((int) $user['id']);
                         flash('success', 'Welcome back.');
-                        redirect(url('dashboard'));
+                        redirect(iworks_post_login_destination(current_user()));
                     }
 
                     if (!email_enabled()) {
                         login_user((int) $user['id']);
                         flash('success', 'Welcome back. Email OTP is temporarily disabled until mail settings are enabled.');
-                        redirect(url('dashboard'));
+                        redirect(iworks_post_login_destination(current_user()));
                     }
 
                     start_otp_challenge((int) $user['id'], 'login');
@@ -589,7 +603,7 @@ try {
 
         case 'google_start':
             if (is_logged_in()) {
-                redirect(url('dashboard'));
+                redirect(iworks_post_login_destination(current_user()));
             }
 
             try {
@@ -602,7 +616,7 @@ try {
 
         case 'google_callback':
             if (is_logged_in()) {
-                redirect(url('dashboard'));
+                redirect(iworks_post_login_destination(current_user()));
             }
 
             $oauthError = trim((string) ($_GET['error'] ?? ''));
@@ -624,7 +638,7 @@ try {
                 remember_trusted_device((int) $user['id']);
 
                 flash('success', 'Signed in with Google successfully.');
-                redirect(url('dashboard'));
+                redirect(iworks_post_login_destination(current_user()));
             } catch (Throwable $e) {
                 flash('error', $e->getMessage());
                 redirect(url('login'));
@@ -719,7 +733,7 @@ try {
 
         case 'register':
             if (is_logged_in()) {
-                redirect(url('dashboard'));
+                redirect(iworks_post_login_destination(current_user()));
             }
 
             if (method_is('POST')) {
@@ -783,7 +797,7 @@ try {
                         mark_email_verified($userId);
                         login_user($userId);
                         flash('success', 'Account created successfully. Email OTP will activate after mail setup is enabled.');
-                        redirect(url('dashboard'));
+                        redirect(iworks_post_login_destination(current_user()));
                     }
 
                     $_SESSION['pending_otp_remember'] = !empty($_POST['remember_30days']) ? '1' : '0';
@@ -802,7 +816,7 @@ try {
 
         case 'otp':
             if (is_logged_in()) {
-                redirect(url('dashboard'));
+                redirect(iworks_post_login_destination(current_user()));
             }
 
             $pendingOtp = pending_otp_context();
@@ -882,7 +896,7 @@ try {
                         unset($_SESSION['pending_otp_remember']);
 
                         flash('success', 'Authentication successful.');
-                        redirect(url('dashboard'));
+                        redirect(iworks_post_login_destination(current_user()));
                     }
                 } catch (Throwable $e) {
                     flash('error', $e->getMessage());
@@ -1252,6 +1266,11 @@ try {
             maybe_auto_close_delivered_jobs();
             $showCreateForm = ($_GET['action'] ?? '') === 'new' && has_role(['admin', 'client']);
             $serviceOptions = list_services(true);
+            $preselectedOrder = null;
+            if ($showCreateForm && has_role(['client'])) {
+                $requestedService = (string) ($_GET['service'] ?? iworks_order_intent_peek());
+                $preselectedOrder = iworks_order_catalog_selection($requestedService, $serviceOptions);
+            }
             $clientOptions = has_role(['admin']) ? list_users_by_role('client') : [];
             $agentOptions = has_role(['admin']) ? list_users_by_role('agent') : [];
             $jobPage = max(1, (int) ($_GET['p'] ?? 1));
@@ -1358,6 +1377,9 @@ try {
                                 $invoice = get_invoice_by_job_id($jobId);
                             }
 
+                            // Only clear a pending order once checkout creates
+                            // the invoice, not when a customer signs in.
+                            iworks_order_intent_clear();
                             flash('success', 'Order created. Complete payment to activate service processing.');
 
                             if ($invoice) {
@@ -1384,7 +1406,8 @@ try {
                 } catch (Throwable $e) {
                     flash('error', $e->getMessage());
                     if (($action ?? '') === 'create_job') {
-                        redirect(url('jobs', ['action' => 'new']));
+                        $slug = iworks_order_intent_peek();
+                        redirect(url('jobs', ['action' => 'new'] + ($slug !== '' ? ['service' => $slug] : [])));
                     }
                     redirect(url('jobs'));
                 }

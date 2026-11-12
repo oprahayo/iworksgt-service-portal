@@ -57,6 +57,7 @@ $seoRecord = $seoPageType === 'service'
 $seoJsonLd = $seoIndexable
     ? iworks_seo_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl, $metaDescription)
     : '';
+$seoBreadcrumb = $seoIndexable ? iworks_seo_breadcrumb_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl) : '';
 $seoOgImage = $ogImage !== '' ? public_absolute_url($ogImage) : '';
 $bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'services' ? ' page-public-services' : '');
 $headerAnnouncement = trim((string) ($publicHeaderConfig['announcement'] ?? ''));
@@ -114,6 +115,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <meta name="twitter:title" content="<?= e($publicTitle) ?>">
   <meta name="twitter:description" content="<?= e($metaDescription) ?>">
   <?php if ($seoJsonLd !== ''): ?><script type="application/ld+json"><?= $seoJsonLd ?></script><?php endif; ?>
+  <?php if ($seoBreadcrumb !== ''): ?><script type="application/ld+json"><?= $seoBreadcrumb ?></script><?php endif; ?>
   <?php if ($favicon !== ''): ?>
     <link rel="icon" type="image/png" href="<?= e($favicon) ?>">
     <link rel="apple-touch-icon" href="<?= e($favicon) ?>">

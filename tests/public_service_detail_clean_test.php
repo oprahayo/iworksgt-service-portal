@@ -13,6 +13,7 @@ function assert_detail(bool $valid, string $reason): void { if (!$valid) { throw
 
 $service = [
   'name' => 'Launch a Company Package',
+  'slug' => 'launch-a-company-package',
   'short_description' => 'Company setup, banking, brand identity.',
   'description' => '<h3>What you get</h3><p>CAC, banking, hosting and branding support.</p>',
   'category' => 'business-registration',
@@ -29,9 +30,10 @@ assert_detail(str_contains($html,'Launch a Company Package'), 'Service name shou
 assert_detail(str_contains($html,'NGN 350,000.00'), 'Actual backend price should render.');
 assert_detail(str_contains($html,'2.50%'), 'Tax rate should remain transparent.');
 assert_detail(str_contains($html,'/portal/login'), 'Order CTA must use portal login.');
-assert_detail(!str_contains(strtolower($html),'banking'), 'Banking must not be advertised.');
+assert_detail(!str_contains(strtolower($html),'banking support'), 'Banking must not be advertised as an included service.');
 assert_detail(str_contains($html,'CAC documentation'), 'Configured inclusions should render.');
-assert_detail(substr_count($html,'<section') === 2, 'Detail page should have only an intro and content section.');
+assert_detail(substr_count($html,'<section') === 3, 'Detail page should contain intro, content and substantive buying guide.');
+assert_detail(str_contains($html,'Launch your company in Nigeria'), 'Company launch guide should be included.');
 assert_detail(!str_contains($html,'What happens next'), 'Remove redundant repeated process cards.');
 assert_detail(str_contains($html,'/contact'), 'Support route should work.');
 

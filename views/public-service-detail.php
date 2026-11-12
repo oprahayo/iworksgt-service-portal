@@ -25,6 +25,14 @@ if (strcasecmp($serviceName, 'Launch a Company Package') === 0) {
 $safeDescription = sanitize_limited_html($description);
 $bullets = public_service_bullets($service);
 $searchGuide = iworks_search_service_guide($service);
+$relatedServices = [];
+foreach (is_array($publicServices ?? null) ? $publicServices : [] as $candidate) {
+    if (!is_array($candidate) || (string) ($candidate['slug'] ?? '') === (string) ($service['slug'] ?? '')) { continue; }
+    if ((string) ($candidate['category'] ?? '') !== (string) ($service['category'] ?? '')) { continue; }
+    if (empty($candidate['slug']) || empty($candidate['name'])) { continue; }
+    $relatedServices[] = $candidate;
+    if (count($relatedServices) >= 3) { break; }
+}
 $price = (float) ($service['price'] ?? 0);
 $priceText = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request a quote';
 $tax = (float) ($service['tax_percent'] ?? 0);
@@ -60,7 +68,7 @@ if ($imageUrl === '') {
             <?php if ($tax > 0): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
           </div>
           <div class="iw-detail-actions">
-            <a class="iw-detail-primary" href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             <a class="iw-detail-secondary" href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="<?= e($serviceName) ?>">Ask a question</a>
           </div>
           <p class="iw-detail-note">Submit requirements and follow updates through your iWorks account.</p>
@@ -122,8 +130,18 @@ if ($imageUrl === '') {
         <p class="iw-search-guide-source">For current government requirements, check the
         <a href="<?= e((string) $searchGuide['official']) ?>" rel="noopener noreferrer" target="_blank">official Corporate Affairs Commission guidance</a>.</p>
       <?php endif; ?>
+      <?php if ($relatedServices !== []): ?>
+        <nav class="iw-search-guide-related" aria-label="Related services">
+          <h3>Related services</h3>
+          <ul>
+            <?php foreach ($relatedServices as $relatedService): ?>
+              <li><a href="<?= e(public_url('service', ['slug' => (string) $relatedService['slug']])) ?>"><?= e((string) $relatedService['name']) ?></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </nav>
+      <?php endif; ?>
       <p class="iw-search-guide-next">Ready to proceed?
-        <a href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Start your request with iWorks</a>
+        <a href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Start your request with iWorks</a>
         or <a href="<?= e(public_url('contact')) ?>">ask a question</a>.
       </p>
     </div>

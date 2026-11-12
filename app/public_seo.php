@@ -88,6 +88,28 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
         | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '';
 }
 
+/**
+ * Visible navigation breadcrumb structured data for human-facing service
+ * detail and published article pages. Does not invent prices or reviews.
+ */
+function iworks_seo_breadcrumb_jsonld(string $type, array $record, string $canonical): string
+{
+    if ($canonical === '' || !in_array($type, ['service', 'blog_post'], true)) { return ''; }
+    $title = trim((string) ($record[$type === 'service' ? 'name' : 'title'] ?? ''));
+    if ($title === '') { return ''; }
+    $items = [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => public_url('home')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => $type === 'service' ? 'Services' : 'Insights', 'item' => public_url($type === 'service' ? 'services' : 'blog')],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $title, 'item' => $canonical],
+    ];
+    return json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => $items,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+       | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '';
+}
+
 function iworks_seo_sitemap_xml(array $services, array $pages, array $posts): string
 {
     $urls = [];

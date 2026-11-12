@@ -5,7 +5,7 @@
 # bash scripts/deploy_public_root_split.sh --apply "$HOME/public_html" "$HOME/public_html/portal.iworksgt.com"
 set -Eeuo pipefail
 REPOSITORY="oprahayo/iworksgt-service-portal"
-RELEASE="2b7d989aba71d7bc8675c599690afb2141bdd2e4"
+RELEASE="6e6dfe8c2c414e46c1911c82047df44e879a07ed"
 MODE="$1"
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 [[ "$MODE" == '--check' || "$MODE" == '--apply' ]] || fail 'Usage: --check or --apply PUBLIC_ROOT PORTAL_ROOT'
@@ -40,12 +40,12 @@ if [[ "$MODE" == '--check' ]]; then
 fi
 
 FILES=(
-  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php
+  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php
   index.php .htaccess views/settings.php views/login.php views/register.php
-  views/public-services-refined.php views/public-service-detail.php
+  views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/jobs.php
   views/partials/public-header.php views/partials/public-footer.php views/partials/header.php
   assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css
-  scripts/check_google_oauth.php
+  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh
 )
 ROOT_FILES=(index.php .htaccess)
 WORK="$(mktemp -d)"
@@ -98,6 +98,10 @@ for file in "${ROOT_FILES[@]}"; do
 done
 php -l "$WORK/root/index.php" >/dev/null || fail 'Invalid root front-controller PHP'
 grep -Fq -- "https://iworksgt.com" "$WORK/portal/app/helpers.php" || fail 'Missing canonical apex URL'
+grep -Fq -- 'function iworks_order_intent_capture' "$WORK/portal/app/order_intent.php" || fail 'Missing pending order tracking'
+grep -Fq -- 'iworks_post_login_destination' "$WORK/portal/index.php" || fail 'Missing Google sign-in order handoff'
+grep -Fq -- 'iw-search-guide' "$WORK/portal/views/public-service-detail.php" || fail 'Missing service landing page guidance'
+grep -Fq -- 'iworks_seo_breadcrumb_jsonld' "$WORK/portal/app/public_seo.php" || fail 'Missing SEO breadcrumb contract'
 grep -Fq -- "portal.iworksgt.com/index.php" "$WORK/root/index.php" || fail 'Missing delegated public controller'
 grep -Fq -- "RewriteRule ^sitemap" "$WORK/root/.htaccess" || fail 'Missing public sitemap rewrite'
 grep -Fq -- "portal.iworksgt.com" "$WORK/portal/index.php" || true
