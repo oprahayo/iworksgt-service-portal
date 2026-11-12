@@ -34,10 +34,8 @@ if [[ -f "$PUBLIC_ROOT/.htaccess" ]]; then
 fi
 printf 'Current public index: '
 [[ -f "$PUBLIC_ROOT/index.php" ]] && printf 'present\n' || printf 'missing\n'
-if [[ "$MODE" == '--check' ]]; then
-  printf 'READ-ONLY CHECK COMPLETE. No DNS, .htaccess, PHP files or database changed.\n'
-  exit 0
-fi
+# Both --check and --apply validate all pinned release files before any site change.
+# A successful --check is therefore a useful predictor of an --apply preflight.
 
 FILES=(
   app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/domain.php
@@ -51,15 +49,16 @@ FILES=(
 ROOT_FILES=(index.php .htaccess)
 WORK="$(mktemp -d)"
 BACKUP_DIR="$HOME/iworks-deployment-backups/public-portal-split-$(date -u +%Y%m%dT%H%M%SZ)-$$"
-mkdir -p "$WORK/portal" "$WORK/root" "$BACKUP_DIR/portal" "$BACKUP_DIR/root"
+mkdir -p "$WORK/portal" "$WORK/root"
 STARTED=0
 ADDED_PORTAL=()
 ADDED_ROOT=()
 ASSETS_MOVED=0
 NEW_ASSETS_LINK=0
 restore() {
-  local status="$?"
-  if [[ "$STARTED" == 1 ]]; then
+  local status="${1:-$?}"
+  trap - EXIT ERR INT TERM
+  if [[ "$STARTED" == 1 && "$status" -ne 0 ]]; then
     printf 'Deployment interrupted. Restoring previous web-root files.\n' >&2
     for file in "${FILES[@]}"; do
       if [[ -f "$BACKUP_DIR/portal/$file" ]]; then
@@ -83,8 +82,11 @@ restore() {
   rm -rf "$WORK"
   exit "$status"
 }
-trap restore ERR INT TERM
-trap 'rm -rf "$WORK"' EXIT
+# EXIT also catches an explicit fail() call after file replacement: restore all
+# web files if either PHP migration fails, not just failures from set -e.
+trap 'restore $?' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 for file in "${FILES[@]}"; do
   mkdir -p "$WORK/portal/$(dirname "$file")"
   curl -fsSL --retry 3 --connect-timeout 15 --max-time 75 \
@@ -107,13 +109,20 @@ grep -Fq -- 'function trademark_checkout' "$WORK/portal/app/trademark_applicatio
 grep -Fq -- 'function stripe_vault_start_setup' "$WORK/portal/app/stripe_card_vault.php" || fail 'Missing secure provider-backed card vault'
 grep -Fq -- "case 'card_vault':" "$WORK/portal/index.php" || fail 'Card vault route is missing'
 grep -Fq -- 'stripe_vault_customer_id' "$WORK/portal/app/domain.php" || fail 'Missing Stripe saved-card checkout integration'
-grep -Fq -- 'New application' "$WORK/portal/views/client-dashboard.php" || fail 'Missing application dashboard'
+grep -Fq -- 'iw-client-services' "$WORK/portal/views/client-dashboard.php" || fail 'Missing application dashboard'
 grep -Fq -- '185' "$WORK/portal/app/trademark_applications.php" || fail 'Missing price default'
 grep -Fq -- "portal.iworksgt.com/index.php" "$WORK/root/index.php" || fail 'Missing delegated public controller'
 grep -Fq -- "RewriteRule ^sitemap" "$WORK/root/.htaccess" || fail 'Missing public sitemap rewrite'
 grep -Fq -- "portal.iworksgt.com" "$WORK/portal/index.php" || true
+# Download, PHP lint and release checks complete; --check stops before any
+# backup, code install, asset link or database migration.
+if [[ "$MODE" == '--check' ]]; then
+  printf 'RELEASE VALIDATION PASSED. No DNS, .htaccess, website files or database changed.\n'
+  exit 0
+fi
 # Back up files into a private directory outside the document roots.
 umask 077
+mkdir -p "$BACKUP_DIR/portal" "$BACKUP_DIR/root"
 for file in "${FILES[@]}"; do
   if [[ -f "$PORTAL_ROOT/$file" ]]; then
     mkdir -p "$BACKUP_DIR/portal/$(dirname "$file")"
