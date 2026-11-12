@@ -30,6 +30,25 @@ if ($seoPageType === 'service' && is_array($service ?? null)) {
 if ($metaDescription === '') {
     $metaDescription = 'Business registration, licensing, compliance, web development and digital services from iWORKS GLOBAL LTD.';
 }
+// Prefer focused, truthful search snippets over generated titles and short
+// placeholders. Respect explicit CMS-authored SEO fields on ordinary pages.
+$searchProfile = $seoPageType === 'service' && is_array($service ?? null)
+    ? iworks_search_service_meta($service)
+    : iworks_search_page_meta($seoPageType);
+if ($searchProfile !== []) {
+    if ($seoPageType === 'service') {
+        $generatedTitle = trim((string) ($service['name'] ?? '')) . ' - ' . brand_name();
+        if ($metaTitle === '' || $metaTitle === $generatedTitle) {
+            $publicTitle = (string) $searchProfile['title'];
+        }
+        $metaDescription = (string) $searchProfile['description'];
+    } else {
+        if ($metaTitle === '') { $publicTitle = (string) $searchProfile['title']; }
+        if (trim((string) ($pageSeo['metaDescription'] ?? '')) === '') {
+            $metaDescription = (string) $searchProfile['description'];
+        }
+    }
+}
 $seoIndexable = http_response_code() !== 404 && !in_array($seoPageType, ['track'], true);
 $seoCanonicalUrl = $seoIndexable ? iworks_seo_canonical($seoPageType, $_GET) : '';
 $seoRecord = $seoPageType === 'service'
