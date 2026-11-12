@@ -3,7 +3,7 @@
 # Validates the release and backs up existing files before any replacement.
 set -Eeuo pipefail
 REPOSITORY="oprahayo/iworksgt-service-portal"
-RELEASE="f211134b09e75c1539f966c52008d2b2c1fad746"
+RELEASE="f95424f46dcab8f53cd8c3f916265b24e9d6ecf8"
 FILES=(
   'app/bootstrap.php'
   'app/public-photo-config.php'
