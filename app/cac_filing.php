@@ -78,7 +78,9 @@ function cac_filing_load(int $id, int $userId): ?array {
 function cac_filing_list(int $userId): array {
     cac_filing_schema();
     return array_map('cac_filing_decode', db_all(
-        'SELECT * FROM cac_filing_applications WHERE client_id=:client ORDER BY updated_at DESC, id DESC LIMIT 100',
+        'SELECT c.*, j.payment_status AS payment_status, j.status AS job_status
+         FROM cac_filing_applications c LEFT JOIN jobs j ON j.id=c.job_id
+         WHERE c.client_id=:client ORDER BY c.updated_at DESC, c.id DESC LIMIT 100',
         ['client'=>$userId]
     ));
 }
