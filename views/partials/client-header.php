@@ -35,7 +35,8 @@ $clientLogo = logo_path();
       <a class="<?= $clientRoute === 'dashboard' ? 'active' : '' ?>" href="<?= e(url('dashboard')) ?>"><i class="bi bi-plus-square"></i> New application</a>
       <a class="<?= in_array($clientRoute, ['applications','trademark'], true) ? 'active' : '' ?>" href="<?= e(url('applications')) ?>"><i class="bi bi-folder2-open"></i> My applications</a>
       <a class="<?= $clientRoute === 'jobs' ? 'active' : '' ?>" href="<?= e(url('jobs')) ?>"><i class="bi bi-receipt-cutoff"></i> My orders</a>
-      <a class="<?= $clientRoute === 'invoices' ? 'active' : '' ?>" href="<?= e(url('invoices')) ?>"><i class="bi bi-credit-card"></i> Billing</a>
+      <a class="<?= $clientRoute === 'invoices' ? 'active' : '' ?>" href="<?= e(url('invoices')) ?>"><i class="bi bi-receipt"></i> Billing</a>
+      <a class="<?= $clientRoute === 'card_vault' ? 'active' : '' ?>" href="<?= e(url('card_vault')) ?>"><i class="bi bi-credit-card-2-front"></i> Saved cards</a>
       <a class="<?= $clientRoute === 'profile' ? 'active' : '' ?>" href="<?= e(url('profile')) ?>"><i class="bi bi-person"></i> Profile</a>
     </nav>
     <div class="iw-client-side-foot">
