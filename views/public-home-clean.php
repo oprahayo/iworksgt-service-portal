@@ -186,7 +186,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <a class="iw-clean-service" href="<?= e($trademarkUrl) ?>">
           <span class="iw-clean-service-icon"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
           <h3>Licences &amp; compliance</h3>
-          <p>Trademarks, regulatory documentation, licensing and ongoing filings.</p>
+          <p>Trademark, NAFDAC documentation, export licensing and regulatory filings.</p>
           <span>Explore services <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
         </a>
         <a class="iw-clean-service" href="<?= e($websiteUrl) ?>">
@@ -197,6 +197,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </a>
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      <p class="iw-home-compliance-extra">Need assistance with an export licence or NAFDAC registration? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Export licence or NAFDAC registration">Ask about licensing <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     </div>
   </section>
 
