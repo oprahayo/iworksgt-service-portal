@@ -200,13 +200,13 @@ if ($description === '' || $description === 'Browse what you need.') {
     buttons.forEach(function (button) {
       button.setAttribute('aria-pressed', String(button.getAttribute('data-iw-service-view') === mode));
     });
-    try { localStorage.setItem('iworks-services-view', mode); } catch (error) {}
+    try { localStorage.setItem('iworks-services-view-v2', mode); } catch (error) {}
   }
   buttons.forEach(function (button) {
     button.addEventListener('click', function () { selectView(button.getAttribute('data-iw-service-view')); });
   });
   var savedView = 'grid';
-  try { savedView = localStorage.getItem('iworks-services-view') || 'grid'; } catch (error) {}
+  try { savedView = localStorage.getItem('iworks-services-view-v2') || 'grid'; } catch (error) {}
   selectView(savedView);
   var rows = Array.prototype.slice.call(list.querySelectorAll('[data-service-row]'));
   function update() {
