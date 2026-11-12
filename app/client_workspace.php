@@ -140,3 +140,13 @@ function iworks_client_trademark_for_job(int $jobId, int $clientId): ?array
     );
     return is_array($row) ? $row : null;
 }
+
+/** Public-safe checkout message: never echo API-key fragments or provider dumps. */
+function iworks_client_safe_payment_error(string $message): string
+{
+    if (preg_match('/(?:sk|rk)_(?:live|test)[A-Za-z0-9_*.-]*|api[\s_-]*key|bearer[\s:]+[A-Za-z0-9_.-]+|secret[\s_-]*key/i', $message)) {
+        return 'The payment provider is temporarily unavailable. Please contact iWorks support or use another available payment option.';
+    }
+    // Other unexpected upstream exceptions should not leak internal details.
+    return 'Unable to complete payment. Please check your selection or contact iWorks support.';
+}
