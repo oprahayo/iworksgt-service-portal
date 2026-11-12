@@ -119,6 +119,10 @@ function trademark_validate_complete(array $data, bool $hasLogo): void
 
 function trademark_ensure_schema(): void
 {
+    static $ready = false;
+    if ($ready) { return; }
+    // Existing installs should not require CREATE privilege on every page.
+    if (schema_table_exists('trademark_applications')) { $ready = true; return; }
     db_execute("CREATE TABLE IF NOT EXISTS trademark_applications (
         id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
         client_id INT UNSIGNED NOT NULL,
@@ -137,6 +141,7 @@ function trademark_ensure_schema(): void
         INDEX idx_tm_client_status (client_id, status),
         INDEX idx_tm_invoice (invoice_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $ready = true;
 }
 
 function trademark_decode(array $row): array
