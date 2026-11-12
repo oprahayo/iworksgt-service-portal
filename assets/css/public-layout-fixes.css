@@ -167,11 +167,11 @@ body.page-public .iw-clean-home .iw-clean-faq-items {
 }
 
 /* Photo on the left, founder narrative on the right. */
-body.page-public .iw-about-min-founder-grid {
+body.page-public .iw-about-min-founder-grid.has-founder-photo {
   grid-template-columns:minmax(200px,.65fr) minmax(0,1.35fr);
   gap:clamp(2rem,5vw,4.4rem);
 }
-body.page-public .iw-about-min-founder-grid>img {
+body.page-public .iw-about-min-founder-grid.has-founder-photo>img {
   grid-column:1;
   grid-row:1;
   width:100%;
@@ -181,7 +181,7 @@ body.page-public .iw-about-min-founder-grid>img {
   border-radius:12px;
   box-shadow:0 15px 36px rgba(35,44,53,.08);
 }
-body.page-public .iw-about-min-founder-grid>div {
+body.page-public .iw-about-min-founder-grid.has-founder-photo>div {
   grid-column:2;
   grid-row:1;
 }
@@ -280,17 +280,17 @@ body.page-public .iw-auth-dialog .iw-auth-dialog-content.is-flipping {
     animation:none;
     opacity:.8;
   }
-  body.page-public .iw-about-min-founder-grid {
+  body.page-public .iw-about-min-founder-grid.has-founder-photo {
     grid-template-columns:1fr;
     gap:1.7rem;
   }
-  body.page-public .iw-about-min-founder-grid>img {
+  body.page-public .iw-about-min-founder-grid.has-founder-photo>img {
     grid-column:1;
     grid-row:1;
     max-width:min(290px,100%);
     margin:0 auto;
   }
-  body.page-public .iw-about-min-founder-grid>div { grid-column:1;grid-row:2; }
+  body.page-public .iw-about-min-founder-grid.has-founder-photo>div { grid-column:1;grid-row:2; }
   body.page-public .iw-clean-home .iw-clean-faq-intro { min-height:285px; }
   body.page-public .iw-auth-dialog { width:calc(100vw - 24px)!important; max-width:calc(100vw - 24px)!important; }
   body.page-public .iw-auth-dialog .iw-auth-dialog-content { padding:.2rem .9rem .8rem; }
