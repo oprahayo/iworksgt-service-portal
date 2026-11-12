@@ -3,27 +3,7 @@
   'use strict';
   function init() {
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var serviceList = document.getElementById('iwServiceList');
-    var viewButtons = Array.prototype.slice.call(document.querySelectorAll('[data-iw-service-view]'));
-    if (serviceList && viewButtons.length) {
-      var current = 'list';
-      try {
-        if (window.localStorage.getItem('iworks-services-view') === 'grid') current = 'grid';
-      } catch (ignore) {}
-      function setView(mode) {
-        current = mode === 'grid' ? 'grid' : 'list';
-        serviceList.setAttribute('data-layout', current);
-        viewButtons.forEach(function (button) {
-          button.setAttribute('aria-pressed', String(button.getAttribute('data-iw-service-view') === current));
-        });
-        try { window.localStorage.setItem('iworks-services-view', current); } catch (ignore) {}
-      }
-      viewButtons.forEach(function (button) {
-        button.addEventListener('click', function () { setView(button.getAttribute('data-iw-service-view')); });
-      });
-      setView(current);
-    }
-
+    // The Services page owns its list/grid controls, so it works independently.
     document.querySelectorAll('[data-iw-reviews]').forEach(function (carousel) {
       var viewport = carousel.querySelector('[data-iw-review-viewport]');
       var prev = carousel.querySelector('[data-iw-review-prev]');
@@ -44,22 +24,7 @@
       next.addEventListener('click', function () { move(1); });
     });
 
-    var frame = document.getElementById('iwPublicAuthFrame');
-    if (frame) {
-      window.addEventListener('message', function (event) {
-        if (event.source !== frame.contentWindow || !event.data) return;
-        var src = frame.getAttribute('src');
-        if (!src) return;
-        try {
-          if (event.origin !== new URL(src, window.location.href).origin) return;
-        } catch (ignore) { return; }
-        var mode = event.data.iwAuthSwitch;
-        if (mode !== 'login' && mode !== 'register') return;
-        var button = document.querySelector('[data-iw-auth-tab="' + mode + '"]');
-        if (button) button.click();
-      });
-    }
-
+    // Authentication renders in the same document; no iframe message bridge.
     var help = document.getElementById('iwPublicHelpDialog');
     var helpForm = help && help.querySelector('form');
     var feedback = document.getElementById('iwHelpFeedback');

@@ -1,0 +1,313 @@
+/*
+ * iWorks public layout corrections, November 2026.
+ * The original app.css nav ::after is the only orange underline.
+ */
+body.page-public main.iw-clean-home,
+body.page-public main.iw-about-min {
+  padding-bottom:0!important;
+}
+body.page-public main.iw-clean-home>.iw-reviews,
+body.page-public main.iw-about-min>.iw-reviews {
+  margin:0;
+  background:#fff;
+  border-top:0;
+  border-bottom:0;
+}
+body.page-public main.iw-clean-home>.iw-reviews + *,
+body.page-public main.iw-about-min>.iw-reviews + * { margin-top:0; }
+
+/* Prominent, balanced icons and centered messaging on both service trios. */
+body.page-public .iw-clean-home .iw-clean-service-grid .iw-clean-service {
+  align-items:center;
+  justify-content:flex-start;
+  text-align:center;
+  padding:1.75rem 1.4rem 1.6rem;
+}
+body.page-public .iw-clean-home .iw-clean-service-icon {
+  width:66px;
+  height:66px;
+  border-radius:17px;
+  font-size:1.95rem;
+  margin:0 auto 1.25rem;
+  flex:0 0 auto;
+}
+body.page-public .iw-clean-home .iw-clean-service-icon i { font-size:inherit; }
+body.page-public .iw-clean-home .iw-clean-service h3 { max-width:100%; }
+body.page-public .iw-clean-home .iw-clean-service p { margin-left:auto; margin-right:auto; max-width:290px; }
+body.page-public .iw-clean-home .iw-clean-service>span:last-child {
+  justify-content:center;
+  text-align:center;
+  margin-left:auto;
+  margin-right:auto;
+}
+body.page-public .iw-clean-home .iw-clean-all-services {
+  display:flex;
+  width:max-content;
+  max-width:100%;
+  margin:1.55rem auto 0;
+  justify-content:center;
+}
+body.page-public .iw-clean-home .iw-home-compliance-extra {
+  text-align:center;
+}
+body.page-public .iw-about-min-services h2,
+body.page-public .iw-about-min-services .iw-about-licensing-note {
+  text-align:center;
+}
+body.page-public .iw-about-min-service-grid>a {
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:1.8rem 1.4rem;
+}
+body.page-public .iw-about-min-service-grid>a>i {
+  display:grid;
+  place-items:center;
+  width:66px;
+  height:66px;
+  border-radius:17px;
+  font-size:1.9rem;
+  color:#e96516;
+  background:#fff2e8;
+  margin:0 auto 1.25rem;
+}
+body.page-public .iw-about-min-service-grid h3 { margin-bottom:.65rem; }
+body.page-public .iw-about-min-service-grid p {
+  text-align:center;
+  max-width:290px;
+  margin:0 auto 1.35rem;
+}
+body.page-public .iw-about-min-service-grid>a>span {
+  justify-content:center;
+  margin-top:auto;
+}
+
+/* One flowing arrow between process steps: no extra decorative glyphs. */
+body.page-public .iw-clean-home .iw-clean-step {
+  border:0!important;
+}
+body.page-public .iw-clean-home .iw-clean-step:not(:last-child)::after {
+  content:"→";
+  top:2.25rem;
+  right:-1.8rem;
+  left:auto;
+  bottom:auto;
+  color:#e36516;
+  font-size:1.7rem;
+  line-height:1;
+  transform:translateX(-5px);
+}
+@media(prefers-reduced-motion:no-preference) {
+  body.page-public .iw-clean-home .iw-clean-step:not(:last-child)::after {
+    animation:iw-step-transmit 2.5s ease-in-out infinite;
+  }
+  body.page-public .iw-clean-home .iw-clean-step:nth-child(2)::after {
+    animation-delay:.6s;
+  }
+}
+@keyframes iw-step-transmit {
+  0%,100% { opacity:.38; transform:translateX(-6px); }
+  45% { opacity:1; transform:translateX(7px); }
+  70% { opacity:.68; transform:translateX(2px); }
+}
+
+/* FAQ portrait is a quiet photo panel with faded overlay and centered copy. */
+body.page-public .iw-clean-home .iw-clean-faq-inner {
+  align-items:stretch;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro {
+  position:relative;
+  isolation:isolate;
+  min-height:370px;
+  border-radius:12px;
+  overflow:hidden;
+  background:#efe8e1;
+  display:grid;
+  place-items:center;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro>img {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 38%;
+  z-index:-2;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:linear-gradient(145deg,rgba(255,255,255,.91),rgba(255,249,241,.72));
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro-content {
+  text-align:center;
+  width:100%;
+  padding:2rem clamp(1.1rem,3vw,2.5rem);
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro h2 {
+  color:#26313b;
+  text-align:center;
+  margin:0 auto .85rem;
+  text-wrap:balance;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro p {
+  max-width:320px;
+  margin:0 auto;
+  text-align:center;
+  color:#4f5d68;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro a {
+  color:#d35b11;
+}
+body.page-public .iw-clean-home .iw-clean-faq-items {
+  align-self:center;
+}
+
+/* Photo on the left, founder narrative on the right. */
+body.page-public .iw-about-min-founder-grid.has-founder-photo {
+  grid-template-columns:minmax(200px,.65fr) minmax(0,1.35fr);
+  gap:clamp(2rem,5vw,4.4rem);
+}
+body.page-public .iw-about-min-founder-grid.has-founder-photo>img {
+  grid-column:1;
+  grid-row:1;
+  width:100%;
+  max-width:330px;
+  max-height:400px;
+  aspect-ratio:.88;
+  border-radius:12px;
+  box-shadow:0 15px 36px rgba(35,44,53,.08);
+}
+body.page-public .iw-about-min-founder-grid.has-founder-photo>div {
+  grid-column:2;
+  grid-row:1;
+}
+
+/* Service directory custom call-to-action follows the warm home CTA. */
+body.page-public .iw-service-index .iw-service-custom {
+  width:100%;
+  margin:2.25rem 0 0;
+  padding:clamp(1.4rem,3vw,2.2rem);
+  border:0;
+  border-radius:0;
+  position:relative;
+  isolation:isolate;
+  background:transparent;
+  color:#fff;
+}
+body.page-public .iw-service-index .iw-service-custom::before {
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:50%;
+  width:100vw;
+  transform:translateX(-50%);
+  background:linear-gradient(110deg,#ed6111 0%,#fa7c29 100%);
+  z-index:-1;
+}
+body.page-public .iw-service-index .iw-service-custom h2,
+body.page-public .iw-service-index .iw-service-custom p { color:#fff; }
+body.page-public .iw-service-index .iw-service-custom p { opacity:.93; }
+body.page-public .iw-service-index .iw-service-custom a {
+  background:#fff;
+  color:#ca4e09!important;
+  border:1px solid rgba(255,255,255,.86);
+  box-shadow:none;
+}
+body.page-public .iw-service-index .iw-service-custom a:hover {
+  background:#fff6ee;
+  color:#b13e03!important;
+}
+
+/* Native in-page authentication, no iframe, nested web page or pane scrollbar. */
+body.page-public .iw-auth-dialog {
+  width:min(470px,calc(100vw - 32px));
+  max-width:calc(100vw - 32px);
+  max-height:calc(100dvh - 24px);
+  height:auto!important;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-width:none;
+  border-radius:14px;
+  background:#fff;
+}
+body.page-public .iw-auth-dialog::-webkit-scrollbar { display:none; }
+body.page-public .iw-auth-dialog .iw-public-dialog-head h2 {
+  flex:1;
+  text-align:center;
+  margin-left:32px;
+  font-size:1.04rem;
+}
+body.page-public .iw-auth-dialog .iw-public-dialog-head { padding:.8rem 1rem; }
+body.page-public .iw-auth-dialog .iw-auth-dialog-tabs { padding:.65rem 1.1rem 0; }
+body.page-public .iw-auth-dialog .iw-auth-dialog-content {
+  padding:.2rem 1.1rem 1rem;
+  overflow:visible;
+}
+body.page-public .iw-auth-dialog .iw-auth-pane[hidden] { display:none!important; }
+body.page-public .iw-auth-dialog .iw-auth-panel {
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  padding:.5rem 0 .2rem;
+  border-radius:0;
+  max-width:100%;
+}
+body.page-public .iw-auth-dialog .iw-auth-header { display:none; }
+body.page-public .iw-auth-dialog .iw-auth-form { gap:.76rem; margin-top:.3rem; }
+body.page-public .iw-auth-dialog .iw-auth-switch { margin-top:.9rem; }
+body.page-public .iw-auth-dialog .iw-auth-form input:not([type=checkbox]),
+body.page-public .iw-auth-dialog .iw-auth-form select { height:40px; }
+body.page-public .iw-auth-dialog .iw-auth-register .iw-auth-fields {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.6rem .75rem;
+}
+body.page-public .iw-auth-dialog .iw-auth-register .iw-auth-full { grid-column:1/-1; }
+body.page-public .iw-auth-dialog .iw-auth-register .iw-auth-step-title { margin:0 0 .5rem; }
+body.page-public .iw-auth-dialog .iw-auth-register .iw-auth-small { font-size:.72rem; }
+body.page-public .iw-auth-dialog .iw-auth-dialog-fallback {
+  text-align:center;
+  border-top:1px solid #f0f1f3;
+  padding:.7rem .75rem .85rem;
+  margin:0;
+}
+body.page-public .iw-auth-dialog .iw-auth-dialog-content.is-flipping {
+  animation:iw-auth-panel-switch .24s ease both;
+}
+@keyframes iw-auth-panel-switch {
+  from { opacity:.35; transform:translateX(10px); }
+  to { opacity:1; transform:none; }
+}
+@media(max-width:767px) {
+  body.page-public .iw-clean-home .iw-clean-step:not(:last-child)::after {
+    content:"↓";
+    top:auto;
+    bottom:-1.5rem;
+    left:50%;
+    right:auto;
+    transform:translate(-50%,-4px);
+    animation:none;
+    opacity:.8;
+  }
+  body.page-public .iw-about-min-founder-grid.has-founder-photo {
+    grid-template-columns:1fr;
+    gap:1.7rem;
+  }
+  body.page-public .iw-about-min-founder-grid.has-founder-photo>img {
+    grid-column:1;
+    grid-row:1;
+    max-width:min(290px,100%);
+    margin:0 auto;
+  }
+  body.page-public .iw-about-min-founder-grid.has-founder-photo>div { grid-column:1;grid-row:2; }
+  body.page-public .iw-clean-home .iw-clean-faq-intro { min-height:285px; }
+  body.page-public .iw-auth-dialog { width:calc(100vw - 24px)!important; max-width:calc(100vw - 24px)!important; }
+  body.page-public .iw-auth-dialog .iw-auth-dialog-content { padding:.2rem .9rem .8rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  body.page-public .iw-auth-dialog .iw-auth-dialog-content.is-flipping { animation:none!important; }
+}

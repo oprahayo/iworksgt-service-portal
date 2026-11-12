@@ -15,6 +15,11 @@ Images are fetched through Unsplash's image CDN with width limits and automatic 
 | strategy | Business support story and trademark service area | Vitaly Gariev — https://unsplash.com/photos/two-business-people-reviewing-documents-together-8k5j5z6ZYT4 |
 | developer | About founder fallback (workspace, not founder portrait) | Olumuyiwa Sobowale — https://unsplash.com/photos/a-man-sitting-in-front-of-a-computer-wearing-headphones-kQIdjLbCghA |
 
+Additional FAQ photo: **Pexels photo 8866777**, customer support representative wearing a headset by **Yan Krukau**:
+https://www.pexels.com/photo/woman-wearing-headset-smiling-8866777/
+Served from Pexels image CDN at constrained 900 px width. Free to use under the Pexels License: https://www.pexels.com/license/
+Illustrative stock image, not an iWorks employee or testimonial.
+
 License: https://unsplash.com/license (free commercial use, no attribution required but appreciated).
 Please be mindful that public use of identifiable people may still require appropriate releases in specific marketing contexts. No claim of endorsement or association is intended.
 

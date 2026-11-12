@@ -81,6 +81,9 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-polish.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/reviews.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/ux-finish.css')) ?>">
+  <!-- Shared auth inputs rendered directly in dialog, no nested page -->
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/auth-clean.css')) ?>?v=20261112b">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-layout-fixes.css')) ?>?v=20261112b">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>"><?php endif; ?>
   <style>

@@ -180,6 +180,22 @@ if ($description === '' || $description === 'Browse what you need.') {
     select.addEventListener('change', function () { form.submit(); });
   }
   if (!input || !list || !count || !empty) return;
+  // This control lives with the directory to work even if optional site JS is cached.
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-iw-service-view]'));
+  function selectView(value) {
+    var mode = value === 'grid' ? 'grid' : 'list';
+    list.setAttribute('data-layout', mode);
+    buttons.forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.getAttribute('data-iw-service-view') === mode));
+    });
+    try { localStorage.setItem('iworks-services-view', mode); } catch (error) {}
+  }
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () { selectView(button.getAttribute('data-iw-service-view')); });
+  });
+  var savedView = 'list';
+  try { savedView = localStorage.getItem('iworks-services-view') || 'list'; } catch (error) {}
+  selectView(savedView);
   var rows = Array.prototype.slice.call(list.querySelectorAll('[data-service-row]'));
   function update() {
     var query = String(input.value || '').trim().toLocaleLowerCase();

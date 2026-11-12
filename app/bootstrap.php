@@ -23,24 +23,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (PHP_SAPI !== 'cli') {
-    // Only the read-only embedded login/register GET views may be framed by
-    // our known public origins. All other routes remain SAMEORIGIN protected.
-    $embedPage = (string) ($_GET['page'] ?? '');
-    $isEmbeddedAuth = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
-        && (string) ($_GET['embed'] ?? '') === '1'
-        && in_array($embedPage, ['login', 'register'], true);
-    if ($isEmbeddedAuth) {
-        $allowedOrigins = ["'self'", 'https://portal.iworksgt.com', 'https://iworksgt.com', 'https://www.iworksgt.com'];
-        $configuredPublic = trim((string) ($__appConfig['app']['public_base_url'] ?? ''));
-        $scheme = strtolower((string) parse_url($configuredPublic, PHP_URL_SCHEME));
-        $host = strtolower((string) parse_url($configuredPublic, PHP_URL_HOST));
-        if (in_array($scheme, ['https', 'http'], true) && $host !== '' && preg_match('/^[a-z0-9.-]+$/', $host)) {
-            $allowedOrigins[] = $scheme . '://' . $host;
-        }
-        header('Content-Security-Policy: frame-ancestors ' . implode(' ', array_unique($allowedOrigins)));
-    } else {
-        header('X-Frame-Options: SAMEORIGIN');
-    }
+    // All pages, including authentication, remain protected from framing.
+    // The public account dialog now embeds forms directly in the page.
+    header('X-Frame-Options: SAMEORIGIN');
     header('X-Content-Type-Options: nosniff');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
