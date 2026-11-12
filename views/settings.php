@@ -110,6 +110,7 @@
           <div class="col-md-3"><label class="form-label">Withdrawal minimum</label><input class="form-control" type="number" name="withdrawal_minimum" min="1" step="0.01" value="<?= e(setting('withdrawal_minimum', '20000')) ?>"></div>
           <div class="col-md-3"><label class="form-label">Withdrawal cooldown (days)</label><input class="form-control" type="number" name="withdrawal_cooldown_days" min="1" step="1" value="<?= e(setting('withdrawal_cooldown_days', '14')) ?>"></div>
           <div class="col-md-3"><label class="form-label">Crypto refresh (minutes)</label><input class="form-control" type="number" name="crypto_rates_refresh_minutes" min="5" max="30" step="1" value="<?= e(setting('crypto_rates_refresh_minutes', '10')) ?>"></div>
+          <div class="col-md-3"><label class="form-label" for="trademarkPriceUsd">Trademark fee (USD / class)</label><input id="trademarkPriceUsd" class="form-control" type="number" name="trademark_price_usd_per_class" min="1" max="100000" step="0.01" required value="<?= e(number_format(trademark_price_usd(), 2, '.', '')) ?>"><small class="text-muted">Default $185.00. Applies to new, unsubmitted trademark quotes.</small></div>
           <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">Save rules</button></div>
         </form>
       </div>

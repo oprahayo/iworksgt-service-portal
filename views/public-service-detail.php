@@ -35,6 +35,11 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $candidate)
 }
 $price = (float) ($service['price'] ?? 0);
 $priceText = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request a quote';
+$isTrademarkService = (string) ($service['slug'] ?? '') === 'trademark';
+if ($isTrademarkService) {
+    $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
+    $priceText = 'USD ' . number_format($price, 2) . ' per class';
+}
 $tax = (float) ($service['tax_percent'] ?? 0);
 $featured = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
 $imageUrl = trim((string) ($featured['url'] ?? ''));

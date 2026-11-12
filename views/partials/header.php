@@ -38,6 +38,13 @@ if ($user) {
     }
 }
 
+// Customer accounts use the dedicated application workspace. The operational
+// admin/finance/agent layout below remains untouched.
+if ($user && (string) ($user['role'] ?? '') === 'client') {
+    require __DIR__ . '/client-header.php';
+    return;
+}
+
 $sidebarItems = [];
 if ($user) {
     $sidebarItems[] = [
