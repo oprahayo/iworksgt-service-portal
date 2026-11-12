@@ -30,6 +30,25 @@ if ($seoPageType === 'service' && is_array($service ?? null)) {
 if ($metaDescription === '') {
     $metaDescription = 'Business registration, licensing, compliance, web development and digital services from iWORKS GLOBAL LTD.';
 }
+// Prefer focused, truthful search snippets over generated titles and short
+// placeholders. Respect explicit CMS-authored SEO fields on ordinary pages.
+$searchProfile = $seoPageType === 'service' && is_array($service ?? null)
+    ? iworks_search_service_meta($service)
+    : iworks_search_page_meta($seoPageType);
+if ($searchProfile !== []) {
+    if ($seoPageType === 'service') {
+        $generatedTitle = trim((string) ($service['name'] ?? '')) . ' - ' . brand_name();
+        if ($metaTitle === '' || $metaTitle === $generatedTitle) {
+            $publicTitle = (string) $searchProfile['title'];
+        }
+        $metaDescription = (string) $searchProfile['description'];
+    } else {
+        if ($metaTitle === '') { $publicTitle = (string) $searchProfile['title']; }
+        if (trim((string) ($pageSeo['metaDescription'] ?? '')) === '') {
+            $metaDescription = (string) $searchProfile['description'];
+        }
+    }
+}
 $seoIndexable = http_response_code() !== 404 && !in_array($seoPageType, ['track'], true);
 $seoCanonicalUrl = $seoIndexable ? iworks_seo_canonical($seoPageType, $_GET) : '';
 $seoRecord = $seoPageType === 'service'
@@ -119,7 +138,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/auth-compact.css')) ?>?v=20261112c">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
-  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112seo">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112seo3">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;

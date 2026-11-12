@@ -69,3 +69,26 @@ body.page-public img { max-width:100%; }
 @media(prefers-reduced-motion:reduce) {
   body.page-public .public-navbar * { scroll-behavior:auto; }
 }
+
+/* Search-intent service guidance: clean, readable, mobile-first and crawlable. */
+body.page-public .iw-search-guide { padding:clamp(2.5rem,5vw,4.5rem) 0; border-top:1px solid #e6eaee; background:#fafbfc; }
+body.page-public .iw-search-guide .public-container { max-width:960px; }
+body.page-public .iw-search-guide h2 { color:#202934; font-size:clamp(1.55rem,3vw,2.15rem); line-height:1.25; margin:0 0 .9rem; }
+body.page-public .iw-search-guide h3 { color:#273440; font-size:1.28rem; margin:2.2rem 0 1.2rem; }
+body.page-public .iw-search-guide-lead { max-width:780px; color:#52616f; font-size:1rem; line-height:1.78; }
+body.page-public .iw-search-guide-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1.7rem 0; padding:0; list-style:none; counter-reset:step; }
+body.page-public .iw-search-guide-steps li { min-width:0; border:1px solid #e4e9ee; border-radius:10px; padding:1.3rem; background:#fff; counter-increment:step; }
+body.page-public .iw-search-guide-steps strong { display:block; margin-bottom:.55rem; font-size:.96rem; color:#29343f; }
+body.page-public .iw-search-guide-steps strong::before { content:counter(step) ". "; color:#e76417; }
+body.page-public .iw-search-guide-steps p,body.page-public .iw-search-guide-questions dd { margin:0; color:#52616f; line-height:1.65; font-size:.9rem; }
+body.page-public .iw-search-guide-questions dt { margin:1rem 0 .25rem; color:#2f3c47; font-weight:650; }
+body.page-public .iw-search-guide-source,body.page-public .iw-search-guide-next { margin-top:1.5rem; color:#52616f; line-height:1.7; }
+body.page-public .iw-search-guide a { color:#be4c0b; text-decoration:underline; text-underline-offset:3px; }
+@media(max-width:767px) {
+ body.page-public .iw-search-guide-steps { grid-template-columns:minmax(0,1fr); gap:.75rem; }
+ body.page-public .iw-search-guide-steps li { padding:1.05rem; }
+ body.page-public .iw-detail-hero,body.page-public .iw-detail-columns { min-width:0; }
+ body.page-public .iw-detail-copy,body.page-public .iw-detail-description,body.page-public .iw-detail-aside { min-width:0; overflow-wrap:anywhere; }
+ body.page-public input[type="text"],body.page-public input[type="email"],body.page-public input[type="search"],body.page-public input[type="tel"],body.page-public select,body.page-public textarea { font-size:16px; }
+ body.page-public .iw-auth-dialog { max-width:calc(100vw - 1rem); max-height:calc(100dvh - 1rem); }
+}
