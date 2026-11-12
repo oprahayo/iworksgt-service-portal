@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     address_line VARCHAR(190) NULL,
     occupation VARCHAR(120) NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'agent', 'client', 'finance') NOT NULL DEFAULT 'client',
+    role ENUM('admin', 'agent', 'client', 'finance', 'author') NOT NULL DEFAULT 'client',
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     account_state ENUM('active', 'suspended', 'blocked') NOT NULL DEFAULT 'active',
     deleted_at DATETIME NULL,
