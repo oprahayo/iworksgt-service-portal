@@ -24,6 +24,7 @@ if (strcasecmp($serviceName, 'Launch a Company Package') === 0) {
 }
 $safeDescription = sanitize_limited_html($description);
 $bullets = public_service_bullets($service);
+$searchGuide = iworks_search_service_guide($service);
 $price = (float) ($service['price'] ?? 0);
 $priceText = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request a quote';
 $tax = (float) ($service['tax_percent'] ?? 0);
