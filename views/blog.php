@@ -192,9 +192,11 @@ $blogReturnUrl = url('blog', $blogReturnParams);
   </div>
 </div>
 
+<?php if($isAdminBlog): ?>
 <?php render_admin_media_modal($mediaAssets, [
     'return_to' => $blogReturnUrl,
 ]); ?>
+<?php endif; ?>
 
 <script>
 (function(){
