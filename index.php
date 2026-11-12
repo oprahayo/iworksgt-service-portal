@@ -2376,7 +2376,11 @@ try {
                     if ($action === 'save_google_auth') {
                         $enabled = !empty($_POST['google_auth_enabled']) ? '1' : '0';
                         $clientId = trim((string) ($_POST['google_client_id'] ?? ''));
+                        // A blank admin field means keep the previously saved secret.
                         $clientSecret = trim((string) ($_POST['google_client_secret'] ?? ''));
+                        if ($clientSecret === '') {
+                            $clientSecret = google_client_secret();
+                        }
                         $redirectOverride = trim((string) ($_POST['google_redirect_uri'] ?? ''));
 
                         if ($enabled === '1' && ($clientId === '' || $clientSecret === '')) {
@@ -2385,6 +2389,15 @@ try {
 
                         if ($redirectOverride !== '' && !preg_match('~^https?://~i', $redirectOverride)) {
                             throw new RuntimeException('Google redirect URL must start with http:// or https://');
+                        }
+                        if ($enabled === '1') {
+                            $redirectCandidate = $redirectOverride !== ''
+                                ? $redirectOverride
+                                : portal_absolute_url(url('google_callback'));
+                            $issues = google_oauth_redirect_problems($redirectCandidate, portal_base_url());
+                            if ($issues !== []) {
+                                throw new RuntimeException('Google callback configuration: ' . implode(' ', $issues));
+                            }
                         }
 
                         set_setting('google_auth_enabled', $enabled);

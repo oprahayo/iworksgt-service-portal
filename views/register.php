@@ -5,6 +5,7 @@ $oldCountryValue = (string) old_input('country', 'Nigeria');
 $oldStateValue = (string) old_input('state_region');
 ?>
 <section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
+  <a class="iw-auth-home" href="<?= e(public_url('home')) ?>" aria-label="Back to iWorks homepage"><i class="bi bi-house-door" aria-hidden="true"></i><span>Home</span></a>
   <div class="iw-auth-header">
     <h1 id="iwRegisterTitle">Create an account</h1>
     <p>One account to order services, share documents and track your work.</p>
@@ -43,6 +44,9 @@ $oldStateValue = (string) old_input('state_region');
       <button class="iw-auth-submit iw-auth-register-submit" id="iwRegisterSubmit" type="submit">Create account <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
     </div>
   </form>
+  <?php if (google_auth_ready()): ?>
+    <a class="iw-auth-google iw-auth-register-google" href="<?= e(portal_url('google_start')) ?>"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a>
+  <?php endif; ?>
   <p class="iw-auth-switch">Already registered? <a href="<?= e(url('login', !empty($_GET['embed']) ? ['embed'=>'1'] : [])) ?>"<?= !empty($_GET['embed']) ? ' data-iw-auth-switch="login"' : '' ?>>Sign in</a></p>
 </section>
 <script>

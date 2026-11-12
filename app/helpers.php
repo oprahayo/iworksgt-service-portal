@@ -1109,6 +1109,40 @@ function google_redirect_uri(): string
     return portal_absolute_url(url('google_callback'));
 }
 
+function google_oauth_redirect_problems(?string $redirect = null, ?string $portalBase = null): array
+{
+    $redirect = trim($redirect ?? google_redirect_uri());
+    $portalBase = trim($portalBase ?? portal_base_url());
+    $issues = [];
+    $parts = parse_url($redirect);
+    $host = strtolower((string) ($parts['host'] ?? ''));
+    $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+    $path = (string) ($parts['path'] ?? '');
+    if ($host === '' || !in_array($scheme, ['https', 'http'], true)) {
+        return ['Google callback must be a valid absolute URL.'];
+    }
+    $local = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+    if ($scheme !== 'https' && !$local) {
+        $issues[] = 'Google callback must use HTTPS on the live website.';
+    }
+    $portalHost = strtolower((string) parse_url($portalBase, PHP_URL_HOST));
+    if ($portalHost !== '' && $host !== $portalHost) {
+        $issues[] = 'The Google callback host must match the portal host so its OAuth session can be verified.';
+    }
+    if (basename($path) !== 'index.php') {
+        $issues[] = 'The Google callback must point to the portal index.php handler.';
+    }
+    $query = [];
+    parse_str((string) ($parts['query'] ?? ''), $query);
+    if (($query['page'] ?? null) !== 'google_callback') {
+        $issues[] = 'The callback query must include page=google_callback.';
+    }
+    if (isset($parts['user']) || isset($parts['pass']) || isset($parts['fragment'])) {
+        $issues[] = 'The Google callback URL must not contain user information or a fragment.';
+    }
+    return $issues;
+}
+
 function google_auth_ready(): bool
 {
     return google_auth_enabled() && google_client_id() !== '' && google_client_secret() !== '';

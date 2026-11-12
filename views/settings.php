@@ -218,9 +218,26 @@
               <label class="form-check-label" for="google_auth_enabled">Enable Google login</label>
             </div>
           </div>
-          <div class="col-md-8"><label class="form-label">Redirect URL (Google Console)</label><input class="form-control" value="<?= e(google_redirect_uri()) ?>" readonly></div>
+          <div class="col-md-8">
+            <label class="form-label">Authorized redirect URI (copy exactly into Google Cloud)</label>
+            <input class="form-control" value="<?= e(google_redirect_uri()) ?>" readonly aria-label="Google callback URL">
+          </div>
+          <div class="col-12">
+            <?php $googleIssues = google_oauth_redirect_problems(); ?>
+            <?php if ($googleIssues !== []): ?>
+              <div class="alert alert-warning small" role="alert">
+                <strong>Google callback needs attention:</strong>
+                <?= e(implode(' ', $googleIssues)) ?>
+              </div>
+            <?php elseif (!google_auth_ready()): ?>
+              <div class="alert alert-info small" role="status">Google sign-in is not ready. Enable it and save a Web application Client ID and Client Secret.</div>
+            <?php else: ?>
+              <p class="small text-success mb-1">Local Google OAuth settings are present and the callback format is valid. Google Cloud authorization must still match.</p>
+            <?php endif; ?>
+            <p class="small text-muted mb-2">In <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">Google Auth Platform → Clients</a>, select your Web application OAuth client and add the exact URI above under <strong>Authorized redirect URIs</strong>. For an app in Testing, add permitted test users under Audience, or publish it when appropriate. Save changes there before testing the sign-in button.</p>
+          </div>
           <div class="col-md-6"><label class="form-label">Google Client ID</label><input class="form-control" name="google_client_id" value="<?= e(google_client_id()) ?>" placeholder="xxxxxxxx.apps.googleusercontent.com"></div>
-          <div class="col-md-6"><label class="form-label">Google Client Secret</label><input class="form-control" name="google_client_secret" value="<?= e(google_client_secret()) ?>" placeholder="GOCSPX-..."></div>
+          <div class="col-md-6"><label class="form-label">Google Client Secret</label><input class="form-control" name="google_client_secret" type="password" value="" autocomplete="new-password" placeholder="<?= google_client_secret() !== '' ? 'Saved — leave blank to keep it' : 'Paste client secret' ?>"></div>
           <div class="col-12"><label class="form-label">Redirect URL override (optional)</label><input class="form-control" name="google_redirect_uri" value="<?= e(google_redirect_uri_override()) ?>" placeholder="Leave blank to use the generated redirect URL"></div>
           <div class="col-12"><button class="btn btn-outline-primary" type="submit">Save Google settings</button></div>
         </form>
