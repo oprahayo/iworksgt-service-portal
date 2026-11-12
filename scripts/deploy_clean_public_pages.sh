@@ -65,7 +65,7 @@ if [[ "$changed" -eq 0 ]]; then printf 'ALREADY INSTALLED: no changes needed.\n'
 umask 077
 BACKUP_DIR="$HOME/iworks-deployment-backups"
 mkdir -p "$BACKUP_DIR"
-BACKUP="$BACKUP_DIR/clean-public-pages-$(date -u +%Y%m%dT%H%M%SZ)-$.tar.gz"
+BACKUP="$BACKUP_DIR/clean-public-pages-$(date -u +%Y%m%dT%H%M%SZ)-$$.tar.gz"
 PRESENT=() ADDED=()
 for file in "${FILES[@]}"; do
   if [[ -f "$SITE_ROOT/$file" ]]; then PRESENT+=("$file"); else ADDED+=("$file"); fi
