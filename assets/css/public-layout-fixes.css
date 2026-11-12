@@ -186,6 +186,10 @@ body.page-public .iw-about-min-founder-grid.has-founder-photo>div {
   grid-row:1;
 }
 
+/* Keep the full-width custom-service banner flush with the page footer. */
+body.page-public main.iw-service-index { padding-bottom:0!important; }
+body.page-public .iw-service-index-shell { padding-bottom:0!important; }
+
 /* Service directory custom call-to-action follows the warm home CTA. */
 body.page-public .iw-service-index .iw-service-custom {
   width:100%;
