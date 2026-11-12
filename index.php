@@ -1172,8 +1172,9 @@ try {
             trademark_ensure_schema();
             $client = current_user();
             $trademarkApplications = trademark_list((int) $client['id']);
+            $cacApplications = cac_filing_list((int) $client['id']);
             $existingOrders = list_accessible_jobs($client, ['page'=>1, 'per_page'=>100, 'sort'=>'newest']);
-            $clientServiceItems = iworks_client_service_items($trademarkApplications, $existingOrders['items'] ?? []);
+            $clientServiceItems = iworks_client_service_items($trademarkApplications, $existingOrders['items'] ?? [], $cacApplications);
             $activeClientStatus = strtolower(trim((string) ($_GET['status'] ?? 'all')));
             if (!in_array($activeClientStatus, ['all','draft','payment','progress','completed','cancelled'], true)) { $activeClientStatus='all'; }
             $title = 'My Services - ' . app_name();
@@ -1451,9 +1452,10 @@ try {
             if (($user['role'] ?? '') === 'client') {
                 trademark_ensure_schema();
                 $trademarkApplications = trademark_list((int) $user['id']);
+                $cacApplications = cac_filing_list((int) $user['id']);
                 $clientCatalogue = iworks_client_catalogue(list_services(true));
                 $recentOrders = list_accessible_jobs($user, ['page'=>1, 'per_page'=>25, 'sort'=>'newest']);
-                $clientRecent = array_slice(iworks_client_service_items($trademarkApplications, $recentOrders['items'] ?? []), 0, 4);
+                $clientRecent = array_slice(iworks_client_service_items($trademarkApplications, $recentOrders['items'] ?? [], $cacApplications), 0, 4);
                 $title = 'New Application - ' . app_name();
                 require __DIR__ . '/views/partials/header.php';
                 require __DIR__ . '/views/client-dashboard.php';
