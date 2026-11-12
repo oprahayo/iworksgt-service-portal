@@ -57,6 +57,7 @@ jobs:
           php tests/public_inner_forms_test.php
           php tests/public_service_detail_clean_test.php
           php tests/public_auth_modal_contract_test.php
+          php tests/public_assistance_contract_test.php
           php tests/job_review_workflow_test.php
           php tests/public_review_carousel_test.php
           php tests/public_layout_finish_test.php
@@ -72,3 +73,4 @@ jobs:
 
       - name: Validate public interaction JavaScript
         run: node --check assets/js/public-ux.js
+          node --check assets/js/public-assistance.js
