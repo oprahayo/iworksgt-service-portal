@@ -151,20 +151,24 @@ $socialIcons = [
     </div>
   </footer>
 
-  <!-- Authentication is framed from the portal origin, so CSRF and cookies
-       remain owned by the existing backend. A direct link is always available. -->
+  <!-- Same-page authentication: existing portal forms, CSRF and OTP, no iframe. -->
   <dialog class="iw-public-dialog iw-auth-dialog" id="iwPublicAuthDialog" aria-labelledby="iwPublicAuthTitle">
     <div class="iw-public-dialog-head">
-      <h2 id="iwPublicAuthTitle">Your iWorks account</h2>
+      <h2 id="iwPublicAuthTitle">Sign in to iWorks</h2>
       <button type="button" data-iw-dialog-close aria-label="Close account window"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     </div>
     <div class="iw-auth-dialog-tabs" role="group" aria-label="Account action">
       <button type="button" data-iw-auth-tab="login" aria-pressed="true">Sign in</button>
       <button type="button" data-iw-auth-tab="register" aria-pressed="false">Create account</button>
     </div>
-    <iframe id="iwPublicAuthFrame" title="Secure iWorks account access" loading="lazy"
-       data-login="<?= e(portal_url('login', ['embed' => '1'])) ?>"
-       data-register="<?= e(portal_url('register', ['embed' => '1'])) ?>"></iframe>
+    <div class="iw-auth-dialog-content" id="iwPublicAuthContent">
+      <div class="iw-auth-pane" data-iw-auth-pane="login">
+        <?php require __DIR__ . '/../login.php'; ?>
+      </div>
+      <div class="iw-auth-pane" data-iw-auth-pane="register" hidden>
+        <?php require __DIR__ . '/../register.php'; ?>
+      </div>
+    </div>
     <p class="iw-auth-dialog-fallback">Having trouble? <a id="iwAuthDirectLink" href="<?= e(portal_url('login')) ?>" data-login-direct="<?= e(portal_url('login')) ?>" data-register-direct="<?= e(portal_url('register')) ?>">Open secure sign in</a>.</p>
   </dialog>
 
@@ -351,39 +355,54 @@ $socialIcons = [
   'use strict';
   var auth = document.getElementById('iwPublicAuthDialog');
   var help = document.getElementById('iwPublicHelpDialog');
-  var frame = document.getElementById('iwPublicAuthFrame');
   var direct = document.getElementById('iwAuthDirectLink');
+  var content = document.getElementById('iwPublicAuthContent');
   var tabs = document.querySelectorAll('[data-iw-auth-tab]');
   var currentTrigger = null;
   function setAuthMode(mode) {
-    if (!frame || !direct) return;
+    if (!auth || !direct) return;
     mode = mode === 'register' ? 'register' : 'login';
-    var target = frame.getAttribute('data-' + mode);
-    if (target && frame.getAttribute('src') !== target) frame.setAttribute('src', target);
-    direct.href = direct.getAttribute('data-' + mode + '-direct') || target;
+    auth.querySelectorAll('[data-iw-auth-pane]').forEach(function (pane) {
+      pane.hidden = pane.getAttribute('data-iw-auth-pane') !== mode;
+    });
+    direct.href = direct.getAttribute('data-' + mode + '-direct');
     direct.textContent = mode === 'login' ? 'Open secure sign in' : 'Open registration';
-    tabs.forEach(function (tab) { tab.setAttribute('aria-pressed', tab.getAttribute('data-iw-auth-tab') === mode ? 'true' : 'false'); });
+    tabs.forEach(function (tab) {
+      tab.setAttribute('aria-pressed', tab.getAttribute('data-iw-auth-tab') === mode ? 'true' : 'false');
+    });
     var heading = document.getElementById('iwPublicAuthTitle');
-    if (heading) heading.textContent = mode === 'register' ? 'Create your account' : 'Sign in to iWorks';
-    if (auth) {
-      auth.classList.remove('is-flipping');
-      void auth.offsetWidth;
-      auth.classList.add('is-flipping');
+    if (heading) heading.textContent = mode === 'login' ? 'Sign in to iWorks' : 'Create an account';
+    if (content) {
+      content.classList.remove('is-flipping');
+      void content.offsetWidth;
+      content.classList.add('is-flipping');
     }
   }
   function show(dialog, trigger) {
     if (!dialog || typeof dialog.showModal !== 'function') return false;
     currentTrigger = trigger || null;
-    dialog.showModal();
+    if (!dialog.open) dialog.showModal();
     return true;
   }
   document.addEventListener('click', function (event) {
     var authTrigger = event.target.closest('[data-iw-auth]');
     if (authTrigger) {
       if (!auth || typeof auth.showModal !== 'function') return;
+      // Public and portal can be configured on distinct origins. Do not use
+      // the public-origin CSRF session to POST credentials across origins.
+      try {
+        if (new URL(authTrigger.href, window.location.href).origin !== window.location.origin) return;
+      } catch (error) { return; }
       event.preventDefault();
       setAuthMode(authTrigger.getAttribute('data-iw-auth'));
       show(auth, authTrigger);
+      return;
+    }
+    var authSwitch = event.target.closest('.iw-auth-dialog .iw-auth-switch a');
+    if (authSwitch) {
+      event.preventDefault();
+      var current = authSwitch.closest('[data-iw-auth-pane]');
+      setAuthMode(current && current.getAttribute('data-iw-auth-pane') === 'login' ? 'register' : 'login');
       return;
     }
     var helpTrigger = event.target.closest('[data-iw-help-open]');
@@ -397,21 +416,19 @@ $socialIcons = [
     if (tab) { setAuthMode(tab.getAttribute('data-iw-auth-tab')); return; }
     var close = event.target.closest('[data-iw-dialog-close]');
     if (close) {
-      var parentDialog = close.closest('dialog');
-      if (parentDialog) parentDialog.close();
+      var parent = close.closest('dialog');
+      if (parent) parent.close();
     }
   });
   [auth, help].forEach(function (dialog) {
     if (!dialog) return;
     dialog.addEventListener('click', function (event) { if (event.target === dialog) dialog.close(); });
     dialog.addEventListener('close', function () {
-      if (dialog === auth && frame) frame.removeAttribute('src');
       if (currentTrigger && typeof currentTrigger.focus === 'function') currentTrigger.focus();
     });
   });
-  // Ambient, reduced-motion-friendly entrance animation with no external library.
   if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var targets = document.querySelectorAll('.iw-clean-service, .iw-clean-step, .iw-home-review-summary, .iw-about-min-story, .iw-clean-support');
+    var targets = document.querySelectorAll('.iw-clean-service, .iw-clean-step, .iw-about-min-story, .iw-clean-support');
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
