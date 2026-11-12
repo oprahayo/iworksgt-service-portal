@@ -138,6 +138,7 @@ if (($user['role'] ?? '') === 'super_admin') {
     </div>
   </div>
 </div>
+<?php endif; ?>
 
 <?php if ($user['role'] === 'client'): ?>
 <section class="dashboard-banner-strip-wrap">
