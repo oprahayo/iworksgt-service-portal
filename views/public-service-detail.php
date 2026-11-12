@@ -58,7 +58,7 @@ if ($imageUrl === '') {
             <?php if ($tax > 0): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
           </div>
           <div class="iw-detail-actions">
-            <a class="iw-detail-primary" href="<?= e(portal_url('login')) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <a class="iw-detail-primary" href="<?= e(portal_url('login')) ?>" data-iw-auth="login">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             <a class="iw-detail-secondary" href="<?= e(public_url('contact')) ?>">Ask a question</a>
           </div>
           <p class="iw-detail-note">Submit requirements and follow updates through your iWorks account.</p>
