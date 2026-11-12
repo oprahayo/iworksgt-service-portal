@@ -85,7 +85,7 @@ function cac_people_from_input(mixed $raw, string $kind): array
         $row = [];
         foreach (['full_name'=>180,'email'=>190,'phone'=>60,'date_of_birth'=>12,'gender'=>24,
             'nationality'=>80,'occupation'=>140,'address'=>450,'city'=>100,'lga'=>100,
-            'state'=>100,'id_number'=>80,'nin'=>80,'shares'=>24] as $key=>$max) {
+            'state'=>100,'id_number'=>80,'nin'=>80,'shares'=>24,'former_name'=>160,'psc_description'=>450] as $key=>$max) {
             $s = $person[$key] ?? '';
             $row[$key] = is_string($s) ? mb_safe_trim(strip_tags($s), $max) : '';
         }
@@ -93,6 +93,7 @@ function cac_people_from_input(mixed $raw, string $kind): array
         $row['id_type'] = in_array($idType,['nin','national_id','passport','drivers_license','voters_card'],true) ? $idType : '';
         $role = (string) ($person['role'] ?? 'both');
         $row['role'] = $kind === 'company' && in_array($role,['director','shareholder','both'],true) ? $role : 'proprietor';
+        $row['psc_other_control'] = (string) ($person['psc_other_control'] ?? '') === '1';
         $people[] = $row;
     }
     return $people;
@@ -178,8 +179,31 @@ function cac_validate(array $data, array $uploadedKeys): void
         if ($directorCount<1 || $shareholderCount<1) {
             throw new RuntimeException('A private company requires at least one director and one shareholder.');
         }
-        if ((float) ($data['share_capital'] ?? 0) <= 0) {
-            throw new RuntimeException('Enter the proposed issued share capital.');
+        $capital=(float) ($data['share_capital'] ?? 0);
+        $shares=(int) ($data['share_count'] ?? 0);
+        if (!is_finite($capital) || $capital < 100000) {
+            throw new RuntimeException('A private company normally needs at least NGN 100,000 issued share capital under CAMA 2020. Contact support for regulated or special cases.');
+        }
+        if ($shares < 1) {
+            throw new RuntimeException('Enter the total number of issued shares.');
+        }
+        $allocated=0;
+        foreach ($people as $i=>$person) {
+            $role=(string) ($person['role'] ?? '');
+            $owned=(int) ($person['shares'] ?? 0);
+            if (in_array($role,['shareholder','both'],true) && $owned<1) {
+                throw new RuntimeException('Enter the shares allocated to shareholder '.($i+1).'.');
+            }
+            if ($owned<0 || ($role==='director' && $owned>0)) {
+                throw new RuntimeException('A director-only applicant cannot be allocated shareholder shares in this section.');
+            }
+            if (!empty($person['psc_other_control']) && trim((string) ($person['psc_description'] ?? ''))==='') {
+                throw new RuntimeException('Describe the significant control held by applicant '.($i+1).'.');
+            }
+            $allocated+=$owned;
+        }
+        if ($allocated!==$shares) {
+            throw new RuntimeException('Allocated shareholder shares ('.$allocated.') must equal total issued shares ('.$shares.').');
         }
     }
     if (empty($data['declaration'])) { throw new RuntimeException('Confirm the accuracy and authorisation declaration before checkout.'); }
