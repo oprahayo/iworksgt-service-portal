@@ -290,5 +290,23 @@ $socialIcons = [
       }
     })();
   </script>
+  <script>
+    (function () {
+      if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+      var targets = document.querySelectorAll('.iw-journey-card, .iw-about-bridge-inner, .iw-about-story-grid, .iw-expertise-grid > a, .launch-work-card');
+      if (!targets.length) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('iw-reveal-visible');
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.07 });
+      targets.forEach(function (element) {
+        element.classList.add('iw-reveal-pending');
+        observer.observe(element);
+      });
+    })();
+  </script>
 </body>
 </html>
