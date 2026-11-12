@@ -8,6 +8,7 @@ function get_service_by_slug(string $slug): ?array
 {
     return match ($slug) {
         'business-name-registration-cac-nigeria' => ['id' => 7, 'slug' => $slug, 'name' => 'Business Name Registration (CAC)'],
+        'company-registration' => ['id'=>8,'slug'=>$slug,'name'=>'Company Registration'],
         'website-design-development' => ['id' => 12, 'slug' => $slug, 'name' => 'Website Design & Development'],
         default => null,
     };
@@ -26,7 +27,10 @@ check_order(iworks_order_slug(['service'=>'a']) === '', 'Only scalar strings sup
 check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=dashboard', 'Direct login must still use dashboard.');
 iworks_order_intent_capture(['service'=>$slug]);
 check_order(iworks_order_intent_peek() === $slug, 'Pending order should be held in server session.');
-check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=jobs&action=new&service=' . $slug, 'Google/password/OTP callback must resume selected service.');
+check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac&kind=business_name', 'Google/password/OTP must resume selected CAC Business Name intake.');
+iworks_order_intent_capture(['service'=>'company-registration']);
+check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac&kind=company', 'Company registration must resume its dedicated intake.');
+iworks_order_intent_capture(['service'=>$slug]);
 check_order(iworks_post_login_destination(['role'=>'admin']) === 'index.php?page=dashboard', 'Admin should not be placed into client checkout.');
 $selected = iworks_order_catalog_selection($slug, [['id'=>7],['id'=>12]]);
 check_order($selected !== null && $selected['id'] === 7, 'Checkout catalog must resolve the selected service.');
