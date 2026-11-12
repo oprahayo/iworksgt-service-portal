@@ -67,7 +67,14 @@ if (method_is('POST') && $user['role'] === 'client') {
             redirect('invoice.php?id=' . $invoiceId);
         }
     } catch (Throwable $e) {
-        flash('error', $e->getMessage());
+        // Never display provider responses containing Stripe API credentials,
+        // even masked keys. Keep client errors safe and actionable.
+        if (isset($methodCode) && is_gateway_payment_method((string) $methodCode)) {
+            error_log('iWorks invoice gateway checkout failed; verify active provider credentials and configuration.');
+            flash('error', 'Secure payment is temporarily unavailable through this provider. Please contact support or select another available method.');
+        } else {
+            flash('error', iworks_client_safe_payment_error($e->getMessage()));
+        }
         redirect('invoice.php?id=' . $invoiceId);
     }
 }
@@ -118,7 +125,8 @@ $favicon = favicon_path();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title><?= e($invoice['invoice_number']) ?></title>
+  <meta name="robots" content="noindex,nofollow">
+  <title><?= e($invoice['invoice_number']) ?> | iWorks billing</title>
   <meta name="description" content="<?= e(seo_description()) ?>">
   <?php if ($favicon !== ''): ?>
     <link rel="icon" type="image/png" href="<?= e($favicon) ?>">
@@ -224,8 +232,9 @@ $favicon = favicon_path();
       }
     }
   </style>
+  <link rel="stylesheet" href="assets/css/client-checkout.css?v=20261112a">
 </head>
-<body>
+<body class="<?= $user['role'] === 'client' ? 'iw-invoice-client' : '' ?>">
   <div class="wrap">
     <div class="head">
       <div>
@@ -239,15 +248,30 @@ $favicon = favicon_path();
           class="btn btn-secondary"
           type="button"
           id="invoiceBackBtn"
-          data-fallback-url="<?= e($user['role'] === 'client' ? url('jobs') : url('invoices')) ?>"
+          data-fallback-url="<?= e($user['role'] === 'client' ? url('applications') : url('invoices')) ?>"
         >Back</button>
         <button class="btn btn-secondary" onclick="window.print()">Print</button>
       </div>
     </div>
 
+    <?php if ($user['role'] === 'client'): ?>
+      <div class="iw-invoice-hero">
+        <div><span class="iw-invoice-eyebrow">SECURE PAYMENT</span>
+          <h1>Review your invoice</h1>
+          <p><?= e((string) ($invoice['service_name'] ?? 'iWorks service')) ?> · <?= e((string) ($invoice['invoice_number'] ?? '')) ?></p>
+        </div>
+        <div class="iw-invoice-hero-amount">
+          <span>Amount due</span><strong><?= e(money((float) ($invoice['amount'] ?? 0), (string) ($invoice['currency'] ?? default_currency()))) ?></strong>
+          <small><?= e(ucfirst((string) ($invoice['status'] ?? 'issued'))) ?></small>
+        </div>
+      </div>
+    <?php endif; ?>
     <?php if ($msg = flash('success')): ?><div class="alert alert-success"><?= e($msg) ?></div><?php endif; ?>
     <?php if ($msg = flash('error')): ?><div class="alert alert-danger"><?= e($msg) ?></div><?php endif; ?>
 
+    <?php if ($user['role'] === 'client'): ?>
+      <details class="iw-invoice-customer-details"><summary>Invoice details <span>Reference, dates and billing contact</span></summary>
+    <?php endif; ?>
     <div class="grid mb-3">
       <div>
         <table>
@@ -266,7 +290,11 @@ $favicon = favicon_path();
       </div>
     </div>
 
-    <h3>Service details</h3>
+    <?php if ($user['role'] === 'client'): ?></details><?php endif; ?>
+
+    <div class="iw-invoice-main-grid">
+    <section class="iw-invoice-order">
+    <h3>Service summary</h3>
     <?php if (count($invoiceJobs) > 1): ?>
       <table class="mb-3">
         <thead>
@@ -307,9 +335,16 @@ $favicon = favicon_path();
       </table>
     <?php endif; ?>
 
+    </section>
+    <section class="iw-invoice-checkout">
     <?php if ($user['role'] === 'client' && $invoice['status'] !== 'paid'): ?>
-      <h3>Submit payment</h3>
-      <p class="muted small">Available methods are filtered by invoice currency. Select one method to continue.</p>
+      <h3>Choose how to pay</h3>
+      <p class="muted small">Available options depend on the invoice currency. Your payment details are entered with the provider, not iWorks.</p>
+      <?php if (strtoupper((string) ($invoice['currency'] ?? '')) === 'USD'): ?>
+        <p class="iw-invoice-saved-cards"><i class="bi bi-lock-fill" aria-hidden="true"></i>
+          Saved a card with Stripe? It can appear during Stripe checkout.
+          <a href="<?= e(url('card_vault')) ?>">Manage saved cards</a></p>
+      <?php endif; ?>
 
       <?php if (!$hasMethods): ?>
         <div class="alert alert-danger">No payment method is active for <?= e($invoice['currency'] ?? default_currency()) ?>. Contact admin.</div>
@@ -369,7 +404,7 @@ $favicon = favicon_path();
             <strong><?= e($method['display_name']) ?></strong>
             <div class="small muted mb-2"><?= nl2br(e($method['details'] ?? 'No instructions configured yet.')) ?></div>
             <?php if ($isGateway): ?>
-              <div class="gateway-note">You will be redirected to secure checkout. Job activates automatically after successful payment verification.</div>
+              <div class="gateway-note">Continue to the payment provider. Your service starts after payment is verified.</div>
             <?php endif; ?>
           </div>
         <?php endforeach; ?>
@@ -415,10 +450,12 @@ $favicon = favicon_path();
           <textarea id="payment_note" name="payment_note" rows="2" class="mb-3" placeholder="Any note for finance/admin"></textarea>
         </div>
 
-        <button class="btn btn-primary" id="paySubmitBtn" type="submit" <?= !$hasMethods ? 'disabled' : '' ?>>Continue payment</button>
+        <button class="btn btn-primary" id="paySubmitBtn" type="submit" <?= !$hasMethods ? 'disabled' : '' ?>>Continue securely &rarr;</button>
       </form>
     <?php endif; ?>
 
+    </section>
+    </div>
     <?php if ($paymentHistory): ?>
       <h3 class="mt-3">Payment history</h3>
       <table>
