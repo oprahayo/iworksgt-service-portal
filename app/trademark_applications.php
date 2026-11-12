@@ -168,7 +168,13 @@ function trademark_list(int $clientId): array
 
 function trademark_private_logo_dir(): string
 {
-    return dirname(__DIR__) . '/storage/trademark-logos';
+    // Keep original logo artwork outside every web document root. The portal
+    // is normally /home/USER/public_html/portal.iworksgt.com.
+    $home = trim((string) getenv('HOME'));
+    if ($home === '' || !is_dir($home)) {
+        $home = dirname(__DIR__, 3);
+    }
+    return rtrim($home, '/') . '/.iworks-private/trademark-logos';
 }
 
 function trademark_store_logo(?array $file): ?string
