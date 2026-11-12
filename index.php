@@ -46,6 +46,20 @@ if (!is_configured() && $page !== 'setup') {
 
 $title = app_name();
 
+// Crawlers receive only published public URLs; no account, job or payment data.
+if ($page === 'seo_sitemap') {
+    header('Content-Type: application/xml; charset=utf-8');
+    header('Cache-Control: public, max-age=1800');
+    echo iworks_seo_public_sitemap();
+    exit;
+}
+if ($page === 'seo_robots') {
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: public, max-age=1800');
+    echo iworks_seo_robots_text();
+    exit;
+}
+
 if (!function_exists('safe_internal_return_url')) {
     function safe_internal_return_url(string $candidate, string $fallback): string
     {
