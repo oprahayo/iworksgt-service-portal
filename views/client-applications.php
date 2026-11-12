@@ -48,11 +48,19 @@ foreach ($clientServiceItems as $item) { $countByStatus[$item['status']] = ($cou
         <a class="iw-client-button <?= $item['status']==='payment'?'':'iw-client-button-soft' ?>"
            href="<?= e((string) $item['detail_url']) ?>"><?= e((string) $item['action']) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
         <?php if (!empty($item['can_delete_draft'])): ?>
-          <form method="post" action="<?= e(url('trademark',['id'=>(int) $item['id']])) ?>" onsubmit="return confirm('Delete this draft application? This cannot be undone.');">
+          <form method="post" action="<?= e(url($item['kind']==='cac'?'cac':'trademark',['id'=>(int) $item['id']])) ?>" onsubmit="return confirm('Delete this draft application? This cannot be undone.');">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="form_action" value="delete_draft">
             <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
             <button class="iw-client-delete" type="submit"><i class="bi bi-trash3"></i> Delete draft</button>
+          </form>
+        <?php endif; ?>
+        <?php if (!empty($item['can_delete_unpaid']) && $item['kind']==='job'): ?>
+          <form method="post" action="<?= e(url('applications')) ?>" onsubmit="return confirm('Delete this unpaid, unprocessed service request? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="form_action" value="delete_unpaid_order">
+            <input type="hidden" name="job_id" value="<?= (int) $item['id'] ?>">
+            <button class="iw-client-delete" type="submit"><i class="bi bi-trash3"></i> Delete request</button>
           </form>
         <?php endif; ?>
       </div>
