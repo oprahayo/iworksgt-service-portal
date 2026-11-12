@@ -49,7 +49,8 @@ vault_assert(str_contains($vault, 'save_card_consent'), 'Explicit save-card cons
 vault_assert(str_contains($vault, 'payment_method_id'), 'Client card deletion missing.');
 vault_assert(!str_contains($vault, 'name="card_number"') && !str_contains($vault, 'name="cvv"'), 'Raw card inputs must never be present.');
 vault_assert(str_contains($bill, "url('card_vault')"), 'Billing must link to card vault.');
-vault_assert(str_contains($head, "Saved cards"), 'Client navigation must expose vault.');
+vault_assert(str_contains($head, "Billing") && !str_contains($head, "> Saved cards</a>"), 'Vault must be under consolidated Billing navigation, not a second item.');
+vault_assert(str_contains($bill, 'billingCards') && str_contains($bill, "url('card_vault')"), 'Billing must show saved payment methods and link to management.');
 vault_assert(str_contains($bootstrap, "require_once __DIR__ . '/stripe_card_vault.php'"), 'Vault service not loaded.');
 
 echo "stripe_card_vault_contract_test passed\n";
