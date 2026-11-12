@@ -2,207 +2,69 @@
 $countryOptions = portal_country_options();
 $stateMap = portal_state_options_map();
 $oldCountryValue = (string) old_input('country', 'Nigeria');
-$oldCountryIso = portal_country_iso($oldCountryValue);
 $oldStateValue = (string) old_input('state_region');
 ?>
-<div class="row justify-content-center">
-  <div class="col-xl-10">
-    <div class="card">
-      <div class="card-body p-4">
-        <h1 class="h4 mb-2">Create client account</h1>
-        <p class="text-muted small mb-3">Complete your biodata. A 6-digit email verification code will be sent after signup.</p>
-        <form method="post" action="<?= e(url('register')) ?>">
-          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label" for="first_name">First name *</label>
-              <input class="form-control" id="first_name" name="first_name" required value="<?= e(old_input('first_name')) ?>">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label" for="last_name">Last name *</label>
-              <input class="form-control" id="last_name" name="last_name" required value="<?= e(old_input('last_name')) ?>">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label" for="gender">Gender</label>
-              <select class="form-select" id="gender" name="gender">
-                <option value="">Select</option>
-                <?php foreach (gender_options() as $genderCode => $genderLabel): ?>
-                  <option value="<?= e($genderCode) ?>" <?= selected_if($genderCode, old_input('gender')) ?>><?= e($genderLabel) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label" for="date_of_birth">Date of birth</label>
-              <input class="form-control" id="date_of_birth" name="date_of_birth" type="date" value="<?= e(old_input('date_of_birth')) ?>">
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label" for="email">Email *</label>
-              <input class="form-control" id="email" name="email" type="email" required value="<?= e(old_input('email')) ?>">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label" for="phone">Phone *</label>
-              <input class="form-control js-intl-phone" id="phone" name="phone" required value="<?= e(old_input('phone')) ?>" data-country-select="#country">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label" for="occupation">Occupation</label>
-              <input class="form-control" id="occupation" name="occupation" value="<?= e(old_input('occupation')) ?>">
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label" for="country">Country *</label>
-              <select class="form-select" id="country" name="country" required>
-                <?php foreach ($countryOptions as $countryIso => $countryName): ?>
-                  <option
-                    value="<?= e($countryName) ?>"
-                    data-iso="<?= e(strtolower($countryIso)) ?>"
-                    <?= selected_if($countryName, $oldCountryValue) ?>
-                  ><?= e($countryName) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label" for="state_region">State/Region *</label>
-              <select class="form-select" id="state_region" name="state_region" required data-selected="<?= e($oldStateValue) ?>"></select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label" for="city">City *</label>
-              <input class="form-control" id="city" name="city" required value="<?= e(old_input('city')) ?>">
-            </div>
-
-            <div class="col-12">
-              <label class="form-label" for="address_line">Address *</label>
-              <input class="form-control" id="address_line" name="address_line" required value="<?= e(old_input('address_line')) ?>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label" for="password">Password *</label>
-              <div class="input-group">
-                <input class="form-control" id="password" name="password" type="password" minlength="6" required>
-                <button class="btn btn-outline-secondary password-toggle" type="button" data-target="password" aria-label="Show password">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="confirm_password">Confirm password *</label>
-              <div class="input-group">
-                <input class="form-control" id="confirm_password" name="confirm_password" type="password" minlength="6" required>
-                <button class="btn btn-outline-secondary password-toggle" type="button" data-target="confirm_password" aria-label="Show password">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-12 d-flex align-items-end">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="remember_30days" name="remember_30days" value="1" <?= checked_if(!empty($_POST['remember_30days'])) ?>>
-                <label class="form-check-label" for="remember_30days">Trust this device for 30 days after verification</label>
-              </div>
-            </div>
-          </div>
-          <button class="btn btn-primary mt-3" type="submit">Create account</button>
-        </form>
-        <p class="text-muted small mt-3 mb-0">Already registered? <a href="<?= e(url('login')) ?>">Login</a></p>
-      </div>
-    </div>
+<section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
+  <div class="iw-auth-header">
+    <?php if (logo_path() !== ''): ?><img src="<?= e(logo_path()) ?>" alt="<?= e(brand_name()) ?>" class="iw-auth-logo"><?php endif; ?>
+    <h1 id="iwRegisterTitle">Create an account</h1>
+    <p>One account to order services, share documents and track your work.</p>
   </div>
-</div>
+  <form class="iw-auth-form" method="post" action="<?= e(url('register')) ?>" target="_top">
+    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+    <div class="iw-auth-fields">
+      <div><label for="iwFirstName">First name *</label><input id="iwFirstName" name="first_name" autocomplete="given-name" value="<?= e(old_input('first_name')) ?>" required maxlength="100"></div>
+      <div><label for="iwLastName">Last name *</label><input id="iwLastName" name="last_name" autocomplete="family-name" value="<?= e(old_input('last_name')) ?>" required maxlength="100"></div>
+      <div class="iw-auth-full"><label for="iwRegisterEmail">Email *</label><input id="iwRegisterEmail" type="email" name="email" autocomplete="email" value="<?= e(old_input('email')) ?>" required maxlength="190"></div>
+      <div class="iw-auth-full"><label for="iwPhone">Phone *</label><input id="iwPhone" type="tel" name="phone" autocomplete="tel" value="<?= e(old_input('phone')) ?>" required placeholder="+234..." maxlength="30"></div>
+      <div><label for="iwCountry">Country *</label><select id="iwCountry" name="country" required>
+        <?php foreach ($countryOptions as $iso => $country): ?><option value="<?= e($country) ?>" data-iso="<?= e((string) $iso) ?>" <?= selected_if($country, $oldCountryValue) ?>><?= e($country) ?></option><?php endforeach; ?>
+      </select></div>
+      <div><label for="iwState">State / region *</label><select id="iwState" name="state_region" data-previous="<?= e($oldStateValue) ?>" required></select></div>
+      <div><label for="iwCity">City *</label><input id="iwCity" name="city" value="<?= e(old_input('city')) ?>" autocomplete="address-level2" required></div>
+      <div><label for="iwAddress">Street address *</label><input id="iwAddress" name="address_line" value="<?= e(old_input('address_line')) ?>" autocomplete="street-address" required></div>
+      <div><label for="iwPassword">Password *</label><input id="iwPassword" type="password" name="password" autocomplete="new-password" minlength="6" required></div>
+      <div><label for="iwConfirmPassword">Confirm password *</label><input id="iwConfirmPassword" type="password" name="confirm_password" autocomplete="new-password" minlength="6" required></div>
+    </div>
+    <p class="iw-auth-small">A verification code will be sent to your email if email verification is enabled.</p>
+    <button class="iw-auth-submit" type="submit">Create account <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+  </form>
+  <p class="iw-auth-switch">Already registered? <a href="<?= e(url('login', !empty($_GET['embed']) ? ['embed'=>'1'] : [])) ?>">Sign in</a></p>
+</section>
 <script>
 (function () {
-  var stateMap = <?= json_encode($stateMap, JSON_UNESCAPED_SLASHES) ?>;
-  var countrySelect = document.getElementById('country');
-  var stateSelect = document.getElementById('state_region');
-
-  function toIso(countryName) {
-    if (!countrySelect) return 'ng';
-    var found = Array.prototype.find.call(countrySelect.options, function (option) {
-      return option.value === countryName;
-    });
-    return found ? (found.getAttribute('data-iso') || 'ng') : 'ng';
-  }
-
-  function buildStates() {
-    if (!countrySelect || !stateSelect) return;
-    var selectedOption = countrySelect.options[countrySelect.selectedIndex];
-    var iso = selectedOption ? (selectedOption.getAttribute('data-iso') || 'ng') : 'ng';
-    var states = stateMap[String(iso).toUpperCase()] || [];
-    var current = stateSelect.getAttribute('data-selected') || stateSelect.value || '';
-
-    stateSelect.innerHTML = '';
-    if (!states.length) {
-      var fallbackOption = document.createElement('option');
-      fallbackOption.value = '';
-      fallbackOption.textContent = 'Select state/region';
-      stateSelect.appendChild(fallbackOption);
-      return;
+  var countries = <?= json_encode($stateMap, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+  var country = document.getElementById('iwCountry');
+  var state = document.getElementById('iwState');
+  if (!country || !state) return;
+  function setStates() {
+    var option = country.options[country.selectedIndex];
+    var iso = (option ? option.getAttribute('data-iso') : '') || 'NG';
+    var available = countries[String(iso).toUpperCase()] || [];
+    var previous = state.getAttribute('data-previous') || state.value || '';
+    state.textContent = '';
+    var prompt = document.createElement('option');
+    prompt.value = '';
+    prompt.textContent = 'Select state / region';
+    state.appendChild(prompt);
+    if (!available.length) {
+      var custom = document.createElement('option');
+      custom.value = 'Other';
+      custom.textContent = 'Other / not listed';
+      state.appendChild(custom);
     }
-
-    var placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = 'Select state/region';
-    stateSelect.appendChild(placeholder);
-
-    states.forEach(function (stateName) {
-      var option = document.createElement('option');
-      option.value = stateName;
-      option.textContent = stateName;
-      if (current === stateName) {
-        option.selected = true;
-      }
-      stateSelect.appendChild(option);
+    available.forEach(function (name) {
+      var entry = document.createElement('option');
+      entry.value = name;
+      entry.textContent = name;
+      entry.selected = name === previous;
+      state.appendChild(entry);
     });
   }
-
-  buildStates();
-  if (countrySelect) {
-    countrySelect.addEventListener('change', buildStates);
-  }
-
-  document.querySelectorAll('.password-toggle').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var targetId = btn.getAttribute('data-target');
-      var input = targetId ? document.getElementById(targetId) : null;
-      if (!input) return;
-      var toText = input.type === 'password';
-      input.type = toText ? 'text' : 'password';
-      btn.innerHTML = toText ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-    });
+  setStates();
+  country.addEventListener('change', function () {
+    state.setAttribute('data-previous', '');
+    setStates();
   });
-
-  if (typeof window.intlTelInput === 'function') {
-    document.querySelectorAll('.js-intl-phone').forEach(function (input) {
-      var countrySelector = document.querySelector(input.getAttribute('data-country-select') || '');
-      var selectedCountry = countrySelector && countrySelector.value ? countrySelector.value : 'Nigeria';
-      var initialIso = toIso(selectedCountry);
-
-      var iti = window.intlTelInput(input, {
-        initialCountry: initialIso || 'ng',
-        separateDialCode: true,
-        nationalMode: false,
-        autoPlaceholder: 'polite',
-        utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.0/build/js/utils.js',
-      });
-
-      if (countrySelector) {
-        countrySelector.addEventListener('change', function () {
-          var option = countrySelector.options[countrySelector.selectedIndex];
-          var iso = option ? (option.getAttribute('data-iso') || 'ng') : 'ng';
-          iti.setCountry(iso);
-        });
-
-        input.addEventListener('countrychange', function () {
-          var data = iti.getSelectedCountryData();
-          if (!data || !data.iso2) return;
-          var match = Array.prototype.find.call(countrySelector.options, function (option) {
-            return (option.getAttribute('data-iso') || '').toLowerCase() === String(data.iso2).toLowerCase();
-          });
-          if (match) {
-            countrySelector.value = match.value;
-            buildStates();
-          }
-        });
-      }
-    });
-  }
 })();
 </script>
