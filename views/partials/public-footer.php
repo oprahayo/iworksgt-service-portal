@@ -151,6 +151,8 @@ $socialIcons = [
     </div>
   </footer>
 
+  <?php if (!should_enforce_split_domain() || request_host() === configured_host(portal_base_url())): ?>
+  <!-- Only render password/registration forms on the portal origin. -->
   <!-- Same-page authentication: existing portal forms, CSRF and OTP, no iframe. -->
   <dialog class="iw-public-dialog iw-auth-dialog" id="iwPublicAuthDialog" aria-labelledby="iwPublicAuthTitle">
     <div class="iw-public-dialog-head">
@@ -174,6 +176,7 @@ $socialIcons = [
     <p class="iw-auth-dialog-fallback">Having trouble? <a id="iwAuthDirectLink" href="<?= e(portal_url('login')) ?>" data-login-direct="<?= e(portal_url('login')) ?>" data-register-direct="<?= e(portal_url('register')) ?>">Open secure sign in</a>.</p>
   </dialog>
 
+  <?php endif; ?>
   <dialog class="iw-public-dialog iw-help-dialog" id="iwPublicHelpDialog" aria-labelledby="iwPublicHelpTitle">
     <div class="iw-public-dialog-head">
       <h2 id="iwPublicHelpTitle">Ask the iWorks team</h2>

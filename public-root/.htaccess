@@ -1,0 +1,31 @@
+# Managed public-domain rules for iWORKS GLOBAL LTD.
+# This file belongs to the apex domain document root, not the portal root.
+DirectoryIndex index.php
+
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# www -> canonical apex. This rule is host-specific so it cannot affect the portal subdomain.
+RewriteCond %{HTTP_HOST} ^www\.iworksgt\.com$ [NC]
+RewriteRule ^ https://iworksgt.com%{REQUEST_URI} [R=301,L,NE]
+
+# Avoid exposing the portal's code directory through the apex-domain URL.
+# The portal virtual host itself remains accessible at portal.iworksgt.com.
+RewriteCond %{HTTP_HOST} ^iworksgt\.com$ [NC]
+RewriteRule ^portal\.iworksgt\.com(?:/|$) - [F,L]
+
+# Search discovery on the canonical public domain.
+RewriteCond %{HTTP_HOST} ^iworksgt\.com$ [NC]
+RewriteRule ^sitemap\.xml$ index.php?page=seo_sitemap [L,QSA]
+RewriteCond %{HTTP_HOST} ^iworksgt\.com$ [NC]
+RewriteRule ^robots\.txt$ index.php?page=seo_robots [L,QSA]
+
+# Route public pretty URLs to the shared PHP front controller.
+RewriteCond %{HTTP_HOST} ^iworksgt\.com$ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L,QSA]
+</IfModule>

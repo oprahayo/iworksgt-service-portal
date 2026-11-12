@@ -47,6 +47,14 @@ if (!is_configured() && $page !== 'setup') {
 $title = app_name();
 
 // Crawlers receive only published public URLs; no account, job or payment data.
+// Search discovery must be served on the marketing domain, not duplicated
+// on the customer application's hostname.
+if (in_array($page, ['seo_sitemap', 'seo_robots'], true)
+    && should_enforce_split_domain()
+    && request_host() !== configured_host(public_base_url())) {
+    header('Location: ' . public_absolute_url($page === 'seo_sitemap' ? 'sitemap.xml' : 'robots.txt'), true, 301);
+    exit;
+}
 if ($page === 'seo_sitemap') {
     header('Content-Type: application/xml; charset=utf-8');
     header('Cache-Control: public, max-age=1800');
@@ -94,7 +102,15 @@ if (!function_exists('safe_internal_return_url')) {
 
 try {
     if ($page === null) {
-        $page = is_logged_in() ? 'dashboard' : 'home';
+        // www.iworksgt.com serves the public index even if a session cookie
+        // is present. portal.iworksgt.com opens the application itself.
+        if (should_enforce_split_domain() && request_host() === configured_host(public_base_url())) {
+            $page = 'home';
+        } elseif (should_enforce_split_domain() && request_host() === configured_host(portal_base_url())) {
+            $page = is_logged_in() ? 'dashboard' : 'login';
+        } else {
+            $page = is_logged_in() ? 'dashboard' : 'home';
+        }
     }
 
     $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post'];
@@ -113,7 +129,8 @@ try {
                 $target = public_url($page, current_query_params_without_page());
             }
 
-            redirect($target);
+            header('Location: ' . $target, true, 301);
+            exit;
         }
 
         if (!in_array($page, $publicPageSlugs, true) && $portalHost !== '' && $requestHost !== $portalHost) {
@@ -133,7 +150,9 @@ try {
         }
     }
 
-    if (in_array($page, $publicPageSlugs, true) && (!is_logged_in() || $requestedPrettyPublicPage)) {
+    if (in_array($page, $publicPageSlugs, true)
+        && (!is_logged_in() || $requestedPrettyPublicPage
+            || (should_enforce_split_domain() && request_host() === configured_host(public_base_url())))) {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
         if ($page === 'service') {
             $service = get_service_by_slug($publicSlug);
