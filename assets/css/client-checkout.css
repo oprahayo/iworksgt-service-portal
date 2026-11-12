@@ -1,0 +1,73 @@
+/* iWorks client payment — accessible, focused checkout without altering staff invoices. */
+body.iw-invoice-client{background:#f8f9fa;color:#202b35;font:14px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body.iw-invoice-client .wrap{max-width:1140px;margin:38px auto;background:#fff;border:1px solid #eaedf0;border-radius:14px;box-shadow:0 10px 35px rgba(27,37,46,.035);padding:clamp(20px,3.1vw,36px)}
+body.iw-invoice-client .head{padding-bottom:20px;margin-bottom:24px;border-color:#edf0f2}
+body.iw-invoice-client .brand img{height:42px;max-width:160px;object-fit:contain}
+body.iw-invoice-client .head-actions .btn{background:#f5f6f8;color:#384651;font-size:12px;font-weight:600;min-height:42px;padding:10px 17px;border-radius:8px}
+body.iw-invoice-client .head-actions .btn:hover{background:#e9edf0}
+body.iw-invoice-client h3{font-size:17px;letter-spacing:-.03em;margin-bottom:15px;color:#23303b;font-weight:750}
+body.iw-invoice-client .muted{color:#71808a}
+.iw-invoice-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;border:1px solid #ffe5d6;background:#fffcfa;border-radius:12px;padding:23px 26px;margin-bottom:23px}
+.iw-invoice-hero h1{font-size:clamp(22px,3vw,29px);font-weight:750;letter-spacing:-.04em;line-height:1.2;margin:5px 0;color:#21303b}
+.iw-invoice-hero p{font-size:12px;color:#78848e;margin:0;overflow-wrap:anywhere}
+.iw-invoice-eyebrow{color:#dc6b34;font-size:10px;letter-spacing:.12em;font-weight:800}
+.iw-invoice-hero-amount{text-align:right;display:flex;flex-direction:column;gap:2px;flex:0 0 auto}
+.iw-invoice-hero-amount span{color:#7e8a93;font-size:11px}
+.iw-invoice-hero-amount strong{color:#e66b32;font-size:clamp(22px,3vw,30px);font-weight:800;white-space:nowrap;letter-spacing:-.04em}
+.iw-invoice-hero-amount small{font-size:11px;color:#825338;background:#fff0e6;padding:4px 9px;border-radius:20px;align-self:flex-end}
+body.iw-invoice-client .alert{border-radius:9px;padding:13px 16px;margin-bottom:17px;font-size:12px}
+body.iw-invoice-client .alert-danger{background:#fff1ef;color:#9d3b25}
+.iw-invoice-customer-details{border:1px solid #eceff2;border-radius:10px;margin-bottom:22px}
+.iw-invoice-customer-details summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 17px;font-weight:650;color:#2c3a45;min-height:48px}
+.iw-invoice-customer-details summary::-webkit-details-marker{display:none}
+.iw-invoice-customer-details summary:before{content:"▸";color:#ed793d}
+.iw-invoice-customer-details[open] summary:before{content:"▾"}
+.iw-invoice-customer-details summary span{color:#83909a;font-weight:400;font-size:11px;margin-left:auto}
+.iw-invoice-customer-details .grid{padding:0 17px 15px;margin:0}
+.iw-invoice-main-grid{display:grid;grid-template-columns:minmax(0,.97fr) minmax(0,1.03fr);gap:22px;align-items:start}
+.iw-invoice-order,.iw-invoice-checkout{min-width:0;border:1px solid #e8ebef;border-radius:12px;padding:clamp(17px,2vw,24px);background:#fff}
+body.iw-invoice-client table{font-size:12px}
+body.iw-invoice-client th,body.iw-invoice-client td{padding:12px 8px;border-color:#edf0f2;vertical-align:top}
+body.iw-invoice-client th{font-weight:600;color:#697784;width:29%}
+body.iw-invoice-client td{color:#27333f;overflow-wrap:anywhere}
+body.iw-invoice-client td.total{font-size:18px;color:#202a34;font-weight:800}
+body.iw-invoice-client .iw-invoice-order>table.mb-3:last-of-type{background:#fdf7f3;border-radius:9px}
+body.iw-invoice-client .iw-invoice-order>table.mb-3:last-of-type tr:last-child{background:#fff1e8}
+body.iw-invoice-client .method-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 22px}
+body.iw-invoice-client .method-mode-pill{justify-content:center;padding:14px;min-height:51px;border-radius:8px;border:1px solid #e1e5e9;font-size:12px;color:#465561;font-weight:650}
+body.iw-invoice-client .method-mode-pill.active{border-color:#f49a67;background:#fff6f0;color:#bd5625}
+body.iw-invoice-client .method-option{display:flex;align-items:center;gap:10px;padding:15px;min-height:52px;border-radius:9px;border:1px solid #e1e5e9;font-size:13px;transition:border-color .12s}
+body.iw-invoice-client .method-option.active{border:1px solid #f18b56;box-shadow:none;background:#fffbf8}
+body.iw-invoice-client .method-option:hover{border-color:#f1b18d}
+body.iw-invoice-client .method-option input{accent-color:#f47537;flex:0 0 auto}
+body.iw-invoice-client .method{padding:14px;border:1px solid #eef0f2;background:#fdfdfd;margin:10px 0 18px;font-size:12px}
+body.iw-invoice-client .method .gateway-note{background:#fff6ef;color:#986040;border:0;padding:11px 13px}
+body.iw-invoice-client .gateway-note{border-radius:8px;line-height:1.65}
+body.iw-invoice-client .iw-invoice-checkout label{font-size:12px}
+body.iw-invoice-client #invoicePaymentForm .btn-primary{display:block;width:100%;min-height:51px;background:#f47132;border-radius:8px;font-size:14px;font-weight:750;color:#fff;margin-top:10px}
+body.iw-invoice-client #invoicePaymentForm .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+body.iw-invoice-client input:not([type=radio]):not([type=checkbox]):not([type=hidden]),body.iw-invoice-client select,body.iw-invoice-client textarea{font-size:16px;min-height:45px}
+body.iw-invoice-client .iw-invoice-saved-cards{font-size:11px;color:#6e7b85;line-height:1.7;margin:10px 0 15px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+body.iw-invoice-client .iw-invoice-saved-cards i{color:#d96b36}
+body.iw-invoice-client .iw-invoice-saved-cards a{color:#db682d;font-weight:700;text-underline-offset:2px}
+body.iw-invoice-client .method-option:focus-within,body.iw-invoice-client summary:focus-visible,body.iw-invoice-client button:focus-visible{outline:2px solid #e96e32;outline-offset:3px}
+@media(max-width:860px){body.iw-invoice-client .iw-invoice-main-grid{grid-template-columns:1fr}body.iw-invoice-client .wrap{margin:12px}}
+@media(max-width:540px){
+ body.iw-invoice-client .wrap{margin:0;padding:16px 13px;border-radius:0}
+ .iw-invoice-hero{padding:17px;align-items:flex-start;flex-direction:column;gap:14px}
+ .iw-invoice-hero-amount{text-align:left;align-items:flex-start}
+ .iw-invoice-hero-amount small{align-self:flex-start}
+ .iw-invoice-customer-details summary{align-items:flex-start;flex-wrap:wrap;gap:3px 9px}
+ .iw-invoice-customer-details summary span{width:100%;margin-left:17px}
+ body.iw-invoice-client .head-actions{width:auto;justify-content:flex-end}
+ body.iw-invoice-client .grid{grid-template-columns:1fr}
+ .iw-invoice-order,.iw-invoice-checkout{padding:16px 12px}
+}
+@media print{
+ body.iw-invoice-client{background:#fff}
+ body.iw-invoice-client .wrap{margin:0;max-width:unset;box-shadow:none;border:0}
+ body.iw-invoice-client .iw-invoice-main-grid{display:block}
+ body.iw-invoice-client .iw-invoice-checkout{display:none}
+ body.iw-invoice-client .iw-invoice-order{border:0;padding:0}
+ .iw-invoice-hero{border:0;border-bottom:1px solid #e5e8ea;background:#fff}
+}
