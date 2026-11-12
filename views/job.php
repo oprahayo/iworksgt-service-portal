@@ -25,6 +25,13 @@ if (!empty($job['managed_by_admin_name'])) {
   <a class="btn btn-outline-secondary" href="<?= e(url('jobs')) ?>">Back to jobs</a>
 </div>
 
+<?php if (!empty($cacLinked) && $user['role'] !== 'client'): ?>
+  <div class="alert alert-info d-flex justify-content-between gap-3 align-items-center flex-wrap">
+    <span><i class="bi bi-file-earmark-lock"></i> Secure CAC registration details and proprietor/director documents are attached to this job.</span>
+    <a class="btn btn-sm btn-outline-primary" href="<?= e(url('cac_review',['id'=>(int)$cacLinked['id']])) ?>">Review CAC filing</a>
+  </div>
+<?php endif; ?>
+
 <?php if ($user['role'] === 'client' && $jobPaymentStatus !== 'paid' && !empty($invoice)): ?>
   <div class="alert alert-warning">
     This order is waiting for payment. Please pay invoice <strong><?= e($job['invoice_number']) ?></strong> to activate processing.
