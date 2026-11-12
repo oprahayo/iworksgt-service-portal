@@ -29,9 +29,9 @@ assert_detail(str_contains($html,'Launch a Company Package'), 'Service name shou
 assert_detail(str_contains($html,'NGN 350,000.00'), 'Actual backend price should render.');
 assert_detail(str_contains($html,'2.50%'), 'Tax rate should remain transparent.');
 assert_detail(str_contains($html,'/portal/login'), 'Order CTA must use portal login.');
-assert_detail(!str_contains(strtolower($html),'banking'), 'Banking must not be advertised.');
+assert_detail(!str_contains(strtolower($html),'banking support'), 'Banking must not be advertised as an included service.');
 assert_detail(str_contains($html,'CAC documentation'), 'Configured inclusions should render.');
-assert_detail(substr_count($html,'<section') === 2, 'Detail page should have only an intro and content section.');
+assert_detail(substr_count($html,'<section') === 3, 'Detail page should contain intro, content and substantive buying guide.');\nassert_detail(str_contains($html,'Launch your company in Nigeria'), 'Company launch guide should be included.');
 assert_detail(!str_contains($html,'What happens next'), 'Remove redundant repeated process cards.');
 assert_detail(str_contains($html,'/contact'), 'Support route should work.');
 
