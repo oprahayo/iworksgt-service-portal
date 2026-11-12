@@ -3,9 +3,9 @@
 $cacStaffApplication = cac_find_for_job((int) $job['id'],(int) $job['client_id']);
 if (!$cacStaffApplication) { return; }
 $filing = $cacStaffApplication['data'] ?? [];
-$files = cac_list_files((int) $cacStaffApplication['id'],(int) $job['client_id']);
+$cacStaffFiles = cac_list_files((int) $cacStaffApplication['id'],(int) $job['client_id']);
 $filesByKey = [];
-foreach ($files as $file) { $filesByKey[(string) $file['field_key']]=$file; }
+foreach ($cacStaffFiles as $file) { $filesByKey[(string) $file['field_key']]=$file; }
 ?>
 <section class="card mb-3" aria-label="CAC filing information">
   <div class="card-body">
