@@ -1591,6 +1591,18 @@ try {
 
         case 'jobs':
             require_login();
+            // Registered CAC products always enter their complete, pre-payment
+            // application. Legacy cart must not bypass ownership/docs checks.
+            if (has_role(['client']) && !method_is('POST')
+                && (string) ($_GET['action'] ?? '') === 'new') {
+                $requested = (string) ($_GET['service'] ?? iworks_order_intent_peek());
+                if ($requested === 'business-name-registration-cac-nigeria') {
+                    redirect(url('cac_filing', ['type'=>'business']));
+                }
+                if ($requested === 'company-registration') {
+                    redirect(url('cac_filing', ['type'=>'company']));
+                }
+            }
             if ((current_user()['role'] ?? '') === 'client'
                 && !in_array((string) ($_GET['action'] ?? ''), ['new'], true)
                 && !method_is('POST')) {
@@ -1603,7 +1615,8 @@ try {
             // The legacy cart must not bypass its dedicated $/class flow.
             if (has_role(['client'])) {
                 $serviceOptions = array_values(array_filter($serviceOptions,
-                    static fn(array $service): bool => (string) ($service['slug'] ?? '') !== 'trademark'));
+                    static fn(array $service): bool => !in_array((string) ($service['slug'] ?? ''),
+                        ['trademark','business-name-registration-cac-nigeria','company-registration'], true)));
             }
             $preselectedOrder = null;
             if ($showCreateForm && has_role(['client'])) {
