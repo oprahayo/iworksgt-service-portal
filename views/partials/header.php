@@ -183,18 +183,25 @@ if ($user) {
   <?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <?php else: ?>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <?php endif; ?>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.0/build/css/intlTelInput.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
+  <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
+    <link rel="stylesheet" href="assets/css/auth-clean.css">
+  <?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
       --brand-primary-dark: <?= e(brand_primary_dark_color()) ?>;
       --brand-accent: <?= e(brand_accent_color()) ?>;
     }
-    body { font-family: 'Outfit', sans-serif; }
+    body { font-family: <?= !$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true) ? "'Inter'" : "'Outfit'" ?>, sans-serif; }
   </style>
 </head>
 <body class="<?= e($bodyClass) ?>">
