@@ -8433,12 +8433,21 @@ function start_gateway_checkout(int $invoiceId, int $clientId, int $methodId): s
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
             'client_reference_id' => $reference,
-            'customer_email' => (string) $client['email'],
             'line_items[0][price_data][currency]' => strtolower($currency),
             'line_items[0][price_data][product_data][name]' => $checkoutTitle,
             'line_items[0][price_data][unit_amount]' => (string) ((int) round($amount * 100)),
             'line_items[0][quantity]' => '1',
         ];
+        // A customer who explicitly saved a card can select it during
+        // Stripe-hosted checkout. Others retain the existing guest flow.
+        $vaultCustomerId = function_exists('stripe_vault_customer_id')
+            ? stripe_vault_customer_id($clientId) : '';
+        if ($vaultCustomerId !== '') {
+            $payload['customer'] = $vaultCustomerId;
+            $payload['saved_payment_method_options[payment_method_remove]'] = 'enabled';
+        } else {
+            $payload['customer_email'] = (string) $client['email'];
+        }
 
         $resp = gateway_form_post('https://api.stripe.com/v1/checkout/sessions', $payload, $secretKey);
         $checkoutUrl = (string) ($resp['url'] ?? '');

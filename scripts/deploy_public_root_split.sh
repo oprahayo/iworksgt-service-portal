@@ -40,13 +40,13 @@ if [[ "$MODE" == '--check' ]]; then
 fi
 
 FILES=(
-  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php
+  app/helpers.php app/auth.php app/bootstrap.php app/public_seo.php app/public_marketing.php app/order_intent.php app/trademark_applications.php app/stripe_card_vault.php app/domain.php
   index.php .htaccess views/settings.php views/login.php views/register.php
   views/public-services-refined.php views/public-service-detail.php views/public-home-clean.php views/jobs.php
-  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php
+  views/client-dashboard.php views/client-applications.php views/client-trademark.php views/client-billing.php views/client-card-vault.php
   views/partials/public-header.php views/partials/public-footer.php views/partials/header.php views/partials/client-header.php
   assets/css/services-list.css assets/css/auth-compact.css assets/css/public-mobile-audit.css assets/css/client-portal.css
-  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php
+  scripts/check_google_oauth.php scripts/audit_public_seo_live.sh scripts/migrate_trademark_applications.php scripts/migrate_stripe_card_vault.php
 )
 ROOT_FILES=(index.php .htaccess)
 WORK="$(mktemp -d)"
@@ -104,6 +104,9 @@ grep -Fq -- 'iworks_post_login_destination' "$WORK/portal/index.php" || fail 'Mi
 grep -Fq -- 'iw-search-guide' "$WORK/portal/views/public-service-detail.php" || fail 'Missing service landing page guidance'
 grep -Fq -- 'iworks_seo_breadcrumb_jsonld' "$WORK/portal/app/public_seo.php" || fail 'Missing SEO breadcrumb contract'
 grep -Fq -- 'function trademark_checkout' "$WORK/portal/app/trademark_applications.php" || fail 'Missing trademark application checkout'
+grep -Fq -- 'function stripe_vault_start_setup' "$WORK/portal/app/stripe_card_vault.php" || fail 'Missing secure provider-backed card vault'
+grep -Fq -- "case 'card_vault':" "$WORK/portal/index.php" || fail 'Card vault route is missing'
+grep -Fq -- 'stripe_vault_customer_id' "$WORK/portal/app/domain.php" || fail 'Missing Stripe saved-card checkout integration'
 grep -Fq -- 'New application' "$WORK/portal/views/client-dashboard.php" || fail 'Missing application dashboard'
 grep -Fq -- '185' "$WORK/portal/app/trademark_applications.php" || fail 'Missing price default'
 grep -Fq -- "portal.iworksgt.com/index.php" "$WORK/root/index.php" || fail 'Missing delegated public controller'
@@ -144,6 +147,7 @@ php -l "$PUBLIC_ROOT/index.php" >/dev/null
 # Provision the dedicated, isolated draft table before enabling the new route.
 # No existing jobs, payments or customer tables are altered by this migration.
 php "$PORTAL_ROOT/scripts/migrate_trademark_applications.php" || fail 'Trademark schema migration failed; deployment rolled back'
+php "$PORTAL_ROOT/scripts/migrate_stripe_card_vault.php" || fail 'Stripe vault mapping schema migration failed; deployment rolled back'
 STARTED=0
 printf '\nLOCAL INSTALL COMPLETED (backups: %s)\n' "$BACKUP_DIR"
 printf 'Important: cPanel domain forwarding or higher-level redirects may still send iworksgt.com to portal.\n'

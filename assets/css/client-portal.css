@@ -192,3 +192,33 @@ body.iw-client-page a{text-decoration:none}
 @media(prefers-reduced-motion:reduce){
  .iw-client-service,.iw-client-sidebar{transition:none!important}
 }
+
+/* Customer-owned cards; provider-hosted setup, no raw PAN inputs. */
+.iw-vault-layout{display:grid;grid-template-columns:minmax(0,770px) minmax(230px,290px);gap:22px;align-items:start}
+.iw-vault-layout .iw-tm-panel{margin-bottom:0}
+.iw-vault-cards{display:flex;flex-direction:column;gap:12px}
+.iw-vault-card{display:flex;align-items:center;gap:16px;border:1px solid #e8ebee;padding:15px 16px;border-radius:10px;background:#fff;min-width:0}
+.iw-vault-card-symbol{display:grid;place-items:center;background:#fff4ed;color:#ea7235;width:43px;height:43px;border-radius:9px;font-size:20px;flex:0 0 43px}
+.iw-vault-card-info{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.iw-vault-card-info strong{font-size:14px;overflow-wrap:anywhere;color:#202c35}
+.iw-vault-card-info small{font-size:12px;color:#7e8b93}
+.iw-vault-remove{display:inline-flex;align-items:center;gap:7px;padding:10px 9px;background:transparent;border:1px solid transparent;border-radius:6px;color:#aa5750;font-size:12px;cursor:pointer;min-height:42px}
+.iw-vault-remove:hover{background:#fff0ef;border-color:#f4dddb}
+.iw-vault-add{border-top:1px solid #ebedf0;margin-top:25px;padding-top:22px}
+.iw-vault-add h3{font-size:17px;font-weight:750;letter-spacing:-.025em}
+.iw-vault-add p{font-size:12px;color:#74818b;line-height:1.7}
+.iw-vault-consent{display:flex;align-items:flex-start;gap:12px;margin:16px 0 19px;cursor:pointer;font-size:12px;line-height:1.65;color:#4a5964}
+.iw-vault-consent input{accent-color:#f07538;width:17px;height:17px;margin-top:2px;flex:0 0 17px}
+.iw-vault-consent span{flex:1}
+.iw-vault-security{padding:22px;border:1px solid #f3e6df;background:#fffaf7;border-radius:10px}
+.iw-vault-security>i{font-size:24px;color:#e86a2c}
+.iw-vault-security h3{font-size:15px;font-weight:750;margin:14px 0 8px}
+.iw-vault-security p{font-size:12px;color:#6f7a83;line-height:1.7}
+.iw-vault-security a{font-size:12px;font-weight:700;color:#d8612a}
+.iw-client-page button:focus-visible,.iw-client-page a:focus-visible{outline:2px solid #e77539;outline-offset:3px}
+@media(max-width:950px){.iw-vault-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:590px){
+ .iw-vault-card{flex-wrap:wrap;gap:12px}
+ .iw-vault-card form{margin-left:auto}
+ .iw-vault-layout .iw-tm-panel{padding:18px 14px}
+}

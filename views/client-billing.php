@@ -4,8 +4,10 @@
 </div>
 <section class="iw-client-billing-notice">
   <i class="bi bi-shield-check" aria-hidden="true"></i>
-  <div><strong>Cards are processed by secure payment providers</strong>
-  <p>Choose a USD or NGN invoice to pay with the supported provider. iWorks never asks you to type your card number into this dashboard. Saved-card reuse depends on your payment provider; card storage inside iWorks is not enabled.</p></div>
+  <div><strong>Secure payments and saved cards</strong>
+  <p>Pay an invoice using the supported gateway for its currency. For USD payments through Stripe, you can choose to save a card securely with Stripe and use it again at checkout. We never store card numbers or CVVs in iWorks.</p>
+  <a href="<?= e(url('card_vault')) ?>" class="iw-client-button iw-client-button-soft" style="margin-top:12px">Manage saved cards <i class="bi bi-arrow-right"></i></a>
+  </div>
 </section>
 <div class="iw-client-section-top"><div><h2>Invoices</h2><p>New trademark invoices will appear here after review.</p></div></div>
 <div class="iw-client-application-list">
