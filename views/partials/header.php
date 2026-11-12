@@ -211,6 +211,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
   <link href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.0/build/css/intlTelInput.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/reviews.css">
+  <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
     <link rel="stylesheet" href="assets/css/auth-clean.css">
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
