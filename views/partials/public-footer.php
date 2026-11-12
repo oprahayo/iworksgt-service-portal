@@ -3,7 +3,14 @@ $footerData = is_array($publicFooterData ?? null) ? $publicFooterData : default_
 $footerCompany = trim((string) ($footerData['companyName'] ?? brand_name())) ?: brand_name();
 $footerSummary = trim((string) ($footerData['summary'] ?? business_support_summary()));
 $footerAddress = trim((string) ($footerData['address'] ?? ''));
+if (strcasecmp($footerAddress, 'Lagos, Nigeria') === 0) {
+    // Replace the obsolete default city; real custom addresses stay untouched.
+    $footerAddress = 'Awolowo Civic Centre, Fajuyi, Ado-Ekiti, Ekiti State, Nigeria';
+}
 $footerPhone = trim((string) ($footerData['phone'] ?? ''));
+if (preg_match('/^\\+?234\\s*806\\s*000\\s*0000$/', $footerPhone)) {
+    $footerPhone = ''; // Never publish a placeholder number as an active support line.
+}
 $footerEmail = trim((string) ($footerData['email'] ?? ''));
 $footerColumns = is_array($footerData['columns'] ?? null) ? $footerData['columns'] : [];
 $footerLogo = logo_path();
@@ -281,6 +288,24 @@ $socialIcons = [
       } else {
         initPublicHeaderInteractions();
       }
+    })();
+  </script>
+  <script>
+    (function () {
+      if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+      var targets = document.querySelectorAll('.iw-journey-card, .iw-about-bridge-inner, .iw-about-story-grid, .iw-expertise-grid > a, .launch-work-card');
+      if (!targets.length) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('iw-reveal-visible');
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.07 });
+      targets.forEach(function (element) {
+        element.classList.add('iw-reveal-pending');
+        observer.observe(element);
+      });
     })();
   </script>
 </body>

@@ -175,6 +175,29 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
     </div>
   </section>
 
+  <section class="iw-journeys" aria-labelledby="iw-journeys-heading">
+    <div class="container public-container">
+      <div class="iw-section-intro">
+        <div><span class="launch-small-label">MADE FOR THE WORK YOU DO</span><h2 id="iw-journeys-heading">From a great idea to a business that works.</h2></div>
+        <p>Start with the essentials. Add the support you need as your business grows, all through one clear service process.</p>
+      </div>
+      <div class="iw-journey-grid">
+        <a class="iw-journey-card" href="<?= e($registrationLink) ?>">
+          <span class="iw-journey-media"><img src="<?= e(public_absolute_url('assets/illustrations/register.svg')) ?>" alt="Digital company registration form illustration" loading="lazy" width="800" height="560"></span>
+          <span class="iw-journey-body"><span class="iw-journey-number">01 / GET STARTED</span><strong>Make it official.</strong><small>Business names, companies and other CAC registration services.</small><span class="iw-journey-arrow">Start registration <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></span>
+        </a>
+        <a class="iw-journey-card" href="<?= e(public_url('services', ['category' => 'growth'])) ?>">
+          <span class="iw-journey-media"><img src="<?= e(public_absolute_url('assets/illustrations/digital.svg')) ?>" alt="Responsive website and brand design illustration" loading="lazy" width="800" height="560"></span>
+          <span class="iw-journey-body"><span class="iw-journey-number">02 / BUILD PRESENCE</span><strong>Look the part online.</strong><small>Websites, branding, domains and digital marketing services.</small><span class="iw-journey-arrow">Explore digital services <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></span>
+        </a>
+        <a class="iw-journey-card" href="<?= e(public_url('track')) ?>">
+          <span class="iw-journey-media"><img src="<?= e(public_absolute_url('assets/illustrations/tracking.svg')) ?>" alt="iWorks service status and document delivery timeline illustration" loading="lazy" width="800" height="560"></span>
+          <span class="iw-journey-body"><span class="iw-journey-number">03 / STAY INFORMED</span><strong>Know what happens next.</strong><small>Track requests, conversations, documents and delivery in your portal.</small><span class="iw-journey-arrow">Track your order <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <?php if ($caseItems !== []): ?>
   <section class="launch-section launch-work" aria-labelledby="launch-work-title">
     <div class="container public-container">
@@ -198,11 +221,27 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
 
   <section class="launch-section launch-how" id="how-it-works" aria-labelledby="launch-how-title">
     <div class="container public-container">
-      <div class="launch-heading launch-heading-compact"><div><span class="launch-small-label">HOW IT WORKS</span><h2 id="launch-how-title"><?= e(trim((string) ($process['title'] ?? '')) ?: 'Simple from start to finish.') ?></h2></div></div>
+      <div class="launch-heading launch-heading-compact"><div><span class="launch-small-label">HOW IT WORKS</span><h2 id="launch-how-title"><?= e(stripos(trim((string) ($process['title'] ?? '')), 'operating in days') !== false ? 'From request to delivery, with every step visible.' : (trim((string) ($process['title'] ?? '')) ?: 'Simple from start to finish.')) ?></h2></div></div>
       <div class="launch-step-grid">
         <?php foreach ($steps as $i => $step): ?>
           <article class="launch-step"><span class="launch-step-number"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span><h3><?= e((string) ($step['title'] ?? '')) ?></h3><p><?= e((string) ($step['text'] ?? '')) ?></p></article>
         <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <section class="iw-about-bridge">
+    <div class="container public-container iw-about-bridge-inner">
+      <div class="iw-about-bridge-copy">
+        <span class="launch-small-label">THE iWORKS APPROACH</span>
+        <h2>Real people. Clear processes. One place to follow through.</h2>
+        <p>From business registration to digital execution, iWorks combines practical assistance with a portal where you can submit requirements, pay, ask questions and follow progress.</p>
+        <div class="iw-about-mini-points"><span><i class="bi bi-check2-circle"></i> Choose the service you need</span><span><i class="bi bi-check2-circle"></i> Keep all documents in one place</span><span><i class="bi bi-check2-circle"></i> Track progress through delivery</span></div>
+        <a href="<?= e(public_url('about')) ?>" class="launch-btn launch-btn-text">Get to know iWorks <i class="bi bi-arrow-up-right"></i></a>
+      </div>
+      <div class="iw-about-bridge-image">
+        <img src="<?= e(public_absolute_url('assets/illustrations/tracking.svg')) ?>" alt="Example of the iWorks online job-tracking process" loading="lazy" width="800" height="560">
+        <span class="iw-about-picture-note"><i class="bi bi-shield-check"></i> Your service progress stays visible</span>
       </div>
     </div>
   </section>

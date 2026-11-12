@@ -17,6 +17,11 @@ if ($publicPageSlug === 'services') {
     return;
 }
 
+if ($publicPageSlug === 'about') {
+    require __DIR__ . '/public-about-refined.php';
+    return;
+}
+
 if (!function_exists('public_reorder_home_layout')) {
     function public_reorder_home_layout(array $layout): array
     {
@@ -479,18 +484,30 @@ if (!function_exists('render_public_block')) {
                 </div>
               </section>
             <?php else: ?>
+              <?php
+              $labels = [
+                  'contact' => 'Contact',
+                  'blog' => 'Insights',
+                  'track' => 'Track your order',
+                  'faq' => 'FAQs',
+                  'pricing' => 'Pricing',
+                  'management' => 'Management',
+                  'case-studies' => 'Our work',
+                  'terms' => 'Terms',
+                  'privacy' => 'Privacy',
+              ];
+              $pageLabel = $labels[$publicPageSlug] ?? ucwords(str_replace('-', ' ', $publicPageSlug));
+              ?>
               <section class="public-page-crumb-hero">
                 <div class="container public-container">
                   <div class="public-page-crumb-shell">
-                    <?php if ($kicker !== ''): ?><span class="public-page-crumb-kicker"><?= e($kicker) ?></span><?php endif; ?>
-                    <h1 class="public-page-crumb-title"><?= e($headline !== '' ? $headline : ucfirst($publicPageSlug)) ?></h1>
+                    <nav class="iw-breadcrumb" aria-label="Breadcrumb">
+                      <a href="<?= e(public_url('home')) ?>">Home</a>
+                      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                      <span aria-current="page"><?= e($pageLabel) ?></span>
+                    </nav>
+                    <h1 class="public-page-crumb-title"><?= e($headline !== '' ? $headline : $pageLabel) ?></h1>
                     <?php if ($subheadline !== ''): ?><p class="public-page-crumb-subtitle"><?= e($subheadline) ?></p><?php endif; ?>
-                    <?php if (!empty($primary['label']) || !empty($secondary['label'])): ?>
-                      <div class="public-page-crumb-actions">
-                        <?php if (!empty($primary['label'])): ?><a class="btn btn-primary" href="<?= e((string) ($primary['href'] ?? '#')) ?>"><?= e((string) $primary['label']) ?></a><?php endif; ?>
-                        <?php if (!empty($secondary['label'])): ?><a class="btn btn-outline-light" href="<?= e((string) ($secondary['href'] ?? '#')) ?>"><?= e((string) $secondary['label']) ?></a><?php endif; ?>
-                      </div>
-                    <?php endif; ?>
                   </div>
                 </div>
               </section>
@@ -1347,10 +1364,9 @@ if (!function_exists('render_public_block')) {
             $limit = $publicPageSlug === 'blog' ? 12 : 3;
             $items = public_blog_highlight_items(is_array($data['items'] ?? null) ? $data['items'] : [], $limit);
             $fallbackImages = [
-                'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80',
-                'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80',
-                'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80',
-                'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80',
+                public_absolute_url('assets/illustrations/register.svg'),
+                public_absolute_url('assets/illustrations/digital.svg'),
+                public_absolute_url('assets/illustrations/tracking.svg'),
             ];
             ?>
             <section class="public-section marketing-blog-section" id="insights">
@@ -1380,7 +1396,14 @@ if (!function_exists('render_public_block')) {
                         $imageUrl = trim((string) ($image['url'] ?? ''));
                     }
                     if ($imageUrl === '') {
-                        $imageUrl = $fallbackImages[$index % count($fallbackImages)];
+                        $topic = strtolower($tag . ' ' . $cardTitle);
+                        if (str_contains($topic, 'registration') || str_contains($topic, 'cac') || str_contains($topic, 'incorporat')) {
+                            $imageUrl = $fallbackImages[0];
+                        } elseif (str_contains($topic, 'web') || str_contains($topic, 'brand') || str_contains($topic, 'marketing') || str_contains($topic, 'trademark')) {
+                            $imageUrl = $fallbackImages[1];
+                        } else {
+                            $imageUrl = $fallbackImages[2];
+                        }
                     }
                     ?>
                     <article class="blog-card marketing-blog-card">
@@ -1458,6 +1481,12 @@ if (!function_exists('render_public_block')) {
             $email = trim((string) ($data['email'] ?? ''));
             $phone = trim((string) ($data['phone'] ?? ''));
             $whatsapp = trim((string) ($data['whatsapp'] ?? ''));
+            if (preg_match('/^\\+?234\\s*806\\s*000\\s*0000$/', $phone)) {
+                $phone = '';
+            }
+            if (preg_match('~(?:wa\\.me|api\\.whatsapp\\.com)/(?:2348060000000)~i', $whatsapp)) {
+                $whatsapp = '';
+            }
             ?>
             <section class="public-section muted">
               <div class="container public-container">
