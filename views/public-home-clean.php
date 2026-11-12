@@ -252,7 +252,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       <div class="container public-container iw-clean-faq-inner">
         <div>
           <h2 id="iw-clean-faq-title">Common questions</h2>
-          <p>Need something else? <button type="button" class="iw-home-help-link" data-iw-help-open>Talk to our team <i class="bi bi-chat-dots" aria-hidden="true"></i></button></p>
+          <p>Need something else? <a href="mailto:support@iworksgt.com" class="iw-home-help-link" data-iw-help-open>Talk to our team <i class="bi bi-chat-dots" aria-hidden="true"></i></a></p>
         </div>
         <div class="iw-clean-faq-items">
           <?php foreach ($faqs as $item): ?>
