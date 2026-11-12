@@ -39,6 +39,7 @@ jobs:
           bash -n scripts/deploy_verified_reviews.sh
           bash -n scripts/deploy_public_layout_final.sh
           bash -n scripts/deploy_google_grid_refresh.sh
+          bash -n scripts/deploy_mobile_seo_grid.sh
 
       - name: Run smoke tests
         run: |
