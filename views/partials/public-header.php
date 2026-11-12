@@ -78,6 +78,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-polish.css')) ?>">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/reviews.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>"><?php endif; ?>
   <style>
