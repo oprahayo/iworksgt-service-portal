@@ -10,16 +10,28 @@ if (!function_exists('iworks_catalog_service_icon')) {
     {
         $search = strtolower((string) ($service['name'] ?? '') . ' ' . (string) ($service['category'] ?? ''));
         foreach ([
+            'incorporated trustee' => 'bi-people-fill',
+            'limited by guarantee' => 'bi-shield-check',
+            'business name' => 'bi-file-earmark-check',
+            'company registration' => 'bi-buildings',
+            'us llc' => 'bi-globe-americas',
+            'u.s. llc' => 'bi-globe-americas',
             'trademark' => 'bi-patch-check',
+            'export licence' => 'bi-box-arrow-up-right',
+            'export license' => 'bi-box-arrow-up-right',
+            'nafdac' => 'bi-clipboard-check',
             'registration' => 'bi-building',
             'company' => 'bi-buildings',
             'website' => 'bi-window-stack',
-            'hosting' => 'bi-globe',
+            'hosting' => 'bi-hdd-network',
+            'email' => 'bi-envelope-at',
+            'smtp' => 'bi-envelope-at',
             'domain' => 'bi-globe',
             'design' => 'bi-palette',
             'marketing' => 'bi-graph-up-arrow',
             'seo' => 'bi-graph-up-arrow',
             'training' => 'bi-mortarboard',
+            'vehicle' => 'bi-truck',
             'tracking' => 'bi-geo-alt',
         ] as $term => $icon) {
             if (str_contains($search, $term)) { return $icon; }
@@ -111,14 +123,14 @@ if ($description === '' || $description === 'Browse what you need.') {
       <div class="iw-service-index-options">
         <span id="iwServiceCount" aria-live="polite"><?= count($filteredServices) ?> <?= count($filteredServices) === 1 ? 'service' : 'services' ?></span>
         <div class="iw-service-view-toggle" role="group" aria-label="Service display">
-          <button type="button" data-iw-service-view="list" aria-pressed="true" title="List view"><i class="bi bi-list-ul" aria-hidden="true"></i><span>List</span></button>
-          <button type="button" data-iw-service-view="grid" aria-pressed="false" title="Grid view"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><span>Grid</span></button>
+          <button type="button" data-iw-service-view="list" aria-pressed="false" title="List view"><i class="bi bi-list-ul" aria-hidden="true"></i><span>List</span></button>
+          <button type="button" data-iw-service-view="grid" aria-pressed="true" title="Grid view"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><span>Grid</span></button>
         </div>
       </div>
     </div>
 
-    <div class="iw-service-index-list" id="iwServiceList" data-layout="list">
-      <?php foreach ($filteredServices as $service): ?>
+    <div class="iw-service-index-list" id="iwServiceList" data-layout="grid">
+      <?php foreach ($filteredServices as $serviceIndex => $service): ?>
         <?php
         $name = trim((string) ($service['name'] ?? 'Service'));
         $category = trim((string) ($service['category'] ?? 'general')) ?: 'general';
@@ -135,7 +147,7 @@ if ($description === '' || $description === 'Browse what you need.') {
         $href = public_url('service', ['slug' => (string) ($service['slug'] ?? '')]);
         $searchText = strtolower($name . ' ' . $short . ' ' . $categoryLabel($category));
         ?>
-        <a class="iw-service-index-row" href="<?= e($href) ?>" data-service-row data-search="<?= e($searchText) ?>">
+        <a class="iw-service-index-row" href="<?= e($href) ?>" data-service-row data-tone="<?= (int) ($serviceIndex % 4) ?>" data-search="<?= e($searchText) ?>">
           <span class="iw-service-index-icon"><i class="bi <?= e(iworks_catalog_service_icon($service)) ?>" aria-hidden="true"></i></span>
           <span class="iw-service-index-main">
             <span class="iw-service-index-category"><?= e($categoryLabel($category)) ?></span>
@@ -193,8 +205,8 @@ if ($description === '' || $description === 'Browse what you need.') {
   buttons.forEach(function (button) {
     button.addEventListener('click', function () { selectView(button.getAttribute('data-iw-service-view')); });
   });
-  var savedView = 'list';
-  try { savedView = localStorage.getItem('iworks-services-view') || 'list'; } catch (error) {}
+  var savedView = 'grid';
+  try { savedView = localStorage.getItem('iworks-services-view') || 'grid'; } catch (error) {}
   selectView(savedView);
   var rows = Array.prototype.slice.call(list.querySelectorAll('[data-service-row]'));
   function update() {
