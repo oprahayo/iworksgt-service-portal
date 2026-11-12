@@ -141,6 +141,17 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112launch1">
+  <script>
+  (function(){
+    var theme='system';
+    try {theme=localStorage.getItem('iworks_theme')||'system';}catch(e){}
+    if(!['system','light','dark'].includes(theme))theme='system';
+    var dark=theme==='dark'||(theme==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.iwTheme=dark?'dark':'light';
+    document.documentElement.dataset.iwThemeMode=theme;
+  })();
+  </script>
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/editorial-brand.css')) ?>?v=20261112a">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -183,7 +194,8 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">
-            <a class="public-signin-link iw-header-account-icon" href="<?= e(portal_url('login')) ?>" data-iw-auth="login" title="Sign in to your account" aria-label="Sign in to your iWorks account"><i class="bi bi-person-circle" aria-hidden="true"></i><span class="visually-hidden"><?= e($signInLabel) ?></span></a>
+            <button class="iw-public-theme-switch" type="button" data-iw-theme-toggle aria-label="Change color theme" title="Theme: system"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+            <a class="public-signin-link iw-public-auth-status" href="<?= e(portal_url('login')) ?>" data-iw-auth="login" data-iw-auth-status title="Sign in" aria-label="Sign in to your iWorks account"><span><?= e($signInLabel?:'Sign In') ?></span></a>
             <a class="btn btn-primary btn-sm public-header-main-cta" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           </div>
         </div>
