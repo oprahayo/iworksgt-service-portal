@@ -41,6 +41,7 @@ jobs:
           bash -n scripts/deploy_google_grid_refresh.sh
           bash -n scripts/deploy_mobile_seo_grid.sh
           bash -n scripts/deploy_google_seo_mobile_complete.sh
+          bash -n scripts/deploy_public_root_split.sh
 
       - name: Run smoke tests
         run: |
@@ -59,6 +60,7 @@ jobs:
           php tests/public_layout_finish_test.php
           php tests/google_oauth_contract_test.php
           php tests/public_seo_mobile_test.php
+          php tests/domain_split_contract_test.php
 
       - name: Validate public interaction JavaScript
         run: node --check assets/js/public-ux.js
