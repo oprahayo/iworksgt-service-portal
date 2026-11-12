@@ -3,6 +3,8 @@ $person = is_array($person ?? null) ? $person : [];
 $fields = [
     'full_name'=>['Legal full name','text','As shown on government ID',true],
     'email'=>['Email address','email','',true],
+    'nin'=>['National Identification Number (NIN)','text','For Nigerian applicants',false],
+    'former_name'=>['Former name (if any)','text','Optional',false],
     'phone'=>['Phone number','tel','',true],
     'date_of_birth'=>['Date of birth','date','',true],
     'nationality'=>['Nationality','text','e.g. Nigerian',true],
@@ -63,6 +65,18 @@ $personIndex=(string) $i;
         <label for="cac_<?= e($personIndex) ?>_shares">Shares allocated (where applicable)</label>
         <input id="cac_<?= e($personIndex) ?>_shares" name="people[<?= e($personIndex) ?>][shares]"
           type="number" min="0" step="1" value="<?= e((string) ($person['shares'] ?? '')) ?>">
+      </div>
+      <div class="iw-tm-field iw-tm-field-full">
+        <label class="iw-cac-check" for="cac_<?= e($personIndex) ?>_psc">
+          <input id="cac_<?= e($personIndex) ?>_psc" type="checkbox" name="people[<?= e($personIndex) ?>][psc_other_control]" value="1"
+            <?= !empty($person['psc_other_control'])?'checked':'' ?>>
+          This person has other significant control (e.g. 5% voting rights, director appointment powers or indirect control).</label>
+        <small>At least 5% direct share ownership is identified from their shares automatically. Disclose other controlling rights here.</small>
+      </div>
+      <div class="iw-tm-field iw-tm-field-full">
+        <label for="cac_<?= e($personIndex) ?>_psc_description">Additional control description (if checked)</label>
+        <textarea id="cac_<?= e($personIndex) ?>_psc_description" name="people[<?= e($personIndex) ?>][psc_description]"
+          rows="2" placeholder="Nature of voting rights, indirect ownership or appointment powers"><?= e((string) ($person['psc_description'] ?? '')) ?></textarea>
       </div>
     <?php endif; ?>
   </div>
