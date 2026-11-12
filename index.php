@@ -2559,6 +2559,9 @@ try {
                     $action = (string) ($_POST['form_action'] ?? '');
 
                     if ($action === 'create_ticket' && $user['role'] === 'client') {
+                        $linkedJobIds=support_client_job_ids(
+                            (int) $user['id'],$_POST['job_ids'] ?? []
+                        );
                         $ticketId = create_support_ticket(
                             (int) $user['id'],
                             (string) ($_POST['subject'] ?? ''),
@@ -2567,6 +2570,7 @@ try {
                             (string) ($_POST['category'] ?? 'general'),
                             $_FILES['attachment'] ?? null
                         );
+                        support_link_ticket_jobs($ticketId,(int) $user['id'],$linkedJobIds);
                         flash('success', 'Support ticket created successfully.');
                         redirect(url('support', ['ticket_id' => $ticketId]));
                     }
@@ -2601,6 +2605,10 @@ try {
             }
 
             $tickets = list_support_tickets_for_user($user, $ticketFilters);
+            $supportOrderOptions=($user['role'] ?? '')==='client'
+                ? (list_accessible_jobs($user,['page'=>1,'per_page'=>100,'sort'=>'newest'])['items'] ?? [])
+                : [];
+            $ticketLinkedOrders=[];
             $activeTicket = null;
             $ticketMessages = [];
             $requestedTicketId = (int) ($_GET['ticket_id'] ?? 0);
@@ -2609,6 +2617,7 @@ try {
                 if ($ticket && can_access_support_ticket($user, $ticket)) {
                     $activeTicket = $ticket;
                     $ticketMessages = list_support_ticket_messages($requestedTicketId);
+                    $ticketLinkedOrders=support_linked_jobs($requestedTicketId,$user);
                 }
             }
 
