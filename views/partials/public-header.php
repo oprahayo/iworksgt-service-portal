@@ -113,9 +113,9 @@ $isLaunchHome = $currentPublicSlug === 'home';
         <div class="collapse navbar-collapse" id="publicNav">
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
-            <li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e(public_url('about')) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>>About</a></li>
+            <?php if ($aboutLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>><?= e($aboutLabel) ?></a></li><?php endif; ?>
             <li class="nav-item"><a class="nav-link" href="<?= e(public_url('track')) ?>">Track order</a></li>
-            <li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e(public_url('contact')) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>>Contact</a></li>
+            <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">
             <a class="public-signin-link" href="<?= e(portal_url('login')) ?>"><?= e($signInLabel) ?></a>
