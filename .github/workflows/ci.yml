@@ -67,6 +67,9 @@ jobs:
           php tests/trademark_pricing_test.php
           php tests/stripe_card_vault_contract_test.php
           php tests/client_workspace_unification_test.php
+          php tests/cac_launch_pricing_contract_test.php
 
       - name: Validate public interaction JavaScript
-        run: node --check assets/js/public-ux.js
+        run: |
+          node --check assets/js/public-ux.js
+          node --check assets/js/cac-application.js
