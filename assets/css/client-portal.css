@@ -347,3 +347,27 @@ body.iw-client-page a{text-decoration:none}
  .iw-client-billing-notice>div{flex-direction:column;align-items:flex-start;gap:6px}
  .iw-client-billing-notice .iw-client-button{margin:3px 0 0!important}
 }
+
+/* Launch polish: clearly distinguish catalogue products and payment tools. */
+.iw-client-services.iw-client-catalog{gap:16px}
+.iw-client-services.iw-client-catalog .iw-client-catalog-item{background:linear-gradient(145deg,var(--svc-bg) 0%,#fff 65%);border-color:color-mix(in srgb,var(--svc-accent) 16%,#dfe5e8);box-shadow:0 4px 14px rgba(24,39,52,.035)}
+.iw-client-services.iw-client-catalog .iw-client-catalog-item .iw-client-service-icon{background:#fff;border:1px solid color-mix(in srgb,var(--svc-accent) 21%,transparent)}
+.iw-client-services.iw-client-catalog .iw-client-catalog-item:hover{border-color:var(--svc-accent);box-shadow:0 10px 25px rgba(30,49,63,.08)}
+.iw-client-services.iw-client-catalog .iw-client-catalog-item .iw-client-service-category{color:var(--svc-accent)}
+.iw-client-services.iw-client-catalog .iw-client-catalog-item .iw-client-service-action{color:var(--svc-accent)}
+.iw-client-topbar .iw-client-top-home,.iw-client-topbar .iw-client-topbar-right a{font-size:14px;font-weight:700;display:inline-flex;gap:9px;align-items:center;min-height:44px;padding:8px 11px;border-radius:8px;color:#34444f}
+.iw-client-topbar .iw-client-topbar-right a:hover,.iw-client-topbar .iw-client-top-home:hover{background:#fff3eb;color:#c45620}
+.iw-client-topbar .iw-client-topbar-right a i,.iw-client-topbar .iw-client-top-home i{font-size:18px}
+.iw-billing-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.78fr);gap:20px;align-items:start}
+.iw-billing-invoice-column{min-width:0}
+.iw-billing-methods .iw-tm-panel{margin:0;padding:22px}
+.iw-billing-methods .iw-client-detail-panel-title h2 i{color:#ec783a;margin-right:7px}
+.iw-billing-card{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #f0f1f2}
+.iw-billing-card>i{color:#f27b41;font-size:21px}
+.iw-billing-card strong,.iw-billing-card small{display:block}
+.iw-billing-card strong{font-size:12px;color:#34444d}
+.iw-billing-card small{font-size:11px;color:#83909a;margin-top:3px}
+.iw-billing-manage{width:100%;margin-top:16px}
+.iw-client-page .iw-client-delete{min-height:42px;border-radius:7px}
+@media(max-width:1024px){.iw-billing-layout{grid-template-columns:minmax(0,1fr)}.iw-billing-methods{grid-row:1}}
+@media(max-width:620px){.iw-client-topbar .iw-client-top-home{font-size:12px}.iw-client-topbar .iw-client-topbar-right a{padding:8px}.iw-client-topbar .iw-client-topbar-right a span{display:none}}
