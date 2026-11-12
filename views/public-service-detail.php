@@ -1,154 +1,102 @@
 <?php
+/**
+ * Clean public service details. Uses the existing published service record,
+ * sanitized description, currency, tax and portal login/order entry.
+ */
 require_once __DIR__ . '/../app/public-photo-config.php';
 if (!function_exists('public_service_bullets')) {
     function public_service_bullets(array $service): array
     {
-        $bullets = array_values(array_filter(array_map('trim', is_array($service['featured_bullets'] ?? null) ? $service['featured_bullets'] : [])));
-        if ($bullets !== []) {
-            return $bullets;
-        }
-
-        return [
-            'Structured service scope and requirements',
-            'Remote document submission flow',
-            'Portal-based updates and delivery',
-        ];
+        return array_values(array_filter(array_map('trim',
+            is_array($service['featured_bullets'] ?? null) ? $service['featured_bullets'] : []
+        )));
     }
 }
-
-$service = $service ?? [];
-$currency = (string) ($service['currency'] ?? default_currency());
+$service = is_array($service ?? null) ? $service : [];
 $serviceName = trim((string) ($service['name'] ?? 'Service'));
-$rawDescription = (string) ($service['description'] ?? '');
+$categoryName = ucwords(str_replace(['-', '_'], ' ', (string) ($service['category'] ?? 'general')));
+$description = (string) ($service['description'] ?? '');
 $shortDescription = trim((string) ($service['short_description'] ?? ''));
-// Legacy CMS copy advertised a banking service iWorks does not provide.
-// This keeps the public statement accurate until the admin updates the source record.
 if (strcasecmp($serviceName, 'Launch a Company Package') === 0) {
-    $rawDescription = str_ireplace('banking, ', '', $rawDescription);
-    $rawDescription = str_ireplace(', banking', '', $rawDescription);
-    $shortDescription = str_ireplace('banking, ', '', $shortDescription);
-    $shortDescription = str_ireplace(', banking', '', $shortDescription);
+    $description = str_ireplace(['banking, ', ', banking', 'bank account opening', 'banking'], '', $description);
+    $shortDescription = str_ireplace(['banking, ', ', banking', 'bank account opening', 'banking'], '', $shortDescription);
 }
-$safeHtml = sanitize_limited_html($rawDescription);
-$categoryLabel = ucwords(str_replace(['-', '_'], ' ', (string) ($service['category'] ?? 'general')));
+$safeDescription = sanitize_limited_html($description);
 $bullets = public_service_bullets($service);
-$priceLabel = money((float) ($service['price'] ?? 0), $currency);
-$taxPercent = (float) ($service['tax_percent'] ?? 0);
-$featuredImage = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
-$featuredImageUrl = trim((string) ($featuredImage['url'] ?? ''));
-$categoryText = strtolower((string) ($service['category'] ?? '') . ' ' . $serviceName);
-$stockVisual = 'consultation';
-if (str_contains($categoryText, 'registration') || str_contains($categoryText, 'company') || str_contains($categoryText, 'cac')) {
-    $stockVisual = 'registration';
-} elseif (str_contains($categoryText, 'trademark') || str_contains($categoryText, 'compliance')) {
-    $stockVisual = 'strategy';
-} elseif (str_contains($categoryText, 'growth') || str_contains($categoryText, 'web') || str_contains($categoryText, 'domain') || str_contains($categoryText, 'hosting') || str_contains($categoryText, 'digital')) {
-    $stockVisual = 'digital';
-} elseif (str_contains($categoryText, 'training')) {
-    $stockVisual = 'meeting';
-} elseif (str_contains($categoryText, 'track')) {
-    $stockVisual = 'tracking';
+$price = (float) ($service['price'] ?? 0);
+$priceText = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request a quote';
+$tax = (float) ($service['tax_percent'] ?? 0);
+$featured = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
+$imageUrl = trim((string) ($featured['url'] ?? ''));
+if ($imageUrl === '') {
+    $name = strtolower($serviceName . ' ' . (string) ($service['category'] ?? ''));
+    $topic = 'consultation';
+    if (str_contains($name, 'company') || str_contains($name, 'registration') || str_contains($name, 'cac')) { $topic = 'registration'; }
+    elseif (str_contains($name, 'trademark') || str_contains($name, 'compliance')) { $topic = 'strategy'; }
+    elseif (str_contains($name, 'web') || str_contains($name, 'hosting') || str_contains($name, 'domain') || str_contains($name, 'digital') || str_contains($name, 'graphic')) { $topic = 'digital'; }
+    $imageUrl = iworks_stock_photo_url($topic, 960);
 }
-$fallback = '<h3>What you get</h3><p>Structured service delivery with clear requirements, invoice flow, and tracked updates inside the portal.</p><h4>Requirements</h4><p>After checkout, complete the intake form and upload the required documents for processing.</p><h4>Processing time</h4><p>Processing timelines depend on service scope and regulatory workload.</p>';
-$renderedHtml = $safeHtml !== '' ? $safeHtml : $fallback;
 ?>
-<main class="public-main service-detail-page">
-  <section class="public-section public-section-tight">
+<main class="public-main iw-detail" id="main-content">
+  <section class="iw-detail-intro">
     <div class="container public-container">
-      <div class="service-detail-page-shell">
-        <div class="service-detail-hero">
-          <div class="service-detail-overview">
-            <a class="service-detail-back" href="<?= e(public_url('services')) ?>">
-              <i class="bi bi-arrow-left"></i>
-              <span>Back to services</span>
-            </a>
-            <div class="service-detail-kicker-row">
-              <span class="hero-chip"><?= e($categoryLabel) ?></span>
-              <span class="service-detail-status-chip"><?= (int) ($service['is_public'] ?? 1) === 1 ? 'Available now' : 'Private service' ?></span>
-            </div>
-            <h1><?= e($serviceName) ?></h1>
-            <?php if ($shortDescription !== ''): ?>
-              <p class="service-detail-subtitle"><?= e($shortDescription) ?></p>
-            <?php endif; ?>
-            <div class="service-detail-meta-row">
-              <div class="service-detail-price">
-                <small>Starting from</small>
-                <strong><?= e($priceLabel) ?></strong>
-              </div>
-              <div class="service-detail-meta-pill">
-                <span class="service-detail-meta-label">Tax</span>
-                <span class="service-detail-meta-value"><?= e(number_format($taxPercent, 2)) ?>%</span>
-              </div>
-              <div class="service-detail-meta-pill">
-                <span class="service-detail-meta-label">Delivery</span>
-                <span class="service-detail-meta-value">Tracked in portal</span>
-              </div>
-            </div>
-            <div class="service-detail-actions">
-              <a class="btn btn-primary" href="<?= e(portal_url('login')) ?>">Order this service</a>
-              <a class="btn btn-outline-primary" href="<?= e(public_url('track')) ?>">Track order</a>
-            </div>
-            <ul class="service-detail-inline-bullets">
-              <?php foreach (array_slice($bullets, 0, 3) as $bullet): ?>
-                <li><i class="bi bi-check-circle-fill"></i><span><?= e($bullet) ?></span></li>
+      <nav class="iw-breadcrumb" aria-label="Breadcrumb">
+        <a href="<?= e(public_url('home')) ?>">Home</a>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        <a href="<?= e(public_url('services')) ?>">Services</a>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        <span aria-current="page"><?= e($serviceName) ?></span>
+      </nav>
+      <div class="iw-detail-hero">
+        <div class="iw-detail-copy">
+          <span class="iw-detail-category"><?= e($categoryName) ?></span>
+          <h1><?= e($serviceName) ?></h1>
+          <?php if ($shortDescription !== ''): ?><p class="iw-detail-lead"><?= e($shortDescription) ?></p><?php endif; ?>
+          <div class="iw-detail-price">
+            <span><?= $price > 0 ? 'Starting from' : 'Pricing' ?></span>
+            <strong><?= e($priceText) ?></strong>
+            <?php if ($tax > 0): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
+          </div>
+          <div class="iw-detail-actions">
+            <a class="iw-detail-primary" href="<?= e(portal_url('login')) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <a class="iw-detail-secondary" href="<?= e(public_url('contact')) ?>">Ask a question</a>
+          </div>
+          <p class="iw-detail-note">Submit requirements and follow updates through your iWorks account.</p>
+        </div>
+        <div class="iw-detail-photo"><img src="<?= e($imageUrl) ?>" alt="" width="560" height="430" decoding="async" fetchpriority="high"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="iw-detail-body">
+    <div class="container public-container iw-detail-columns">
+      <article class="iw-detail-description">
+        <h2>About this service</h2>
+        <div class="rich-text">
+          <?php if ($safeDescription !== ''): ?>
+            <?= $safeDescription ?>
+          <?php else: ?>
+            <p>Review the service scope and complete the required information during checkout. Processing times depend on the selected service and any external regulatory approvals.</p>
+          <?php endif; ?>
+        </div>
+      </article>
+      <aside class="iw-detail-aside">
+        <?php if ($bullets !== []): ?>
+          <div class="iw-detail-includes">
+            <h2>What's included</h2>
+            <ul>
+              <?php foreach (array_slice($bullets, 0, 6) as $bullet): ?>
+                <li><i class="bi bi-check2" aria-hidden="true"></i><?= e($bullet) ?></li>
               <?php endforeach; ?>
             </ul>
           </div>
-
-          <aside class="service-detail-hero-card">
-            <div class="service-detail-hero-media">
-              <?php if ($featuredImageUrl !== ''): ?>
-                <img src="<?= e($featuredImageUrl) ?>" alt="<?= e($serviceName) ?>" loading="lazy">
-              <?php else: ?>
-                <img src="<?= e(iworks_stock_photo_url($stockVisual, 1000)) ?>" alt="" loading="lazy" width="800" height="560" decoding="async">
-              <?php endif; ?>
-            </div>
-            <div class="service-detail-hero-card-body">
-              <span class="service-detail-card-label">What happens next</span>
-              <ol class="service-detail-step-list">
-                <li>Open the service and continue to portal checkout.</li>
-                <li>Make payment and complete any required intake form.</li>
-                <li>Track updates, comments, files, and final delivery online.</li>
-              </ol>
-            </div>
-          </aside>
+        <?php endif; ?>
+        <div class="iw-detail-help">
+          <h2>Need help?</h2>
+          <p>We can help you choose the right service before ordering.</p>
+          <a href="<?= e(public_url('contact')) ?>">Contact iWorks <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
         </div>
-
-        <div class="service-detail-content-grid">
-          <article class="service-detail-article-card">
-            <div class="service-detail-content rich-text">
-              <?= $renderedHtml ?>
-            </div>
-          </article>
-
-          <aside class="service-detail-sidebar">
-            <div class="service-detail-card">
-              <h3>Service highlights</h3>
-              <ul class="marketing-bullets service-detail-bullets">
-                <?php foreach ($bullets as $bullet): ?>
-                  <li><?= e($bullet) ?></li>
-                <?php endforeach; ?>
-              </ul>
-            </div>
-
-            <div class="service-detail-card">
-              <h3>How delivery works</h3>
-              <ul class="marketing-bullets service-detail-bullets">
-                <li>Choose the service and continue to portal checkout.</li>
-                <li>Submit requirements, files, and intake details remotely.</li>
-                <li>Receive updates from admin or assigned agents as work progresses.</li>
-                <li>Get final delivery in your dashboard with comments and files.</li>
-              </ul>
-            </div>
-
-            <div class="service-detail-card service-detail-support-card">
-              <h3>Need help before ordering?</h3>
-              <p>Use the contact page to speak with iWorks support if you need help choosing the right service.</p>
-              <a class="btn btn-outline-primary btn-sm" href="<?= e(public_url('contact')) ?>">Talk to support</a>
-            </div>
-          </aside>
-        </div>
-      </div>
+      </aside>
     </div>
   </section>
 </main>
