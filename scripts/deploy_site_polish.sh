@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 
 REPOSITORY="oprahayo/iworksgt-service-portal"
-RELEASE="d6a19c97eb31a4bb5cc9d633d0e463dcac1ecf1a"
+RELEASE="d7186377aed8048c39fe24c2f3629b4528b92a5e"
 FILES=(
   'assets/illustrations/register.svg'
   'assets/illustrations/digital.svg'
