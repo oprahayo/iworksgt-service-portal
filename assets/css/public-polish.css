@@ -1,0 +1,99 @@
+/* iWorks public experience: restrained microinteractions, connected steps and modal UI. */
+body.page-public .iw-clean-home .iw-clean-hero-inner { grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr); gap:clamp(2rem,4vw,4rem); }
+body.page-public .iw-clean-home .iw-clean-hero { background:radial-gradient(circle at 94% 14%,#fff2e7 0,transparent 32%),linear-gradient(180deg,#fffdfb 0,#fff 100%); }
+body.page-public .iw-clean-home .iw-clean-hero h1 { max-width:660px; font-size:clamp(2.45rem,3.8vw,3.4rem); line-height:1.12; letter-spacing:-.046em; text-wrap:balance; }
+body.page-public .iw-clean-home .iw-clean-section-head { max-width:100%; text-align:center; margin:0 auto 2rem; }
+body.page-public .iw-clean-home .iw-clean-section-head p { max-width:620px; margin:.55rem auto 0; }
+body.page-public .iw-clean-home .iw-clean-services { background:#fff; }
+body.page-public .iw-clean-home .iw-clean-service { position:relative; transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease; }
+body.page-public .iw-clean-home .iw-clean-service:hover { border-color:#f0af82; box-shadow:0 12px 26px rgba(35,42,51,.055); transform:translateY(-3px); }
+body.page-public .iw-clean-home .iw-clean-process { background:#fff6ee; }
+body.page-public .iw-clean-home .iw-clean-step-grid { gap:2.7rem; }
+body.page-public .iw-clean-home .iw-clean-step { position:relative; text-align:center; border:0; padding:1.55rem .7rem 0; }
+body.page-public .iw-clean-home .iw-clean-step>span { color:#e76816; font-size:.82rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:.08em; }
+body.page-public .iw-clean-home .iw-clean-step h3 { font-size:1.04rem; }
+body.page-public .iw-clean-home .iw-clean-step p { margin:0 auto; }
+body.page-public .iw-clean-home .iw-clean-step:not(:last-child)::after {
+  content:'→'; position:absolute; top:2.15rem; right:-1.8rem; color:#e49e70; font-size:1.7rem; font-weight:400;
+}
+body.page-public .iw-clean-home .iw-clean-support { background:#fafbfd; }
+body.page-public .iw-clean-home .iw-clean-support-copy .iw-clean-overline { margin-bottom:.6rem; }
+.iw-home-track { margin-top:1.25rem; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.55rem .75rem; max-width:510px; }
+.iw-home-track label { font-size:.77rem; font-weight:600; color:#64707b; }
+.iw-home-track input { display:block; width:100%; min-height:43px; border:1px solid #dde3e7; border-radius:7px; padding:.7rem .85rem; color:#27323b; font-size:.88rem; background:#fff; }
+.iw-home-track input:focus { outline:2px solid #efaf83; outline-offset:1px; }
+.iw-home-track label:nth-of-type(1) { grid-area:1/1/2/2; }
+.iw-home-track label:nth-of-type(2) { grid-area:1/2/2/3; }
+.iw-home-track input:nth-of-type(1) { grid-area:2/1/3/2; }
+.iw-home-track input:nth-of-type(2) { grid-area:2/2/3/3; }
+.iw-home-track .iw-clean-btn { justify-self:start; grid-column:1/-1; margin-top:.5rem; }
+.iw-home-track-result { margin-top:1rem; padding:.9rem 1rem; background:#fff; border:1px solid #e8ecee; border-radius:8px; display:grid; gap:.3rem; font-size:.88rem; }
+.iw-home-track-result strong { font-size:.91rem; color:#26333e; }
+.iw-home-track-result span { color:#6e7780; }
+.iw-home-track-result a { color:#e76310; font-weight:650; }
+.iw-home-help-link { appearance:none; background:transparent; color:#df590c; font-size:inherit; font-weight:650; border:0; padding:0; cursor:pointer; display:inline-flex; align-items:center; gap:.4rem; }
+.iw-home-help-link:hover { color:#b44909; text-decoration:underline; }
+.iw-home-reviews { background:#faf7f3; border-top:1px solid #f0e8e0; }
+.iw-home-reviews-head .iw-clean-overline { margin-bottom:.8rem; }
+.iw-home-review-summary { display:flex; align-items:center; justify-content:space-between; gap:1.5rem; padding:1.55rem 2rem; border:1px solid #eee8e1; border-radius:10px; background:#fff; max-width:890px; margin:0 auto; }
+.iw-home-review-score { display:flex; flex-direction:column; gap:.34rem; }
+.iw-home-stars { display:flex; gap:.18rem; color:#e46b1c; font-size:.95rem; }
+.iw-home-review-score strong { font-size:1.17rem; font-weight:700; color:#2b3137; }
+.iw-home-review-score small { color:#828c95; font-size:.77rem; line-height:1.5; }
+.iw-home-review-link { color:#dc5a09!important; border:1px solid #f2c7ab!important; background:#fff!important; white-space:nowrap; }
+.iw-home-review-link:hover { background:#fff3eb!important; }
+.iw-home-review-footnote { text-align:center; font-size:.75rem; line-height:1.6; color:#91989f; margin:1.2rem 0 0; }
+/* About hero should be recognisably distinct from the homepage but use the same font and palette. */
+.iw-about-min-intro { background:linear-gradient(132deg,#fff8f2 0%,#fff 58%); }
+.iw-about-min-hero figure { position:relative; }
+.iw-about-min-hero figure::before { content:''; position:absolute; inset:-13px 12% 12% -12px; z-index:0; border-radius:10px; background:#f8dec9; }
+.iw-about-min-hero figure img { position:relative; z-index:1; }
+.iw-about-min-services { background:#fff; }
+/* Lightweight reveal: elements are visible without JS, paint only transform/opacity. */
+@media(prefers-reduced-motion:no-preference) {
+ .iw-polish-ready { opacity:.94; transform:translateY(11px); transition:opacity .45s ease,transform .45s ease; }
+ .iw-polish-ready.iw-polish-in { opacity:1; transform:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .iw-polish-ready,.iw-polish-in { transform:none!important; opacity:1!important; transition:none!important; }
+}
+/* Secure auth and human-help dialogs; login/register remain on the portal origin. */
+.iw-public-dialog { max-width:min(96vw,535px); width:535px; padding:0; border:1px solid rgba(226,231,236,.9); border-radius:14px; color:#252c34; box-shadow:0 26px 85px rgba(32,40,54,.19); overflow:hidden; max-height:92dvh; }
+.iw-public-dialog::backdrop { background:rgba(30,35,45,.26); backdrop-filter:blur(5px); }
+.iw-public-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.3rem; background:radial-gradient(circle at 94% 0,rgba(246,117,39,.16),transparent 58%),#fff; border-bottom:1px solid #edf0f2; }
+.iw-public-dialog-head h2 { font:650 1rem/1.3 Inter,-apple-system,sans-serif; letter-spacing:-.02em; margin:0; }
+.iw-public-dialog-head button { display:grid; place-items:center; width:32px; height:32px; background:transparent; border:0; border-radius:6px; color:#6c7781; cursor:pointer; }
+.iw-public-dialog-head button:hover { background:#f4f5f6; }
+.iw-auth-dialog-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; padding:.95rem 1.3rem 0; }
+.iw-auth-dialog-tabs button { border:1px solid #e8ecef; border-radius:7px; background:#fafbfc; color:#66727d; padding:.65rem; cursor:pointer; font:600 .85rem Inter,sans-serif; }
+.iw-auth-dialog-tabs button[aria-pressed="true"] { border-color:#fac6a5; background:#fff1e7; color:#df6114; }
+.iw-auth-dialog iframe { display:block; width:100%; min-height:360px; height:min(68dvh,600px); border:0; background:#fff; }
+.iw-auth-dialog-fallback { font-size:.77rem; color:#838d96; margin:0; padding:.65rem 1.3rem 1.1rem; }
+.iw-auth-dialog-fallback a { color:#df5f12; font-weight:650; }
+.iw-help-dialog { max-width:min(96vw,470px); width:470px; overflow:auto; }
+.iw-help-dialog-intro { margin:1rem 1.3rem .4rem; font-size:.86rem; color:#727d88; line-height:1.6; }
+.iw-help-dialog-form { padding:.75rem 1.3rem 1.4rem; display:grid; gap:.5rem; }
+.iw-help-dialog-form label { font-size:.78rem; color:#485560; font-weight:600; margin-top:.5rem; }
+.iw-help-dialog-form input,.iw-help-dialog-form textarea { width:100%; border:1px solid #dfe4e7; border-radius:7px; padding:.7rem .8rem; font-size:.89rem; font-family:Inter,sans-serif; color:#25313a; }
+.iw-help-dialog-form textarea { resize:vertical; }
+.iw-help-dialog-form button { border:0; border-radius:7px; background:#f36614; color:#fff; padding:.8rem 1rem; margin-top:.6rem; font:650 .89rem Inter,sans-serif; cursor:pointer; display:inline-flex; justify-content:center; align-items:center; gap:.6rem; }
+.iw-help-dialog-form button:hover { background:#df590b; }
+@media(max-width:992px) {
+ body.page-public .iw-clean-home .iw-clean-hero-inner { grid-template-columns:1fr .9fr; }
+ body.page-public .iw-clean-home .iw-clean-hero h1 { font-size:clamp(2.35rem,4.1vw,3rem); }
+}
+@media(max-width:767px) {
+ body.page-public .iw-clean-home .iw-clean-hero-inner { grid-template-columns:1fr; }
+ body.page-public .iw-clean-home .iw-clean-hero h1 { font-size:clamp(2.2rem,8.7vw,3rem); }
+ body.page-public .iw-clean-home .iw-clean-step:not(:last-child)::after { content:'↓'; left:50%; right:auto; top:auto; bottom:-1.5rem; transform:translateX(-50%); font-size:1.35rem; }
+ body.page-public .iw-clean-home .iw-clean-step { padding:1rem .5rem; }
+ body.page-public .iw-clean-home .iw-clean-step-grid { gap:1.55rem; }
+ .iw-home-track { grid-template-columns:1fr; }
+ .iw-home-track label:nth-of-type(1),.iw-home-track label:nth-of-type(2),.iw-home-track input:nth-of-type(1),.iw-home-track input:nth-of-type(2) { grid-area:auto; }
+ .iw-home-track label:nth-of-type(2) { margin-top:.35rem; }
+ .iw-home-track .iw-clean-btn { grid-column:1; }
+ .iw-home-review-summary { flex-direction:column; align-items:flex-start; padding:1.25rem; }
+ .iw-public-dialog { max-width:100vw; width:100vw; max-height:100dvh; height:100dvh; border-radius:0; }
+ .iw-auth-dialog iframe { height:calc(100dvh - 174px); min-height:300px; }
+ .iw-help-dialog { max-width:min(96vw,470px); width:96vw; height:auto; max-height:90dvh; border-radius:12px; }
+}
