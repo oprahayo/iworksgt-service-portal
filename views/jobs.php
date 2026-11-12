@@ -144,6 +144,9 @@ foreach ($serviceOptions as $serviceOptionRow) {
 <div class="card mb-4 <?= has_role(['client']) ? 'job-create-card' : '' ?>">
   <div class="card-body">
     <h2 class="h5"><?= $user['role'] === 'client' ? 'Order New Service' : 'Create job' ?></h2>
+    <?php if (!empty($preselectedOrder)): ?>
+      <p class="alert alert-info small" role="status">Your selected service, <strong><?= e((string) $preselectedOrder['name']) ?></strong>, is ready in your cart. Review the requirements and payment options below to continue.</p>
+    <?php endif; ?>
     <form method="post" action="<?= e(url('jobs')) ?>" id="jobCreateForm">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="form_action" value="create_job">
@@ -220,7 +223,7 @@ foreach ($serviceOptions as $serviceOptionRow) {
                   data-service-group="<?= e($serviceGroup) ?>"
                   role="button"
                   tabindex="0"
-                  aria-pressed="false"
+                  aria-pressed="<?= !empty($preselectedOrder) && (int) $preselectedOrder['id'] === (int) $service['id'] ? 'true' : 'false' ?>"
                 >
                   <input
                     class="service-selector service-selector-native"
@@ -228,6 +231,7 @@ foreach ($serviceOptions as $serviceOptionRow) {
                     name="service_ids[]"
                     value="<?= (int) $service['id'] ?>"
                     id="svc_<?= (int) $service['id'] ?>"
+                    <?= !empty($preselectedOrder) && (int) $preselectedOrder['id'] === (int) $service['id'] ? 'checked' : '' ?>
                     tabindex="-1"
                     aria-hidden="true"
                   >
@@ -1505,8 +1509,10 @@ foreach ($serviceOptions as $serviceOptionRow) {
     });
   }
 
+  // Keep the user's service after authentication instead of resetting the cart.
   Array.prototype.forEach.call(cards, function (card) {
-    setCardSelected(card, false);
+    var checkbox = card.querySelector('.service-selector');
+    setCardSelected(card, !!(checkbox && checkbox.checked));
   });
   syncPayCurrencyInput();
   togglePayMethodUI();
