@@ -177,25 +177,7 @@ $socialIcons = [
   </dialog>
 
   <?php endif; ?>
-  <dialog class="iw-public-dialog iw-help-dialog" id="iwPublicHelpDialog" aria-labelledby="iwPublicHelpTitle">
-    <div class="iw-public-dialog-head">
-      <h2 id="iwPublicHelpTitle">Ask the iWorks team</h2>
-      <button type="button" data-iw-dialog-close aria-label="Close support window"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-    </div>
-    <p class="iw-help-dialog-intro">Ask about a service or describe what you need. You'll receive a confirmation here when your message is sent.</p>
-    <div id="iwHelpFeedback" role="status" aria-live="polite" hidden></div>
-    <form method="post" action="<?= e(public_url('home')) ?>" class="iw-help-dialog-form">
-      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-      <input type="hidden" name="form_action" value="website_lead">
-      <label for="iwHelpName">Full name</label>
-      <input id="iwHelpName" name="full_name" autocomplete="name" maxlength="150" required>
-      <label for="iwHelpEmail">Email</label>
-      <input id="iwHelpEmail" name="email" type="email" autocomplete="email" maxlength="254" required>
-      <label for="iwHelpMessage">How can we help?</label>
-      <textarea id="iwHelpMessage" name="message" rows="4" maxlength="5000" required></textarea>
-      <button type="submit">Send enquiry <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-    </form>
-  </dialog>
+  <?php require __DIR__ . '/public-assistance.php'; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -359,7 +341,6 @@ $socialIcons = [
 (function () {
   'use strict';
   var auth = document.getElementById('iwPublicAuthDialog');
-  var help = document.getElementById('iwPublicHelpDialog');
   var direct = document.getElementById('iwAuthDirectLink');
   var content = document.getElementById('iwPublicAuthContent');
   var tabs = document.querySelectorAll('[data-iw-auth-tab]');
@@ -410,13 +391,6 @@ $socialIcons = [
       setAuthMode(current && current.getAttribute('data-iw-auth-pane') === 'login' ? 'register' : 'login');
       return;
     }
-    var helpTrigger = event.target.closest('[data-iw-help-open]');
-    if (helpTrigger) {
-      if (!help || typeof help.showModal !== 'function') return;
-      event.preventDefault();
-      show(help, helpTrigger);
-      return;
-    }
     var tab = event.target.closest('[data-iw-auth-tab]');
     if (tab) { setAuthMode(tab.getAttribute('data-iw-auth-tab')); return; }
     var close = event.target.closest('[data-iw-dialog-close]');
@@ -425,7 +399,7 @@ $socialIcons = [
       if (parent) parent.close();
     }
   });
-  [auth, help].forEach(function (dialog) {
+  [auth].forEach(function (dialog) {
     if (!dialog) return;
     dialog.addEventListener('click', function (event) { if (event.target === dialog) dialog.close(); });
     dialog.addEventListener('close', function () {
@@ -497,5 +471,6 @@ $socialIcons = [
 })();
 </script>
 <script defer src="<?= e(public_absolute_url('assets/js/public-ux.js')) ?>?v=20261112b"></script>
+<script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261113a"></script>
 </body>
 </html>
