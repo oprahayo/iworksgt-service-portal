@@ -3,7 +3,14 @@ $footerData = is_array($publicFooterData ?? null) ? $publicFooterData : default_
 $footerCompany = trim((string) ($footerData['companyName'] ?? brand_name())) ?: brand_name();
 $footerSummary = trim((string) ($footerData['summary'] ?? business_support_summary()));
 $footerAddress = trim((string) ($footerData['address'] ?? ''));
+if (strcasecmp($footerAddress, 'Lagos, Nigeria') === 0) {
+    // Replace the obsolete default city; real custom addresses stay untouched.
+    $footerAddress = 'Awolowo Civic Centre, Fajuyi, Ado-Ekiti, Ekiti State, Nigeria';
+}
 $footerPhone = trim((string) ($footerData['phone'] ?? ''));
+if (preg_match('/^\\+?234\\s*806\\s*000\\s*0000$/', $footerPhone)) {
+    $footerPhone = ''; // Never publish a placeholder number as an active support line.
+}
 $footerEmail = trim((string) ($footerData['email'] ?? ''));
 $footerColumns = is_array($footerData['columns'] ?? null) ? $footerData['columns'] : [];
 $footerLogo = logo_path();
