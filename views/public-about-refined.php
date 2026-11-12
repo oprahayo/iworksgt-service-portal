@@ -3,6 +3,7 @@
  * iWorks About page: editorial, concise and CMS-backed.
  * Only public, published CMS content is consumed.
  */
+require_once __DIR__ . '/../app/public-photo-config.php';
 $aboutBlocks = [];
 foreach ($layout as $block) {
     if (!is_array($block)) { continue; }
@@ -40,7 +41,7 @@ $aboutHeroImage = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $her
           <?php if (!empty($aboutHeroImage['url'])): ?>
             <img src="<?= e((string) $aboutHeroImage['url']) ?>" alt="iWorks Global business support" width="800" height="560" fetchpriority="high">
           <?php else: ?>
-            <img src="<?= e(public_absolute_url('assets/illustrations/register.svg')) ?>" alt="Digital business registration visual" width="800" height="560" fetchpriority="high">
+            <img src="<?= e(iworks_stock_photo_url('meeting', 1200)) ?>" alt="Professionals collaborating around an office meeting table" width="800" height="560" fetchpriority="high">
           <?php endif; ?>
           <div class="iw-about-hero-caption"><i class="bi bi-check-circle-fill"></i><span>Business services with progress you can follow</span></div>
         </div>
@@ -48,6 +49,7 @@ $aboutHeroImage = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $her
     </div>
   </section>
 
+  <div class="container public-container"><p class="iw-photo-disclosure">Illustrative business photography. People shown are not identified as iWorks staff or clients.</p></div>
   <section class="iw-about-principles">
     <div class="container public-container iw-about-principles-grid">
       <div><span>01</span><h2>Simple to start</h2><p>Find your service, see what's required, and make your request online.</p></div>
@@ -58,7 +60,7 @@ $aboutHeroImage = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $her
 
   <section class="iw-about-story">
     <div class="container public-container iw-about-story-grid">
-      <div class="iw-about-story-visual"><img src="<?= e(public_absolute_url('assets/illustrations/digital.svg')) ?>" alt="Responsive website and digital brand workflow visual" width="800" height="560" loading="lazy"><div class="iw-story-note"><strong>Business + technology</strong><span>Practical services, supported by a digital workflow.</span></div></div>
+      <div class="iw-about-story-visual"><img src="<?= e(iworks_stock_photo_url('strategy', 1080)) ?>" alt="Business professionals reviewing documents together" width="800" height="560" loading="lazy"><div class="iw-story-note"><strong>Business + technology</strong><span>Practical services, supported by a digital workflow.</span></div></div>
       <div class="iw-about-story-copy">
         <span class="iw-kicker">WHY WE EXIST</span>
         <h2>Less back-and-forth. More work completed.</h2>
@@ -73,9 +75,9 @@ $aboutHeroImage = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $her
     <div class="container public-container">
       <div class="iw-about-heading"><div><span class="iw-kicker">WHAT WE DO</span><h2>Support for every stage of business.</h2></div><p>Pick the right starting point. Each service connects to the same ordering and tracking system.</p></div>
       <div class="iw-expertise-grid">
-        <a href="<?= e(public_url('services', ['category' => 'business-registration'])) ?>"><img src="<?= e(public_absolute_url('assets/illustrations/register.svg')) ?>" alt="" width="800" height="560" loading="lazy"><span>01 · REGISTER</span><h3>Company &amp; CAC services</h3><p>Business names, companies and related filing support.</p><i class="bi bi-arrow-up-right"></i></a>
-        <a href="<?= e(public_url('services', ['category' => 'trademark'])) ?>"><img src="<?= e(public_absolute_url('assets/illustrations/tracking.svg')) ?>" alt="" width="800" height="560" loading="lazy"><span>02 · PROTECT</span><h3>Trademark &amp; compliance</h3><p>Brand protection and structured compliance support.</p><i class="bi bi-arrow-up-right"></i></a>
-        <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>"><img src="<?= e(public_absolute_url('assets/illustrations/digital.svg')) ?>" alt="" width="800" height="560" loading="lazy"><span>03 · GROW</span><h3>Web &amp; digital solutions</h3><p>Websites, hosting, identity and digital marketing.</p><i class="bi bi-arrow-up-right"></i></a>
+        <a href="<?= e(public_url('services', ['category' => 'business-registration'])) ?>"><img src="<?= e(iworks_stock_photo_url('registration', 900)) ?>" alt="" width="800" height="560" loading="lazy"><span>01 · REGISTER</span><h3>Company &amp; CAC services</h3><p>Business names, companies and related filing support.</p><i class="bi bi-arrow-up-right"></i></a>
+        <a href="<?= e(public_url('services', ['category' => 'trademark'])) ?>"><img src="<?= e(iworks_stock_photo_url('consultation', 900)) ?>" alt="" width="800" height="560" loading="lazy"><span>02 · PROTECT</span><h3>Trademark &amp; compliance</h3><p>Brand protection and structured compliance support.</p><i class="bi bi-arrow-up-right"></i></a>
+        <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>"><img src="<?= e(iworks_stock_photo_url('digital', 900)) ?>" alt="" width="800" height="560" loading="lazy"><span>03 · GROW</span><h3>Web &amp; digital solutions</h3><p>Websites, hosting, identity and digital marketing.</p><i class="bi bi-arrow-up-right"></i></a>
       </div>
     </div>
   </section>
@@ -93,7 +95,7 @@ $aboutHeroImage = (int) ($hero['imageId'] ?? 0) > 0 ? get_media_asset((int) $her
       <?php if (!empty($founderImage['url'])): ?>
         <div class="iw-founder-photo"><img src="<?= e((string) $founderImage['url']) ?>" alt="<?= e($founderName) ?>" loading="lazy"></div>
       <?php else: ?>
-        <div class="iw-founder-visual"><img src="<?= e(public_absolute_url('assets/illustrations/tracking.svg')) ?>" alt="iWorks structured workflow visual" loading="lazy" width="800" height="560"></div>
+        <div class="iw-founder-visual"><img src="<?= e(iworks_stock_photo_url('digital', 880)) ?>" alt="Software development workspace" loading="lazy" width="800" height="560"></div>
       <?php endif; ?>
     </div>
   </section>
