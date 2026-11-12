@@ -1457,6 +1457,17 @@ try {
                         }
                     }
 
+                    if ($action === 'submit_order_review') {
+                        submit_job_review(
+                            $jobId,
+                            $user,
+                            (int) ($_POST['rating'] ?? 0),
+                            (string) ($_POST['feedback'] ?? ''),
+                            (string) ($_POST['publish_consent'] ?? '') === '1'
+                        );
+                        flash('success', 'Thank you. Your order review has been saved.');
+                    }
+
                     if ($action === 'accept_delivery' && $user['role'] === 'client') {
                         client_accept_job_delivery($jobId, (int) $user['id']);
                         flash('success', 'Delivery accepted and job closed.');
@@ -1501,6 +1512,9 @@ try {
             }
 
             $job = get_job($jobId);
+            $clientOrderReview = ((string) ($user['role'] ?? '') === 'client' && (int) ($job['client_id'] ?? 0) === (int) $user['id'])
+                ? job_review_for_order($jobId)
+                : null;
             $comments = list_comments($jobId);
             $files = list_job_files($jobId);
             $logs = list_status_logs($jobId);
