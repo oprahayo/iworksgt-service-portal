@@ -48,6 +48,14 @@ function iworks_post_login_destination(?array $user): string
     if ($slug === 'trademark' && (string) ($user['role'] ?? '') === 'client') {
         return url('trademark');
     }
+    if ((string) ($user['role'] ?? '') === 'client') {
+        if ($slug === 'business-name-registration-cac-nigeria') {
+            return url('cac_filing', ['type' => 'business']);
+        }
+        if ($slug === 'company-registration') {
+            return url('cac_filing', ['type' => 'company']);
+        }
+    }
     if ($slug !== '' && (string) ($user['role'] ?? '') === 'client') {
         return url('jobs', ['action' => 'new', 'service' => $slug]);
     }
