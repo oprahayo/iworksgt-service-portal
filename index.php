@@ -1147,6 +1147,28 @@ try {
 
         case 'applications':
             require_roles(['client']);
+            if (method_is('POST')) {
+                require_csrf();
+                if ((string) ($_POST['form_action'] ?? '') === 'delete_pending_service') {
+                    try {
+                        $clientId = (int) current_user()['id'];
+                        $jobId = (int) ($_POST['job_id'] ?? 0);
+                        $item = get_job($jobId);
+                        if (!$item || (int) ($item['client_id'] ?? 0) !== $clientId
+                            || (string) ($item['status'] ?? '') !== 'pending') {
+                            throw new RuntimeException('Only your own pending unpaid service can be deleted.');
+                        }
+                        if (iworks_client_trademark_for_job($jobId, $clientId)) {
+                            throw new RuntimeException('Please manage this trademark filing from its application page.');
+                        }
+                        delete_unpaid_job_for_client($jobId, $clientId);
+                        flash('success', 'Pending service request deleted.');
+                    } catch (Throwable $deleteError) {
+                        flash('error', $deleteError->getMessage());
+                    }
+                    redirect(url('applications'));
+                }
+            }
             trademark_ensure_schema();
             $client = current_user();
             $trademarkApplications = trademark_list((int) $client['id']);
@@ -2453,10 +2475,21 @@ try {
                     $action = (string) ($_POST['form_action'] ?? '');
 
                     if ($action === 'create_ticket' && $user['role'] === 'client') {
+                        $selectedJobs = is_array($_POST['related_job_ids'] ?? null) ? $_POST['related_job_ids'] : [];
+                        $linkedJobs = [];
+                        foreach (array_slice(array_unique(array_map('intval', $selectedJobs)), 0, 12) as $linkedId) {
+                            if ($linkedId <= 0) { continue; }
+                            $linkedJob = get_job($linkedId);
+                            if (!$linkedJob || (int) ($linkedJob['client_id'] ?? 0) !== (int) $user['id']) {
+                                throw new RuntimeException('A selected service does not belong to your account.');
+                            }
+                            $linkedJobs[] = (string) ($linkedJob['job_code'] ?? ('#' . $linkedId));
+                        }
+                        $relatedPrefix = $linkedJobs !== [] ? 'Related services: ' . implode(', ', $linkedJobs) . "\n\n" : '';
                         $ticketId = create_support_ticket(
                             (int) $user['id'],
                             (string) ($_POST['subject'] ?? ''),
-                            (string) ($_POST['message'] ?? ''),
+                            $relatedPrefix . (string) ($_POST['message'] ?? ''),
                             (string) ($_POST['priority'] ?? 'normal'),
                             (string) ($_POST['category'] ?? 'general'),
                             $_FILES['attachment'] ?? null
@@ -2494,6 +2527,9 @@ try {
                 }
             }
 
+            $supportServices = ($user['role'] ?? '') === 'client'
+                ? (list_accessible_jobs($user, ['page'=>1,'per_page'=>100,'sort'=>'newest'])['items'] ?? [])
+                : [];
             $tickets = list_support_tickets_for_user($user, $ticketFilters);
             $activeTicket = null;
             $ticketMessages = [];
