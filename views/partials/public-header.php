@@ -71,7 +71,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
-  <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/launch-home.css')) ?>"><?php endif; ?>
+  <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/businesshub-home.css')) ?>"><?php endif; ?>
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/refined-services.css')) ?>"><?php endif; ?>
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="dns-prefetch" href="//images.unsplash.com">
@@ -86,7 +86,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   </style>
 </head>
 <body class="<?= e($bodyClass) ?>">
-  <?php if ($headerAnnouncement !== ''): ?>
+  <?php if ($headerAnnouncement !== '' && !$isLaunchHome): ?>
     <div class="public-announcement-bar">
       <div class="container public-container">
         <span><?= e($headerAnnouncement) ?></span>
