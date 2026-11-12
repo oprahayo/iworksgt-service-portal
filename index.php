@@ -366,7 +366,7 @@ try {
     // Editorial-only accounts must never inherit access to jobs, payments,
     // other users, settings or staff operations through broadly-allowed routes.
     if (is_logged_in() && user_role() === 'author'
-        && !in_array((string)$page, ['dashboard','blog','profile','notifications','realtime','set_pay_currency'], true)) {
+        && !in_array((string)$page, ['dashboard','blog','profile','notifications','realtime','set_pay_currency','public_auth_status'], true)) {
         http_response_code(403);
         exit('Author accounts can access Insights and their own profile only.');
     }
