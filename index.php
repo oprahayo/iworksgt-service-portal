@@ -1150,8 +1150,11 @@ try {
             trademark_ensure_schema();
             $client = current_user();
             $trademarkApplications = trademark_list((int) $client['id']);
-            $existingOrders = list_accessible_jobs($client, ['page'=>1, 'per_page'=>25, 'sort'=>'newest']);
-            $title = 'My Applications - ' . app_name();
+            $existingOrders = list_accessible_jobs($client, ['page'=>1, 'per_page'=>100, 'sort'=>'newest']);
+            $clientServiceItems = iworks_client_service_items($trademarkApplications, $existingOrders['items'] ?? []);
+            $activeClientStatus = strtolower(trim((string) ($_GET['status'] ?? 'all')));
+            if (!in_array($activeClientStatus, ['all','draft','payment','progress','completed','cancelled'], true)) { $activeClientStatus='all'; }
+            $title = 'My Services - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
             require __DIR__ . '/views/client-applications.php';
             require __DIR__ . '/views/partials/footer.php';
@@ -1333,6 +1336,9 @@ try {
             if (($user['role'] ?? '') === 'client') {
                 trademark_ensure_schema();
                 $trademarkApplications = trademark_list((int) $user['id']);
+                $clientCatalogue = iworks_client_catalogue(list_services(true));
+                $recentOrders = list_accessible_jobs($user, ['page'=>1, 'per_page'=>25, 'sort'=>'newest']);
+                $clientRecent = array_slice(iworks_client_service_items($trademarkApplications, $recentOrders['items'] ?? []), 0, 4);
                 $title = 'New Application - ' . app_name();
                 require __DIR__ . '/views/partials/header.php';
                 require __DIR__ . '/views/client-dashboard.php';
@@ -1444,6 +1450,11 @@ try {
 
         case 'jobs':
             require_login();
+            if ((current_user()['role'] ?? '') === 'client'
+                && !in_array((string) ($_GET['action'] ?? ''), ['new'], true)
+                && !method_is('POST')) {
+                redirect(url('applications'));
+            }
             maybe_auto_close_delivered_jobs();
             $showCreateForm = ($_GET['action'] ?? '') === 'new' && has_role(['admin', 'client']);
             $serviceOptions = list_services(true);
@@ -1790,7 +1801,12 @@ try {
 
             $title = $job['job_code'] . ' - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
-            require __DIR__ . '/views/job.php';
+            if (($user['role'] ?? '') === 'client') {
+                $wizardTrademark = iworks_client_trademark_for_job($jobId, (int) $user['id']);
+                require __DIR__ . '/views/client-job.php';
+            } else {
+                require __DIR__ . '/views/job.php';
+            }
             require __DIR__ . '/views/partials/footer.php';
             break;
 
@@ -2850,7 +2866,11 @@ try {
 
             $title = 'My Profile - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
-            require __DIR__ . '/views/profile.php';
+            if ((current_user()['role'] ?? '') === 'client') {
+                require __DIR__ . '/views/client-profile.php';
+            } else {
+                require __DIR__ . '/views/profile.php';
+            }
             require __DIR__ . '/views/partials/footer.php';
             break;
 
