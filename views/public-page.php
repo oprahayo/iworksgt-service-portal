@@ -23,6 +23,16 @@ if ($publicPageSlug === 'about') {
     return;
 }
 
+if ($publicPageSlug === 'contact') {
+    require __DIR__ . '/public-contact-clean.php';
+    return;
+}
+
+if ($publicPageSlug === 'track') {
+    require __DIR__ . '/public-track-clean.php';
+    return;
+}
+
 if (!function_exists('public_reorder_home_layout')) {
     function public_reorder_home_layout(array $layout): array
     {
