@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../app/public-photo-config.php';
 $pageData = $pageData ?? [];
 $layout = is_array($pageData['layout'] ?? null) ? $pageData['layout'] : [];
 $publicServices = is_array($publicServices ?? null) ? $publicServices : [];
@@ -1364,9 +1365,9 @@ if (!function_exists('render_public_block')) {
             $limit = $publicPageSlug === 'blog' ? 12 : 3;
             $items = public_blog_highlight_items(is_array($data['items'] ?? null) ? $data['items'] : [], $limit);
             $fallbackImages = [
-                public_absolute_url('assets/illustrations/register.svg'),
-                public_absolute_url('assets/illustrations/digital.svg'),
-                public_absolute_url('assets/illustrations/tracking.svg'),
+                iworks_stock_photo_url('registration', 960),
+                iworks_stock_photo_url('digital', 960),
+                iworks_stock_photo_url('strategy', 960),
             ];
             ?>
             <section class="public-section marketing-blog-section" id="insights">

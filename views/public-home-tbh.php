@@ -3,6 +3,7 @@
  * Fast, CMS-backed, service-first public homepage.
  * All service links use the existing published catalogue and portal routes.
  */
+require_once __DIR__ . '/../app/public-photo-config.php';
 $home = [];
 foreach ($layout as $block) {
     if (!is_array($block)) { continue; }
@@ -103,16 +104,7 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
         <?php if (!empty($heroMedia['url'])): ?>
           <img class="launch-hero-photo" src="<?= e((string) $heroMedia['url']) ?>" alt="" fetchpriority="high" width="640" height="530" decoding="async">
         <?php else: ?>
-          <div class="launch-ui-preview">
-            <div class="launch-preview-top"><span class="launch-preview-symbol">i<span>W</span></span><span class="launch-preview-dots"><b></b><b></b><b></b></span></div>
-            <div class="launch-preview-body">
-              <span class="launch-preview-kicker">YOUR BUSINESS, SORTED</span>
-              <strong>One place for every next step.</strong>
-              <div class="launch-preview-row"><i class="bi bi-building-check"></i><span>Business registration</span><i class="bi bi-check-circle-fill"></i></div>
-              <div class="launch-preview-row"><i class="bi bi-patch-check"></i><span>Trademark &amp; compliance</span><i class="bi bi-arrow-up-right"></i></div>
-              <div class="launch-preview-row"><i class="bi bi-window-stack"></i><span>Web &amp; digital solutions</span><i class="bi bi-arrow-up-right"></i></div>
-            </div>
-          </div>
+          <img class="launch-hero-photo" src="<?= e(iworks_stock_photo_url('consultation', 1200)) ?>" alt="" fetchpriority="high" width="640" height="530" decoding="async">
         <?php endif; ?>
         <div class="launch-progress-card"><i class="bi bi-check-circle-fill"></i><span><strong>Stay informed</strong><small>Track your request online</small></span></div>
       </div>
@@ -181,17 +173,18 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
         <div><span class="launch-small-label">MADE FOR THE WORK YOU DO</span><h2 id="iw-journeys-heading">From a great idea to a business that works.</h2></div>
         <p>Start with the essentials. Add the support you need as your business grows, all through one clear service process.</p>
       </div>
+      <p class="iw-photo-disclosure">Illustrative stock photography — not iWorks staff or client projects.</p>
       <div class="iw-journey-grid">
         <a class="iw-journey-card" href="<?= e($registrationLink) ?>">
-          <span class="iw-journey-media"><img src="<?= e(public_absolute_url('assets/illustrations/register.svg')) ?>" alt="Digital company registration form illustration" loading="lazy" width="800" height="560"></span>
+          <span class="iw-journey-media"><img src="<?= e(iworks_stock_photo_url('registration', 960)) ?>" alt="Real-life paperwork, calculator and laptop on an office desk" loading="lazy" width="800" height="560"></span>
           <span class="iw-journey-body"><span class="iw-journey-number">01 / GET STARTED</span><strong>Make it official.</strong><small>Business names, companies and other CAC registration services.</small><span class="iw-journey-arrow">Start registration <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></span>
         </a>
         <a class="iw-journey-card" href="<?= e(public_url('services', ['category' => 'growth'])) ?>">
-          <span class="iw-journey-media"><img src="<?= e(public_absolute_url('assets/illustrations/digital.svg')) ?>" alt="Responsive website and brand design illustration" loading="lazy" width="800" height="560"></span>
+          <span class="iw-journey-media"><img src="<?= e(iworks_stock_photo_url('digital', 960)) ?>" alt="Laptop and phone in a software developer workspace" loading="lazy" width="800" height="560"></span>
           <span class="iw-journey-body"><span class="iw-journey-number">02 / BUILD PRESENCE</span><strong>Look the part online.</strong><small>Websites, branding, domains and digital marketing services.</small><span class="iw-journey-arrow">Explore digital services <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></span>
         </a>
         <a class="iw-journey-card" href="<?= e(public_url('track')) ?>">
-          <span class="iw-journey-media"><img src="<?= e(public_absolute_url('assets/illustrations/tracking.svg')) ?>" alt="iWorks service status and document delivery timeline illustration" loading="lazy" width="800" height="560"></span>
+          <span class="iw-journey-media"><img src="<?= e(iworks_stock_photo_url('tracking', 960)) ?>" alt="Business collaborators reviewing work on a laptop" loading="lazy" width="800" height="560"></span>
           <span class="iw-journey-body"><span class="iw-journey-number">03 / STAY INFORMED</span><strong>Know what happens next.</strong><small>Track requests, conversations, documents and delivery in your portal.</small><span class="iw-journey-arrow">Track your order <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></span>
         </a>
       </div>
@@ -240,8 +233,8 @@ $faqItems = is_array($faq['items'] ?? null) ? array_slice($faq['items'], 0, 5) :
         <a href="<?= e(public_url('about')) ?>" class="launch-btn launch-btn-text">Get to know iWorks <i class="bi bi-arrow-up-right"></i></a>
       </div>
       <div class="iw-about-bridge-image">
-        <img src="<?= e(public_absolute_url('assets/illustrations/tracking.svg')) ?>" alt="Example of the iWorks online job-tracking process" loading="lazy" width="800" height="560">
-        <span class="iw-about-picture-note"><i class="bi bi-shield-check"></i> Your service progress stays visible</span>
+        <img src="<?= e(iworks_stock_photo_url('strategy', 1080)) ?>" alt="Two professionals discussing documents in a business setting" loading="lazy" width="800" height="560">
+        <span class="iw-about-picture-note"><i class="bi bi-shield-check"></i> Clear steps. Real support.</span>
       </div>
     </div>
   </section>

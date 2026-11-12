@@ -196,3 +196,40 @@ body.page-public a:focus-visible,body.page-public button:focus-visible { outline
 @media(prefers-reduced-motion:reduce) {
  .iw-reveal-pending { opacity:1!important; transform:none!important; transition:none!important; }
 }
+
+
+/* Photo-led presentation: real, illustrative business photography (no staff endorsement claims). */
+.iworks-launch-home .iw-journey-media,
+.iw-about-page .iw-expertise-grid img,
+.iw-about-page .iw-about-story-visual img {
+  background-color:#e9ecef;
+}
+.iworks-launch-home .iw-journey-media img,
+.iw-about-page .iw-expertise-grid img,
+.iw-about-page .iw-about-story-visual img {
+  object-fit:cover;
+  object-position:center center;
+}
+.iworks-launch-home .iw-about-bridge-image img {
+  aspect-ratio:1.35;
+  object-fit:cover;
+}
+.iworks-launch-home .launch-hero-photo {
+  aspect-ratio:1.25;
+  object-fit:cover;
+  object-position:center;
+}
+.iw-about-page .iw-about-hero-visual>img { object-position:center; }
+.iw-photo-disclosure {
+  color:#84909a;
+  font-size:.74rem;
+  line-height:1.4;
+  margin:-.75rem 0 1.35rem;
+}
+.iw-about-page .iw-photo-disclosure { margin:0 0 1.2rem; }
+.iworks-launch-home .launch-hero-art { overflow:visible; }
+@media(max-width:767px) {
+  .iworks-launch-home .launch-hero-photo { aspect-ratio:1.4; }
+  .iworks-launch-home .iw-about-bridge-image img { aspect-ratio:1.5; }
+  .iw-photo-disclosure { margin:0 0 1rem; }
+}

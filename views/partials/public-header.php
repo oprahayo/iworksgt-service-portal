@@ -73,6 +73,8 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/app.css')) ?>">
   <?php if ($isLaunchHome): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/launch-home.css')) ?>"><?php endif; ?>
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/refined-services.css')) ?>"><?php endif; ?>
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+  <link rel="dns-prefetch" href="//images.unsplash.com">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
   <style>
     :root {
