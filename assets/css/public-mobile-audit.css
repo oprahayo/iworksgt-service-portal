@@ -92,3 +92,17 @@ body.page-public .iw-search-guide a { color:#be4c0b; text-decoration:underline; 
  body.page-public input[type="text"],body.page-public input[type="email"],body.page-public input[type="search"],body.page-public input[type="tel"],body.page-public select,body.page-public textarea { font-size:16px; }
  body.page-public .iw-auth-dialog { max-width:calc(100vw - 1rem); max-height:calc(100dvh - 1rem); }
 }
+
+/* Search-intent navigation: contextual links with mobile-safe line wrapping. */
+body.page-public .iw-home-intent-links { display:flex; flex-wrap:wrap; gap:.45rem 1.2rem; margin-top:1.2rem; align-items:center; }
+body.page-public .iw-home-intent-links a { display:inline-flex; min-height:44px; align-items:center; font-size:.87rem; line-height:1.4; font-weight:550; color:#ad4a12; text-underline-offset:3px; overflow-wrap:anywhere; }
+body.page-public .iw-home-intent-links a:focus-visible,
+body.page-public .iw-search-guide-related a:focus-visible { outline:2px solid #d3611a; outline-offset:3px; }
+body.page-public .iw-search-guide-related ul { display:flex; flex-wrap:wrap; gap:.5rem 1.4rem; margin:0; padding:0; list-style:none; }
+body.page-public .iw-search-guide-related li { max-width:100%; }
+body.page-public .iw-search-guide-related a { display:inline-flex; align-items:center; min-height:44px; text-decoration:underline; }
+@media(max-width:650px) {
+ body.page-public .iw-home-intent-links { display:flex; flex-direction:column; align-items:flex-start; gap:0; }
+ body.page-public .iw-home-intent-links a { min-height:42px; font-size:.9rem; }
+ body.page-public .iw-search-guide-related ul { flex-direction:column; gap:0; }
+}
