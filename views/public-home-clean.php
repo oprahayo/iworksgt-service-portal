@@ -87,6 +87,23 @@ $businessUrl = $findService(['business name registration', 'company registration
 $trademarkUrl = $findService(['trademark'], 'trademark');
 $websiteUrl = $findService(['website design', 'domain & web hosting'], 'growth');
 
+// Admin-selected featured service IDs can update category destinations
+// without expanding the homepage into another long product grid.
+$selectedIds = array_values(array_filter(array_map('intval', is_array($featured['serviceIds'] ?? null) ? $featured['serviceIds'] : [])));
+foreach ($selectedIds as $id) {
+    foreach ($catalog as $service) {
+        if ((int) ($service['id'] ?? 0) !== $id) {
+            continue;
+        }
+        $category = strtolower((string) ($service['category'] ?? ''));
+        $link = public_url('service', ['slug' => (string) $service['slug']]);
+        if ($category === 'business-registration') { $businessUrl = $link; }
+        if ($category === 'trademark') { $trademarkUrl = $link; }
+        if ($category === 'growth') { $websiteUrl = $link; }
+        break;
+    }
+}
+
 $serviceHeading = trim((string) ($featured['title'] ?? ''));
 if ($serviceHeading === '' || $serviceHeading === 'Services entrepreneurs use most') {
     $serviceHeading = 'What do you need help with?';
