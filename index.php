@@ -1182,6 +1182,99 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
+        case 'cac_filing':
+            require_roles(['client']);
+            $client = current_user();
+            $clientId = (int) $client['id'];
+            $filingId = (int) ($_GET['id'] ?? 0);
+            $filingKind = strtolower(trim((string) ($_GET['type'] ?? 'business')));
+            if (!in_array($filingKind, ['business','company'], true)) $filingKind='business';
+            cac_filing_schema();
+            if ($filingId>0) {
+                $cacDraft = cac_filing_load($filingId,$clientId);
+                if (!$cacDraft) { http_response_code(404); exit('Application not found.'); }
+                $filingKind=(string)$cacDraft['kind'];
+            } else { $cacDraft = null; }
+            if (method_is('POST')) {
+                require_csrf();
+                $action=(string) ($_POST['form_action'] ?? '');
+                $isAjax=in_array($action,['upload_document','draw_signature'],true);
+                try {
+                    if ($action==='save_draft') {
+                        $newId=cac_filing_save($clientId,$filingId,$filingKind, is_array($_POST['filing'] ?? null) ? $_POST['filing'] : []);
+                        flash('success','Application details saved. Now add identification, photographs and signatures for each person.');
+                        redirect(url('cac_filing',['id'=>$newId]));
+                    }
+                    if ($action==='delete_draft') {
+                        cac_filing_delete_draft($clientId,$filingId);
+                        flash('success','Draft registration deleted.');
+                        redirect(url('applications'));
+                    }
+                    if ($action==='checkout') {
+                        $invoiceId=cac_filing_checkout($clientId,$filingId);
+                        redirect('invoice.php?id='.$invoiceId);
+                    }
+                    if ($action==='upload_document') {
+                        $result=cac_filing_save_document($clientId,$filingId,(int)($_POST['person_index']??-1),
+                            (string)($_POST['doc_type']??''), (array)($_FILES['document']??[]));
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode(['success'=>true,'file'=>$result],JSON_UNESCAPED_SLASHES);break;
+                    }
+                    if ($action==='draw_signature') {
+                        $result=cac_filing_save_drawn_signature($clientId,$filingId,
+                            (int)($_POST['person_index']??-1),(string)($_POST['signature_png']??''));
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode(['success'=>true,'file'=>$result],JSON_UNESCAPED_SLASHES);break;
+                    }
+                    throw new RuntimeException('Invalid action.');
+                } catch (Throwable $e) {
+                    if($isAjax) {
+                        http_response_code(422);
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
+                        break;
+                    }
+                    flash('error',$e->getMessage());
+                    redirect(url('cac_filing',$filingId>0?['id'=>$filingId]:['type'=>$filingKind]));
+                }
+            }
+            $title = ($filingKind==='business'?'Business Name':'Company').' Registration - '.app_name();
+            $cacQuote = null;
+            $cacErrors = [];
+            if ($cacDraft) {
+                try { $cacQuote = cac_filing_quote($filingKind,$cacDraft['data']); }
+                catch(Throwable $e){$cacErrors[]=$e->getMessage();}
+                $cacErrors = array_merge($cacErrors,cac_filing_missing($cacDraft));
+                $cacErrors = array_values(array_unique($cacErrors));
+            }
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/client-cac-filing.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
+        case 'cac_document':
+            require_roles(['client']);
+            $user=current_user();
+            $cacRow=cac_filing_load((int)($_GET['id']??0),(int)$user['id']);
+            $person=(int)($_GET['person']??-1);
+            $type=(string)($_GET['type']??'');
+            if (!$cacRow || $person<0 || !in_array($type,['id','photo','signature'],true)) {
+                http_response_code(404);exit('Document not found.');
+            }
+            $file=$cacRow['docs'][$person][$type]??null;
+            $path=is_array($file)?(string)($file['path']??''):'';
+            $root=realpath(upload_directory().'/cac');
+            $real=$path!==''?realpath($path):false;
+            if (!$root || !$real || !str_starts_with($real,$root.DIRECTORY_SEPARATOR) || !is_file($real)) {
+                http_response_code(404);exit('Document not found.');
+            }
+            header('Cache-Control: private, no-store');
+            header('X-Content-Type-Options: nosniff');
+            header('Content-Type: '.(($file['mime']??'')==='pdf'?'application/pdf':(($file['mime']??'')==='png'?'image/png':'image/jpeg')));
+            header('Content-Disposition: attachment; filename="cac-document.'.e((string)($file['mime']??'jpg')).'"');
+            readfile($real);
+            break;
+
         case 'card_vault':
             require_roles(['client']);
             $vaultUser = current_user();
