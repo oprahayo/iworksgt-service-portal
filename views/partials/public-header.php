@@ -53,7 +53,8 @@ $seoIndexable = http_response_code() !== 404 && !in_array($seoPageType, ['track'
 $seoCanonicalUrl = $seoIndexable ? iworks_seo_canonical($seoPageType, $_GET) : '';
 $seoRecord = $seoPageType === 'service'
     ? (is_array($service ?? null) ? $service : [])
-    : ($seoPageType === 'blog_post' ? (is_array($blogPost ?? null) ? $blogPost : []) : []);
+    : ($seoPageType === 'blog_post' ? (is_array($blogPost ?? null) ? $blogPost : [])
+      : ($seoPageType === 'case_study' ? (is_array($caseRecord ?? null) ? $caseRecord : []) : []));
 $seoJsonLd = $seoIndexable
     ? iworks_seo_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl, $metaDescription)
     : '';
