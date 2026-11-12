@@ -1,0 +1,71 @@
+/* Mobile navigation and touch-target audit: public pages only. */
+body.page-public { -webkit-text-size-adjust:100%; }
+body.page-public .public-navbar .navbar-toggler {
+  min-width:44px;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.5rem;
+  border:1px solid #e2e6e9;
+  border-radius:8px;
+}
+body.page-public .public-navbar .navbar-toggler:focus-visible,
+body.page-public .public-navbar .public-signin-link:focus-visible,
+body.page-public .public-navbar .public-header-main-cta:focus-visible {
+  outline:2px solid #e47830;
+  outline-offset:3px;
+  box-shadow:none;
+}
+body.page-public .public-nav-center .nav-link {
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+body.page-public .public-nav-actions { flex-shrink:0; }
+body.page-public .public-brand { min-width:0; }
+body.page-public .public-logo { max-width:100%; object-fit:contain; }
+body.page-public img { max-width:100%; }
+@media(max-width:1199.98px) {
+  body.page-public .public-nav-shell { min-width:0; }
+  body.page-public .public-nav-center { align-items:stretch!important; gap:0!important; padding:.75rem 0 .5rem; }
+  body.page-public .public-nav-center .nav-link {
+    justify-content:flex-start;
+    text-align:left;
+    padding:.8rem .85rem!important;
+    margin:0!important;
+    border-bottom:0!important;
+  }
+  body.page-public .public-nav-center .nav-link::after { bottom:.36rem; left:.85rem; right:auto; width:0; max-width:calc(100% - 1.7rem); }
+  body.page-public .public-nav-center .nav-link.active::after,
+  body.page-public .public-nav-center .nav-link[aria-current="page"]::after { width:32px; }
+  body.page-public .public-header-cta-group {
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:.6rem;
+    padding:.5rem 0 1rem;
+  }
+  body.page-public .public-header-cta-group a {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    text-align:center;
+  }
+}
+@media(max-width:767px) {
+  body.page-public .iw-service-index-tools { min-width:0; }
+  body.page-public .iw-service-index-search,
+  body.page-public .iw-service-index-filter { min-width:0; width:100%; }
+  body.page-public .iw-service-index-list[data-layout="grid"] { grid-template-columns:minmax(0,1fr); }
+  body.page-public .iw-service-index-row { max-width:100%; }
+  body.page-public .iw-home-track input,
+  body.page-public .iw-contact-fields input,
+  body.page-public .iw-track-fields input { min-height:44px; }
+  body.page-public .iw-reviews { overflow-x:clip; }
+}
+@media(prefers-reduced-motion:reduce) {
+  body.page-public .public-navbar * { scroll-behavior:auto; }
+}
