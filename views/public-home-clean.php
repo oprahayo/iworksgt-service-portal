@@ -141,6 +141,9 @@ foreach ($moreFaqs as $item) {
 }
 $faqs = array_slice($faqs, 0, 8);
 
+$featuredInsights = [];
+try { $featuredInsights = list_blog_posts_public(4); } catch (Throwable $e) { $featuredInsights = []; }
+
 $bannerTitle = trim((string) ($banner['headline'] ?? ''));
 if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right support stack.') {
     $bannerTitle = 'Ready to get started?';
@@ -199,12 +202,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </a>
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-      <nav class="iw-home-intent-links" aria-label="Popular business services">
-        <a href="<?= e(public_url('service', ['slug' => 'business-name-registration-cac-nigeria'])) ?>">Register a business name in Nigeria</a>
-        <a href="<?= e(public_url('service', ['slug' => 'company-registration'])) ?>">Register a company with CAC</a>
-        <a href="<?= e(public_url('service', ['slug' => 'website-design-development'])) ?>">Design a website remotely</a>
-      </nav>
-      <p class="iw-home-compliance-extra">Need assistance with an export licence or NAFDAC registration? <a href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="Export licence or NAFDAC registration">Ask about licensing <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+      <p class="iw-home-compliance-extra">Looking for something else? <a href="<?= e(public_url('services')) ?>">Explore the full service catalogue <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     </div>
   </section>
 
@@ -281,6 +279,62 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </div>
       </div>
     </section>
+  <?php endif; ?>
+
+  <?php if ($featuredInsights !== []): ?>
+  <section class="iw-clean-section iw-home-insights" aria-labelledby="iw-home-insights-title">
+    <div class="container public-container">
+      <div class="iw-home-insights-head">
+        <div><span class="iw-clean-overline">BUSINESS INSIGHTS</span>
+          <h2 id="iw-home-insights-title">Ideas for your next move</h2>
+          <p>Practical guidance on registration, compliance and growing your business.</p>
+        </div>
+        <a href="<?= e(public_url('blog')) ?>">All insights <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="iw-home-insights-carousel" id="iwHomeInsights" tabindex="0" aria-label="Recent insights" aria-roledescription="carousel">
+        <?php foreach ($featuredInsights as $insight): ?>
+          <article class="iw-home-insight">
+            <a href="<?= e(public_url('blog_post',['slug'=>(string) ($insight['slug'] ?? '')])) ?>">
+              <span class="iw-home-insight-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span>
+              <span class="iw-home-insight-category">INSIGHTS</span>
+              <h3><?= e((string) ($insight['title'] ?? 'Business insight')) ?></h3>
+              <p><?= e(mb_safe_trim(trim((string) ($insight['excerpt'] ?? '')), 125)) ?></p>
+              <strong>Read article <i class="bi bi-arrow-right" aria-hidden="true"></i></strong>
+            </a>
+          </article>
+        <?php endforeach; ?>
+      </div>
+      <div class="iw-home-insights-controls" aria-label="Insight carousel controls">
+        <button type="button" data-iw-insights-prev aria-label="Previous insight"><i class="bi bi-arrow-left"></i></button>
+        <button type="button" data-iw-insights-next aria-label="Next insight"><i class="bi bi-arrow-right"></i></button>
+      </div>
+    </div>
+  </section>
+  <script>
+  (function(){
+    var rail=document.getElementById('iwHomeInsights');
+    if(!rail||rail.children.length<2)return;
+    var pause=false,delay=6500;
+    function move(dir){
+      var card=rail.querySelector('.iw-home-insight');if(!card)return;
+      var amount=card.getBoundingClientRect().width+16;
+      var atEnd=rail.scrollLeft+rail.clientWidth>=rail.scrollWidth-amount*.65;
+      if(dir>0&&atEnd)rail.scrollTo({left:0,behavior:'smooth'});
+      else rail.scrollBy({left:dir*amount,behavior:'smooth'});
+    }
+    var prev=document.querySelector('[data-iw-insights-prev]');
+    var next=document.querySelector('[data-iw-insights-next]');
+    if(prev)prev.addEventListener('click',function(){move(-1)});
+    if(next)next.addEventListener('click',function(){move(1)});
+    rail.addEventListener('mouseenter',function(){pause=true});
+    rail.addEventListener('mouseleave',function(){pause=false});
+    rail.addEventListener('focusin',function(){pause=true});
+    rail.addEventListener('focusout',function(){pause=false});
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.setInterval(function(){if(!pause&&!document.hidden)move(1)},delay);
+    }
+  })();
+  </script>
   <?php endif; ?>
 
   <section class="iw-clean-last" aria-labelledby="iw-clean-last-title">
