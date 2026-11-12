@@ -46,7 +46,12 @@ if ($user && (string) ($user['role'] ?? '') === 'client') {
 }
 
 $sidebarItems = [];
-if ($user) {
+if ($user && (string)($user['role'] ?? '') === 'author') {
+    $sidebarItems = [
+        ['page'=>'dashboard','label'=>'Dashboard','icon'=>'bi-speedometer2','url'=>url('dashboard')],
+        ['page'=>'blog','label'=>'Insights','icon'=>'bi-journal-richtext','url'=>url('blog')],
+    ];
+} elseif ($user) {
     $sidebarItems[] = [
         'page' => 'dashboard',
         'label' => 'Dashboard',
