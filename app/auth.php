@@ -123,9 +123,16 @@ function find_user_by_email(string $email): ?array
 
 function authenticate_with_password(string $email, string $password): ?array
 {
+    $actor = iworks_auth_actor($email);
+    $ip = iworks_auth_ip();
+    if (!iworks_auth_limit_allows('password_actor', $actor, 8, 900)
+        || !iworks_auth_limit_allows('password_ip', $ip, 70, 900)) {
+        return null;
+    }
     $user = find_user_by_email($email);
-
-    if (!$user || !password_verify($password, $user['password_hash'])) {
+    if (!$user || !password_verify($password, (string) $user['password_hash'])) {
+        iworks_auth_limit_record('password_actor', $actor, 900);
+        iworks_auth_limit_record('password_ip', $ip, 900);
         return null;
     }
 
@@ -609,25 +616,36 @@ function create_otp_code(int $userId, string $purpose): string
     }
 
     $code = (string) random_int(100000, 999999);
+    // Serialize resends for this user. A concurrent request cannot insert a
+    // second active challenge after we invalidate the first one.
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $user = db_one('SELECT id FROM users WHERE id = :id FOR UPDATE', ['id' => $userId]);
+        if (!$user) { throw new RuntimeException('Account unavailable.'); }
 
-    db_execute('DELETE FROM otp_codes WHERE user_id = :user_id AND purpose = :purpose AND consumed_at IS NULL', [
-        'user_id' => $userId,
-        'purpose' => $purpose,
-    ]);
-
-    db_execute(
-        'INSERT INTO otp_codes (user_id, purpose, code_hash, expires_at, consumed_at, created_at)
-         VALUES (:user_id, :purpose, :code_hash, :expires_at, :consumed_at, :created_at)',
-        [
-            'user_id' => $userId,
-            'purpose' => $purpose,
-            'code_hash' => password_hash($code, PASSWORD_DEFAULT),
-            'expires_at' => date('Y-m-d H:i:s', strtotime('+' . otp_expiry_minutes() . ' minutes')),
-            'consumed_at' => null,
-            'created_at' => now(),
-        ]
-    );
-
+        db_execute(
+            'DELETE FROM otp_codes
+             WHERE user_id = :user_id AND purpose = :purpose AND consumed_at IS NULL',
+            ['user_id' => $userId, 'purpose' => $purpose]
+        );
+        db_execute(
+            'INSERT INTO otp_codes
+             (user_id, purpose, code_hash, expires_at, consumed_at, failed_attempts, created_at)
+             VALUES (:user_id, :purpose, :code_hash, :expires_at, NULL, 0, :created_at)',
+            [
+                'user_id' => $userId,
+                'purpose' => $purpose,
+                'code_hash' => password_hash($code, PASSWORD_DEFAULT),
+                'expires_at' => date('Y-m-d H:i:s', strtotime('+' . otp_expiry_minutes() . ' minutes')),
+                'created_at' => now(),
+            ]
+        );
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        throw $e;
+    }
     return $code;
 }
 
@@ -664,6 +682,11 @@ function clear_pending_otp(): void
 
 function start_otp_challenge(int $userId, string $purpose): void
 {
+    $actor = $userId . '|' . iworks_auth_ip();
+    if (!iworks_auth_limit_allows('otp_request', $actor, 6, 3600)) {
+        throw new RuntimeException('Too many verification requests. Try again later.');
+    }
+    iworks_auth_limit_record('otp_request', $actor, 3600);
     $user = find_user_by_id($userId);
     if (!$user) {
         throw new RuntimeException('User not found.');
@@ -682,34 +705,60 @@ function start_otp_challenge(int $userId, string $purpose): void
 
 function verify_otp_code(int $userId, string $purpose, string $code): bool
 {
-    $record = db_one(
-        'SELECT * FROM otp_codes
-         WHERE user_id = :user_id AND purpose = :purpose AND consumed_at IS NULL
-         ORDER BY id DESC LIMIT 1',
-        [
-            'user_id' => $userId,
-            'purpose' => $purpose,
-        ]
-    );
-
-    if (!$record) {
+    if (!in_array($purpose, ['login', 'verify_email'], true)) {
         return false;
     }
-
-    if (strtotime((string) $record['expires_at']) < time()) {
+    $ip = iworks_auth_ip();
+    if (!iworks_auth_limit_allows('otp_ip', $ip, 40, 900)) {
         return false;
     }
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $record = db_one(
+            'SELECT * FROM otp_codes
+             WHERE user_id = :user_id AND purpose = :purpose AND consumed_at IS NULL
+             ORDER BY id DESC LIMIT 1 FOR UPDATE',
+            ['user_id' => $userId, 'purpose' => $purpose]
+        );
+        $valid = $record
+            && strtotime((string) $record['expires_at']) > time()
+            && (int) ($record['failed_attempts'] ?? 5) < 5;
+        if (!$valid) {
+            $pdo->commit();
+            iworks_auth_limit_record('otp_ip', $ip, 900);
+            return false;
+        }
 
-    if (!password_verify(trim($code), (string) $record['code_hash'])) {
-        return false;
+        if (!preg_match('/^[0-9]{6}$/D', trim($code))
+            || !password_verify(trim($code), (string) $record['code_hash'])) {
+            $attempts = (int) $record['failed_attempts'] + 1;
+            db_execute(
+                'UPDATE otp_codes SET failed_attempts = :attempts, consumed_at = :consumed_at
+                 WHERE id = :id AND consumed_at IS NULL',
+                [
+                    'attempts' => $attempts,
+                    'consumed_at' => $attempts >= 5 ? now() : null,
+                    'id' => (int) $record['id'],
+                ]
+            );
+            $pdo->commit();
+            iworks_auth_limit_record('otp_ip', $ip, 900);
+            return false;
+        }
+
+        db_execute(
+            'UPDATE otp_codes SET consumed_at = :at WHERE id = :id AND consumed_at IS NULL',
+            ['at' => now(), 'id' => (int) $record['id']]
+        );
+        $pdo->commit();
+        return true;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $error;
     }
-
-    db_execute('UPDATE otp_codes SET consumed_at = :consumed_at WHERE id = :id', [
-        'consumed_at' => now(),
-        'id' => $record['id'],
-    ]);
-
-    return true;
 }
 
 function trusted_device_cookie_name(): string
@@ -873,6 +922,14 @@ function send_password_reset_link_to_user(int $userId): bool
 
 function request_password_reset_by_email(string $email): void
 {
+    $actor = iworks_auth_actor($email);
+    $ip = iworks_auth_ip();
+    if (!iworks_auth_limit_allows('reset_actor', $actor, 3, 3600)
+        || !iworks_auth_limit_allows('reset_ip', $ip, 30, 3600)) {
+        return;
+    }
+    iworks_auth_limit_record('reset_actor', $actor, 3600);
+    iworks_auth_limit_record('reset_ip', $ip, 3600);
     $user = find_user_by_email($email);
     if (!$user) {
         return;

@@ -66,6 +66,7 @@ function app_config(): array
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/support_email.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth_rate_limits.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/gateway_verification.php';
 require_once __DIR__ . '/domain.php';
