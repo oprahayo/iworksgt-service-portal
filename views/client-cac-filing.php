@@ -124,7 +124,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                 <?php endif; ?>
               </select>
               <textarea id="cacAddress" rows="2" name="filing[business_address]" required <?= $first('address_mode')==='virtual'?'readonly':'' ?>><?= e($first('business_address')) ?></textarea>
-              <label class="iw-cac-checkbox" id="cacSameAddressWrap" <?= $first('address_mode')==='virtual'?'hidden':'' ?>><input type="checkbox" id="cacSameAddress"> Use first proprietor/director's residential address as business address</label>
+              <p class="iw-cac-explain" id="cacSameAddressWrap" <?= $first('address_mode')==='virtual'?'hidden':'' ?>>If appropriate for your business, enter your permitted residential address directly above.</p>
               <small class="iw-cac-explain" id="cacAddressNote">
                 <?php if ($virtualAddressAvailable): ?>
                   Managed-office service is only offered where a traceable eligible location and the necessary permission are available. It does not hide mandatory CAC public records.
@@ -496,14 +496,6 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
     people.addEventListener('input',function(ev){if(ev.target.matches('[data-cac-id-number]'))validateId(ev.target.closest('[data-person]'));});
     people.addEventListener('change',function(ev){if(ev.target.matches('[data-cac-id-type]'))validateId(ev.target.closest('[data-person]'));});
     people.querySelectorAll('[data-person]').forEach(validateId);
-    var same=document.getElementById('cacSameAddress');
-    if(same)same.addEventListener('change',function(){
-      if(!same.checked)return;
-      var residence=people.querySelector('[name="filing[people][0][residential_address]"]');
-      var businessField=document.getElementById('cacAddress');
-      if(residence&&residence.value.trim())businessField.value=residence.value;
-      else { same.checked=false; alert('Enter the first person’s residential address first.'); }
-    });
     reindex();
   }
 
