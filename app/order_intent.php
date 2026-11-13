@@ -16,7 +16,7 @@ function iworks_order_intent_capture(array $query): void
 {
     if (!array_key_exists('service', $query)) { return; }
     $slug = iworks_order_slug($query['service']);
-    $service = $slug !== '' ? get_service_by_slug($slug) : null;
+    $service = $slug !== '' ? get_service_by_slug($slug === 'cac-business-name' ? 'company-registration' : $slug) : null;
     if (!$service) {
         iworks_order_intent_clear();
         return;
