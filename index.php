@@ -185,6 +185,10 @@ try {
             || (should_enforce_split_domain() && request_host() === configured_host(public_base_url())))) {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
         if ($page === 'service') {
+            if (in_array((string)$publicSlug,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                header('Location: ' . public_url('service',['slug'=>'company-registration']), true, 301);
+                return;
+            }
             $service = get_service_by_slug($publicSlug);
             if (!$service) {
                 http_response_code(404);
@@ -1846,7 +1850,7 @@ try {
                     redirect(url('cac_filing', ['type'=>'business']));
                 }
                 if ($requested === 'company-registration') {
-                    redirect(url('cac_filing', ['type'=>'company']));
+                    redirect(url('cac_filing'));
                 }
             }
             if ((current_user()['role'] ?? '') === 'client'
