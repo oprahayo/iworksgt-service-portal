@@ -26,17 +26,15 @@ $clientLogo = logo_path();
   <?php if ($clientRoute === 'jobs'): ?>
     <link rel="stylesheet" href="assets/css/customer-focused-checkout.css?v=20261113-catalog2">
   <?php endif; ?>
+  <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
 </head>
 <body class="portal-authenticated iw-client-page <?= e($pageBodyClass ?? '') ?>">
 <div class="portal-layout iw-client-layout">
   <aside class="portal-sidebar iw-client-sidebar" id="portalSidebar">
     <div class="iw-client-side-brand">
       <a href="<?= e(url('dashboard')) ?>" aria-label="iWorks customer home">
-        <?php if ($clientLogo !== ''): ?>
-        <img class="iw-client-logo" src="<?= e($clientLogo) ?>" alt="<?= e(brand_name()) ?>">
-        <?php else: ?>
-        <span class="iw-client-brand"><span class="iw-client-mark">i</span>works<span class="iw-client-brand-dot">.</span></span>
-        <?php endif; ?>
+        <img class="iw-client-logo iw-compact-logo" src="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1" alt="" width="49" height="28" decoding="async">
+        <span class="iw-compact-wordmark">iWORKS<small>GLOBAL</small></span>
       </a>
       <button class="iw-client-nav-close" id="sidebarCloseBtn" aria-label="Close menu" type="button"><i class="bi bi-x-lg"></i></button>
     </div>

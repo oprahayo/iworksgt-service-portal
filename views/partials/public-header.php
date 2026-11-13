@@ -193,6 +193,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
       <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/blog-reading.css')) ?>?v=20261113-reading2">
     <?php endif; ?>
   <?php endif; ?>
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/iworks-responsive-logo.css')) ?>?v=20261113-logo1">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -215,11 +216,10 @@ $isLaunchHome = $currentPublicSlug === 'home';
     <div class="container public-container">
       <nav class="navbar navbar-expand-xl public-nav-shell" aria-label="Main navigation">
         <a class="navbar-brand d-flex align-items-center public-brand" href="<?= e(public_url('home')) ?>" aria-label="<?= e(brand_name()) ?> home">
-          <?php if ($logo !== ''): ?>
-            <img src="<?= e($logo) ?>" alt="<?= e(brand_name()) ?>" class="public-logo">
-          <?php else: ?>
-            <span class="public-wordmark"><?= e(brand_name()) ?></span>
-          <?php endif; ?>
+          <picture class="iw-brand-picture">
+            <source media="(max-width:1199.98px)" srcset="<?= e(public_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1">
+            <img src="<?= e(public_absolute_url('assets/branding/iworks-desktop.svg')) ?>?v=20261113-logo1" alt="<?= e(brand_name()) ?>" class="public-logo iw-desktop-logo" width="224" height="21" decoding="async">
+          </picture>
         </a>
         <div class="public-nav-actions d-xl-none">
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation">

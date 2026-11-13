@@ -144,11 +144,10 @@ $socialIcons = [
 
         <div class="public-footer-brand-row">
           <a class="public-footer-brand-lockup" href="<?= e(public_url('home')) ?>">
-            <?php if ($footerLogo !== ''): ?>
-              <img src="<?= e($footerLogo) ?>" alt="<?= e($footerCompany) ?>" class="public-footer-logo" onerror="this.style.display='none'">
-            <?php else: ?>
-              <span class="public-footer-brand-text"><?= e($footerCompany) ?></span>
-            <?php endif; ?>
+            <picture class="iw-brand-picture">
+              <source media="(max-width:575.98px)" srcset="<?= e(public_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1">
+              <img src="<?= e(public_absolute_url('assets/branding/iworks-desktop.svg')) ?>?v=20261113-logo1" alt="<?= e($footerCompany) ?>" class="public-footer-logo iw-desktop-logo" width="195" height="18" loading="lazy" decoding="async">
+            </picture>
           </a>
           <?php if ($footerSummary !== ''): ?><p class="public-footer-summary"><?= e($footerSummary) ?></p><?php endif; ?>
           <div class="public-footer-socials">
