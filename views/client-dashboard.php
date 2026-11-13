@@ -44,6 +44,8 @@ foreach ($clientCatalogue as $catalogItem) {
     $price = (float) ($service['price'] ?? 0);
     $pricing = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request quote';
     if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
+    $checkoutMode = (string)($service['_iworks_checkout_mode'] ?? 'standard');
+    if ($checkoutMode === 'consultation') { $pricing = 'Specialist quote'; }
     $startUrl = $slug === 'trademark'
         ? url('trademark')
         : ($slug === 'business-name-registration-cac-nigeria'
