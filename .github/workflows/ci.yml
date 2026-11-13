@@ -75,6 +75,7 @@ jobs:
           php tests/cac_launch_preparation_test.php
           php tests/cac_unified_product_contract_test.php
           php tests/editorial_launch_contract_test.php
+          php tests/blog_journal_render_test.php
           php tests/admin_public_navigation_schema_contract_test.php
           php tests/job_support_refresh_contract_test.php
           php tests/live_chat_emoji_editorial_contract_test.php

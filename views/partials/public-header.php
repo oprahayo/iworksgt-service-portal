@@ -169,6 +169,18 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php else: ?>
     <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261113-launch2">
   <?php endif; ?>
+  <?php if (in_array($currentPublicSlug, ['blog', 'blog_post'], true)): ?>
+    <?php
+      // Serve the journal styling directly when split cPanel document roots
+      // cannot expose /portal/assets on the apex domain.
+      $iwJournalCss = __DIR__ . '/../../assets/css/blog-journal.css';
+    ?>
+    <?php if (is_file($iwJournalCss) && is_readable($iwJournalCss)): ?>
+      <style id="iw-journal-css"><?= (string) file_get_contents($iwJournalCss) ?></style>
+    <?php else: ?>
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/blog-journal.css')) ?>?v=20261113-journal1">
+    <?php endif; ?>
+  <?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;

@@ -97,7 +97,7 @@ $blogReturnUrl = url('blog', $blogReturnParams);
                 'Open media library'
             ); ?>
             <input class="form-control mt-2" type="file" name="featured_image_upload" accept=".jpg,.jpeg,.png,.webp">
-            <small class="text-muted">Use library or upload directly here.</small>
+            <small class="text-muted">Use a unique, landscape image for each article (recommended 1200 × 630 px, JPG or WebP). It appears in the featured story, article cards and article header. If left empty, the public site uses an iWorks branded cover.</small>
           </div>
 
           <?php if (!empty($formPost['featured_image']['url'])): ?>

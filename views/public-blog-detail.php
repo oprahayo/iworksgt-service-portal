@@ -8,9 +8,9 @@ $published=substr((string)($blogPost['published_at']??''),0,10);
 $link=public_url('blog_post',['slug'=>(string)($blogPost['slug']??'')]);
 $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
 ?>
-<main class="public-main iw-editorial-public">
+<main class="public-main iw-editorial-public iw-journal iw-journal-article" id="main-content">
   <article class="iw-article-shell">
-    <div class="container public-container iw-article-narrow">
+    <div class="container public-container iw-article-narrow iw-journal-article-container">
       <nav class="iw-editorial-breadcrumb" aria-label="Breadcrumb">
         <a href="<?= e(public_url('home')) ?>">Home</a><i class="bi bi-chevron-right"></i>
         <a href="<?= e(public_url('blog')) ?>">Insights</a><i class="bi bi-chevron-right"></i>
@@ -20,13 +20,20 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
         <span class="iw-editorial-eyebrow"><?= e($tag) ?> · BUSINESS INSIGHTS</span>
         <h1><?= e($title) ?></h1>
         <?php if(!empty($blogPost['excerpt'])): ?><p><?= e((string)$blogPost['excerpt']) ?></p><?php endif; ?>
-        <div class="iw-article-byline"><span class="iw-article-author-avatar"><i class="bi bi-person"></i></span>
-          <div><strong><?= e($author) ?></strong><small><?= e($published) ?></small></div>
+        <div class="iw-article-byline"><span class="iw-article-author-avatar"><i class="bi bi-person" aria-hidden="true"></i></span>
+          <div><strong><?= e($author) ?></strong><small><time datetime="<?= e($published) ?>"><?= e($published) ?></time></small></div>
           <span class="iw-article-read-time"><?= max(1,(int)ceil(str_word_count(strip_tags((string)($blogPost['body_html']??'')))/220)) ?> min read</span>
         </div>
       </header>
       <?php if($cover!==''): ?><figure class="iw-article-cover"><img src="<?= e($cover) ?>" alt="<?= e($title) ?>" decoding="async" fetchpriority="high"></figure>
-      <?php else: ?><div class="iw-article-graphic iw-editorial-abstract"><i class="bi bi-journal-richtext" aria-hidden="true"></i></div><?php endif; ?>
+      <?php else: ?>
+        <div class="iw-article-graphic iw-journal-no-cover">
+          <div class="iw-journal-art" aria-hidden="true">
+            <span class="iw-journal-art-brand">iWORKS <em>GLOBAL</em></span>
+            <strong><?= e($title) ?></strong><span class="iw-journal-art-tag"><?= e($tag) ?></span>
+          </div>
+        </div>
+      <?php endif; ?>
 
       <div class="iw-article-body rich-text">
         <?= sanitize_limited_html((string)($blogPost['body_html']??'')) ?>
@@ -78,19 +85,41 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
     </div>
   </article>
   <?php if($related): ?>
-    <section class="iw-related-insights"><div class="container public-container">
+    <section class="iw-related-insights"><div class="container public-container iw-journal-container">
       <div class="iw-editorial-section-head"><div><span>KEEP READING</span><h2>Related insights</h2></div>
         <a href="<?= e(public_url('blog')) ?>">View all <i class="bi bi-arrow-right"></i></a></div>
-      <div class="iw-insights-grid">
-        <?php foreach($related as $post): ?>
-          <?php $img=trim((string)($post['featured_image']['url']??'')); ?>
-          <article class="iw-insights-card"><a href="<?= e(public_url('blog_post',['slug'=>(string)$post['slug']])) ?>">
-            <div class="iw-insights-card-cover <?= $img===''?'iw-editorial-abstract':'' ?>">
-              <?php if($img!==''): ?><img src="<?= e($img) ?>" loading="lazy" alt=""><?php else: ?><i class="bi bi-journal-text"></i><?php endif; ?>
-              <span class="iw-editorial-read-overlay">Read article <i class="bi bi-arrow-up-right"></i></span>
-            </div><div class="iw-insights-card-copy"><span class="iw-editorial-tag"><?= e((string)($post['tag']?:'Insights')) ?></span>
-              <h3><?= e((string)$post['title']) ?></h3><p><?= e((string)($post['excerpt']??'')) ?></p></div>
-          </a></article>
+      <div class="iw-journal-grid">
+        <?php foreach ($related as $index => $post): ?>
+          <?php
+            $img = trim((string)($post['featured_image']['url'] ?? ''));
+            $relatedTitle = (string)($post['title'] ?? 'Business insight');
+            $relatedTag = trim((string)($post['tag'] ?? '')) ?: 'Business';
+          ?>
+          <article class="iw-journal-card">
+            <a href="<?= e(public_url('blog_post', ['slug'=>(string)($post['slug'] ?? '')])) ?>">
+              <div class="iw-journal-card-cover <?= $img === '' ? 'iw-journal-no-cover' : '' ?>" data-art-variant="<?= (int)($index % 4) + 1 ?>">
+                <?php if ($img !== ''): ?>
+                  <img src="<?= e($img) ?>" alt="" loading="lazy" decoding="async" width="600" height="344">
+                <?php else: ?>
+                  <div class="iw-journal-art" aria-hidden="true">
+                    <span class="iw-journal-art-brand">iWORKS <em>GLOBAL</em></span>
+                    <strong><?= e($relatedTitle) ?></strong>
+                    <span class="iw-journal-art-tag"><?= e($relatedTag) ?></span>
+                  </div>
+                <?php endif; ?>
+                <span class="iw-journal-cover-action">Read article <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+              </div>
+              <div class="iw-journal-card-content">
+                <h3><?= e($relatedTitle) ?></h3>
+                <div class="iw-journal-meta"><span><?= e($relatedTag) ?></span>
+                <span aria-hidden="true">·</span>
+                <time datetime="<?= e(substr((string)($post['published_at'] ?? ''),0,10)) ?>"><?= e(substr((string)($post['published_at'] ?? ''),0,10)) ?></time></div>
+                <?php if (trim((string)($post['excerpt'] ?? '')) !== ''): ?>
+                  <p><?= e((string)$post['excerpt']) ?></p>
+                <?php endif; ?>
+              </div>
+            </a>
+          </article>
         <?php endforeach; ?>
       </div>
     </div></section>
