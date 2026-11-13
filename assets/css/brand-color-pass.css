@@ -1,0 +1,41 @@
+/* Unified orange, charcoal and warm neutrals across the public and portal UI.
+ * Keep semantic error/success colours but remove default Bootstrap blue accents.
+ */
+:root{--iw-brand-orange:#e86720;--iw-brand-orange-dark:#b84d11;--iw-brand-charcoal:#202124;--iw-brand-warm:#fff5ed}
+body.page-public,body.portal-authenticated{
+  --bs-primary:#e86720;--bs-primary-rgb:232,103,32;
+  --bs-link-color:#b74a10;--bs-link-hover-color:#8f3308;
+  --bs-focus-ring-color:#e8672040;accent-color:#df631d;
+}
+body.page-public .btn-primary,body.portal-authenticated .btn-primary{
+  background-color:#e86720!important;border-color:#e86720!important;color:#fff!important
+}
+body.page-public .btn-primary:hover,body.portal-authenticated .btn-primary:hover{
+  background-color:#ba4d12!important;border-color:#ba4d12!important
+}
+body.page-public .btn-outline-primary,body.portal-authenticated .btn-outline-primary{
+  color:#bf4e13!important;border-color:#d8763c!important;background-color:transparent!important
+}
+body.page-public .btn-outline-primary:hover,body.portal-authenticated .btn-outline-primary:hover{
+  background-color:#fff0e5!important;border-color:#c55b20!important;color:#9d3d0a!important
+}
+body.page-public :is(.text-primary,.link-primary),body.portal-authenticated :is(.text-primary,.link-primary){color:#b84b11!important}
+body.page-public .bg-primary,body.portal-authenticated .bg-primary{background-color:#e86720!important}
+body.page-public .border-primary,body.portal-authenticated .border-primary{border-color:#e86720!important}
+body.page-public :is(.form-control,.form-select):focus,
+body.portal-authenticated :is(.form-control,.form-select):focus{
+ border-color:#e2a078!important;box-shadow:0 0 0 3px #e867201e!important
+}
+body.page-public .page-link,body.portal-authenticated .page-link{color:#b9490d}
+body.page-public .page-item.active .page-link,body.portal-authenticated .page-item.active .page-link{background:#e86720;border-color:#e86720;color:#fff}
+body.portal-authenticated:not(.role-client) .sidebar-link.active{
+ color:#a84911!important;background:#fff0e5!important;border-color:#f1c9af!important
+}
+body.portal-authenticated:not(.role-client) .sidebar-link:hover{color:#ae4b10;background:#fff8f3}
+body.portal-authenticated:not(.role-client) .iw-ops-site-link{color:#b54e18}
+body.portal-authenticated:not(.role-client) .iw-ops-dashboard-links a:hover{background:#fff2e9;border-color:#f3c7a8;color:#9d4312}
+body.portal-authenticated:not(.role-client) .iw-ops-eyebrow{color:#b25320}
+body.page-public .iw-mobile-menu-book{color:#bb5314!important;background:#fff4ec!important;border-color:#f1bd9a!important}
+body.page-public .iw-mobile-menu-start{background:#e86720!important;border-color:#e86720!important;color:#fff!important}
+body.page-public .iw-sitewide-cta{background:linear-gradient(125deg,#171717,#2a2420)!important}
+@media(prefers-reduced-motion:reduce){body.page-public *,body.portal-authenticated *{scroll-behavior:auto!important}}
