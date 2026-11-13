@@ -65,7 +65,7 @@ foreach ($clientCatalogue as $catalogItem) {
       <span class="iw-client-catalog-price"><?= e($pricing) ?></span>
       <div class="iw-client-catalog-actions">
         <a href="<?= e(public_url('service',['slug'=>$slug])) ?>" class="iw-client-catalog-learn" aria-label="Learn more about <?= e($name) ?>">Details</a>
-        <a href="<?= e($startUrl) ?>" class="iw-client-service-action">Start <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="<?= e($startUrl) ?>" class="iw-client-service-action"><?= e($startLabel) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       </div>
     </div>
   </article>
