@@ -74,7 +74,10 @@ check(str_starts_with($guidance['official'], 'https://icrp.cac.gov.ng/'), 'CAC s
 $header = file_get_contents(dirname(__DIR__) . '/views/partials/public-header.php');
 check(str_contains($header, 'iworks_search_service_meta'), 'Public header must load service-specific metadata.');
 $detail = file_get_contents(dirname(__DIR__) . '/views/public-service-detail.php');
-check(str_contains($detail, 'iw-search-guide'), 'Service detail must include search guidance.');
+check(str_contains($detail, 'iworks_search_service_guide($service)') &&
+    str_contains($detail, 'iw-product-process') &&
+    str_contains($detail, 'iw-product-faq'),
+    'Service detail must retain guided steps and FAQs in the unified product layout.');
 $breadcrumb = json_decode(iworks_seo_breadcrumb_jsonld('service',
     ['name' => 'Business Name Registration (CAC Nigeria)'], public_url('service', ['slug'=>'business-name-registration-cac-nigeria'])), true);
 check(($breadcrumb['@type'] ?? '') === 'BreadcrumbList' && count($breadcrumb['itemListElement'] ?? []) === 3, 'Services must have three-level breadcrumb JSON-LD.');
