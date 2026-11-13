@@ -299,7 +299,7 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
               $customerOffer = iworks_customer_published_service($service);
               $customerMode = (string)($customerOffer['_iworks_checkout_mode'] ?? '');
               $customerStatus = $customerOffer === null ? 'Not offered to customers'
-                : ($customerMode === 'cac' ? 'Customer: Enterprise &amp; Private Ltd (guided)'
+                : ($customerMode === 'cac' ? 'Customer: Enterprise + Private Ltd (guided)'
                 : ($customerMode === 'trademark' ? 'Customer: guided Trademark'
                 : ($customerMode === 'consultation' ? 'Customer: specialist enquiry'
                 : 'Customer: standard checkout')));
