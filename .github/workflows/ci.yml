@@ -74,7 +74,9 @@ jobs:
           php tests/editorial_launch_contract_test.php
           php tests/admin_public_navigation_schema_contract_test.php
           php tests/job_support_refresh_contract_test.php
+          php tests/live_chat_emoji_editorial_contract_test.php
 
       - name: Validate public interaction JavaScript
         run: node --check assets/js/public-ux.js
           node --check assets/js/public-assistance.js
+          node --check assets/js/live-inbox.js

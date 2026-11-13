@@ -102,6 +102,12 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
 
     if (has_role(['admin', 'agent'])) {
         $sidebarItems[] = [
+            'page' => 'live_inbox',
+            'label' => 'Website Live Chat',
+            'icon' => 'bi-chat-dots-fill',
+            'url' => url('live_inbox'),
+        ];
+        $sidebarItems[] = [
             'page' => 'messages',
             'label' => 'Messages',
             'icon' => 'bi-chat-dots',
@@ -185,7 +191,7 @@ if ($user && (string)($user['role'] ?? '') === 'admin') {
     $sidebarItems[] = ['page'=>'system_health','label'=>'System health','icon'=>'bi-heart-pulse','url'=>url('system_health')];
 }
 $sidebarPriority = [
-    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'messages'=>30, 'community'=>40,
+    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'live_inbox'=>25, 'messages'=>30, 'community'=>40,
     'services'=>50, 'forms'=>60,
     'blog'=>70, 'editorial_showcase'=>80, 'frontend'=>90, 'media'=>100,
     'invoices'=>110, 'payments'=>120, 'payouts'=>130, 'withdrawals'=>140,
@@ -226,6 +232,9 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <link href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.0/build/css/intlTelInput.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/reviews.css">
+  <link rel="stylesheet" href="assets/css/emoji-rating.css?v=20261113-live1">
+  <link rel="stylesheet" href="assets/css/brand-color-pass.css?v=20261113-live1">
+  <?php if ($currentPage === 'live_inbox'): ?><link rel="stylesheet" href="assets/css/live-inbox.css?v=20261113-live1"><?php endif; ?>
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
   <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
   <?php if ($user && $currentPage === 'job'): ?><link rel="stylesheet" href="assets/css/job-workspace.css?v=20261113b"><?php endif; ?>
@@ -276,7 +285,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         $portalGroups = [
           'dashboard'=>'OVERVIEW',
           'jobs'=>'SERVICE DELIVERY','support'=>'SERVICE DELIVERY',
-          'messages'=>'COMMUNICATION','community'=>'COMMUNICATION',
+          'messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
           'services'=>'SERVICE CATALOGUE','forms'=>'SERVICE CATALOGUE',
           'blog'=>'WEBSITE CONTENT','editorial_showcase'=>'WEBSITE CONTENT','frontend'=>'WEBSITE CONTENT','media'=>'WEBSITE CONTENT',
           'invoices'=>'FINANCE','payments'=>'FINANCE','payouts'=>'FINANCE','withdrawals'=>'FINANCE',

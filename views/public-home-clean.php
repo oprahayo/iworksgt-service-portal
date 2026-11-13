@@ -212,7 +212,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     <div class="container public-container">
       <div class="iw-clean-section-head">
         <h2 id="iw-clean-process-title">How it works</h2>
-        <p>Choose, submit and track—everything moves through your portal.</p>
+        <p>Choose a service, submit your details and track progress in your portal.</p>
       </div>
       <div class="iw-clean-step-grid">
         <?php foreach (array_slice($steps, 0, 3) as $index => $step): ?>

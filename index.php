@@ -117,7 +117,7 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study', 'live_chat'];
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
@@ -161,6 +161,11 @@ try {
         && request_host() === configured_host(portal_base_url())
         && !$isPublicPageRoute) {
         header('X-Robots-Tag: noindex, nofollow');
+    }
+
+    if ($page === 'live_chat') {
+        iw_chat_public_request();
+        return;
     }
 
     if (is_logged_in()) {
@@ -2767,6 +2772,20 @@ try {
             $title = 'Notifications - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
             require __DIR__ . '/views/notifications.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
+        case 'live_inbox_api':
+            require_roles(['admin','agent']);
+            iw_chat_staff_request();
+            break;
+
+        case 'live_inbox':
+            require_roles(['admin','agent']);
+            $title = 'Website Live Chats - ' . app_name();
+            $liveChatInstalled = iw_chat_ready();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/live-inbox.php';
             require __DIR__ . '/views/partials/footer.php';
             break;
 

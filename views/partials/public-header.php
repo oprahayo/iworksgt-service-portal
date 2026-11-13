@@ -161,6 +161,8 @@ $isLaunchHome = $currentPublicSlug === 'home';
   document.documentElement.dataset.iwThemeMode='light';
   </script>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/editorial-brand.css')) ?>?v=20261112a">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-editorial-refinement.css')) ?>?v=20261113-live1">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/brand-color-pass.css')) ?>?v=20261113-live1">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;

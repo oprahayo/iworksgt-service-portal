@@ -53,8 +53,8 @@ function job_review_display_name(string $name): string
 
 function validate_job_review_input(int $rating, string $feedback, bool $public): array
 {
-    if ($rating < 1 || $rating > 10) {
-        throw new RuntimeException('Select a rating between 1 and 10.');
+    if ($rating < 1 || $rating > 5) {
+        throw new RuntimeException('Choose one of the five satisfaction emojis.');
     }
     $feedback = trim(strip_tags($feedback));
     $length = function_exists('mb_strlen') ? mb_strlen($feedback, 'UTF-8') : strlen($feedback);
@@ -67,7 +67,27 @@ function validate_job_review_input(int $rating, string $feedback, bool $public):
     if ($public && (preg_match('/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/', $feedback) || preg_match('/https?:\/\/|www\./i', $feedback))) {
         throw new RuntimeException('Remove email addresses and website links before publishing your feedback.');
     }
-    return ['rating' => $rating, 'feedback' => $feedback, 'is_public' => $public ? 1 : 0];
+    // Preserve the historical ten-point database scale without rewriting existing reviews.
+    // New 1..5 face selections are stored as 2,4,6,8,10. Public views map back to 1..5.
+    return ['rating' => $rating * 2, 'feedback' => $feedback, 'is_public' => $public ? 1 : 0];
+}
+
+function job_review_five_point_score(int $storedRating): int
+{
+    // Existing 1–10 feedback maps fairly to the new five-choice display.
+    return max(1, min(5, (int) round($storedRating / 2, 0, PHP_ROUND_HALF_UP)));
+}
+
+function job_review_emoji(int $storedRating): string
+{
+    $options = [1=>'😠', 2=>'🙁', 3=>'😐', 4=>'🙂', 5=>'😍'];
+    return $options[job_review_five_point_score($storedRating)];
+}
+
+function job_review_label(int $storedRating): string
+{
+    $options = [1=>'Very unhappy', 2=>'Unhappy', 3=>'Okay', 4=>'Happy', 5=>'Excellent'];
+    return $options[job_review_five_point_score($storedRating)];
 }
 
 function job_review_for_order(int $jobId): ?array

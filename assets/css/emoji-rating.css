@@ -1,0 +1,13 @@
+/* Five-choice emoji satisfaction scale shared by client and staff job views. */
+.iw-review-emoji-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-width:600px;margin:7px 0 14px}
+.iw-review-emoji-choice{position:relative;cursor:pointer;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid #e5e1dd;background:#fff;border-radius:12px;padding:12px 4px 10px;min-height:89px;text-align:center;transition:border-color .14s,background .14s,transform .14s}
+.iw-review-emoji-choice input{position:absolute;opacity:0;width:100%;height:100%;inset:0;cursor:pointer}
+.iw-review-emoji-face{font-size:clamp(27px,3vw,39px);line-height:1.15;filter:saturate(.92)}
+.iw-review-emoji-caption{font-size:11px;line-height:1.25;font-weight:650;color:#52606e}
+.iw-review-emoji-choice:hover{border-color:#e9a67f;background:#fff8f2;transform:translateY(-2px)}
+.iw-review-emoji-choice:has(input:checked){border-color:#ef742c;background:#fff0e4;box-shadow:0 0 0 2px #ef742c22}
+.iw-review-emoji-choice:has(input:checked) .iw-review-emoji-caption{color:#af4914}
+.iw-review-emoji-choice:has(input:focus-visible){outline:3px solid #efa06c;outline-offset:3px}
+.iw-review-emoji-choice input:disabled + .iw-review-emoji-face{opacity:.55}
+@media(max-width:500px){.iw-review-emoji-options{gap:5px}.iw-review-emoji-choice{padding:9px 1px;min-height:79px}.iw-review-emoji-face{font-size:27px}.iw-review-emoji-caption{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.iw-review-emoji-choice{transition:none}.iw-review-emoji-choice:hover{transform:none}}

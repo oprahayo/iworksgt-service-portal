@@ -167,16 +167,24 @@ $missingRequired = count(array_filter($visibleIntake, static fn(array $s): bool 
       <section class="iw-client-detail-panel">
         <h2>Your feedback</h2>
         <?php if (!empty($clientOrderReview)): ?>
-          <p>You rated this service <?= (int) ($clientOrderReview['rating'] ?? 0) ?>/10.</p>
+          <p>You rated this service <?= job_review_emoji((int)($clientOrderReview['rating'] ?? 0)) ?> <?= e(job_review_label((int)($clientOrderReview['rating'] ?? 0))) ?>.</p>
           <p><?= nl2br(e((string) ($clientOrderReview['feedback'] ?? ''))) ?></p>
         <?php else: ?>
           <form method="post" action="<?= e(url('job',['id'=>(int) $job['id']])) ?>">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="form_action" value="submit_order_review">
-            <label class="iw-client-field-label" for="clientRating">Rate this service (1–10)</label>
-            <select class="iw-client-input" name="rating" id="clientRating" required>
-              <?php for ($rating=10;$rating>=1;$rating--): ?><option value="<?= $rating ?>"><?= $rating ?> / 10</option><?php endfor; ?>
-            </select>
+            <fieldset class="iw-review-rating-fieldset">
+              <legend class="iw-client-field-label">How was your experience?</legend>
+              <div class="iw-review-emoji-options" role="radiogroup" aria-label="Choose a satisfaction emoji">
+                <?php foreach ([1=>['😠','Very unhappy'],2=>['🙁','Unhappy'],3=>['😐','Okay'],4=>['🙂','Happy'],5=>['😍','Excellent']] as $rating => $face): ?>
+                  <label class="iw-review-emoji-choice">
+                    <input type="radio" name="rating" value="<?= $rating ?>" required aria-label="<?= e($face[1]) ?>">
+                    <span class="iw-review-emoji-face" aria-hidden="true"><?= $face[0] ?></span>
+                    <span class="iw-review-emoji-caption"><?= e($face[1]) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </fieldset>
             <label class="iw-client-field-label" for="clientFeedback">Comments (optional)</label>
             <textarea class="iw-client-textarea" name="feedback" id="clientFeedback" rows="3" maxlength="1400"></textarea>
             <label class="iw-client-consent"><input type="checkbox" name="publish_consent" value="1"> Allow iWorks to publish my feedback with an abbreviated name</label>
