@@ -54,7 +54,7 @@ foreach ($clientCatalogue as $catalogItem) {
             ? url('trademark')
             : ($slug === 'company-registration'
                 ? url('cac_filing')
-                : url('jobs', ['action'=>'new','service'=>$slug])));
+                : url('jobs', ['action'=>'new','service'=>$slug]))));
     $startLabel = $checkoutMode === 'consultation' ? 'Enquire' : 'Start';
     $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
   ?>
