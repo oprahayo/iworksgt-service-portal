@@ -40,8 +40,16 @@ tar -C "$TMP" -czf "$TMP/release.tar.gz" --transform='s#^fixture/#release-root/#
 
 # No internet needed, and no /dev/fd process substitution used by installer.
 export IWORKS_RELEASE_ARCHIVE="$TMP/release.tar.gz"
-# Fail-closed rehearsal: missing migrations/mail/private HTTP controls block
-# the entire release before any portal or asset writes occur.
+# Fail-closed rehearsal: even --check must report missing live
+# schema/mail/HTTP prerequisites. Both modes preserve all site files.
+if bash "$ROOT/scripts/deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC" > "$TMP/blocked-check.log" 2>&1; then
+  echo 'Dry-run failed to report an unsafe release.' >&2
+  exit 1
+fi
+grep -Fq 'Release safety preflight blocked deployment' "$TMP/blocked-check.log"
+grep -Fq 'Portal changes:' "$TMP/blocked-check.log"
+grep -q 'old portal' "$PORTAL/index.php"
+# A failed preflight must also block --apply before any writes.
 if bash "$ROOT/scripts/deploy_admin_mobile_refresh.sh" --apply "$PORTAL" "$PUBLIC" > "$TMP/blocked.log" 2>&1; then
   echo 'An unsafe release unexpectedly applied.' >&2
   exit 1
@@ -54,6 +62,7 @@ printf '%s\n' '<?php exit(0); // synthetic read-only preflight succeeded' > "$TM
 tar -C "$TMP" -czf "$TMP/release.tar.gz" --transform='s#^fixture/#release-root/#' fixture
 bash "$ROOT/scripts/deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC" > "$TMP/check.log"
 grep -q 'CHECK ONLY' "$TMP/check.log"
+grep -q 'READINESS PASSED' "$TMP/check.log"
 grep -q 'Portal changes:' "$TMP/check.log"
 [[ ! -e "$PORTAL/assets/css/fixture.css" ]]
 [[ ! -e "$PUBLIC/assets/css/fixture.css" ]]
