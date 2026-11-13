@@ -43,6 +43,11 @@ if ($isTrademarkService) {
     $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
     $priceText = 'USD ' . number_format($price, 2) . ' per class';
 }
+$manualReview = (string)($service['_iworks_checkout_mode'] ?? '') === 'consultation';
+if ($manualReview) {
+    $priceText = 'Tailored quote after review';
+    $price = 0;
+}
 $tax = (float) ($service['tax_percent'] ?? 0);
 $featured = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
 $imageUrl = trim((string) ($featured['url'] ?? ''));
