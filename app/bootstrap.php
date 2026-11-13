@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/error_response.php';
+if (PHP_SAPI !== 'cli') {
+    set_exception_handler('iworks_public_error_response');
+}
+
 $__configPath = __DIR__ . '/config.php';
 
 // Keep local credentials out of source control while allowing a fresh clone
