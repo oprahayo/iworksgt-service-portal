@@ -6,6 +6,7 @@ require __DIR__ . '/app/bootstrap.php';
 
 $page = $_GET['page'] ?? null;
 $requestedPrettyPublicPage = false;
+$unmatchedPrettyRoute = false;
 
 if ($page === null) {
     $rawPath = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
@@ -41,6 +42,7 @@ if ($page === null) {
             $page = $rawPath;
             $requestedPrettyPublicPage = true;
         }
+        $unmatchedPrettyRoute = iworks_unmatched_pretty_path($rawPath, $requestedPrettyPublicPage);
     }
 }
 
@@ -105,6 +107,16 @@ if (!function_exists('safe_internal_return_url')) {
 }
 
 try {
+    if ($page === null && $unmatchedPrettyRoute) {
+        http_response_code(404);
+        $title = 'Page not found - ' . app_name();
+        $publicPageSlug = 'not_found';
+        header('X-Robots-Tag: noindex, follow');
+        require __DIR__ . '/views/partials/public-header.php';
+        require __DIR__ . '/views/public-404.php';
+        require __DIR__ . '/views/partials/public-footer.php';
+        exit;
+    }
     if ($page === null) {
         // www.iworksgt.com serves the public index even if a session cookie
         // is present. portal.iworksgt.com opens the application itself.

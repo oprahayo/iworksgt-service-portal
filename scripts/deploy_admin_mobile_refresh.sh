@@ -52,7 +52,7 @@ sed 's#^\./##' "$TMP/source-files" | LC_ALL=C sort > "$TMP/source-paths"
 : > "$TMP/list"
 while IFS= read -r file; do
   case "$file" in
-    app/config.php|storage/*|assets/uploads/*|public-root/*|.github/*|.htaccess) continue ;;
+    app/config.php|storage/*|assets/uploads/*|public-root/*|.github/*|.htaccess|database.sql) continue ;;
     app/*|api/*|assets/css/*|assets/js/*|assets/illustrations/*|assets/branding/*|views/*|scripts/*|tests/*|index.php|invoice.php|download.php|export.php|preview.php|sso.php|logout.php|setup.php|database.sql|cron_*.php)
       printf '%s\n' "$file" >> "$TMP/list" ;;
   esac
@@ -92,7 +92,7 @@ if [[ "$MODE" == "--check" ]]; then
 fi
 OLD_UMASK="$(umask)"
 umask 077
-BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-$"
+BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-${BASHPID}"
 mkdir -p "$BACKUP"
 chmod 0700 "$BACKUP"
 if [[ -s "$TMP/portal-existing" ]]; then tar -C "$PORTAL" -czf "$BACKUP/portal.tar.gz" -T "$TMP/portal-existing"; fi

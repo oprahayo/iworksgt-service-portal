@@ -135,3 +135,41 @@ body.page-public .iw-home-insights .iw-home-journal-no-cover .iw-home-read-overl
     font-size:clamp(18px,5vw,25px);
   }
 }
+
+
+/* F16: make long real contact addresses wrap at 320px rather than widening
+   the viewport or hiding content from keyboard/screen-reader users. */
+body.page-public .public-footer-top-grid,
+body.page-public .public-footer-top-grid > *,
+body.page-public .public-footer-contact-col,
+body.page-public .public-footer-contact-col p,
+body.page-public .public-footer-contact-col a {
+  min-width: 0;
+  max-width: 100%;
+}
+body.page-public .public-footer-contact-col a,
+body.page-public .public-footer-contact-col p {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+@media (max-width: 640px) {
+  body.page-public .public-footer-top-grid {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+  body.page-public .public-footer-contact-col {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+  body.page-public .public-footer-brand-row,
+  body.page-public .public-footer-bottom,
+  body.page-public .iw-sitewide-cta-inner {
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.page-public .iw-sitewide-cta-actions > a {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

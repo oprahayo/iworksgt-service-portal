@@ -1,5 +1,16 @@
 <?php
 declare(strict_types=1);
+
+/**
+ * Unknown pretty paths must never silently serve the homepage with HTTP 200.
+ * Explicit ?page= routes and direct index.php / legacy index.html stay intact.
+ */
+function iworks_unmatched_pretty_path(string $path, bool $recognized): bool
+{
+    $path = trim($path, '/');
+    return !$recognized && $path !== ''
+        && !in_array($path, ['index.php', 'index.html'], true);
+}
 /**
  * Search-intent copy for published iWorks services. Complements CMS descriptions;
  * intentionally makes no promises about CAC approvals, filing speed or rankings.
@@ -13,6 +24,12 @@ function iworks_search_page_meta(string $page): array
         'contact' => ['Contact iWorks Global | CAC & Website Design Enquiries', 'Contact iWorks Global about business registration in Nigeria, trademarks, company compliance, web development and remote digital services.'],
         'faq' => ['Business Registration and Service FAQs | iWorks Global', 'Answers about CAC-related service requests, document submission, remote business support and tracking your iWorks Global service order.'],
         'blog' => ['CAC Registration & Digital Business Guides | iWorks Global', 'Practical guides for founders on Nigerian business registration, trademarks, website planning and remote business operations.'],
+        'case-studies' => ['Client Projects & Case Studies | iWORKS GLOBAL', 'Explore completed business registration and digital service projects, their scope and documented results from iWORKS GLOBAL.'],
+        'management' => ['Management & Leadership | iWORKS GLOBAL LTD', 'Meet the people responsible for iWORKS GLOBAL LTD operations and the delivery of business and digital services.'],
+        'pricing' => ['Business Services & Pricing | iWorks Global', 'Review published business registration and digital service prices; final quotes and applicable charges are confirmed before payment.'],
+        'track' => ['Track Your iWorks Order | Service Progress', 'Find the latest status of your existing iWorks service request using your job reference and contact details.'],
+        'terms' => ['Terms and Conditions | iWORKS GLOBAL', 'Read the terms governing service requests, account use, payments and delivery through iWORKS GLOBAL.'],
+        'privacy' => ['Privacy Policy | iWORKS GLOBAL', 'Understand how iWORKS GLOBAL handles account information, service requests, documents and contact details.'],
     ];
     return isset($map[$page]) ? ['title'=>$map[$page][0], 'description'=>$map[$page][1]] : [];
 }
