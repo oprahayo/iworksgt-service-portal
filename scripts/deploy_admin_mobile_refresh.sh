@@ -53,7 +53,7 @@ sed 's#^\./##' "$TMP/source-files" | LC_ALL=C sort > "$TMP/source-paths"
 while IFS= read -r file; do
   case "$file" in
     app/config.php|storage/*|assets/uploads/*|public-root/*|.github/*|.htaccess) continue ;;
-    app/*|api/*|assets/css/*|assets/js/*|assets/illustrations/*|views/*|scripts/*|tests/*|index.php|invoice.php|download.php|export.php|preview.php|sso.php|logout.php|setup.php|database.sql|cron_*.php)
+    app/*|api/*|assets/css/*|assets/js/*|assets/illustrations/*|assets/branding/*|views/*|scripts/*|tests/*|index.php|invoice.php|download.php|export.php|preview.php|sso.php|logout.php|setup.php|database.sql|cron_*.php)
       printf '%s\n' "$file" >> "$TMP/list" ;;
   esac
 done < "$TMP/source-paths"
@@ -76,7 +76,7 @@ while IFS= read -r file; do
     if [[ -f "$PORTAL/$file" ]]; then echo "$file" >> "$TMP/portal-existing"; else echo "$file" >> "$TMP/portal-added"; fi
   fi
   if [[ "$MIRROR" -eq 1 ]]; then
-    case "$file" in assets/css/*|assets/js/*|assets/illustrations/*)
+    case "$file" in assets/css/*|assets/js/*|assets/illustrations/*|assets/branding/*)
       if [[ ! -f "$PUBLIC/$file" ]] || ! cmp -s "$SRC/$file" "$PUBLIC/$file"; then
         echo "$file" >> "$TMP/public-change"
         if [[ -f "$PUBLIC/$file" ]]; then echo "$file" >> "$TMP/public-existing"; else echo "$file" >> "$TMP/public-added"; fi
