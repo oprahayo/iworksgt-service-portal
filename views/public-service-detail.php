@@ -48,6 +48,7 @@ if ($manualReview) {
     $priceText = 'Tailored quote after review';
     $price = 0;
 }
+$registrationType = (string)($service['_iworks_registration_type'] ?? '');
 $tax = (float) ($service['tax_percent'] ?? 0);
 $featured = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
 $imageUrl = trim((string) ($featured['url'] ?? ''));
