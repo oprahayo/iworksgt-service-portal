@@ -8,6 +8,7 @@ $reviews = [
 ];
 function list_public_job_reviews(int $limit): array { global $reviews; return array_slice($reviews, 0, $limit); }
 function check_review(bool $valid, string $message): void { if (!$valid) throw new RuntimeException($message); }
+function job_review_five_point_score(int $storedRating): int { return max(1, min(5, (int) round($storedRating / 2, 0, PHP_ROUND_HALF_UP))); }
 ob_start();
 require dirname(__DIR__) . '/views/partials/public-review-carousel.php';
 $html = ob_get_clean();
