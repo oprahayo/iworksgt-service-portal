@@ -106,4 +106,42 @@ check_journal(str_contains($css,'prefers-reduced-motion:reduce') &&
     str_contains($css,'focus-visible'), 'Reduced motion and keyboard focus must be supported.');
 check_journal(str_contains($editor,'recommended 1200 × 630 px'),
     'CMS editors must see recommended cover proportions.');
+
+// Individual articles use a lighter reading experience than the image-led index.
+$readingCss = file_get_contents($root . '/assets/css/blog-reading.css');
+check_journal(str_contains($detail,'iw-reading-masthead') &&
+    str_contains($detail,'iw-reading-column') &&
+    str_contains($detail,'iw-reading-discussion'),
+    'Article must have a compact masthead, reading column and collapsible discussion.');
+check_journal(str_contains($detail,'/uploads/feature.webp') &&
+    str_contains($detail,'iw-reading-cover') &&
+    str_contains($detail,'data-iw-share') &&
+    str_contains($detail,'blog_like') && str_contains($detail,'blog_comment'),
+    'Simple article must preserve real cover, sharing, likes and moderated comments.');
+check_journal(str_contains($readingCss,'max-width:700px') &&
+    str_contains($readingCss,'.iw-reading-masthead') &&
+    str_contains($readingCss,'@media(max-width:520px)'),
+    'Reading mode needs narrow desktop column and compact phone layout.');
+check_journal(str_contains($readingCss,'body.page-public-article .iw-sitewide-cta{display:none}'),
+    'Article reading must not be interrupted by the unrelated large selling banner.');
+$journalPosition = strpos($header,'id="iw-journal-css"');
+$readingPosition = strpos($header,'id="iw-reading-critical-css"');
+check_journal($journalPosition !== false && $readingPosition !== false && $readingPosition > $journalPosition &&
+    str_contains($header,"$"."currentPublicSlug === 'blog_post'") &&
+    str_contains($header,'file_get_contents($iwReadingCss)') &&
+    str_contains($header,'page-public-article'),
+    'Article CSS must load last and inline for split-root hosting, only on article route.');
+$blogPost = $makePost('text-first','A straightforward guide');
+$relatedBlogPosts = [];
+ob_start();
+require $root . '/views/public-blog-detail.php';
+$textOnlyDetail = (string)ob_get_clean();
+check_journal(str_contains($textOnlyDetail,'A straightforward guide') &&
+    !str_contains($textOnlyDetail,'iw-reading-cover') &&
+    !str_contains($textOnlyDetail,'iw-article-graphic') &&
+    !str_contains($textOnlyDetail,'iw-journal-no-cover'),
+    'Articles with no uploaded photograph must start with actual text, not duplicate the title inside generated art.');
+check_journal(str_contains($textOnlyDetail,'<details class="iw-reading-discussion"') &&
+    str_contains($textOnlyDetail,'Read comments or leave a comment'),
+    'Reader can optionally expand discussion without scrolling past an unused form.');
 echo "blog_journal_render_test passed\n";
