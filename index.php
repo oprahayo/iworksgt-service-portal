@@ -672,10 +672,45 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
+        case 'system_health':
+            require_roles(['admin']);
+            $schemaRequirements = [
+                'users' => ['id','full_name','role','email','account_state'],
+                'services' => ['id','slug','is_active','is_public','category'],
+                'jobs' => ['id','job_code','status'],
+                'pages' => ['slug','status','published_layout_json'],
+                'website_leads' => ['id','email','message','page_slug'],
+                'media_assets' => ['id','url'],
+                'blog_posts' => ['id','author_id','slug','title','body_html','status','published_at','updated_at'],
+                'iworks_case_studies' => ['id','slug','story_html','status'],
+                'iworks_testimonials' => ['id','customer_name','status','consent_confirmed'],
+                'iworks_blog_comments' => ['id','post_id','status'],
+                'iworks_blog_likes' => ['post_id','visitor_hash'],
+            ];
+            $schemaReport = [];
+            foreach ($schemaRequirements as $schemaTable => $requiredColumns) {
+                $schemaColumns = db_all(
+                    'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=:table',
+                    ['table' => $schemaTable]
+                );
+                $present = array_column($schemaColumns, 'COLUMN_NAME');
+                $schemaReport[$schemaTable] = [
+                    'ready' => count(array_diff($requiredColumns, $present)) === 0,
+                    'exists' => $present !== [],
+                    'missing' => array_values(array_diff($requiredColumns, $present)),
+                ];
+            }
+            $title = 'System Health - ' . app_name();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/system-health.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
         case 'blog':
             require_roles(['admin', 'agent', 'author']);
             $user = current_user();
             $isAdminBlog = has_role(['admin']);
+            $blogSchemaReady = schema_table_exists('blog_posts');
             $blogAction = strtolower(trim((string) ($_GET['action'] ?? '')));
             $editBlogPost = null;
 
