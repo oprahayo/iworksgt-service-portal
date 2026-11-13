@@ -4,6 +4,8 @@
   function init() {
     var root = document.getElementById('iwAssist');
     if (!root) return;
+    if (root.dataset.assistReady === '1') return;
+    root.dataset.assistReady = '1';
     var chat = document.getElementById('iwAssistChat');
     var nudge = document.getElementById('iwAssistNudge');
     var launcher = root.querySelector('.iw-assist-launcher');
@@ -177,14 +179,28 @@
       data.append('full_name', name);
       data.append('email', email);
       data.append('message', message);
-      var response = await fetch(endpoint, {
-        method: 'POST', credentials: 'same-origin',
-        headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-        body: data
-      });
+      var response;
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST', credentials: 'same-origin',
+          redirect: 'error',
+          cache: 'no-store',
+          headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+          body: data
+        });
+      } catch (networkError) {
+        throw new Error('Could not connect to our support form. Please check your connection and retry.');
+      }
       var result;
-      try { result = await response.json(); } catch (ignore) { throw new Error('Unable to reach support. Please try again.'); }
-      if (!response.ok || !result || !result.ok) throw new Error((result && result.message) || 'Unable to send. Please try again.');
+      try { result = await response.json(); }
+      catch (ignore) {
+        throw new Error(response.status === 403 || response.status === 419
+          ? 'Your session expired. Refresh this page, then try again.'
+          : 'The support form is temporarily unavailable. Please use the Contact page.');
+      }
+      if (!response.ok || !result || !result.ok) {
+        throw new Error((result && result.message) || 'Unable to send your message. Please try again.');
+      }
       return result;
     }
 
@@ -367,13 +383,26 @@
     });
 
     showChatStage();
-    if (getStore('nudge-dismissed') !== 'yes') {
-      var elapsed = Math.max(0, Date.now() - Number(getStore('first-seen') || Date.now()));
-      window.setTimeout(function () {
-        if (getStore('nudge-dismissed') === 'yes' || !chat.hidden || !book.hidden || document.visibilityState === 'hidden') return;
-        nudge.hidden = false;
-      }, Math.max(0, 120000 - elapsed));
+    // Keep the invitation session-aware but resilient to background tabs.
+    // The original one-shot timer was lost if the page was hidden at expiry.
+    var nudgeTimer = null;
+    var firstSeen = Number(getStore('first-seen')) || Date.now();
+    function offerNudgeWhenReady() {
+      if (nudgeTimer !== null) { window.clearTimeout(nudgeTimer); nudgeTimer = null; }
+      if (getStore('nudge-dismissed') === 'yes') return;
+      var remaining = Math.max(0, 120000 - (Date.now() - firstSeen));
+      if (remaining > 0) {
+        nudgeTimer = window.setTimeout(offerNudgeWhenReady, remaining);
+        return;
+      }
+      if (document.visibilityState === 'hidden') return;
+      if (!chat.hidden || !book.hidden) return;
+      nudge.hidden = false;
     }
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') offerNudgeWhenReady();
+    });
+    offerNudgeWhenReady();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
