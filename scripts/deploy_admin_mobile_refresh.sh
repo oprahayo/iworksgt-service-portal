@@ -92,7 +92,7 @@ if [[ "$MODE" == "--check" ]]; then
 fi
 OLD_UMASK="$(umask)"
 umask 077
-BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-$"
+BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-${BASHPID}"
 mkdir -p "$BACKUP"
 chmod 0700 "$BACKUP"
 if [[ -s "$TMP/portal-existing" ]]; then tar -C "$PORTAL" -czf "$BACKUP/portal.tar.gz" -T "$TMP/portal-existing"; fi
