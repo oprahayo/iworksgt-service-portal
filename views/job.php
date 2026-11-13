@@ -17,7 +17,25 @@ if (!empty($job['managed_by_admin_name'])) {
     $jobAssigneeLabel = (string) $job['agent_name'];
 }
 ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="iw-job-workspace">
+  <header class="iw-job-titlebar">
+    <div class="iw-job-titlebar-copy">
+      <span class="iw-job-eyebrow">SERVICE DELIVERY / JOB RECORD</span>
+      <h1><?= e($job['service_name']) ?></h1>
+      <div class="iw-job-metadata"><span class="iw-job-code"><?= e($job['job_code']) ?></span><span>Client: <?= e($job['client_name']) ?></span><span>Assigned to: <?= e($jobAssigneeLabel) ?></span></div>
+    </div>
+    <a class="btn btn-outline-secondary iw-job-back" href="<?= e(url('jobs')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i> All jobs</a>
+  </header>
+  <?php if (($user['role'] ?? '') !== 'client'): ?>
+    <nav class="iw-job-jump-nav" aria-label="Job sections">
+      <a href="#iwJobOverview"><i class="bi bi-info-circle" aria-hidden="true"></i> Overview</a>
+      <a href="#iwJobDiscussion"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Discussion</a>
+      <a href="#iwJobFiles"><i class="bi bi-folder2-open" aria-hidden="true"></i> Documents</a>
+      <a href="#iwJobActions"><i class="bi bi-sliders" aria-hidden="true"></i> Management</a>
+    </nav>
+  <?php endif; ?>
+
+<div class="d-flex justify-content-between align-items-center mb-3 iw-job-legacy-heading" hidden>
   <div>
     <h1 class="h4 mb-0"><?= e($job['job_code']) ?> - <?= e($job['service_name']) ?></h1>
     <div class="text-muted small">Client: <?= e($job['client_name']) ?> | Handler: <?= e($jobAssigneeLabel) ?></div>
@@ -128,7 +146,7 @@ if (!empty($job['managed_by_admin_name'])) {
   </section>
 <?php endif; ?>
 
-<div class="row g-3 mb-3">
+<div class="row g-3 mb-3 iw-job-metrics" aria-label="Job at a glance">
   <div class="col-md-3"><div class="card"><div class="card-body"><small class="kicker">Status</small><div><?= status_badge($job['status']) ?></div></div></div></div>
   <div class="col-md-3"><div class="card"><div class="card-body"><small class="kicker">Payment</small><div><?= status_badge($jobPaymentStatus) ?></div></div></div></div>
   <div class="col-md-3">
@@ -148,11 +166,11 @@ if (!empty($job['managed_by_admin_name'])) {
   <?php endif; ?>
 </div>
 
-<div class="row g-3">
-  <div class="col-lg-8">
+<div class="row g-3 iw-job-content">
+  <div class="col-lg-8 iw-job-primary">
     <div class="card mb-3">
       <div class="card-body">
-        <h2 class="h5">Job details</h2>
+        <h2 class="h5" id="iwJobOverview"><i class="bi bi-card-text" aria-hidden="true"></i> Job overview</h2>
         <p class="mb-0"><?= nl2br(e($job['description'] ?: 'No description.')) ?></p>
       </div>
     </div>
@@ -202,7 +220,7 @@ if (!empty($job['managed_by_admin_name'])) {
 
     <div class="card mb-3">
       <div class="card-body">
-        <h2 class="h5">Comments</h2>
+        <h2 class="h5" id="iwJobDiscussion"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Discussion</h2>
         <?php foreach ($comments as $comment): ?>
           <div class="comment-item">
             <div class="d-flex justify-content-between">
@@ -248,7 +266,7 @@ if (!empty($job['managed_by_admin_name'])) {
 
     <div class="card">
       <div class="card-body">
-        <h2 class="h5">Files</h2>
+        <h2 class="h5" id="iwJobFiles"><i class="bi bi-folder2-open" aria-hidden="true"></i> Documents</h2>
         <?php if ($canUploadJobFiles): ?>
           <form
             method="post"
@@ -307,7 +325,8 @@ if (!empty($job['managed_by_admin_name'])) {
     </div>
   </div>
 
-  <div class="col-lg-4">
+  <div class="col-lg-4 iw-job-actions" id="iwJobActions">
+    <div class="iw-job-actions-header"><span class="iw-job-eyebrow">OPERATIONS</span><h2>Manage this job</h2><p>Assignment, progress, payments and activity.</p></div>
     <?php if (has_role(['agent']) && $job['agent_id'] === null && empty($job['managed_by_admin_id']) && $jobPaymentStatus === 'paid'): ?>
       <div class="card mb-3">
         <div class="card-body">
@@ -324,7 +343,7 @@ if (!empty($job['managed_by_admin_name'])) {
     <?php if (has_role(['admin'])): ?>
       <div class="card mb-3">
         <div class="card-body">
-          <h2 class="h6">Admin handling</h2>
+          <h2 class="h6"><i class="bi bi-person-workspace" aria-hidden="true"></i> Admin ownership</h2>
           <?php if (!empty($job['managed_by_admin_name'])): ?>
             <div class="small text-muted mb-2">Currently handled by <?= e((string) $job['managed_by_admin_name']) ?>.</div>
           <?php else: ?>
@@ -340,7 +359,7 @@ if (!empty($job['managed_by_admin_name'])) {
 
       <div class="card mb-3">
         <div class="card-body">
-          <h2 class="h6">Assign agent</h2>
+          <h2 class="h6"><i class="bi bi-person-plus" aria-hidden="true"></i> Assign an agent</h2>
           <form method="post" action="<?= e(url('job', ['id' => (int) $job['id']])) ?>">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="form_action" value="assign_agent">
@@ -359,7 +378,7 @@ if (!empty($job['managed_by_admin_name'])) {
     <?php if (has_role(['admin']) || ($user['role'] === 'agent' && (int) $job['agent_id'] === (int) $user['id'])): ?>
       <div class="card mb-3">
         <div class="card-body">
-          <h2 class="h6">Update status</h2>
+          <h2 class="h6"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Update progress</h2>
           <form method="post" action="<?= e(url('job', ['id' => (int) $job['id']])) ?>">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="form_action" value="update_status">
@@ -393,7 +412,7 @@ if (!empty($job['managed_by_admin_name'])) {
     <?php if (has_role(['admin', 'finance'])): ?>
       <div class="card mb-3">
         <div class="card-body">
-          <h2 class="h6">Payment & commission</h2>
+          <h2 class="h6"><i class="bi bi-receipt" aria-hidden="true"></i> Billing and commission</h2>
           <form method="post" action="<?= e(url('job', ['id' => (int) $job['id']])) ?>">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="form_action" value="update_finance">
@@ -437,7 +456,7 @@ if (!empty($job['managed_by_admin_name'])) {
 
     <div class="card">
       <div class="card-body">
-        <h2 class="h6">Status timeline</h2>
+        <h2 class="h6"><i class="bi bi-clock-history" aria-hidden="true"></i> Activity timeline</h2>
         <?php if (!empty($job['delivered_at'])): ?>
           <div class="timeline-item">
             <div class="small text-muted">Delivered record</div>
@@ -469,6 +488,7 @@ if (!empty($job['managed_by_admin_name'])) {
     </div>
   </div>
 </div>
+</div><!-- /.iw-job-workspace -->
 
 <script>
 (function () {
