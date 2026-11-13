@@ -29,9 +29,9 @@ iworks_order_intent_capture(['service'=>$slug]);
 check_order(iworks_order_intent_peek() === $slug, 'Pending order should be held in server session.');
 check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac_filing&type=business', 'Business name login must resume pre-payment intake.');
 iworks_order_intent_capture(['service'=>'company-registration']);
-check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac_filing&type=company', 'Company login must resume pre-payment intake.');
+check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac_filing', 'Unified CAC login must offer both business-name and private-Ltd pathways.');
 iworks_order_intent_capture(['service'=>'website-design-development']);
-check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=jobs&action=new&service=website-design-development', 'Other services retain legacy checkout.');
+check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=jobs&action=new&service=website-design-development', 'Other services retain their selected one-service checkout.');
 check_order(iworks_post_login_destination(['role'=>'admin']) === 'index.php?page=dashboard', 'Admin should not be placed into client checkout.');
 $selected = iworks_order_catalog_selection($slug, [['id'=>7],['id'=>12]]);
 check_order($selected !== null && $selected['id'] === 7, 'Checkout catalog must resolve the selected service.');
@@ -56,7 +56,10 @@ check_order(str_contains($index, "case 'google_callback':") && str_contains($ind
 check_order(str_contains($index, "case 'otp':") && str_contains($index, "case 'register':"), 'OTP and registration paths must exist.');
 check_order(str_contains($service, "portal_url('login', ['service'"), 'Public order button must carry selected service.');
 check_order(str_contains($index, 'iworks_order_catalog_selection('), 'Checkout must validate service against catalog.');
-check_order(str_contains($jobs, 'preselectedOrder') && str_contains($jobs, 'checked'), 'Checkout must preselect retained service.');
+check_order(str_contains($index, "require __DIR__.'/views/client-service-checkout.php'"),
+    'Customer checkout must render the focused selected-product screen.');
+check_order(str_contains(file_get_contents($root . '/views/client-service-checkout.php'),
+    'name="service_id"'), 'Focused checkout must preserve server validated product ID.');
 check_order(str_contains($index, 'iworks_order_intent_clear();'), 'Successful checkout must clear intent.');
 check_order(str_contains($index, 'redirect($redirectInvoice);'), 'Successful order must proceed to payment invoice.');
 echo "order_resume_contract_test passed\n";
