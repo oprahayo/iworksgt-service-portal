@@ -67,6 +67,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/support_email.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/gateway_verification.php';
 require_once __DIR__ . '/domain.php';
 require_once __DIR__ . '/customer_service_policy.php';
 require_once __DIR__ . '/live_chat.php';
