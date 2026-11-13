@@ -51,6 +51,8 @@ jobs:
           bash tests/deploy_split_installer_contract.sh
           bash -n scripts/contain_private_http_access.sh
           bash tests/f01_containment_fixture_test.sh
+          bash -n scripts/install_scheduled_jobs.sh
+          bash tests/f12_schedule_fixture_test.sh
           bash -n scripts/audit_public_seo_live.sh
           bash -n scripts/audit_launch_public.sh
 
