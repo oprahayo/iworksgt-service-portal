@@ -283,6 +283,7 @@
       focusReturn = trigger || document.activeElement;
       hideNudge(true);
       chat.hidden = false;
+      document.body.classList.add('iw-assist-chat-open');
       launcher.hidden = true;
       launcher.setAttribute('aria-expanded', 'true');
       showChatStage();
@@ -296,6 +297,7 @@
     function closeChat() {
       endSheet.hidden = true;
       chat.hidden = true;
+      document.body.classList.remove('iw-assist-chat-open');
       launcher.hidden = false;
       launcher.setAttribute('aria-expanded', 'false');
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
@@ -323,6 +325,7 @@
     }
     function closeBook() {
       book.hidden = true;
+      document.body.classList.remove('iw-assist-book-open');
       backdrop.hidden = true;
       document.body.style.overflow = oldOverflow;
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
@@ -333,6 +336,7 @@
       hideNudge(true);
       rebuildRequestDays();
       book.hidden = false;
+      document.body.classList.add('iw-assist-book-open');
       backdrop.hidden = false;
       oldOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
