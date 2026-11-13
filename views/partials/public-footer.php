@@ -472,6 +472,15 @@ $socialIcons = [
 })();
 </script>
 <script defer src="<?= e(public_absolute_url('assets/js/public-ux.js')) ?>?v=20261112b"></script>
-<script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261113a"></script>
+<?php
+  // Serve the small widget controller from the PHP app when available.
+  // This prevents a silent, unclickable launcher when cPanel's public
+  // document root doesn't expose the portal's assets/js directory.
+  $iwAssistJsPath = __DIR__ . '/../../assets/js/public-assistance.js';
+  if (is_file($iwAssistJsPath) && is_readable($iwAssistJsPath)): ?>
+  <script id="iw-assist-controller"><?= str_ireplace('</script', '<\\/script', (string) file_get_contents($iwAssistJsPath)) ?></script>
+<?php else: ?>
+  <script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261113c"></script>
+<?php endif; ?>
 </body>
 </html>

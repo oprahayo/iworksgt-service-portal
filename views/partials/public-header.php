@@ -142,7 +142,17 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112launch1">
-  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261113a">
+  <?php
+  // The public site delegates to the portal PHP app, but on some cPanel
+  // setups static assets aren't mapped to the same root. Inline this small
+  // critical widget stylesheet so chat/popup styling never depends on the
+  // apex-domain asset mirroring configuration.
+  $iwAssistCssPath = __DIR__ . '/../../assets/css/public-assistance.css';
+  if (is_file($iwAssistCssPath) && is_readable($iwAssistCssPath)): ?>
+    <style id="iw-assist-critical-css"><?= (string) file_get_contents($iwAssistCssPath) ?></style>
+  <?php else: ?>
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261113c">
+  <?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-navigation-cta.css')) ?>?v=20261113a">
   <script>
   // Public website now uses one consistent light theme; ignore older saved

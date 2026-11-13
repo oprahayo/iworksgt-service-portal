@@ -12,7 +12,7 @@ if (($user['role'] ?? '') === 'agent') {
     $heroMessage = 'Claim paid jobs from the pool, deliver updates, and grow your earnings.';
 }
 
-if (role_has_admin_or_finance_access((string) ($user['role'] ?? ''))) {
+if (in_array((string) ($user['role'] ?? ''), ['admin', 'finance', 'super_admin'], true)) {
     $heroKicker = 'Operations Hub';
     $heroMessage = 'Manage jobs, teams, payouts, and platform activity from one dashboard.';
 }

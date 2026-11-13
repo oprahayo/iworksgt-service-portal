@@ -315,9 +315,9 @@ try {
             ?? get_public_footer_data('home');
 
         if (method_is('POST') && (string) ($_POST['form_action'] ?? '') === 'website_lead') {
-            require_csrf();
             $isAsyncLead = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
             try {
+                require_csrf();
                 save_website_lead([
                     'full_name' => (string) ($_POST['full_name'] ?? ''),
                     'email' => (string) ($_POST['email'] ?? ''),
@@ -337,7 +337,7 @@ try {
                 if ($isAsyncLead) {
                     http_response_code(422);
                     header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['ok' => false, 'message' => 'We could not send your message. Check the details and try again.']);
+                    echo json_encode(['ok' => false, 'message' => 'We could not send your message. Refresh the page and try again, or use the Contact page.']);
                     exit;
                 }
                 flash('error', $e->getMessage());
