@@ -117,7 +117,7 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study', 'live_chat'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
@@ -161,6 +161,39 @@ try {
         && request_host() === configured_host(portal_base_url())
         && !$isPublicPageRoute) {
         header('X-Robots-Tag: noindex, nofollow');
+    }
+
+    if ($page === 'brand_icon') {
+        // Publicly serve ONLY the administrator-selected, validated favicon.
+        // This handles separate portal/apex document roots without exposing
+        // other customer uploads or allowing arbitrary file paths.
+        if (!in_array((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'),['GET','HEAD'],true)) {
+            http_response_code(405);
+            return;
+        }
+        $iconRelative = trim(setting('favicon_path',''));
+        if (!preg_match('~^assets/uploads/branding/[A-Za-z0-9_.-]+\\.(?:png|jpe?g|gif|webp)$~i', $iconRelative)) {
+            http_response_code(404);
+            return;
+        }
+        $brandRoot = realpath(public_upload_directory().'/branding');
+        $file = realpath(__DIR__.'/'.$iconRelative);
+        if (!$brandRoot || !$file || !str_starts_with($file,$brandRoot.DIRECTORY_SEPARATOR) || !is_file($file)) {
+            http_response_code(404);
+            return;
+        }
+        $mime = mime_content_type($file) ?: '';
+        if (!in_array($mime,['image/png','image/jpeg','image/gif','image/webp'],true)
+            || @getimagesize($file) === false) {
+            http_response_code(415);
+            return;
+        }
+        header('Content-Type: '.$mime);
+        header('Cache-Control: public, max-age=86400');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Length: '.filesize($file));
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') readfile($file);
+        return;
     }
 
     if ($page === 'live_chat') {
