@@ -7,6 +7,7 @@ function setting(string $key,string $default=''):string{return $default;}
 function get_service_by_slug(string $slug):?array{return $slug==='company-registration'?['price'=>100000,'currency'=>'NGN']:null;}
 function convert_amount(float $amount,string $from,string $to):float{return $amount;}
 function fx_ngn_per_usd():float{return 1500;}
+require dirname(__DIR__).'/app/cac_registration_policy.php';
 require dirname(__DIR__).'/app/cac_filing.php';
 
 cac_assert(cac_business_quote('sole',1)===26000.0,'Sole proprietor must cost NGN 26000.');
@@ -49,7 +50,9 @@ cac_assert(str_contains($wizard,'data-cac-upload') && str_contains($wizard,'draw
 cac_assert(str_contains($wizard,'Check uploaded documents & refresh review'),'User must be able to review verified document completion.');
 cac_assert(str_contains($intake,'upload_intake_file'),'Old intake form must support real immediate uploads.');
 cac_assert(!str_contains($intake,'style="width:100%"'),'Old upload must not show fake complete progress bars.');
-cac_assert(str_contains($settings,'cac_business_base_ngn') && str_contains($settings,'cac_business_partner_extra_ngn'),'Admin per-proprietor prices missing.');
+$servicesAdmin=file_get_contents($root.'/views/services.php');
+cac_assert(str_contains($servicesAdmin,'cac_business_base_ngn') && str_contains($servicesAdmin,'cac_business_partner_extra_ngn'),'Unified service admin pricing inputs missing.');
+cac_assert(!str_contains($settings,'name="cac_business_base_ngn"') && str_contains($settings,"url('services'"),'Settings must link to one pricing editor rather than duplicate it.');
 cac_assert(str_contains($dashboard,"url('cac_filing'"),'Published CAC services must start guided workflow.');
 cac_assert(str_contains($billing,'billingCards'),'Billing needs saved method preview.');
 cac_assert(str_contains(file_get_contents($root.'/views/partials/public-header.php'),'Insights'),'Public Insights nav must be present.');
