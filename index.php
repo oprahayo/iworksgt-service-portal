@@ -233,6 +233,10 @@ try {
                 return;
             }
             $service = $service ? iworks_customer_published_service($service) : null;
+            if ($service && in_array($publicSlug, ['cac-business-name','company-registration'], true)) {
+                $variants = iworks_customer_registration_variants($rawService);
+                $service = $publicSlug === 'cac-business-name' ? ($variants[0] ?? null) : ($variants[1] ?? null);
+            }
             if (!$service) {
                 http_response_code(404);
                 $title = 'Not Found - ' . app_name();
