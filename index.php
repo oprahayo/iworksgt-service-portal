@@ -1898,8 +1898,13 @@ try {
             // The legacy cart must not bypass its dedicated $/class flow.
             if (has_role(['client'])) {
                 $serviceOptions = array_values(array_filter($serviceOptions,
-                    static fn(array $service): bool => !in_array((string) ($service['slug'] ?? ''),
-                        ['trademark','business-name-registration-cac-nigeria','company-registration'], true)));
+                    static fn(array $service): bool =>
+                        !in_array((string) ($service['slug'] ?? ''),
+                            ['trademark','business-name-registration','business-name-registration-cac-nigeria','company-registration'], true)
+                        && !(
+                            strtolower(trim((string)($service['name'] ?? ''))) === 'custom service'
+                            && (float)($service['price'] ?? 0) <= 0
+                        )));
             }
             $preselectedOrder = null;
             if ($showCreateForm && has_role(['client'])) {
@@ -1991,8 +1996,12 @@ try {
                                 if ($chosenSlug === 'trademark') {
                                     throw new RuntimeException('Use the dedicated trademark application to select classes and calculate the correct fee.');
                                 }
-                                if (in_array($chosenSlug, ['business-name-registration-cac-nigeria','company-registration'], true)) {
+                                if (in_array($chosenSlug, ['business-name-registration','business-name-registration-cac-nigeria','company-registration'], true)) {
                                     throw new RuntimeException('Complete the CAC registration application and upload required documents before payment.');
+                                }
+                                if (strtolower(trim((string)($requestedService['name'] ?? ''))) === 'custom service'
+                                    && (float)($requestedService['price'] ?? 0) <= 0) {
+                                    throw new RuntimeException('Custom service orders require an administrator-approved quote before payment.');
                                 }
                             }
                             $payload['client_id'] = (int) current_user()['id'];
