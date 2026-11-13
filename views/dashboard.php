@@ -59,6 +59,21 @@ if (($user['role'] ?? '') === 'super_admin') {
   <p class="mb-0 text-white-50"><?= e($heroMessage) ?></p>
 </div>
 
+<?php if (in_array((string)($user['role'] ?? ''), ['admin','agent','finance'], true)): ?>
+  <nav class="iw-ops-dashboard-links" aria-label="Common workspace actions">
+    <a href="<?= e(url('jobs')) ?>"><i class="bi bi-briefcase" aria-hidden="true"></i> Service delivery</a>
+    <?php if (has_role(['admin','agent'])): ?>
+      <a href="<?= e(url('messages')) ?>"><i class="bi bi-chat-left-dots" aria-hidden="true"></i> Team messages</a>
+      <a href="<?= e(url('blog')) ?>"><i class="bi bi-journal-richtext" aria-hidden="true"></i> Manage Insights</a>
+    <?php endif; ?>
+    <?php if (has_role(['admin','finance'])): ?>
+      <a href="<?= e(url('services')) ?>"><i class="bi bi-grid" aria-hidden="true"></i> Manage services</a>
+    <?php endif; ?>
+    <a href="<?= e(public_url('home')) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View live website</a>
+    <?php if (has_role(['admin'])): ?><a href="<?= e(url('system_health')) ?>"><i class="bi bi-heart-pulse" aria-hidden="true"></i> System health</a><?php endif; ?>
+  </nav>
+<?php endif; ?>
+
 <?php if($user['role']==='admin'): ?>
   <section class="iw-admin-launchpad" aria-label="Administration shortcuts">
     <div class="iw-admin-section-head"><div><span>QUICK ACCESS</span><h2>Manage iWorks</h2></div></div>
