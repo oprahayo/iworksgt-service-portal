@@ -616,25 +616,36 @@ function create_otp_code(int $userId, string $purpose): string
     }
 
     $code = (string) random_int(100000, 999999);
+    // Serialize resends for this user. A concurrent request cannot insert a
+    // second active challenge after we invalidate the first one.
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $user = db_one('SELECT id FROM users WHERE id = :id FOR UPDATE', ['id' => $userId]);
+        if (!$user) { throw new RuntimeException('Account unavailable.'); }
 
-    db_execute('DELETE FROM otp_codes WHERE user_id = :user_id AND purpose = :purpose AND consumed_at IS NULL', [
-        'user_id' => $userId,
-        'purpose' => $purpose,
-    ]);
-
-    db_execute(
-        'INSERT INTO otp_codes (user_id, purpose, code_hash, expires_at, consumed_at, created_at)
-         VALUES (:user_id, :purpose, :code_hash, :expires_at, :consumed_at, :created_at)',
-        [
-            'user_id' => $userId,
-            'purpose' => $purpose,
-            'code_hash' => password_hash($code, PASSWORD_DEFAULT),
-            'expires_at' => date('Y-m-d H:i:s', strtotime('+' . otp_expiry_minutes() . ' minutes')),
-            'consumed_at' => null,
-            'created_at' => now(),
-        ]
-    );
-
+        db_execute(
+            'DELETE FROM otp_codes
+             WHERE user_id = :user_id AND purpose = :purpose AND consumed_at IS NULL',
+            ['user_id' => $userId, 'purpose' => $purpose]
+        );
+        db_execute(
+            'INSERT INTO otp_codes
+             (user_id, purpose, code_hash, expires_at, consumed_at, failed_attempts, created_at)
+             VALUES (:user_id, :purpose, :code_hash, :expires_at, NULL, 0, :created_at)',
+            [
+                'user_id' => $userId,
+                'purpose' => $purpose,
+                'code_hash' => password_hash($code, PASSWORD_DEFAULT),
+                'expires_at' => date('Y-m-d H:i:s', strtotime('+' . otp_expiry_minutes() . ' minutes')),
+                'created_at' => now(),
+            ]
+        );
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        throw $e;
+    }
     return $code;
 }
 
