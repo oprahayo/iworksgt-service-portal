@@ -223,6 +223,14 @@ try {
                 return;
             }
             $service = get_service_by_slug($publicSlug);
+            // Old company-launch bundles are no longer a separate consumer
+            // product. Keep historical orders and DB records unchanged.
+            if ($service && (($service['slug'] ?? '') === 'launch-a-company-package'
+                || strtolower(trim((string)($service['name'] ?? ''))) === 'launch a company package')) {
+                header('Location: ' . public_url('service',['slug'=>'company-registration']), true, 302);
+                return;
+            }
+            $service = $service ? iworks_customer_published_service($service) : null;
             if (!$service) {
                 http_response_code(404);
                 $title = 'Not Found - ' . app_name();
@@ -1690,7 +1698,7 @@ try {
                 trademark_ensure_schema();
                 $trademarkApplications = trademark_list((int) $user['id']);
                 $cacApplications = cac_filing_list((int) $user['id']);
-                $clientCatalogue = iworks_client_catalogue(list_services(true));
+                $clientCatalogue = iworks_client_catalogue(list_public_services_catalog());
                 $recentOrders = list_accessible_jobs($user, ['page'=>1, 'per_page'=>25, 'sort'=>'newest']);
                 $clientRecent = array_slice(iworks_client_service_items($trademarkApplications, $recentOrders['items'] ?? [], $cacApplications), 0, 4);
                 $title = 'New Application - ' . app_name();
@@ -1874,17 +1882,42 @@ try {
 
         case 'jobs':
             require_login();
-            // Registered CAC products always enter their complete, pre-payment
-            // application. Legacy cart must not bypass ownership/docs checks.
+            // Do not expose the legacy all-active-service cart to clients.
+            // One public/customer catalogue is the selector; the checkout only
+            // reviews the selected, published standard service.
             if (has_role(['client']) && !method_is('POST')
                 && (string) ($_GET['action'] ?? '') === 'new') {
-                $requested = (string) ($_GET['service'] ?? iworks_order_intent_peek());
-                if ($requested === 'business-name-registration-cac-nigeria') {
-                    redirect(url('cac_filing', ['type'=>'business']));
+                $requested = iworks_order_slug($_GET['service'] ?? iworks_order_intent_peek());
+                if (in_array($requested,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                    redirect(url('cac_filing',['type'=>'business']));
                 }
                 if ($requested === 'company-registration') {
                     redirect(url('cac_filing'));
                 }
+                if ($requested === 'trademark') {
+                    redirect(url('trademark'));
+                }
+                $checkoutService = $requested !== '' ? get_service_by_slug($requested) : null;
+                if (!$checkoutService) {
+                    redirect(url('dashboard'));
+                }
+                $checkoutService = iworks_customer_published_service($checkoutService);
+                if (!$checkoutService) {
+                    flash('error','This service is no longer offered as a new application. Choose a current service.');
+                    redirect(url('dashboard'));
+                }
+                if (($checkoutService['_iworks_checkout_mode'] ?? '') === 'consultation') {
+                    redirect(public_url('service',['slug'=>(string)$checkoutService['slug']]));
+                }
+                if (!iworks_customer_can_standard_checkout($checkoutService)) {
+                    flash('error','Use the guided application or contact support for this service.');
+                    redirect(url('dashboard'));
+                }
+                $title = 'Review '.(string)$checkoutService['name'].' - '.app_name();
+                require __DIR__.'/views/partials/header.php';
+                require __DIR__.'/views/client-service-checkout.php';
+                require __DIR__.'/views/partials/footer.php';
+                break;
             }
             if ((current_user()['role'] ?? '') === 'client'
                 && !in_array((string) ($_GET['action'] ?? ''), ['new'], true)
@@ -1989,9 +2022,17 @@ try {
                         if (has_role(['client'])) {
                             $requestedIds = is_array($_POST['service_ids'] ?? null) ? $_POST['service_ids'] : [];
                             $requestedIds[] = $_POST['service_id'] ?? 0;
+                            $requestedIds = array_values(array_unique(array_filter(array_map('intval',$requestedIds),
+                                static fn(int $id): bool => $id > 0)));
+                            if (count($requestedIds) !== 1) {
+                                throw new RuntimeException('Choose one published service at a time from New Application.');
+                            }
                             foreach ($requestedIds as $requestedId) {
                                 if ((int) $requestedId <= 0) { continue; }
                                 $requestedService = get_service((int) $requestedId);
+                                if (!$requestedService || !iworks_customer_can_standard_checkout($requestedService)) {
+                                    throw new RuntimeException('This product requires a guided application, specialist review, or is no longer publicly available.');
+                                }
                                 $chosenSlug = (string) ($requestedService['slug'] ?? '');
                                 if ($chosenSlug === 'trademark') {
                                     throw new RuntimeException('Use the dedicated trademark application to select classes and calculate the correct fee.');
@@ -2005,8 +2046,13 @@ try {
                                 }
                             }
                             $payload['client_id'] = (int) current_user()['id'];
+                            $payload['service_id'] = $requestedIds[0];
+                            $payload['title'] = (string)$requestedService['name'];
                             $payload['payment_status'] = 'unpaid';
-                            unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'], $payload['tax_percent'], $payload['currency']);
+                            // Never accept client-supplied prices, taxation, scopes
+                            // or commission overrides for standard service jobs.
+                            unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'],
+                                $payload['tax_percent'], $payload['tax_mode'], $payload['currency']);
                             if (!empty($payload['pay_currency'])) {
                                 set_active_pay_currency((string) $payload['pay_currency']);
                             }
@@ -2064,7 +2110,8 @@ try {
                     flash('error', $e->getMessage());
                     if (($action ?? '') === 'create_job') {
                         $slug = iworks_order_intent_peek();
-                        redirect(url('jobs', ['action' => 'new'] + ($slug !== '' ? ['service' => $slug] : [])));
+                        if ($slug !== '') redirect(url('jobs', ['action' => 'new','service' => $slug]));
+                        redirect(url('dashboard'));
                     }
                     redirect(url('jobs'));
                 }
