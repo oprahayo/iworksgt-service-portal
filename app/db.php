@@ -27,7 +27,10 @@ function db(): PDO
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
     } catch (PDOException $e) {
-        throw new RuntimeException('Database connection failed. Update app/config.php. ' . $e->getMessage());
+        // Never expose SQL driver errors, hostnames, credentials or schema
+        // details to a web visitor. The correlation logger records only type
+        // and safe source metadata.
+        throw new RuntimeException('Database service is temporarily unavailable.', 0, $e);
     }
 
     return $pdo;
