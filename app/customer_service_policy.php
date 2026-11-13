@@ -206,6 +206,13 @@ function iworks_customer_product_price(array $service): array
                 : money($amount, $currency)));
 
     $tax = max(0.0, (float) ($service['tax_percent'] ?? 0));
+    if (in_array($slug, ['company-registration', 'cac-business-name'], true)) {
+        // Use the same CAC filing policy as the eventual quote/invoice, not
+        // an unrelated generic service tax percentage.
+        $tax = function_exists('cac_filing_tax_percent')
+            ? cac_filing_tax_percent()
+            : 0.0;
+    }
     $taxNote = !$isEnquiry && $tax > 0
         ? 'Tax rate: ' . number_format($tax, 2) . '%. Final total is shown before payment.'
         : '';
