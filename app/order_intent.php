@@ -62,7 +62,9 @@ function iworks_post_login_destination(?array $user): string
             return url('cac_filing', ['type' => 'business']);
         }
         if ($slug === 'company-registration') {
-            return url('cac_filing');
+            // Preserve the selected Limited Company pathway after password,
+            // OTP, registration or Google login; never return to the chooser.
+            return url('cac_filing', ['type' => 'company']);
         }
     }
     if ($slug !== '' && (string) ($user['role'] ?? '') === 'client') {
