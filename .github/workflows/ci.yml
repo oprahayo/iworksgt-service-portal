@@ -93,6 +93,7 @@ jobs:
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
           php tests/f15_gateway_insert_id_test.php
+          php tests/f03_f05_auth_session_reset_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
 
       - name: Validate public interaction JavaScript
