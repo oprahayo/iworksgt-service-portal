@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../app/customer_service_policy.php';
 /**
  * iWorks public service directory.
  *
