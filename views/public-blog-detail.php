@@ -5,6 +5,7 @@ $title=(string)($blogPost['title']??'Business insight');
 $tag=trim((string)($blogPost['tag']??'Insights'));
 $author=trim((string)($blogPost['author_name']??'iWorks Team'));
 $published=substr((string)($blogPost['published_at']??''),0,10);
+$publishedTimestamp=$published!==''?strtotime($published):false;
 $link=public_url('blog_post',['slug'=>(string)($blogPost['slug']??'')]);
 $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
 ?>
@@ -26,7 +27,7 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
           <div class="iw-article-byline iw-reading-meta">
             <span class="iw-reading-author"><?= e($author) ?></span>
             <span aria-hidden="true" class="iw-reading-dot">·</span>
-            <?php if($published!==''): ?><time datetime="<?= e($published) ?>"><?= e(date('j F Y',strtotime($published)?:time())) ?></time><?php endif; ?>
+            <?php if($published!==''): ?><time datetime="<?= e($published) ?>"><?= e($publishedTimestamp!==false?date('j F Y',$publishedTimestamp):$published) ?></time><?php endif; ?>
             <span aria-hidden="true" class="iw-reading-dot">·</span>
             <span><?= max(1,(int)ceil(str_word_count(strip_tags((string)($blogPost['body_html']??'')))/220)) ?> min read</span>
           </div>
