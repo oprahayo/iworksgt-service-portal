@@ -29,7 +29,7 @@ iworks_order_intent_capture(['service'=>$slug]);
 check_order(iworks_order_intent_peek() === $slug, 'Pending order should be held in server session.');
 check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac_filing&type=business', 'Business name login must resume pre-payment intake.');
 iworks_order_intent_capture(['service'=>'company-registration']);
-check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac_filing', 'Unified CAC login must offer both business-name and private-Ltd pathways.');
+check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=cac_filing&type=company', 'Ltd login must resume the selected company application directly.');
 iworks_order_intent_capture(['service'=>'website-design-development']);
 check_order(iworks_post_login_destination(['role'=>'client']) === 'index.php?page=jobs&action=new&service=website-design-development', 'Other services retain their selected one-service checkout.');
 check_order(iworks_post_login_destination(['role'=>'admin']) === 'index.php?page=dashboard', 'Admin should not be placed into client checkout.');

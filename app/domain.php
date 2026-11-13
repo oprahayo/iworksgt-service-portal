@@ -8311,10 +8311,15 @@ function create_gateway_payment_record(array $invoice, int $clientId, int $metho
         ]
     );
 
+    // LAST_INSERT_ID() is connection-local and changes after other writes.
+    // Capture the actual new payment ID immediately, before invoice/job
+    // synchronization updates and any later inserts.
+    $createdPaymentId = db_last_id();
+
     // Keep invoice/job unpaid until gateway confirmation callback succeeds.
     mark_invoice_jobs_payment_state($invoice, 'unpaid', $reference);
 
-    return db_last_id();
+    return $createdPaymentId;
 }
 
 function default_gateway_callback_url(string $provider, int $invoiceId): string
