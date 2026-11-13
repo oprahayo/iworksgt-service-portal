@@ -124,13 +124,11 @@ function resolve_portal_file_request(array $user, array $query): array
         throw file_access_error('File not found.', 404);
     }
 
-    $jobLike = [
-        'client_id' => $file['client_id'],
-        'agent_id' => $file['agent_id'],
-        'payment_status' => $file['payment_status'] ?? 'paid',
-    ];
-
-    if (!can_access_job($user, $jobLike)) {
+    // Never authorize against a partial projection or assume a missing
+    // payment state is "paid". Fetch the full job used by the page policy,
+    // including managed_by_admin_id and effective payment status.
+    $job = get_job((int) ($file['job_id'] ?? 0));
+    if (!$job || !can_access_job($user, $job)) {
         throw file_access_error('Access denied.', 403);
     }
 
