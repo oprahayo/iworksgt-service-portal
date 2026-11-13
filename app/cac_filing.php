@@ -61,10 +61,27 @@ function cac_filing_quote(string $kind, array $data): array {
     $ngn = $kind === 'business'
         ? cac_business_quote((string)($data['structure'] ?? 'sole'), count($people))
         : cac_company_quote($directors);
+
+    $extras = ['registered_office'=>0.0,'privacy_advisory'=>0.0];
+    $addressChoice = (string)($data['address_mode'] ?? 'own');
+    if ($addressChoice === 'virtual') {
+        if (!cac_virtual_address_eligible()) {
+            throw new RuntimeException('Managed registered office is not available. Select your own address.');
+        }
+        $extras['registered_office'] = cac_money_setting('cac_virtual_address_ngn', 0);
+    } elseif ($addressChoice !== 'own') {
+        throw new RuntimeException('Invalid registered-office selection.');
+    }
+    if (!empty($data['privacy_advisory'])) {
+        if ($kind !== 'company') throw new RuntimeException('Director privacy advisory is offered for companies only.');
+        $extras['privacy_advisory'] = $directors * cac_money_setting('cac_privacy_advisory_per_director_ngn', 50000);
+    }
+    $ngn += array_sum($extras);
     $currency = strtoupper((string) ($data['currency'] ?? 'NGN'));
     if (!in_array($currency, ['NGN','USD'], true)) $currency = 'NGN';
     $amount = $currency === 'NGN' ? $ngn : round($ngn / max(1, fx_ngn_per_usd()), 2);
-    return ['ngn'=>$ngn, 'currency'=>$currency, 'total'=>$amount, 'fx'=>fx_ngn_per_usd()];
+    return ['ngn'=>$ngn, 'currency'=>$currency, 'total'=>$amount,
+        'base_ngn'=>$ngn-array_sum($extras), 'extras_ngn'=>$extras, 'fx'=>fx_ngn_per_usd()];
 }
 function cac_filing_decode(array $row): array {
     $row['data'] = is_array(json_decode((string)($row['data_json'] ?? '{}'), true)) ? json_decode((string)$row['data_json'],true) : [];
@@ -94,13 +111,19 @@ function cac_clean_person(array $person): array {
     return $out;
 }
 function cac_clean_data(array $input, string $kind): array {
-    $fields=['first_choice','second_choice','av_code','business_activity','business_email',
-        'business_phone','business_address','commencement_date','structure','currency','share_capital','company_type'];
+    $fields=['first_choice','second_choice','av_code','business_activity','nature_category','business_email',
+        'business_phone','business_address','address_mode','commencement_date','structure','currency','share_capital','company_type'];
     $out=[];
     foreach($fields as $key) {
         $out[$key]=mb_safe_trim(trim((string)($input[$key] ?? '')), $key==='business_address'?500:240);
     }
     $out['structure'] = $kind === 'business' ? (in_array($out['structure'],['sole','partnership'],true) ? $out['structure'] : 'sole') : 'company';
+    $out['address_mode'] = in_array($out['address_mode'], ['own','virtual'], true) ? $out['address_mode'] : 'own';
+    $out['privacy_advisory'] = $kind === 'company' && !empty($input['privacy_advisory']) ? 1 : 0;
+    // A customer cannot enter an arbitrary address and label it as ours.
+    if ($out['address_mode'] === 'virtual' && cac_virtual_address_eligible()) {
+        $out['business_address'] = cac_registered_office('virtual', '');
+    }
     $out['currency'] = in_array(strtoupper($out['currency']),['NGN','USD'],true) ? strtoupper($out['currency']) : 'NGN';
     $people=is_array($input['people'] ?? null) ? array_values($input['people']) : [];
     $out['people']=array_map('cac_clean_person', array_filter(array_slice($people,0,20),'is_array'));
@@ -203,10 +226,26 @@ function cac_filing_save_drawn_signature(int $clientId,int $id,int $personIndex,
 }
 function cac_filing_missing(array $row): array {
     $d=$row['data'];$docs=$row['docs'];$errors=[];
-    foreach(['first_choice'=>'First business name','business_activity'=>'Business activity',
+    foreach(['first_choice'=>'First business name','business_activity'=>'Specific business activity',
       'business_email'=>'Business email','business_phone'=>'Business phone',
-      'business_address'=>'Business address','commencement_date'=>'Commencement date'] as $key=>$label)
+      'commencement_date'=>'Commencement date'] as $key=>$label)
         if(trim((string)($d[$key]??''))==='')$errors[]=$label.' is required.';
+    $addressMode = (string)($d['address_mode'] ?? 'own');
+    try {
+        $office = cac_registered_office($addressMode, (string)($d['business_address'] ?? ''));
+        if ($office === '') $errors[] = 'A traceable registered office address is required.';
+    } catch (Throwable $e) {
+        $errors[] = $e->getMessage();
+    }
+    $nameCheck = cac_name_review((string)($d['first_choice'] ?? ''), (string)$row['kind']);
+    foreach ($nameCheck['errors'] as $problem) $errors[] = 'Proposed name: ' . $problem;
+    if (trim((string)($d['second_choice'] ?? '')) !== '') {
+        $alternative = cac_name_review((string)$d['second_choice'], (string)$row['kind']);
+        foreach ($alternative['errors'] as $problem) $errors[] = 'Alternative name: ' . $problem;
+        if (strcasecmp(trim((string)$d['first_choice']), trim((string)$d['second_choice']))===0) {
+            $errors[] = 'Use a different alternative name.';
+        }
+    }
     $people=is_array($d['people']??null)?$d['people']:[];
     try { cac_filing_quote((string)$row['kind'],$d); }
     catch(Throwable $e){$errors[]=$e->getMessage();}
@@ -214,6 +253,14 @@ function cac_filing_missing(array $row): array {
         foreach(['full_name'=>'full legal name','dob'=>'date of birth','nationality'=>'nationality',
           'residential_address'=>'residence address','id_type'=>'ID type','id_number'=>'ID number'] as $key=>$label)
             if(trim((string)($person[$key]??''))==='')$errors[]='Person '.($i+1).': '.$label.' required.';
+        if (($person['id_type'] ?? '') !== '' || ($person['id_number'] ?? '') !== '') {
+            $invalid = cac_validate_id_number((string)($person['id_type'] ?? ''), (string)($person['id_number'] ?? ''));
+            if ($invalid !== null) $errors[] = 'Person '.($i+1).': ' . $invalid;
+        }
+        if (trim((string)($person['nin'] ?? '')) !== ''
+            && !preg_match('/^[0-9]{11}$/D', trim((string)$person['nin']))) {
+            $errors[] = 'Person '.($i+1).': NIN must be exactly 11 digits.';
+        }
         foreach(['id'=>'government ID','photo'=>'passport photograph','signature'=>'signature'] as $type=>$label)
             if(empty($docs[$i][$type]['path']) || !is_file((string)$docs[$i][$type]['path']))
                 $errors[]='Person '.($i+1).': '.$label.' must be uploaded.';
@@ -223,8 +270,16 @@ function cac_filing_missing(array $row): array {
             $errors[]='Companies limited by guarantee require a specialist quote and regulatory review. Contact iWorks support before ordering.';
         }
         if(!is_numeric($d['share_capital']??null) || (float)$d['share_capital']<=0)$errors[]='Company share capital is required.';
-        // Company ownership can involve corporate shareholders; staff verifies
-        // the full share/PSC structure before any CAC submission.
+        $directorCount = count(array_filter($people, static fn(array $p): bool =>
+            str_contains(strtolower((string)($p['role'] ?? 'Director and shareholder')), 'director')));
+        if ($directorCount < 1) $errors[] = 'At least one director is required.';
+        $shares = array_values(array_filter(array_map(static fn(array $p): string =>
+            trim((string)($p['share_percent'] ?? '')), $people),static fn(string $v):bool=>$v!==''));
+        if (count($shares) > 0) {
+            $sum = array_sum(array_map('floatval', $shares));
+            if ($sum > 100.001) $errors[] = 'Share allocations cannot exceed 100%.';
+        }
+        // Complete share capital allocation and PSC checks require staff review.
     }
     return $errors;
 }
@@ -237,7 +292,8 @@ function cac_filing_checkout(int $clientId,int $id): int {
         $errors=cac_filing_missing($row);
         if($errors)throw new RuntimeException($errors[0]);
         $quote=cac_filing_quote((string)$row['kind'],$row['data']);
-        $slug=$row['kind']==='business'?'business-name-registration-cac-nigeria':'company-registration';
+        // One current product; legacy business-name service IDs remain for historic jobs.
+        $slug='company-registration';
         $service=get_service_by_slug($slug);
         if(!$service)throw new RuntimeException('Registration service is not active.');
         $data=$row['data'];$personNames=array_map(static fn(array $p):string=>(string)$p['full_name'],$data['people']);
@@ -246,7 +302,9 @@ function cac_filing_checkout(int $clientId,int $id): int {
         $description.='Registration structure: '.($data['structure']??'company')."\n";
         $description.='Proprietors/directors: '.implode(', ',$personNames)."\n";
         $description.='Business activity: '.$data['business_activity']."\n";
-        $description.='Registered address: '.$data['business_address']."\n";
+        $description.='Registered address: '.cac_registered_office((string)($data['address_mode'] ?? 'own'), (string)$data['business_address'])."\n";
+        $description.='Office service: '.(($data['address_mode'] ?? 'own')==='virtual'?'Managed registered office':'Customer-provided office')."\n";
+        $description.='Optional privacy advisory: '.(!empty($data['privacy_advisory'])?'Requested (no concealment of CAC-mandated public records)':'No')."\n";
         $description.='Documents and sensitive personal details are in the restricted CAC filing record.';
         $jobId=create_job([
             'service_id'=>(int)$service['id'],'client_id'=>$clientId,'created_by'=>$clientId,
