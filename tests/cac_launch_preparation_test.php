@@ -47,7 +47,7 @@ cac_assert(str_contains($router,"case 'cac_review':"),'Staff review missing.');
 cac_assert(str_contains($router,"case 'cac_document':"),'Private document download missing.');
 cac_assert(str_contains($router,'require_csrf();'),'All authenticated writes must have CSRF.');
 cac_assert(str_contains($wizard,'data-cac-upload') && str_contains($wizard,'draw_signature'),'Passport and drawn signatures must save securely.');
-cac_assert(str_contains($wizard,'Check uploaded documents & refresh review'),'User must be able to review verified document completion.');
+cac_assert(str_contains($wizard,'Refresh document checks') && str_contains($wizard,'data-cac-stage="5"'),'User must be able to review verified document completion.');
 cac_assert(str_contains($intake,'upload_intake_file'),'Old intake form must support real immediate uploads.');
 cac_assert(!str_contains($intake,'style="width:100%"'),'Old upload must not show fake complete progress bars.');
 $servicesAdmin=file_get_contents($root.'/views/services.php');

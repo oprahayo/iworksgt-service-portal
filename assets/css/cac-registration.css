@@ -21,3 +21,122 @@
 .iw-cac-pricing-panel .card-body{padding:17px}
 .iw-cac-advisory{padding:11px 12px}
 }
+
+
+/* CAC intake v2 — progressive, mobile-first screens instead of a full-page form. */
+.iw-cac-journey-progress{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:7px;max-width:1020px;margin:0 0 20px;scroll-margin-top:80px
+}
+.iw-cac-journey-progress[hidden]{display:none!important}
+.iw-cac-journey-progress button{
+  display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;
+  padding:12px 7px;border:1px solid #e4e7eb;border-radius:9px;
+  color:#66717c;background:#fff;font:600 12px/1.3 Inter,system-ui,sans-serif;
+  cursor:pointer;transition:border-color .18s,background-color .18s,color .18s
+}
+.iw-cac-journey-progress button span{
+  display:grid;place-items:center;flex:none;width:25px;height:25px;
+  border-radius:50%;background:#edf0f3;color:#53606c;font-size:12px
+}
+.iw-cac-journey-progress button strong{font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.iw-cac-journey-progress button[aria-current=step]{
+  background:#fff1e7;border-color:#e86620;color:#a8440d
+}
+.iw-cac-journey-progress button[aria-current=step] span{
+  background:#e86620;color:#fff
+}
+.iw-cac-journey-progress button.iw-cac-progress-complete span{
+  background:#e9f4ed;color:#257547
+}
+.iw-cac-journey-progress button:disabled{opacity:.48;cursor:not-allowed}
+.iw-cac-journey-progress button:focus-visible,
+.iw-cac-journey-actions button:focus-visible{outline:3px solid #ed9c63;outline-offset:2px}
+.iw-cac-journey-ready [data-cac-stage]:not(.iw-cac-step-active){
+  display:none!important
+}
+.iw-cac-journey-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+  padding:15px 0 19px;margin:0
+}
+.iw-cac-journey-actions .iw-client-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:43px;padding:10px 16px;border-radius:9px;
+  font-size:13px;font-weight:750;text-decoration:none
+}
+.iw-cac-journey-actions .iw-client-button:not(.iw-client-button-soft){
+  background:#e86620;color:#fff;border-color:#e86620
+}
+.iw-cac-journey-actions .iw-client-button:not(.iw-client-button-soft):hover{background:#bb5015}
+.iw-cac-journey-actions .iw-client-button-soft{
+  background:#fff;color:#343e46;border-color:#d7dce1
+}
+.iw-cac-journey-step{
+  scroll-margin-top:76px;
+  border:1px solid #e7e2dd!important;
+  box-shadow:0 3px 16px rgba(44,32,23,.045)
+}
+.iw-cac-journey-step .iw-tm-panel-head{margin-bottom:19px}
+.iw-cac-journey-step .iw-tm-panel-head h2{font-size:clamp(18px,2vw,23px);letter-spacing:-.025em}
+.iw-cac-journey-step .iw-tm-panel-head p{font-size:13px;line-height:1.55;color:#6b7279}
+.iw-cac-journey-step .iw-tm-section-number{background:#fff1e7!important;color:#d45c16!important}
+.iw-cac-journey-step .iw-tm-field :is(input,select,textarea){
+  min-height:43px;border-radius:8px;border-color:#dfe2e5
+}
+.iw-cac-journey-step .iw-tm-field :is(input,select,textarea):focus{
+  border-color:#e86620;box-shadow:0 0 0 3px #fae0ce
+}
+.iw-cac-journey-step .iw-tm-field>label{font-size:12px;font-weight:750;line-height:1.45}
+.iw-cac-journey-step .iw-cac-explain{font-size:11px;line-height:1.6}
+.iw-cac-journey-step .iw-cac-doc-label{border:1px solid #e8ded8;border-radius:9px}
+.iw-cac-journey-ready .iw-cac-sidebar{position:sticky;top:85px;align-self:start}
+.iw-cac-journey-progress button[aria-current=step]:not(:disabled){box-shadow:0 2px 8px rgba(207,95,30,.10)}
+.iw-cac-journey-step .iw-cac-advanced-options{
+  border:1px solid #ece4de;background:#fffaf6;border-radius:9px;
+  padding:12px 14px;margin:14px 0
+}
+.iw-cac-advanced-options summary{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  color:#744421;font-size:12px;font-weight:750
+}
+.iw-cac-advanced-options summary::marker{color:#c95b23}
+.iw-cac-advanced-options .iw-tm-fields{margin-top:13px}
+.iw-cac-journey-ready [hidden]{display:none!important}
+.iw-cac-path-choice{max-width:1060px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.iw-cac-path-choice article{
+  display:flex;flex-direction:column;min-width:0;background:#fff;border:1px solid #e7e1dd;
+  border-radius:14px;padding:23px;box-shadow:0 5px 20px rgba(30,26,24,.04)
+}
+.iw-cac-path-choice article:hover,.iw-cac-path-choice article:focus-within{
+  border-color:#e9b895;box-shadow:0 9px 25px rgba(30,26,24,.09)
+}
+.iw-cac-path-choice h2{font-size:21px;font-weight:780;letter-spacing:-.028em;line-height:1.2}
+.iw-cac-path-choice p{font-size:13px;line-height:1.68;color:#5d656e}
+.iw-cac-path-choice ul{padding:0;list-style:none;margin:8px 0 20px}
+.iw-cac-path-choice li{font-size:12px;line-height:1.6;color:#48525c;margin:7px 0;display:flex;gap:8px}
+.iw-cac-path-choice li i{color:#d86220;flex:none}
+.iw-cac-path-choice .iw-cac-price{margin:auto 0 13px;color:#293039;font-size:14px;font-weight:780}
+.iw-cac-path-choice .iw-cac-path-link{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  background:#e86620;color:#fff;min-height:46px;border-radius:8px;
+  padding:11px;font:750 13px/1.4 Inter,system-ui,sans-serif;text-decoration:none
+}
+.iw-cac-path-choice .iw-cac-path-link:hover{background:#bf4c0e}
+.iw-cac-path-choice .iw-cac-path-link:focus-visible{outline:3px solid #ed9c63;outline-offset:2px}
+@media(max-width:900px){
+  .iw-cac-journey-ready .iw-cac-sidebar{position:static}
+}
+@media(max-width:650px){
+  .iw-cac-journey-progress{gap:4px;margin:8px 0 16px}
+  .iw-cac-journey-progress button{padding:9px 3px;gap:4px;flex-direction:column;font-size:9px}
+  .iw-cac-journey-progress button span{width:24px;height:24px;font-size:11px}
+  .iw-cac-journey-actions{padding:12px 0 15px}
+  .iw-cac-journey-actions .iw-client-button{flex:1 1 auto;padding:11px 9px;font-size:12px}
+  .iw-cac-path-choice{grid-template-columns:1fr;gap:13px}
+  .iw-cac-path-choice article{padding:19px}
+}
+@media(prefers-reduced-motion:reduce){
+  .iw-cac-journey-progress button{transition:none}
+}
+
+.iw-cac-field-value{margin:5px 0 3px;color:#303944;font-weight:750;font-size:14px;line-height:1.5}

@@ -16,7 +16,7 @@ function iworks_order_intent_capture(array $query): void
 {
     if (!array_key_exists('service', $query)) { return; }
     $slug = iworks_order_slug($query['service']);
-    $service = $slug !== '' ? get_service_by_slug($slug) : null;
+    $service = $slug !== '' ? get_service_by_slug($slug === 'cac-business-name' ? 'company-registration' : $slug) : null;
     if (!$service) {
         iworks_order_intent_clear();
         return;
@@ -58,7 +58,7 @@ function iworks_post_login_destination(?array $user): string
         return url('trademark');
     }
     if ((string) ($user['role'] ?? '') === 'client') {
-        if (in_array($slug, ['business-name-registration','business-name-registration-cac-nigeria'], true)) {
+        if (in_array($slug, ['business-name-registration','business-name-registration-cac-nigeria','cac-business-name'], true)) {
             return url('cac_filing', ['type' => 'business']);
         }
         if ($slug === 'company-registration') {

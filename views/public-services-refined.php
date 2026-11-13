@@ -56,7 +56,7 @@ $allServices = array_values(array_filter(is_array($publicServices ?? null) ? $pu
     }
     return true;
 }));
-$priority = ['business name registration', 'company registration', 'trademark', 'website design', 'domain', 'graphics design', 'seo'];
+$priority = ['business name', 'private limited company', 'trademark', 'website design', 'domain', 'graphics design', 'seo'];
 usort($allServices, static function (array $left, array $right) use ($priority): int {
     $rank = static function (array $item) use ($priority): int {
         $name = strtolower((string) ($item['name'] ?? ''));

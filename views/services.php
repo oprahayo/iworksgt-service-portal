@@ -266,7 +266,7 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
 </script>
 
 <div class="alert alert-light border mb-3 small">
-  <strong>Customer catalogue:</strong> only active, published services shown in the public website are offered in New Application. Business Registration and Trademark use guided application flows. Incorporated Trustees and Ltd by Guarantee require specialist enquiry. Legacy company bundles and system placeholders remain in admin records but are not sold as new customer orders.
+  <strong>Customer catalogue:</strong> only active, published services shown in the public website are offered in New Application. The Business Registration record powers two customer choices (Enterprise and Private Ltd), with different pricing and guided forms. Trademark uses its own class-aware flow. Incorporated Trustees and Ltd by Guarantee require specialist enquiry. Legacy company bundles and system placeholders remain in admin records but are not sold as new customer orders.
 </div>
 <div class="card service-catalog-card">
   <div class="table-responsive">
@@ -299,7 +299,7 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
               $customerOffer = iworks_customer_published_service($service);
               $customerMode = (string)($customerOffer['_iworks_checkout_mode'] ?? '');
               $customerStatus = $customerOffer === null ? 'Not offered to customers'
-                : ($customerMode === 'cac' ? 'Customer: guided Business Registration'
+                : ($customerMode === 'cac' ? 'Customer: Enterprise + Private Ltd (guided)'
                 : ($customerMode === 'trademark' ? 'Customer: guided Trademark'
                 : ($customerMode === 'consultation' ? 'Customer: specialist enquiry'
                 : 'Customer: standard checkout')));

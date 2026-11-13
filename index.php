@@ -219,10 +219,12 @@ try {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
         if ($page === 'service') {
             if (in_array((string)$publicSlug,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
-                header('Location: ' . public_url('service',['slug'=>'company-registration']), true, 301);
+                header('Location: ' . public_url('service',['slug'=>'cac-business-name']), true, 301);
                 return;
             }
-            $service = get_service_by_slug($publicSlug);
+            $rawService = get_service_by_slug($publicSlug === 'cac-business-name'
+                ? 'company-registration' : $publicSlug);
+            $service = $rawService;
             // Old company-launch bundles are no longer a separate consumer
             // product. Keep historical orders and DB records unchanged.
             if ($service && (($service['slug'] ?? '') === 'launch-a-company-package'
@@ -231,6 +233,10 @@ try {
                 return;
             }
             $service = $service ? iworks_customer_published_service($service) : null;
+            if ($service && in_array($publicSlug, ['cac-business-name','company-registration'], true)) {
+                $variants = iworks_customer_registration_variants($rawService);
+                $service = $publicSlug === 'cac-business-name' ? ($variants[0] ?? null) : ($variants[1] ?? null);
+            }
             if (!$service) {
                 http_response_code(404);
                 $title = 'Not Found - ' . app_name();
@@ -1424,8 +1430,8 @@ try {
                 try {
                     if ($action==='save_draft') {
                         $newId=cac_filing_save($clientId,$filingId,$filingKind, is_array($_POST['filing'] ?? null) ? $_POST['filing'] : []);
-                        flash('success','Application details saved. Now add identification, photographs and signatures for each person.');
-                        redirect(url('cac_filing',['id'=>$newId]));
+                        flash('success','Details saved securely. Add the identity documents and signatures for each person.');
+                        redirect(url('cac_filing',['id'=>$newId,'step'=>'documents']));
                     }
                     if ($action==='delete_draft') {
                         cac_filing_delete_draft($clientId,$filingId);
@@ -1888,7 +1894,7 @@ try {
             if (has_role(['client']) && !method_is('POST')
                 && (string) ($_GET['action'] ?? '') === 'new') {
                 $requested = iworks_order_slug($_GET['service'] ?? iworks_order_intent_peek());
-                if (in_array($requested,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                if (in_array($requested,['business-name-registration','business-name-registration-cac-nigeria','cac-business-name'],true)) {
                     redirect(url('cac_filing',['type'=>'business']));
                 }
                 if ($requested === 'company-registration') {
@@ -1897,7 +1903,8 @@ try {
                 if ($requested === 'trademark') {
                     redirect(url('trademark'));
                 }
-                $checkoutService = $requested !== '' ? get_service_by_slug($requested) : null;
+                $checkoutService = $requested !== '' ? get_service_by_slug($requested === 'cac-business-name'
+                    ? 'company-registration' : $requested) : null;
                 if (!$checkoutService) {
                     redirect(url('dashboard'));
                 }

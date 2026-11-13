@@ -15,11 +15,18 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
     <a class="iw-client-back" href="<?= e(url('dashboard')) ?>"><i class="bi bi-arrow-left"></i> All services</a>
     <span class="iw-client-eyebrow">CAC NIGERIA · <?= $business ? 'BUSINESS NAME' : 'COMPANY INCORPORATION' ?></span>
     <h1><?= $business ? 'Business name registration' : 'Company registration' ?></h1>
-    <p>Choose your ownership details, review preliminary name guidance, attach documents and confirm your exact price before payment.</p>
+    <p>Answer a few questions at a time. Save your draft, add documents and review the final quote before paying.</p>
     <a class="iw-client-subtle-link" href="<?= e(url('cac_filing')) ?>">Change registration pathway</a>
   </div>
   <span class="iw-client-status" data-state="<?= $editable ? 'draft' : 'payment' ?>"><?= $editable ? 'Draft application' : 'Awaiting payment' ?></span>
 </div>
+<nav class="iw-cac-journey-progress" id="cacJourneyProgress" aria-label="Registration progress" hidden>
+  <button type="button" data-cac-jump="1" aria-current="step"><span>1</span><strong>Business</strong></button>
+  <button type="button" data-cac-jump="2"><span>2</span><strong>Contact</strong></button>
+  <button type="button" data-cac-jump="3"><span>3</span><strong>Owners</strong></button>
+  <button type="button" data-cac-jump="4" <?= !$cacDraft?'disabled':'' ?>><span>4</span><strong>Documents</strong></button>
+  <button type="button" data-cac-jump="5" <?= !$cacDraft?'disabled':'' ?>><span>5</span><strong>Review</strong></button>
+</nav>
 <div class="iw-cac-layout">
   <div class="iw-cac-main">
     <?php if (!$editable): ?>
@@ -34,7 +41,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
       <form method="post" id="cacFilingForm" action="<?= e(url('cac_filing',$cacDraft?['id'=>(int)$cacDraft['id']]:['type'=>$filingKind])) ?>">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="form_action" value="save_draft">
-        <section class="iw-tm-panel">
+        <section class="iw-tm-panel iw-cac-journey-step" data-cac-stage="1">
           <div class="iw-tm-panel-head"><span class="iw-tm-section-number">1</span>
             <div><h2>Registration details</h2><p>Prepare the details needed for filing with CAC Nigeria.</p></div>
           </div>
@@ -49,11 +56,13 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <p class="iw-cac-explain">Partnership pricing adds ₦<?= e(number_format(cac_money_setting('cac_business_partner_extra_ngn',15000),0)) ?> for each additional proprietor after the first. A sole proprietor cannot add partners.</p>
           <?php else: ?>
           <div class="iw-tm-fields">
-            <div class="iw-tm-field"><label for="cacCompanyType">Company type</label>
-              <select name="filing[company_type]" id="cacCompanyType">
-                <option value="private_limited" <?= $first('company_type')!=='limited_by_guarantee'?'selected':'' ?>>Private company limited by shares</option>
-                <option value="limited_by_guarantee" <?= $first('company_type')==='limited_by_guarantee'?'selected':'' ?>>Company limited by guarantee (special review)</option>
-              </select>
+            <div class="iw-tm-field"><label>Company type</label>
+              <input type="hidden" name="filing[company_type]" value="<?= $first('company_type')==='limited_by_guarantee'?'limited_by_guarantee':'private_limited' ?>">
+              <p class="iw-cac-field-value">Private company limited by shares</p>
+              <?php if($first('company_type')==='limited_by_guarantee'): ?>
+                <p class="alert alert-warning small">This older draft is marked Limited by Guarantee. It cannot be submitted through the standard Private Ltd flow. Contact support or start a new Private Ltd application.</p>
+              <?php endif; ?>
+              <p class="iw-cac-explain">This guided application is for private companies limited by shares. Limited by Guarantee requires specialist review. <a href="<?= e(url('support')) ?>">Request help</a>.</p>
             </div>
             <div class="iw-tm-field"><label for="cacShareCapital">Issued share capital (NGN)</label><input id="cacShareCapital" type="number" min="1" step="1" name="filing[share_capital]" value="<?= e($first('share_capital')) ?>" placeholder="e.g. 1000000"></div>
           </div>
@@ -93,6 +102,16 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
               <label for="cacActivity">Specific nature of business <span>*</span></label>
               <input id="cacActivity" name="filing[business_activity]" value="<?= e($first('business_activity')) ?>" required maxlength="240" placeholder="e.g. Online retail of household goods">
             </div>
+          </div>
+        </section>
+        <div class="iw-cac-journey-actions" data-cac-stage="1">
+          <button type="button" class="iw-client-button" data-cac-next="2">Continue to contact details <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </div>
+        <section class="iw-tm-panel iw-cac-journey-step" data-cac-stage="2">
+          <div class="iw-tm-panel-head"><span class="iw-tm-section-number">2</span>
+            <div><h2>Contact and registered address</h2><p>How should CAC and iWorks contact your business?</p></div>
+          </div>
+          <div class="iw-tm-fields">
             <div class="iw-tm-field"><label for="cacStart">Commencement date <span>*</span></label><input id="cacStart" type="date" name="filing[commencement_date]" value="<?= e($first('commencement_date')) ?>" required></div>
             <div class="iw-tm-field"><label for="cacEmail">Business email <span>*</span></label><input id="cacEmail" type="email" name="filing[business_email]" value="<?= e($first('business_email') ?: (string)($client['email']??'')) ?>" required></div>
             <div class="iw-tm-field"><label for="cacPhone">Business phone <span>*</span></label><input id="cacPhone" type="tel" name="filing[business_phone]" value="<?= e($first('business_phone') ?: (string)($client['phone']??'')) ?>" required></div>
@@ -105,7 +124,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                 <?php endif; ?>
               </select>
               <textarea id="cacAddress" rows="2" name="filing[business_address]" required <?= $first('address_mode')==='virtual'?'readonly':'' ?>><?= e($first('business_address')) ?></textarea>
-              <label class="iw-cac-checkbox" id="cacSameAddressWrap" <?= $first('address_mode')==='virtual'?'hidden':'' ?>><input type="checkbox" id="cacSameAddress"> Use first proprietor/director's residential address as business address</label>
+              <p class="iw-cac-explain" id="cacSameAddressWrap" <?= $first('address_mode')==='virtual'?'hidden':'' ?>>If appropriate for your business, enter your permitted residential address directly above.</p>
               <small class="iw-cac-explain" id="cacAddressNote">
                 <?php if ($virtualAddressAvailable): ?>
                   Managed-office service is only offered where a traceable eligible location and the necessary permission are available. It does not hide mandatory CAC public records.
@@ -132,8 +151,12 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
             </div>
           </div>
         </section>
-        <section class="iw-tm-panel">
-          <div class="iw-tm-panel-head"><span class="iw-tm-section-number">2</span>
+        <div class="iw-cac-journey-actions" data-cac-stage="2">
+          <button type="button" class="iw-client-button iw-client-button-soft" data-cac-back="1"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</button>
+          <button type="button" class="iw-client-button" data-cac-next="3">Continue to owners <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </div>
+        <section class="iw-tm-panel iw-cac-journey-step" data-cac-stage="3">
+          <div class="iw-tm-panel-head"><span class="iw-tm-section-number">3</span>
             <div><h2><?= $business ? 'Proprietor details' : 'Directors and owners' ?></h2>
               <p>Use the exact legal names shown on government ID documents.</p></div>
           </div>
@@ -144,8 +167,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                 <div class="iw-tm-fields">
                 <?php foreach ([
                   'full_name'=>'Full legal name','dob'=>'Date of birth','nationality'=>'Nationality',
-                  'occupation'=>'Occupation','email'=>'Email address','phone'=>'Phone number',
-                  'residential_address'=>'Residential address','nin'=>'NIN (if applicable)',
+                  'residential_address'=>'Residential address',
                   'id_type'=>'Government ID type','id_number'=>'ID / passport number',
                 ] as $key=>$label): ?>
                   <div class="iw-tm-field <?= $key==='residential_address'?'iw-tm-field-full':'' ?>">
@@ -167,6 +189,23 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                     <?php endif; ?>
                   </div>
                 <?php endforeach; ?>
+                <details class="iw-cac-advanced-options iw-tm-field-full">
+                  <summary>Additional contact information (optional)</summary>
+                  <div class="iw-tm-fields">
+                    <?php foreach ([
+                      'occupation'=>'Occupation','email'=>'Email address','phone'=>'Phone number',
+                      'nin'=>'NIN (if applicable)',
+                    ] as $key=>$label): ?>
+                      <div class="iw-tm-field">
+                        <label><?= e($label) ?></label>
+                        <input type="<?= $key==='email'?'email':($key==='phone'?'tel':'text') ?>"
+                          name="filing[people][<?= (int)$i ?>][<?= e($key) ?>]"
+                          <?= $key==='nin'?'inputmode="numeric" pattern="[0-9]{11}" maxlength="11" title="NIN must be 11 digits"':'' ?>
+                          value="<?= e((string)($person[$key]??'')) ?>">
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </details>
                 <?php if (!$business): ?>
                   <div class="iw-tm-field"><label>Role</label><select name="filing[people][<?= (int)$i ?>][role]">
                     <?php foreach (['Director and shareholder','Director','Shareholder'] as $role): ?>
@@ -184,14 +223,15 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <button type="button" class="iw-client-button iw-client-button-soft" id="cacAddPerson"><i class="bi bi-person-plus"></i> Add another <?= $business?'partner':'director / owner' ?></button>
           <p class="iw-cac-explain">Every person must supply their own valid ID, passport photograph and signature. Do not sign on another person's behalf.</p>
         </section>
-        <div class="iw-cac-save">
+        <div class="iw-cac-save iw-cac-journey-actions" data-cac-stage="3">
+          <button type="button" class="iw-client-button iw-client-button-soft" data-cac-back="2"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</button>
           <button type="submit" class="iw-client-button"><i class="bi bi-cloud-check"></i> Save details and continue</button>
           <span class="iw-client-small-muted">You can return to a saved draft later. No payment is taken yet.</span>
         </div>
       </form>
       <?php if ($cacDraft): ?>
-      <section class="iw-tm-panel iw-cac-documents">
-        <div class="iw-tm-panel-head"><span class="iw-tm-section-number">3</span><div><h2>Identification and signatures</h2>
+      <section class="iw-tm-panel iw-cac-documents iw-cac-journey-step" data-cac-stage="4">
+        <div class="iw-tm-panel-head"><span class="iw-tm-section-number">4</span><div><h2>Secure documents</h2>
           <p>Attach an ID, a passport photograph and a signed image for each person. Documents save immediately.</p></div></div>
         <?php foreach ($people as $i=>$person): ?>
           <div class="iw-cac-doc-person">
@@ -222,8 +262,12 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           </div>
         <?php endforeach; ?>
       </section>
-      <section class="iw-tm-panel iw-cac-review">
-        <div class="iw-tm-panel-head"><span class="iw-tm-section-number">4</span><div><h2>Review and checkout</h2>
+      <div class="iw-cac-journey-actions" data-cac-stage="4">
+        <button type="button" class="iw-client-button iw-client-button-soft" data-cac-back="3"><i class="bi bi-arrow-left" aria-hidden="true"></i> Edit owner details</button>
+        <button type="button" class="iw-client-button" data-cac-next="5">Review application <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+      </div>
+      <section class="iw-tm-panel iw-cac-review iw-cac-journey-step" data-cac-stage="5">
+        <div class="iw-tm-panel-head"><span class="iw-tm-section-number">5</span><div><h2>Review and checkout</h2>
           <p>Verify names and documents before generating an invoice. CAC filing starts only after payment verification.</p></div></div>
         <?php if ($cacQuote): ?>
           <div class="iw-cac-total"><span>Total iWorks service and selected add-ons</span><strong><?= e(money((float)$cacQuote['total'],$cacQuote['currency'])) ?></strong>
@@ -231,7 +275,10 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
             <small><?= $business ? e(ucfirst((string)($filing['structure']??'sole'))) . ' · ' . count($people) . ' proprietor(s)' : count($people) . ' director(s)/owner(s)' ?></small>
           </div>
         <?php endif; ?>
-        <button type="button" class="iw-client-button iw-client-button-soft mb-3" onclick="window.location.reload()"><i class="bi bi-arrow-clockwise"></i> Check uploaded documents & refresh review</button>
+        <div class="iw-cac-journey-actions iw-cac-review-actions">
+          <button type="button" class="iw-client-button iw-client-button-soft" data-cac-back="4"><i class="bi bi-arrow-left"></i> Back to documents</button>
+          <button type="button" class="iw-client-button iw-client-button-soft" onclick="window.location.reload()"><i class="bi bi-arrow-clockwise"></i> Refresh document checks</button>
+        </div>
         <?php if ($cacErrors !== []): ?>
           <div class="iw-cac-validation" role="status"><strong>Before checkout:</strong>
             <ul><?php foreach (array_slice($cacErrors,0,15) as $error): ?><li><?= e((string)$error) ?></li><?php endforeach; ?></ul>
@@ -261,10 +308,11 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
     <div class="iw-tm-panel">
       <h2><i class="bi bi-shield-check"></i> CAC Nigeria filing</h2>
       <p>Have your proposed business name, details of each owner/director, a valid ID, passport photo and signature ready.</p>
-      <div class="iw-cac-stage"><span>1</span> Application details</div>
-      <div class="iw-cac-stage"><span>2</span> People and roles</div>
-      <div class="iw-cac-stage"><span>3</span> Secure documents</div>
-      <div class="iw-cac-stage"><span>4</span> Review and payment</div>
+      <div class="iw-cac-stage"><span>1</span> Business type and name</div>
+      <div class="iw-cac-stage"><span>2</span> Contact and address</div>
+      <div class="iw-cac-stage"><span>3</span> Owners and roles</div>
+      <div class="iw-cac-stage"><span>4</span> Secure documents</div>
+      <div class="iw-cac-stage"><span>5</span> Review and payment</div>
       <p class="iw-client-small-muted mt-3">You are preparing an order with iWorks, not filing directly on the official CAC website.</p>
     </div>
     <div class="iw-tm-panel">
@@ -277,6 +325,65 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
 <script>
 (function(){
   var form=document.getElementById('cacFilingForm');
+  var progress=document.getElementById('cacJourneyProgress');
+  if(form&&progress){
+    progress.hidden=false;
+    var hasSavedDraft=<?= $cacDraft?'true':'false' ?>;
+    var requestedStep=(new URLSearchParams(window.location.search)).get('step');
+    var stepNumber=hasSavedDraft && requestedStep==='documents' ? 4 :
+      (hasSavedDraft && requestedStep==='review' ? 5 : 1);
+    var screen=document.querySelector('.iw-cac-layout');
+    if(screen)screen.classList.add('iw-cac-journey-ready');
+    function showStage(number){
+      number=Math.max(1,Math.min(hasSavedDraft?5:3,Number(number)||1));
+      stepNumber=number;
+      document.querySelectorAll('.iw-cac-journey-step,[data-cac-stage].iw-cac-journey-actions').forEach(function(section){
+        section.classList.toggle('iw-cac-step-active',Number(section.dataset.cacStage)===number);
+      });
+      progress.querySelectorAll('[data-cac-jump]').forEach(function(button){
+        var stage=Number(button.dataset.cacJump);
+        if(stage===number)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
+        button.classList.toggle('iw-cac-progress-complete',stage<number);
+      });
+      if(screen && window.matchMedia('(max-width: 760px)').matches){
+        progress.scrollIntoView({block:'start',behavior:'auto'});
+      }
+    }
+    function validStage(number){
+      var stage=document.querySelector('.iw-cac-journey-step[data-cac-stage="'+number+'"]');
+      if(!stage)return true;
+      for(var field of stage.querySelectorAll('input,select,textarea')){
+        if(!field.checkValidity()){
+          if(field.closest('details'))field.closest('details').open=true;
+          field.reportValidity();
+          return false;
+        }
+      }
+      return true;
+    }
+    document.querySelectorAll('[data-cac-next],[data-cac-back]').forEach(function(button){
+      button.addEventListener('click',function(){
+        if(button.dataset.cacNext){
+          if(!validStage(stepNumber))return;
+          var next=Number(button.dataset.cacNext);
+          if(next>=4 && !hasSavedDraft){form.requestSubmit();return;}
+          showStage(next);
+        } else showStage(Number(button.dataset.cacBack));
+      });
+    });
+    progress.querySelectorAll('[data-cac-jump]').forEach(function(button){
+      button.addEventListener('click',function(){
+        var stage=Number(button.dataset.cacJump);
+        if(stage<=stepNumber || stage<=3 && hasSavedDraft){
+          showStage(stage);return;
+        }
+        if(!validStage(stepNumber))return;
+        if(stage>=4 && !hasSavedDraft)return;
+        if(stage===stepNumber+1)showStage(stage);
+      });
+    });
+    showStage(stepNumber);
+  }
   if(form){
     var people=document.getElementById('cacPeople');
     var first=people.querySelector('[data-person]');
@@ -389,14 +496,6 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
     people.addEventListener('input',function(ev){if(ev.target.matches('[data-cac-id-number]'))validateId(ev.target.closest('[data-person]'));});
     people.addEventListener('change',function(ev){if(ev.target.matches('[data-cac-id-type]'))validateId(ev.target.closest('[data-person]'));});
     people.querySelectorAll('[data-person]').forEach(validateId);
-    var same=document.getElementById('cacSameAddress');
-    if(same)same.addEventListener('change',function(){
-      if(!same.checked)return;
-      var residence=people.querySelector('[name="filing[people][0][residential_address]"]');
-      var businessField=document.getElementById('cacAddress');
-      if(residence&&residence.value.trim())businessField.value=residence.value;
-      else { same.checked=false; alert('Enter the first person’s residential address first.'); }
-    });
     reindex();
   }
 
