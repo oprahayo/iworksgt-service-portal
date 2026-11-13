@@ -1,0 +1,55 @@
+/* iWorks public navigation and CTA — light-only, mobile-first overrides. */
+html[data-iw-theme="light"]{color-scheme:light}
+body.page-public .iw-mobile-menu{display:none}
+body.page-public .iw-sitewide-cta{background:linear-gradient(130deg,#0d1630 0%,#121e44 100%);color:#fff;padding:clamp(70px,8vw,112px) 20px;position:relative;overflow:hidden}
+body.page-public .iw-sitewide-cta-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;z-index:1}
+body.page-public .iw-sitewide-cta h2{font-family:Inter,system-ui,sans-serif;font-size:clamp(30px,4.7vw,58px);font-weight:800;letter-spacing:-.045em;line-height:1.12;max-width:850px;color:#fff;margin:0 auto 23px}
+body.page-public .iw-sitewide-cta p{font-size:clamp(15px,1.65vw,20px);line-height:1.65;max-width:700px;color:#b2bfd8;margin:0 auto 30px}
+body.page-public .iw-sitewide-cta-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:22px}
+body.page-public .iw-sitewide-cta-actions a{text-decoration:none;font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:13px;min-height:53px}
+body.page-public .iw-sitewide-cta-primary{padding:13px 27px;border-radius:11px;background:#fff;color:#101c3e!important;box-shadow:7px 7px 0 rgba(255,255,255,.12);transition:transform .17s ease,box-shadow .17s ease}
+body.page-public .iw-sitewide-cta-primary:hover{transform:translateY(-2px);box-shadow:7px 9px 0 rgba(255,255,255,.18)}
+body.page-public .iw-sitewide-cta-secondary{color:#c4cde0!important}
+body.page-public .iw-sitewide-cta-secondary:hover{color:#fff!important}
+body.page-public .iw-sitewide-cta-assurances{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;list-style:none;padding:0;margin:44px 0 0}
+body.page-public .iw-sitewide-cta-assurances li{display:inline-flex;align-items:center;gap:9px;border:1px solid #ffffff21;border-radius:9px;padding:9px 14px;color:#b7c4db;font-size:12px}
+body.page-public .iw-sitewide-cta-assurances i{color:#87d6e7}
+@media(max-width:1199.98px){
+  body.page-public .public-nav-shell{position:static}
+  body.page-public .public-navbar{z-index:1045}
+  body.page-public .public-nav-actions .navbar-toggler{border:0;box-shadow:none;color:inherit;min-width:46px;min-height:46px;display:grid;place-items:center}
+  body.page-public .public-nav-actions .navbar-toggler:focus-visible{outline:3px solid #8dacfa;outline-offset:2px}
+  body.page-public .public-navbar .navbar-collapse{position:absolute;top:100%;left:0;right:0;max-height:calc(100dvh - 65px);overflow:auto;background:#fff;box-shadow:0 20px 38px #0b172529;z-index:1080}
+  body.page-public .iw-mobile-menu{display:block;padding:20px clamp(18px,6vw,42px) max(25px,env(safe-area-inset-bottom));background:#fff;color:#1b2740}
+  body.page-public .public-navbar .public-nav-center,
+  body.page-public .public-navbar .public-header-cta-group{display:none!important}
+  body.page-public .iw-mobile-menu-group{border:0;margin:0}
+  body.page-public .iw-mobile-menu-group summary{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:19px 0;font-size:18px;font-weight:700;color:#17243b;cursor:pointer;list-style:none;min-height:59px}
+  body.page-public .iw-mobile-menu-group summary::-webkit-details-marker{display:none}
+  body.page-public .iw-mobile-menu-group summary i{color:#8a9ab2;font-size:14px;transition:transform .18s ease}
+  body.page-public .iw-mobile-menu-group[open] summary i{transform:rotate(180deg)}
+  body.page-public .iw-mobile-menu-sub{display:grid;gap:3px;padding:0 0 10px 11px;border-left:2px solid #eef1f7;margin-left:3px}
+  body.page-public .iw-mobile-menu-sub a{color:#485671;text-decoration:none;font-size:14px;line-height:1.5;padding:10px 13px;border-radius:8px}
+  body.page-public .iw-mobile-menu-sub a:hover,
+  body.page-public .iw-mobile-menu-sub a:focus-visible{color:var(--brand-primary,#eb651e);background:#f6f8fb}
+  body.page-public .iw-mobile-menu-link{display:block;padding:19px 0;color:#17243b;text-decoration:none;font-weight:700;font-size:18px}
+  body.page-public .iw-mobile-menu-bottom{border-top:1px solid #e6eaf0;margin-top:14px;padding-top:17px;display:grid;gap:11px}
+  body.page-public .iw-mobile-menu-signin{padding:8px 0 13px;text-decoration:none;color:#475a75;font-size:16px}
+  body.page-public .iw-mobile-menu-book,
+  body.page-public .iw-mobile-menu-start{display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid #c5d7fa;background:#eef4ff;color:#0755d7!important;border-radius:12px;padding:15px 16px;min-height:51px;text-decoration:none;font-weight:700;font-size:15px}
+  body.page-public .iw-mobile-menu-start{background:var(--brand-primary,#eb651e);border-color:var(--brand-primary,#eb651e);color:#fff!important}
+}
+@media(min-width:1200px){body.page-public .iw-mobile-menu{display:none!important}}
+@media(max-width:600px){
+  body.page-public .iw-sitewide-cta{padding:65px 19px}
+  body.page-public .iw-sitewide-cta h2{font-size:clamp(28px,8vw,41px)}
+  body.page-public .iw-sitewide-cta-actions{width:100%;gap:8px;flex-direction:column}
+  body.page-public .iw-sitewide-cta-primary{width:min(100%,330px);min-height:55px}
+  body.page-public .iw-sitewide-cta-secondary{min-height:45px}
+  body.page-public .iw-sitewide-cta-assurances{margin-top:30px;gap:9px}
+  body.page-public .iw-sitewide-cta-assurances li{padding:6px 11px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  body.page-public .iw-sitewide-cta-primary,
+  body.page-public .iw-mobile-menu-group summary i{transition:none!important}
+}
