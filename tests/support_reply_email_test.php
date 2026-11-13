@@ -45,7 +45,9 @@ support_mail_check(str_contains($anonymous['plain'], 'Our iWORKSGLOBAL Support t
 $domainSource = file_get_contents(__DIR__ . '/../app/domain.php');
 support_mail_check(str_contains($domainSource, '?array $emailOverride = null'), 'Notification must support optional HTML override.');
 support_mail_check(str_contains($domainSource, 'iworks_support_email_payload($ticket, $sender,'), 'Staff replies must use branded template.');
-support_mail_check(str_contains($domainSource, 'iworks_send_html_email('), 'Override must send multipart email.');
-support_mail_check(str_contains($domainSource, 'send_email((string) $user[' . "'email'" . '], $title, $mailMessage)'), 'Generic notifications must retain existing plain-text behavior.');
+support_mail_check(str_contains($domainSource, 'iworks_enqueue_notification_email('), 'Branded support reply must enter durable outbox.');
+$outboxSource = file_get_contents(__DIR__ . '/../app/notification_outbox.php');
+support_mail_check(str_contains($outboxSource, 'iworks_send_html_email('), 'Outbox must preserve multipart delivery.');
+support_mail_check(str_contains($outboxSource, 'send_email('), 'Outbox must retain plain-text notification fallback.');
 
 echo "support_reply_email_test passed\n";

@@ -9475,37 +9475,43 @@ function list_active_banners(): array
 
 function create_notification(int $userId, string $title, string $message, string $targetUrl = '', ?array $emailOverride = null): void
 {
-    db_execute(
-        'INSERT INTO notifications (user_id, title, message, target_url, is_read, created_at)
-         VALUES (:user_id, :title, :message, :target_url, :is_read, :created_at)',
-        [
-            'user_id' => $userId,
-            'title' => trim($title),
-            'message' => trim($message),
-            'target_url' => trim($targetUrl),
-            'is_read' => 0,
-            'created_at' => now(),
-        ]
-    );
+    $pdo = db();
+    $ownsTransaction = !$pdo->inTransaction();
+    if ($ownsTransaction) $pdo->beginTransaction();
+    try {
+        db_execute(
+            'INSERT INTO notifications (user_id, title, message, target_url, is_read, created_at)
+             VALUES (:user_id, :title, :message, :target_url, :is_read, :created_at)',
+            [
+                'user_id'=>$userId, 'title'=>trim($title),
+                'message'=>trim($message), 'target_url'=>trim($targetUrl),
+                'is_read'=>0, 'created_at'=>now(),
+            ]
+        );
+        $notificationId = db_last_id();
+        if ($notificationId <= 0) {
+            throw new RuntimeException('Notification could not be recorded.');
+        }
 
-    if (email_notifications_enabled()) {
-        $user = find_user_by_id($userId);
-        if ($user && !empty($user['email'])) {
-            $mailMessage = $message;
-            if ($targetUrl !== '') {
-                $mailMessage .= "\n\nOpen: " . portal_absolute_url($targetUrl);
-            }
-            if ($emailOverride !== null) {
-                iworks_send_html_email(
-                    (string) $user['email'],
-                    (string) ($emailOverride['subject'] ?? $title),
-                    (string) ($emailOverride['plain'] ?? $mailMessage),
-                    (string) ($emailOverride['html'] ?? '')
+        if (email_notifications_enabled()) {
+            $user = find_user_by_id($userId);
+            if ($user && !empty($user['email'])) {
+                $mailMessage = $message;
+                if ($targetUrl !== '') {
+                    $mailMessage .= "\n\nOpen: " . portal_absolute_url($targetUrl);
+                }
+                iworks_enqueue_notification_email(
+                    $notificationId, $userId, (string)$user['email'],
+                    (string)($emailOverride['subject'] ?? $title),
+                    (string)($emailOverride['plain'] ?? $mailMessage),
+                    (string)($emailOverride['html'] ?? '')
                 );
-            } else {
-                send_email((string) $user['email'], $title, $mailMessage);
             }
         }
+        if ($ownsTransaction) $pdo->commit();
+    } catch (Throwable $e) {
+        if ($ownsTransaction && $pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
     }
 }
 
