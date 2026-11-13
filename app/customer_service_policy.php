@@ -47,6 +47,12 @@ function iworks_customer_published_service(array $service): ?array
     // One canonical CAC product, with structure-specific quote at intake,
     // NOT the fixed historical Ltd service price.
     if ($slug === 'company-registration') {
+        // The client catalogue consumes already decorated public offers.
+        // Do not overwrite the actual Ltd price/name with Enterprise pricing.
+        if (($service['_iworks_registration_type'] ?? '') === 'company') {
+            $service['_iworks_checkout_mode'] = 'cac';
+            return $service;
+        }
         if (function_exists('cac_public_service_record')) {
             $service = cac_public_service_record($service);
             if ($service === null) return null;
