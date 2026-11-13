@@ -41,10 +41,8 @@ if ($page === null) {
         } elseif (in_array($rawPath, ['home', 'management', 'about', 'case-studies', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'login'], true)) {
             $page = $rawPath;
             $requestedPrettyPublicPage = true;
-        } elseif (!in_array($rawPath, ['index.php', 'index.html'], true)) {
-            // Missing pretty paths must not silently become the homepage.
-            $unmatchedPrettyRoute = true;
         }
+        $unmatchedPrettyRoute = iworks_unmatched_pretty_path($rawPath, $requestedPrettyPublicPage);
     }
 }
 
