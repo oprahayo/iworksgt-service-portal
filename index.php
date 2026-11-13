@@ -119,12 +119,23 @@ try {
 
     $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study'];
 
+    // "blog" and "services" are intentionally shared URL names: pretty URLs
+    // on the public host show published content, whereas ?page=blog and
+    // ?page=services on the secure portal must render management screens.
+    $portalManagementPage = in_array($page, ['blog', 'services'], true)
+        && !$requestedPrettyPublicPage
+        && array_key_exists('page', $_GET)
+        && (!should_enforce_split_domain()
+            || request_host() === configured_host(portal_base_url()));
+    $isPublicPageRoute = in_array($page, $publicPageSlugs, true) && !$portalManagementPage;
+
+
     if (should_enforce_split_domain()) {
         $requestHost = request_host();
         $publicHost = configured_host(public_base_url());
         $portalHost = configured_host(portal_base_url());
 
-        if (in_array($page, $publicPageSlugs, true) && $publicHost !== '' && $requestHost !== $publicHost) {
+        if ($isPublicPageRoute && $publicHost !== '' && $requestHost !== $publicHost) {
             if ($page === 'service') {
                 $target = public_url('service', ['slug' => (string) ($_GET['slug'] ?? '')] + current_query_params_without_page(['slug']));
             } elseif ($page === 'blog_post') {
@@ -139,7 +150,7 @@ try {
             exit;
         }
 
-        if (!in_array($page, $publicPageSlugs, true) && $portalHost !== '' && $requestHost !== $portalHost) {
+        if (!$isPublicPageRoute && $portalHost !== '' && $requestHost !== $portalHost) {
             redirect(portal_url($page, current_query_params_without_page()));
         }
     }
@@ -148,7 +159,7 @@ try {
     // out of public search results. Published marketing URLs live on apex.
     if (should_enforce_split_domain()
         && request_host() === configured_host(portal_base_url())
-        && !in_array($page, $publicPageSlugs, true)) {
+        && !$isPublicPageRoute) {
         header('X-Robots-Tag: noindex, nofollow');
     }
 
@@ -164,7 +175,7 @@ try {
         }
     }
 
-    if (in_array($page, $publicPageSlugs, true)
+    if ($isPublicPageRoute
         && (!is_logged_in() || $requestedPrettyPublicPage
             || (should_enforce_split_domain() && request_host() === configured_host(public_base_url())))) {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
@@ -662,7 +673,7 @@ try {
             break;
 
         case 'blog':
-            require_roles(['admin', 'author']);
+            require_roles(['admin', 'agent', 'author']);
             $user = current_user();
             $isAdminBlog = has_role(['admin']);
             $blogAction = strtolower(trim((string) ($_GET['action'] ?? '')));
