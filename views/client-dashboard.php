@@ -46,7 +46,9 @@ foreach ($clientCatalogue as $catalogItem) {
     if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
     $checkoutMode = (string)($service['_iworks_checkout_mode'] ?? 'standard');
     if ($checkoutMode === 'consultation') { $pricing = 'Specialist quote'; }
-    $startUrl = $checkoutMode === 'consultation'
+    $startUrl = $slug === 'cac-business-name'
+        ? url('cac_filing', ['type'=>'business'])
+        : ($checkoutMode === 'consultation'
         ? public_url('service',['slug'=>$slug])
         : ($slug === 'trademark'
             ? url('trademark')
