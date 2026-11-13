@@ -159,7 +159,7 @@ assert_detail(str_contains($listing, 'iworks_customer_product_price($service)')
     && str_contains($dashboard, 'iworks_customer_product_price($service)'),
     'Directory and customer catalogue must use one shared price presenter.');
 assert_detail(str_contains($header, "currentPublicSlug === 'service'") &&
-    str_contains($header, 'iw-product-detail-css') && str_contains($header, "file_get_contents($iwProductCss)"),
+    str_contains($header, 'iw-product-detail-css') && str_contains($header, 'file_get_contents($iwProductCss)'),
     'Product CSS must load on service pages using the split-root-safe application path.');
 assert_detail(str_contains($styles, '@media (max-width:920px)') &&
     str_contains($styles, 'grid-template-areas:"side" "content"'),
