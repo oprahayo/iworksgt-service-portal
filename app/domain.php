@@ -2140,7 +2140,9 @@ function list_public_services_catalog(): array
          ORDER BY is_featured DESC, name ASC'
     );
 
-    return array_map('service_marketing_payload', $rows);
+    $catalog = array_map('service_marketing_payload', $rows);
+    return array_values(array_filter(array_map(static fn(array $item): ?array =>
+        function_exists('cac_public_service_record') ? cac_public_service_record($item) : $item, $catalog)));
 }
 
 function list_public_service_categories(): array
