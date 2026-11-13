@@ -3,9 +3,9 @@
 # Run on the cPanel account: bash scripts/contain_private_http_access.sh --check|--apply
 # This script intentionally does NOT rotate sessions or touch the database.
 set -Eeuo pipefail
-MODE="\${1:---check}"
-PORTAL_INPUT="\${2:-$HOME/public_html/portal.iworksgt.com}"
-PUBLIC_INPUT="\${3:-$HOME/public_html}"
+MODE="${1:---check}"
+PORTAL_INPUT="${2:-$HOME/public_html/portal.iworksgt.com}"
+PUBLIC_INPUT="${3:-$HOME/public_html}"
 [[ "$MODE" == "--check" || "$MODE" == "--apply" ]] || { echo 'Use --check or --apply' >&2; exit 2; }
 for command in readlink mktemp cp mv chmod grep cat; do command -v "$command" >/dev/null || { echo "Missing $command" >&2; exit 1; }; done
 PORTAL="$(readlink -f "$PORTAL_INPUT")"
@@ -104,7 +104,7 @@ done
 echo "Containment rules installed for both document roots. Private evidence: $EVIDENCE"
 
 # Verify safe methods without downloading/exposing message contents.
-if [[ "\${IWORKS_SECURITY_FIXTURE_MODE:-0}" == "1" ]]; then
+if [[ "${IWORKS_SECURITY_FIXTURE_MODE:-0}" == "1" ]]; then
   echo 'Fixture mode: remote HTTP checks were not attempted.'
   exit 0
 fi
