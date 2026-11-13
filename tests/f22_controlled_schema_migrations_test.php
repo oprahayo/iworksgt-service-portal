@@ -6,7 +6,12 @@ declare(strict_types=1);
 $GLOBALS['ddlAttempts'] = 0;
 function iworks_schema_mutation_allowed(): bool { return false; }
 function is_configured(): bool { return true; }
-function schema_table_exists(string $table): bool { return false; }
+function db_one(string $sql, array $params = []): ?array
+{
+    // Simulate a missing legacy table through the application's own
+    // information_schema helper. No production database access is made.
+    return ['c' => 0];
+}
 function db_execute(string $query, array $params = []): bool
 {
     $GLOBALS['ddlAttempts']++;
