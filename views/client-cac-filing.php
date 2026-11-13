@@ -4,6 +4,10 @@ $people = is_array($filing['people'] ?? null) && $filing['people'] !== [] ? $fil
 $documents = is_array($cacDraft['docs'] ?? null) ? $cacDraft['docs'] : [];
 $editable = !$cacDraft || ($cacDraft['status'] ?? '') === 'draft';
 $business = $filingKind === 'business';
+$virtualAddressAvailable = cac_virtual_address_eligible();
+$virtualOfficePrice = cac_money_setting('cac_virtual_address_ngn',0);
+$privacyPerDirector = cac_money_setting('cac_privacy_advisory_per_director_ngn',50000);
+$nameScreen = cac_name_review((string)($filing['first_choice'] ?? ''),$filingKind);
 $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
 ?>
 <div class="iw-client-heading iw-client-heading-row">
@@ -11,7 +15,8 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
     <a class="iw-client-back" href="<?= e(url('dashboard')) ?>"><i class="bi bi-arrow-left"></i> All services</a>
     <span class="iw-client-eyebrow">CAC NIGERIA · <?= $business ? 'BUSINESS NAME' : 'COMPANY INCORPORATION' ?></span>
     <h1><?= $business ? 'Business name registration' : 'Company registration' ?></h1>
-    <p>Enter your information, attach documents, review pricing, then proceed to payment.</p>
+    <p>Choose your ownership details, review preliminary name guidance, attach documents and confirm your exact price before payment.</p>
+    <a class="iw-client-subtle-link" href="<?= e(url('cac_filing')) ?>">Change registration pathway</a>
   </div>
   <span class="iw-client-status" data-state="<?= $editable ? 'draft' : 'payment' ?>"><?= $editable ? 'Draft application' : 'Awaiting payment' ?></span>
 </div>
@@ -52,20 +57,72 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
             </div>
             <div class="iw-tm-field"><label for="cacShareCapital">Issued share capital (NGN)</label><input id="cacShareCapital" type="number" min="1" step="1" name="filing[share_capital]" value="<?= e($first('share_capital')) ?>" placeholder="e.g. 1000000"></div>
           </div>
-          <p class="iw-cac-explain">Company registration may require additional ownership, PSC, regulatory and consent information. iWorks will review these before CAC submission.</p>
+          <div class="iw-tm-field iw-tm-field-full">
+            <label for="cacOwnership">Ownership arrangement</label>
+            <select id="cacOwnership" name="filing[company_ownership]">
+              <option value="single" <?= $first('company_ownership')!=='multiple'?'selected':'' ?>>One owner (one shareholder, at least one director)</option>
+              <option value="multiple" <?= $first('company_ownership')==='multiple'?'selected':'' ?>>Multiple owners / shareholders and directors</option>
+            </select>
+          </div>
+          <p class="iw-cac-explain">Nigerian private limited-by-shares company: record every director, shareholder and their shareholding. Persons with significant control (PSC) disclosures may be required. It is different from a US LLC. Other company types need specialist review.</p>
           <?php endif; ?>
           <div class="iw-tm-fields">
-            <div class="iw-tm-field"><label for="cacName1">Proposed name (first choice) <span>*</span></label><input id="cacName1" name="filing[first_choice]" value="<?= e($first('first_choice')) ?>" required></div>
+            <div class="iw-tm-field iw-tm-field-full">
+              <label for="cacName1">Proposed name (first choice) <span>*</span></label>
+              <input id="cacName1" name="filing[first_choice]" value="<?= e($first('first_choice')) ?>" required minlength="4" maxlength="190" autocomplete="organization" aria-describedby="cacNameHelp cacNameFeedback">
+              <p class="iw-cac-explain" id="cacNameHelp">Use a distinctive name that reflects the activity. <?= $business ? 'Do not add Ltd or Limited to a Business Name.' : 'Use a Nigerian Limited/Ltd ending, not LLC.' ?> This is a screening aid, not an official name reservation.</p>
+              <div id="cacNameFeedback" class="iw-cac-name-feedback" aria-live="polite"></div>
+              <div class="iw-cac-name-suggestions" id="cacNameSuggestions" aria-label="Suggested name alternatives"></div>
+              <a href="https://icrp.cac.gov.ng/public-search/" target="_blank" rel="noopener noreferrer" class="iw-cac-official-link"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Check existing names on the official CAC register</a>
+            </div>
             <div class="iw-tm-field"><label for="cacName2">Alternative name (optional)</label><input id="cacName2" name="filing[second_choice]" value="<?= e($first('second_choice')) ?>"></div>
-            <div class="iw-tm-field"><label for="cacActivity">Nature of business <span>*</span></label><input id="cacActivity" name="filing[business_activity]" value="<?= e($first('business_activity')) ?>" required placeholder="e.g. Retail and distribution"></div>
+            <div class="iw-tm-field">
+              <label for="cacNature">Nature of business / profession <span>*</span></label>
+              <select id="cacNature" name="filing[nature_category]" required>
+                <option value="">Choose your main industry</option>
+                <?php foreach (cac_registration_natures() as $nature): ?>
+                  <option value="<?= e($nature) ?>" <?= $first('nature_category')===$nature?'selected':'' ?>><?= e($nature) ?></option>
+                <?php endforeach; ?>
+                <?php if($first('nature_category')!=='' && !in_array($first('nature_category'),cac_registration_natures(),true)): ?>
+                  <option value="<?= e($first('nature_category')) ?>" selected><?= e($first('nature_category')) ?> (previously saved)</option>
+                <?php endif; ?>
+              </select>
+              <small class="iw-cac-explain">Indicative categories; iWorks matches the final specific activity to the current CAC iCRP list before filing.</small>
+            </div>
+            <div class="iw-tm-field">
+              <label for="cacActivity">Specific nature of business <span>*</span></label>
+              <input id="cacActivity" name="filing[business_activity]" value="<?= e($first('business_activity')) ?>" required maxlength="240" placeholder="e.g. Online retail of household goods">
+            </div>
             <div class="iw-tm-field"><label for="cacStart">Commencement date <span>*</span></label><input id="cacStart" type="date" name="filing[commencement_date]" value="<?= e($first('commencement_date')) ?>" required></div>
             <div class="iw-tm-field"><label for="cacEmail">Business email <span>*</span></label><input id="cacEmail" type="email" name="filing[business_email]" value="<?= e($first('business_email') ?: (string)($client['email']??'')) ?>" required></div>
             <div class="iw-tm-field"><label for="cacPhone">Business phone <span>*</span></label><input id="cacPhone" type="tel" name="filing[business_phone]" value="<?= e($first('business_phone') ?: (string)($client['phone']??'')) ?>" required></div>
             <div class="iw-tm-field iw-tm-field-full">
-              <label for="cacAddress">Business / registered office address <span>*</span></label>
-              <textarea id="cacAddress" rows="2" name="filing[business_address]" required><?= e($first('business_address')) ?></textarea>
-              <label class="iw-cac-checkbox"><input type="checkbox" id="cacSameAddress"> Use first proprietor/director's residential address as business address</label>
+              <label for="cacAddressMode">Business / registered office address <span>*</span></label>
+              <select id="cacAddressMode" name="filing[address_mode]">
+                <option value="own" <?= $first('address_mode')!=='virtual'?'selected':'' ?>>Use my own traceable Nigerian office address</option>
+                <?php if($virtualAddressAvailable): ?>
+                  <option value="virtual" <?= $first('address_mode')==='virtual'?'selected':'' ?>>Use iWorks managed registered office (+₦<?= e(number_format($virtualOfficePrice,0)) ?>)</option>
+                <?php endif; ?>
+              </select>
+              <textarea id="cacAddress" rows="2" name="filing[business_address]" required <?= $first('address_mode')==='virtual'?'readonly':'' ?>><?= e($first('business_address')) ?></textarea>
+              <label class="iw-cac-checkbox" id="cacSameAddressWrap" <?= $first('address_mode')==='virtual'?'hidden':'' ?>><input type="checkbox" id="cacSameAddress"> Use first proprietor/director's residential address as business address</label>
+              <small class="iw-cac-explain" id="cacAddressNote">
+                <?php if ($virtualAddressAvailable): ?>
+                  Managed-office service is only offered where a traceable eligible location and the necessary permission are available. It does not hide mandatory CAC public records.
+                <?php else: ?>
+                  Managed office not currently offered. Provide an actual, traceable address where official correspondence can be received.
+                <?php endif; ?>
+              </small>
             </div>
+            <?php if (!$business): ?>
+            <div class="iw-tm-field iw-tm-field-full iw-cac-advisory">
+              <label class="iw-cac-checkbox">
+                <input type="checkbox" name="filing[privacy_advisory]" value="1" <?= !empty($filing['privacy_advisory'])?'checked':'' ?>>
+                Add optional director privacy and registered-address advisory (+₦<?= e(number_format($privacyPerDirector,0)) ?> per director)
+              </label>
+              <p class="iw-cac-explain">Advisory only: personal data minimisation and lawful address arrangements. This does <strong>not</strong> hide names or beneficial ownership information CAC must make public. No secrecy or registration outcome is guaranteed.</p>
+            </div>
+            <?php endif; ?>
             <div class="iw-tm-field"><label for="cacAv">CAC name reservation / AV code (if available)</label><input id="cacAv" name="filing[av_code]" value="<?= e($first('av_code')) ?>"></div>
             <div class="iw-tm-field"><label for="cacCurrency">Pay in</label>
               <select name="filing[currency]" id="cacCurrency">
@@ -94,15 +151,17 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                   <div class="iw-tm-field <?= $key==='residential_address'?'iw-tm-field-full':'' ?>">
                     <label><?= e($label) ?><?= in_array($key,['full_name','dob','nationality','residential_address','id_type','id_number'],true) ? ' *' : '' ?></label>
                     <?php if ($key==='id_type'): ?>
-                    <select name="filing[people][<?= (int)$i ?>][id_type]">
+                    <select name="filing[people][<?= (int)$i ?>][id_type]" data-cac-id-type required>
                       <option value="">Select identification</option>
-                      <?php foreach (['National ID','International passport','Driver licence','Voter card'] as $idType): ?>
+                      <?php foreach (cac_id_type_options() as $idType): ?>
                         <option value="<?= e($idType) ?>" <?= (string)($person[$key]??'')===$idType?'selected':'' ?>><?= e($idType) ?></option>
                       <?php endforeach; ?>
                     </select>
                     <?php else: ?>
                       <input type="<?= $key==='dob'?'date':($key==='email'?'email':($key==='phone'?'tel':'text')) ?>"
                         name="filing[people][<?= (int)$i ?>][<?= e($key) ?>]"
+                        <?= $key==='id_number'?'data-cac-id-number inputmode="text" autocomplete="off"':'' ?>
+                        <?= $key==='nin'?'inputmode="numeric" pattern="[0-9]{11}" maxlength="11" title="NIN must be 11 digits"':'' ?>
                         value="<?= e((string)($person[$key]??'')) ?>"
                         <?= in_array($key,['full_name','dob','nationality','residential_address','id_number'],true) ? 'required' : '' ?>>
                     <?php endif; ?>
@@ -167,7 +226,8 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
         <div class="iw-tm-panel-head"><span class="iw-tm-section-number">4</span><div><h2>Review and checkout</h2>
           <p>Verify names and documents before generating an invoice. CAC filing starts only after payment verification.</p></div></div>
         <?php if ($cacQuote): ?>
-          <div class="iw-cac-total"><span>iWorks service fee</span><strong><?= e(money((float)$cacQuote['total'],$cacQuote['currency'])) ?></strong>
+          <div class="iw-cac-total"><span>Total iWorks service and selected add-ons</span><strong><?= e(money((float)$cacQuote['total'],$cacQuote['currency'])) ?></strong>
+            <small>Base filing support: ₦<?= e(number_format((float)$cacQuote['base_ngn'],0)) ?><?php if(($cacQuote['extras_ngn']['registered_office'] ?? 0)>0): ?> · Registered office: ₦<?= e(number_format((float)$cacQuote['extras_ngn']['registered_office'],0)) ?><?php endif; ?><?php if(($cacQuote['extras_ngn']['privacy_advisory'] ?? 0)>0): ?> · Privacy advisory: ₦<?= e(number_format((float)$cacQuote['extras_ngn']['privacy_advisory'],0)) ?><?php endif; ?></small>
             <small><?= $business ? e(ucfirst((string)($filing['structure']??'sole'))) . ' · ' . count($people) . ' proprietor(s)' : count($people) . ' director(s)/owner(s)' ?></small>
           </div>
         <?php endif; ?>
@@ -260,6 +320,75 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
       }
       reindex();
     });
+    var addressMode=document.getElementById('cacAddressMode');
+    var officeInput=document.getElementById('cacAddress');
+    var originalAddress=officeInput ? officeInput.value : '';
+    var managedOffice=<?= json_encode($virtualAddressAvailable ? setting('cac_virtual_address_details','') : '', JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;
+    function updateOffice() {
+      if(!addressMode||!officeInput)return;
+      var virtual=addressMode.value==='virtual';
+      if(virtual){ if(!officeInput.readOnly)originalAddress=officeInput.value; officeInput.value=managedOffice; }
+      else if(officeInput.readOnly)officeInput.value=originalAddress;
+      officeInput.readOnly=virtual;
+      var sameWrap=document.getElementById('cacSameAddressWrap');
+      if(sameWrap)sameWrap.hidden=virtual;
+    }
+    if(addressMode)addressMode.addEventListener('change',updateOffice);
+    updateOffice();
+
+    var nameInput=document.getElementById('cacName1');
+    var suggestionHost=document.getElementById('cacNameSuggestions');
+    var nameFeedback=document.getElementById('cacNameFeedback');
+    var company=<?= $business?'false':'true' ?>;
+    function suggestNames(){
+      if(!nameInput||!suggestionHost)return;
+      var name=nameInput.value.trim().replace(/\s+/g,' ');
+      suggestionHost.replaceChildren();
+      nameFeedback.textContent='';
+      if(name.length<4)return;
+      var suffix=/\b(?:Limited|Ltd|Enterprises?|Ventures?|Services|LLC)\.?$/i;
+      var base=name.replace(suffix,'').trim()||name;
+      if(!company && /\b(?:Limited|Ltd|LLC|PLC|Inc)\.?$/i.test(name)){
+        nameFeedback.textContent='Business Names must not use company suffixes such as Ltd, Limited or LLC.';
+      }else if(company && /\b(?:LLC|Inc|PLC)\.?$/i.test(name)){
+        nameFeedback.textContent='For Nigerian private companies use Ltd or Limited, not LLC or Inc.';
+      }else if(company && !/\b(?:LTD|LIMITED)\.?$/i.test(name)){
+        nameFeedback.textContent='Tip: Nigerian private limited companies normally end with Ltd or Limited.';
+      }else{
+        nameFeedback.textContent='Preliminary suggestions only. Check the official CAC iCRP for actual availability.';
+      }
+      var alternatives=company?[base+' Limited',base+' Ventures Limited',base+' Services Limited']:[base+' Enterprises',base+' Ventures',base+' Services'];
+      alternatives.forEach(function(candidate){
+        if(candidate.toLowerCase()===name.toLowerCase()||candidate.length>190)return;
+        var button=document.createElement('button');button.type='button';button.className='iw-cac-suggestion';
+        button.textContent=candidate;
+        button.title='Use as alternative proposed name';
+        button.addEventListener('click',function(){document.getElementById('cacName2').value=candidate;});
+        suggestionHost.appendChild(button);
+      });
+    }
+    if(nameInput){nameInput.addEventListener('input',suggestNames);suggestNames();}
+
+    function validateId(row){
+      var type=row.querySelector('[data-cac-id-type]');
+      var number=row.querySelector('[data-cac-id-number]');
+      if(!type||!number)return;
+      var normalized=number.value.trim().replace(/[\s-]+/g,'').toUpperCase();
+      number.setCustomValidity('');
+      if(!normalized)return;
+      if(type.value==='NIN' && !/^\d{11}$/.test(normalized)){
+        number.setCustomValidity('A NIN has exactly 11 digits.');
+      }else if(type.value==='International passport'&&!/^[A-Z0-9]{6,16}$/.test(normalized)){
+        number.setCustomValidity('Enter the document number printed on your passport (6–16 letters/digits).');
+      }else if(type.value==='Driver licence'&&!/^[A-Z0-9]{6,22}$/.test(normalized)){
+        number.setCustomValidity('Check the licence number printed on your document.');
+      }else if(type.value==='Voter card'&&!/^[A-Z0-9]{8,25}$/.test(normalized)){
+        number.setCustomValidity('Check the voter identification number printed on your card.');
+      }
+    }
+    people.addEventListener('input',function(ev){if(ev.target.matches('[data-cac-id-number]'))validateId(ev.target.closest('[data-person]'));});
+    people.addEventListener('change',function(ev){if(ev.target.matches('[data-cac-id-type]'))validateId(ev.target.closest('[data-person]'));});
+    people.querySelectorAll('[data-person]').forEach(validateId);
     var same=document.getElementById('cacSameAddress');
     if(same)same.addEventListener('change',function(){
       if(!same.checked)return;
