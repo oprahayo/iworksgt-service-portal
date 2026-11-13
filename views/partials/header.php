@@ -228,6 +228,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <link rel="stylesheet" href="assets/css/reviews.css">
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
   <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
+  <?php if ($user && $currentPage === 'job'): ?><link rel="stylesheet" href="assets/css/job-workspace.css?v=20261113b"><?php endif; ?>
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
     <link rel="stylesheet" href="assets/css/auth-clean.css">
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
@@ -357,7 +358,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         </div>
       <?php endif; ?>
 
-      <?php if (is_array($portalHint)): ?>
+      <?php if (is_array($portalHint) && $currentPage === 'dashboard'): ?>
         <div class="alert alert-info d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2" role="alert">
           <div>
             <strong><?= e((string) ($portalHint['title'] ?? 'Guide')) ?>:</strong>
