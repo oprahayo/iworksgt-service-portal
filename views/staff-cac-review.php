@@ -14,9 +14,10 @@ $docs=is_array($cacRow['docs']??null)?$cacRow['docs']:[];
   <dl class="row mb-0">
   <?php foreach ([
     'first_choice'=>'Preferred business name','second_choice'=>'Alternative name',
-    'structure'=>'Structure','company_type'=>'Company type','share_capital'=>'Issued share capital',
-    'av_code'=>'Reservation code','business_activity'=>'Business activity',
-    'business_email'=>'Email','business_phone'=>'Phone',
+    'structure'=>'Structure','company_type'=>'Company type','company_ownership'=>'Company ownership',
+    'share_capital'=>'Issued share capital','av_code'=>'Reservation code',
+    'nature_category'=>'Client industry category','business_activity'=>'Specific business activity',
+    'business_email'=>'Email','business_phone'=>'Phone','address_mode'=>'Registered office option',
     'business_address'=>'Registered address','commencement_date'=>'Commencement'
   ] as $key=>$label): ?>
     <?php if(trim((string)($details[$key]??''))==='')continue; ?>
@@ -24,6 +25,22 @@ $docs=is_array($cacRow['docs']??null)?$cacRow['docs']:[];
     <dd class="col-sm-9"><?= nl2br(e((string)$details[$key])) ?></dd>
   <?php endforeach; ?>
   </dl>
+  <?php if(!empty($details['privacy_advisory'])): ?>
+    <p class="alert alert-warning small mt-3 mb-0"><strong>Privacy advisory add-on requested.</strong> This may assist with lawful registered-address arrangements. It does not hide mandatory CAC director, shareholder or PSC disclosures.</p>
+  <?php endif; ?>
+  <?php $cacNameScreen=cac_name_review((string)($details['first_choice']??''),(string)$cacRow['kind']); ?>
+  <div class="alert alert-light border small mt-3 mb-0">
+    <strong>Pre-submission name &amp; nature verification:</strong> Confirm proposed names and actual availability on the official CAC portal, match the specific nature to current iCRP options, and obtain any regulatory consents.
+    <?php foreach($cacNameScreen['errors'] as $flag): ?><p class="text-danger mb-1"><?= e($flag) ?></p><?php endforeach; ?>
+    <?php foreach($cacNameScreen['warnings'] as $flag): ?><p class="text-warning-emphasis mb-1"><?= e($flag) ?></p><?php endforeach; ?>
+    <a href="https://icrp.cac.gov.ng/public-search/" target="_blank" rel="noopener noreferrer">Official CAC search</a>.
+    This tool does not reserve names.
+  </div>
+  <?php if(!empty($cacRow['quoted_total'])): ?>
+    <p class="mt-3 mb-0 small text-muted">Frozen order quote:
+      <strong><?= e(money((float)$cacRow['quoted_total'],(string)($cacRow['quoted_currency']??'NGN'))) ?></strong> · Current admin prices do not change an existing invoice.
+    </p>
+  <?php endif; ?>
 </div></section>
 <?php foreach ($people as $i=>$person): ?>
 <section class="card mb-3"><div class="card-body">

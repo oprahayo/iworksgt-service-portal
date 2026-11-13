@@ -14,6 +14,9 @@ if (!function_exists('public_service_bullets')) {
     }
 }
 $service = is_array($service ?? null) ? $service : [];
+if (($service['slug'] ?? '') === 'company-registration' && function_exists('cac_public_service_record')) {
+    $service = cac_public_service_record($service) ?? $service;
+}
 $serviceName = trim((string) ($service['name'] ?? 'Service'));
 $categoryName = ucwords(str_replace(['-', '_'], ' ', (string) ($service['category'] ?? 'general')));
 $description = (string) ($service['description'] ?? '');

@@ -217,8 +217,8 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <meta property="og:title" content="<?= e($title ?: app_name()) ?>">
   <meta property="og:description" content="<?= e($seoDescriptionText) ?>">
   <?php if ($favicon !== ''): ?>
-    <link rel="icon" type="image/png" href="<?= e($favicon) ?>">
-    <link rel="apple-touch-icon" href="<?= e($favicon) ?>">
+    <link rel="icon" type="<?= e(favicon_mime_type($favicon)) ?>" href="<?= e($favicon) ?>" sizes="any">
+    <?php if (favicon_mime_type($favicon) !== 'image/svg+xml'): ?><link rel="apple-touch-icon" href="<?= e($favicon) ?>"><?php endif; ?>
   <?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -233,6 +233,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/reviews.css">
   <link rel="stylesheet" href="assets/css/emoji-rating.css?v=20261113-live1">
+  <link rel="stylesheet" href="assets/css/cac-registration.css?v=20261113-cac1">
   <link rel="stylesheet" href="assets/css/brand-color-pass.css?v=20261113-live1">
   <?php if ($currentPage === 'live_inbox'): ?><link rel="stylesheet" href="assets/css/live-inbox.css?v=20261113-live1"><?php endif; ?>
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">

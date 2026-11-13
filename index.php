@@ -117,7 +117,7 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study', 'live_chat'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
@@ -163,6 +163,39 @@ try {
         header('X-Robots-Tag: noindex, nofollow');
     }
 
+    if ($page === 'brand_icon') {
+        // Publicly serve ONLY the administrator-selected, validated favicon.
+        // This handles separate portal/apex document roots without exposing
+        // other customer uploads or allowing arbitrary file paths.
+        if (!in_array((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'),['GET','HEAD'],true)) {
+            http_response_code(405);
+            return;
+        }
+        $iconRelative = trim(setting('favicon_path',''));
+        if (!preg_match('~^assets/uploads/branding/[A-Za-z0-9_.-]+\\.(?:png|jpe?g|gif|webp)$~i', $iconRelative)) {
+            http_response_code(404);
+            return;
+        }
+        $brandRoot = realpath(public_upload_directory().'/branding');
+        $file = realpath(__DIR__.'/'.$iconRelative);
+        if (!$brandRoot || !$file || !str_starts_with($file,$brandRoot.DIRECTORY_SEPARATOR) || !is_file($file)) {
+            http_response_code(404);
+            return;
+        }
+        $mime = mime_content_type($file) ?: '';
+        if (!in_array($mime,['image/png','image/jpeg','image/gif','image/webp'],true)
+            || @getimagesize($file) === false) {
+            http_response_code(415);
+            return;
+        }
+        header('Content-Type: '.$mime);
+        header('Cache-Control: public, max-age=86400');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Length: '.filesize($file));
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') readfile($file);
+        return;
+    }
+
     if ($page === 'live_chat') {
         iw_chat_public_request();
         return;
@@ -185,6 +218,10 @@ try {
             || (should_enforce_split_domain() && request_host() === configured_host(public_base_url())))) {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
         if ($page === 'service') {
+            if (in_array((string)$publicSlug,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                header('Location: ' . public_url('service',['slug'=>'company-registration']), true, 301);
+                return;
+            }
             $service = get_service_by_slug($publicSlug);
             if (!$service) {
                 http_response_code(404);
@@ -1358,6 +1395,13 @@ try {
             $clientId = (int) $client['id'];
             $filingId = (int) ($_GET['id'] ?? 0);
             $filingKind = strtolower(trim((string) ($_GET['type'] ?? 'business')));
+            if (!$filingId && ($filingKind === 'choose' || !isset($_GET['type']))) {
+                $title = 'Business Registration - ' . app_name();
+                require __DIR__ . '/views/partials/header.php';
+                require __DIR__ . '/views/client-cac-pathway.php';
+                require __DIR__ . '/views/partials/footer.php';
+                break;
+            }
             if (!in_array($filingKind, ['business','company'], true)) $filingKind='business';
             cac_filing_schema();
             if ($filingId>0) {
@@ -1684,13 +1728,81 @@ try {
                 try {
                     $serviceAction = (string) ($_POST['form_action'] ?? '');
 
+                    if ($serviceAction === 'save_cac_pricing') {
+                        $amounts = [];
+                        foreach ([
+                            'cac_business_base_ngn' => 26000,
+                            'cac_business_partner_extra_ngn' => 15000,
+                            'cac_company_base_ngn' => 120000,
+                            'cac_company_extra_director_ngn' => 0,
+                            'cac_virtual_address_ngn' => 0,
+                            'cac_privacy_advisory_per_director_ngn' => 50000,
+                        ] as $key => $default) {
+                            $raw = $_POST[$key] ?? $default;
+                            $value = filter_var($raw, FILTER_VALIDATE_FLOAT);
+                            if ($value === false || !is_finite((float)$value) || $value < 0 || $value > 100000000) {
+                                throw new RuntimeException('Check the CAC pricing fields. All amounts must be between ₦0 and ₦100 million.');
+                            }
+                            $amounts[$key] = round((float)$value,2);
+                        }
+                        if ($amounts['cac_business_base_ngn'] <= 0 || $amounts['cac_company_base_ngn'] <= 0) {
+                            throw new RuntimeException('Business Name and Limited Company base prices must be greater than zero.');
+                        }
+                        $virtualEnabled = isset($_POST['cac_virtual_address_enabled']);
+                        $office = trim((string)($_POST['cac_virtual_address_details'] ?? ''));
+                        if ($virtualEnabled && ($amounts['cac_virtual_address_ngn'] <= 0 || mb_safe_trim($office, 500) !== $office
+                            || $office === '' || empty($_POST['cac_office_authorized']))) {
+                            throw new RuntimeException('Managed office requires a positive price, traceable address and confirmation that iWorks has permission to provide it.');
+                        }
+                        $companyRecord = db_one("SELECT id FROM services WHERE slug='company-registration' LIMIT 1");
+                        if (!$companyRecord) throw new RuntimeException('The main CAC company service record is missing; do not modify other services.');
+                        db()->beginTransaction();
+                        try {
+                            foreach ($amounts as $key=>$value) {
+                                if ($key === 'cac_company_base_ngn') continue;
+                                set_setting($key, number_format($value,2,'.',''));
+                            }
+                            set_setting('cac_virtual_address_enabled', $virtualEnabled ? '1' : '0');
+                            set_setting('cac_virtual_address_details', $virtualEnabled ? $office : '');
+                            db_execute("UPDATE services SET price=:price, currency='NGN' WHERE id=:id",
+                                ['price'=>$amounts['cac_company_base_ngn'],'id'=>(int)$companyRecord['id']]);
+                            db()->commit();
+                        } catch (Throwable $error) {
+                            if (db()->inTransaction()) db()->rollBack();
+                            throw $error;
+                        }
+                        flash('success', 'Unified Business Registration prices saved for future quotes. Existing invoices are unchanged.');
+                        redirect(url('services',['section'=>'cac-pricing']));
+                    }
+
                     if ($serviceAction === 'save_service') {
                         $serviceId = !empty($_POST['service_id']) ? (int) $_POST['service_id'] : null;
-                        save_service($_POST, $serviceId);
-                        flash('success', 'Service saved.');
+                        $existing = $serviceId ? get_service($serviceId) : null;
+                        $existingSlug = (string)($existing['slug'] ?? '');
+                        if (in_array($existingSlug,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                            throw new RuntimeException('This legacy Business Name record is retained for old orders. New pricing belongs under Business Registration.');
+                        }
+                        $payload = $_POST;
+                        if ($existingSlug === 'company-registration') {
+                            // Protect the canonical linked service ID and unified price.
+                            $payload['name'] = (string)$existing['name'];
+                            $payload['price'] = (string)$existing['price'];
+                            $payload['currency'] = (string)$existing['currency'];
+                            $payload['is_active'] = '1';
+                            $payload['is_public'] = '1';
+                        }
+                        save_service($payload, $serviceId);
+                        flash('success', $existingSlug === 'company-registration'
+                            ? 'Business Registration content updated. Prices remain managed in the unified pricing panel.'
+                            : 'Service saved.');
                     }
 
                     if ($serviceAction === 'delete_service') {
+                        $existing = get_service((int) ($_POST['service_id'] ?? 0));
+                        if (in_array((string)($existing['slug'] ?? ''),
+                            ['company-registration','business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                            throw new RuntimeException('CAC registration records cannot be deleted because past jobs and invoices depend on them.');
+                        }
                         delete_service((int) ($_POST['service_id'] ?? 0));
                         flash('success', 'Service deleted.');
                     }
@@ -1708,7 +1820,9 @@ try {
                 }
             }
 
-            $services = list_services(false);
+            $services = array_values(array_filter(list_services(false), static fn(array $service): bool =>
+                !in_array((string)($service['slug'] ?? ''), ['business-name-registration','business-name-registration-cac-nigeria'],true)));
+            $cacUnifiedCompany = db_one("SELECT id,price,currency FROM services WHERE slug='company-registration' LIMIT 1");
             $mediaAssets = list_media_assets(300);
             $title = 'Services - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
@@ -1769,7 +1883,7 @@ try {
                     redirect(url('cac_filing', ['type'=>'business']));
                 }
                 if ($requested === 'company-registration') {
-                    redirect(url('cac_filing', ['type'=>'company']));
+                    redirect(url('cac_filing'));
                 }
             }
             if ((current_user()['role'] ?? '') === 'client'
@@ -3027,18 +3141,8 @@ try {
                     }
 
                     if ($action === 'save_cac_pricing') {
-                        foreach ([
-                            'cac_business_base_ngn' => 26000,
-                            'cac_business_partner_extra_ngn' => 15000,
-                            'cac_company_extra_director_ngn' => 0,
-                        ] as $key=>$default) {
-                            $value = filter_var($_POST[$key] ?? $default, FILTER_VALIDATE_FLOAT);
-                            if ($value === false || !is_finite((float)$value) || $value < 0 || $value > 100000000) {
-                                throw new RuntimeException('CAC pricing entries must be non-negative and below ₦100 million.');
-                            }
-                            set_setting($key, number_format((float)$value,2,'.',''));
-                        }
-                        flash('success', 'CAC service pricing updated.');
+                        flash('error', 'CAC pricing has moved to Services → Business Registration to avoid conflicting prices.');
+                        redirect(url('services',['section'=>'cac-pricing']));
                     }
 
                     if ($action === 'save_rules') {

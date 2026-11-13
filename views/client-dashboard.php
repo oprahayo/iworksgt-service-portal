@@ -48,7 +48,7 @@ foreach ($clientCatalogue as $catalogItem) {
         : ($slug === 'business-name-registration-cac-nigeria'
             ? url('cac_filing', ['type'=>'business'])
             : ($slug === 'company-registration'
-                ? url('cac_filing', ['type'=>'company'])
+                ? url('cac_filing')
                 : url('jobs', ['action'=>'new', 'service'=>$slug])));
     $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
   ?>

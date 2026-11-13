@@ -10,6 +10,9 @@ $clientLogo = logo_path();
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title><?= e($title ?: 'iWorks — Client Workspace') ?></title>
+  <?php $iwClientFavicon = favicon_path(); ?>
+  <link rel="icon" type="<?= e(favicon_mime_type($iwClientFavicon)) ?>" href="<?= e($iwClientFavicon) ?>" sizes="any">
+  <?php if (favicon_mime_type($iwClientFavicon) !== 'image/svg+xml'): ?><link rel="apple-touch-icon" href="<?= e($iwClientFavicon) ?>"><?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,6 +21,7 @@ $clientLogo = logo_path();
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/client-portal.css?v=20261112d">
   <link rel="stylesheet" href="assets/css/emoji-rating.css?v=20261113-live1">
+  <link rel="stylesheet" href="assets/css/cac-registration.css?v=20261113-cac1">
   <link rel="stylesheet" href="assets/css/brand-color-pass.css?v=20261113-live1">
 </head>
 <body class="portal-authenticated iw-client-page <?= e($pageBodyClass ?? '') ?>">

@@ -393,7 +393,35 @@ function logo_path(): string
 
 function favicon_path(): string
 {
-    return normalize_public_asset_path(setting('favicon_path', ''));
+    $setting = trim(setting('favicon_path', ''));
+    // Uploaded branding files live in the portal document root, while the
+    // apex website can have a separate root. Serve only the selected favicon
+    // through an allowlisted endpoint instead of exposing the uploads folder.
+    if (preg_match('~^assets/uploads/branding/[A-Za-z0-9_.-]+\.(?:png|jpe?g|gif|webp)$~i', $setting)) {
+        return public_url('home', ['page'=>'brand_icon','v'=>substr(sha1($setting),0,12)]);
+    }
+    $configured = normalize_public_asset_path($setting);
+    if ($configured !== '') return $configured;
+    // Reliable no-request fallback on every public, portal and client page.
+    // This uses a lightweight first-party orange/charcoal icon when no custom
+    // uploaded brand favicon has been configured in Settings.
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+        . '<rect width="64" height="64" rx="15" fill="#191919"/>'
+        . '<path d="M16 13h10v38H16zM33 20h10v16l8-10h10L49 40l12 11H49L43 44v7H33z" fill="#ff6600"/>'
+        . '</svg>';
+    return 'data:image/svg+xml,' . rawurlencode($svg);
+}
+
+function favicon_mime_type(string $favicon): string
+{
+    if (str_contains($favicon,'page=brand_icon')) {
+        return favicon_mime_type(setting('favicon_path',''));
+    }
+    if (str_starts_with($favicon,'data:image/svg+xml') || preg_match('~\.svg(?:[?#]|$)~i', $favicon)) return 'image/svg+xml';
+    if (preg_match('~\.ico(?:[?#]|$)~i', $favicon)) return 'image/x-icon';
+    if (preg_match('~\.webp(?:[?#]|$)~i', $favicon)) return 'image/webp';
+    if (preg_match('~\.jpe?g(?:[?#]|$)~i', $favicon)) return 'image/jpeg';
+    return 'image/png';
 }
 
 function seo_description(): string
