@@ -47,7 +47,7 @@ if ! (cd "$SRC" && find . -type f -print) > "$TMP/source-files"; then
   echo 'Release manifest scan failed; no site files changed.' >&2
   exit 1
 fi
-sed 's#^\\./##' "$TMP/source-files" | LC_ALL=C sort > "$TMP/source-paths"
+sed 's#^\./##' "$TMP/source-files" | LC_ALL=C sort > "$TMP/source-paths"
 [[ -s "$TMP/source-paths" ]] || { echo 'Release archive contains no regular files.' >&2; exit 1; }
 : > "$TMP/list"
 while IFS= read -r file; do
