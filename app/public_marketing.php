@@ -21,6 +21,7 @@ function iworks_search_service_meta(array $service): array
     $slug = strtolower(trim((string) ($service['slug'] ?? '')));
     $map = [
         'business-name-registration-cac-nigeria' => ['Register a Business Name in Nigeria | CAC Support | iWorks', 'Want to register a business name in Nigeria? iWorks helps with CAC name search, online filing preparation, documents and remote tracking.'],
+        'cac-business-name' => ['Register a Business Name in Nigeria | CAC Support | iWorks', 'Review Business Name / Enterprise filing support and requirements with iWorks, including name checks, documents and remote tracking.'],
         'company-registration' => ['Register a Company in Nigeria | CAC Incorporation | iWorks', 'Start company registration in Nigeria with structured CAC incorporation support. Prepare company and director details remotely with iWorks Global.'],
         'website-design-development' => ['Website Design in Nigeria | Remote Web Development | iWorks', 'Need a professional website designed in Nigeria? iWorks builds and supports business websites remotely, with responsive design and technical support.'],
         'domain-web-hosting' => ['Domain Registration & Web Hosting in Nigeria | iWorks', 'Register domains and arrange managed website hosting with iWorks Global. Get help with DNS, SSL, business email and hosting support.'],
@@ -40,7 +41,7 @@ function iworks_search_service_meta(array $service): array
 function iworks_search_service_guide(array $service): array
 {
     $slug = strtolower(trim((string) ($service['slug'] ?? '')));
-    if ($slug === 'business-name-registration-cac-nigeria') {
+    if (in_array($slug, ['business-name-registration-cac-nigeria', 'cac-business-name'], true)) {
         return [
             'heading' => 'How to register a business name in Nigeria',
             'intro' => 'Registration with the Corporate Affairs Commission starts with choosing a suitable name and preparing accurate proprietor and business information. iWorks helps coordinate remote requirements and track your service request; CAC remains responsible for registration decisions.',
