@@ -222,7 +222,9 @@ try {
                 header('Location: ' . public_url('service',['slug'=>'company-registration']), true, 301);
                 return;
             }
-            $service = get_service_by_slug($publicSlug);
+            $rawService = get_service_by_slug($publicSlug === 'cac-business-name'
+                ? 'company-registration' : $publicSlug);
+            $service = $rawService;
             // Old company-launch bundles are no longer a separate consumer
             // product. Keep historical orders and DB records unchanged.
             if ($service && (($service['slug'] ?? '') === 'launch-a-company-package'
