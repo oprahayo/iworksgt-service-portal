@@ -113,7 +113,14 @@ bad=0
 for host in "https://portal.iworksgt.com" "https://iworksgt.com"; do
   for path in "/storage/mail.log" "/storage/setup.lock" "/database.sql"; do
     for method in GET HEAD; do
-      status="$(curl -sS --max-time 15 --max-redirs 0 -o /dev/null -w '%{http_code}' -X "$method" "$host$path")" || status=000
+      # Some cPanel/CDN HTTP/2 endpoints terminate -X HEAD as a protocol
+      # error even when GET is correctly forbidden. Use curl's actual
+      # HEAD mode with HTTP/1.1 for deterministic no-body denial checks.
+      if [[ "$method" == "HEAD" ]]; then
+        status="$(curl --http1.1 --head -sS --max-time 15 --max-redirs 0 -o /dev/null -w '%{http_code}' "$host$path")" || status=000
+      else
+        status="$(curl --http1.1 -sS --max-time 15 --max-redirs 0 -o /dev/null -w '%{http_code}' "$host$path")" || status=000
+      fi
       case "$status" in
         401|403|404|410) echo "DENIED $method $host$path ($status)" ;;
         *) echo "FAIL $method $host$path ($status); investigate hosting rules immediately" >&2; bad=1 ;;
