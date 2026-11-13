@@ -1740,11 +1740,32 @@ try {
 
                     if ($serviceAction === 'save_service') {
                         $serviceId = !empty($_POST['service_id']) ? (int) $_POST['service_id'] : null;
-                        save_service($_POST, $serviceId);
-                        flash('success', 'Service saved.');
+                        $existing = $serviceId ? get_service($serviceId) : null;
+                        $existingSlug = (string)($existing['slug'] ?? '');
+                        if (in_array($existingSlug,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                            throw new RuntimeException('This legacy Business Name record is retained for old orders. New pricing belongs under Business Registration.');
+                        }
+                        $payload = $_POST;
+                        if ($existingSlug === 'company-registration') {
+                            // Protect the canonical linked service ID and unified price.
+                            $payload['name'] = (string)$existing['name'];
+                            $payload['price'] = (string)$existing['price'];
+                            $payload['currency'] = (string)$existing['currency'];
+                            $payload['is_active'] = '1';
+                            $payload['is_public'] = '1';
+                        }
+                        save_service($payload, $serviceId);
+                        flash('success', $existingSlug === 'company-registration'
+                            ? 'Business Registration content updated. Prices remain managed in the unified pricing panel.'
+                            : 'Service saved.');
                     }
 
                     if ($serviceAction === 'delete_service') {
+                        $existing = get_service((int) ($_POST['service_id'] ?? 0));
+                        if (in_array((string)($existing['slug'] ?? ''),
+                            ['company-registration','business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                            throw new RuntimeException('CAC registration records cannot be deleted because past jobs and invoices depend on them.');
+                        }
                         delete_service((int) ($_POST['service_id'] ?? 0));
                         flash('success', 'Service deleted.');
                     }
@@ -1762,7 +1783,9 @@ try {
                 }
             }
 
-            $services = list_services(false);
+            $services = array_values(array_filter(list_services(false), static fn(array $service): bool =>
+                !in_array((string)($service['slug'] ?? ''), ['business-name-registration','business-name-registration-cac-nigeria'],true)));
+            $cacUnifiedCompany = db_one("SELECT id,price,currency FROM services WHERE slug='company-registration' LIMIT 1");
             $mediaAssets = list_media_assets(300);
             $title = 'Services - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
