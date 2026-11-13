@@ -21,7 +21,7 @@ case "$PORTAL" in "$HTML"/*) ;; *) echo 'Portal root must be under public_html' 
 [[ -f "$PORTAL/index.php" && -f "$PORTAL/app/config.php" && -f "$PORTAL/views/partials/header.php" ]] || {
   echo 'Existing configured portal files not found; nothing changed.' >&2; exit 1;
 }
-RELEASE="113c8cba6f20bbdccff2f8251fb25b639a0e6ec5"
+RELEASE="bdb64cc82192ba2a739ecb2ec2678302f423ab64"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 if [[ -n "${IWORKS_RELEASE_ARCHIVE:-}" ]]; then
