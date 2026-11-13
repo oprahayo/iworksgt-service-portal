@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/app/error_response.php';
+set_exception_handler('iworks_public_error_response');
 require __DIR__ . '/app/bootstrap.php';
 
 $page = $_GET['page'] ?? null;
@@ -1217,7 +1219,8 @@ try {
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => false,
-                    'message' => $e->getMessage(),
+                    'message' => 'Unable to process this event. Contact support if the issue continues.',
+                    'reference' => iworks_report_error($e),
                 ], JSON_UNESCAPED_SLASHES);
             }
             break;
@@ -3477,36 +3480,5 @@ try {
             break;
     }
 } catch (Throwable $e) {
-    http_response_code(500);
-    $appTitle = app_name();
-    ?>
-    <!doctype html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title><?= e('Error - ' . $appTitle) ?></title>
-      <style>
-        body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
-        .wrap { max-width: 760px; margin: 40px auto; padding: 0 16px; }
-        .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 24px rgba(15,23,42,0.08); }
-        .card-body { padding: 20px; }
-        .err { color: #991b1b; }
-        .muted { color: #64748b; }
-        code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
-      </style>
-    </head>
-    <body>
-      <div class="wrap">
-        <div class="card">
-          <div class="card-body">
-            <h1 style="margin-top:0;">System error</h1>
-            <p class="err"><strong><?= e($e->getMessage()) ?></strong></p>
-            <p class="muted">Check <code>app/config.php</code>, database credentials, and rerun <code>setup.php</code> if required.</p>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-    <?php
+    iworks_public_error_response($e);
 }
