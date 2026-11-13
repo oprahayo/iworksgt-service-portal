@@ -5,39 +5,45 @@ $title=(string)($blogPost['title']??'Business insight');
 $tag=trim((string)($blogPost['tag']??'Insights'));
 $author=trim((string)($blogPost['author_name']??'iWorks Team'));
 $published=substr((string)($blogPost['published_at']??''),0,10);
+$publishedTimestamp=$published!==''?strtotime($published):false;
 $link=public_url('blog_post',['slug'=>(string)($blogPost['slug']??'')]);
 $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
 ?>
-<main class="public-main iw-editorial-public iw-journal iw-journal-article" id="main-content">
+<main class="public-main iw-editorial-public iw-journal iw-journal-article iw-reading-article" id="main-content">
   <article class="iw-article-shell">
-    <div class="container public-container iw-article-narrow iw-journal-article-container">
-      <nav class="iw-editorial-breadcrumb" aria-label="Breadcrumb">
-        <a href="<?= e(public_url('home')) ?>">Home</a><i class="bi bi-chevron-right"></i>
-        <a href="<?= e(public_url('blog')) ?>">Insights</a><i class="bi bi-chevron-right"></i>
-        <span><?= e($title) ?></span>
-      </nav>
-      <header class="iw-article-head">
-        <span class="iw-editorial-eyebrow"><?= e($tag) ?> · BUSINESS INSIGHTS</span>
-        <h1><?= e($title) ?></h1>
-        <?php if(!empty($blogPost['excerpt'])): ?><p><?= e((string)$blogPost['excerpt']) ?></p><?php endif; ?>
-        <div class="iw-article-byline"><span class="iw-article-author-avatar"><i class="bi bi-person" aria-hidden="true"></i></span>
-          <div><strong><?= e($author) ?></strong><small><time datetime="<?= e($published) ?>"><?= e($published) ?></time></small></div>
-          <span class="iw-article-read-time"><?= max(1,(int)ceil(str_word_count(strip_tags((string)($blogPost['body_html']??'')))/220)) ?> min read</span>
-        </div>
-      </header>
-      <?php if($cover!==''): ?><figure class="iw-article-cover"><img src="<?= e($cover) ?>" alt="<?= e($title) ?>" decoding="async" fetchpriority="high"></figure>
-      <?php else: ?>
-        <div class="iw-article-graphic iw-journal-no-cover">
-          <div class="iw-journal-art" aria-hidden="true">
-            <span class="iw-journal-art-brand">iWORKS <em>GLOBAL</em></span>
-            <strong><?= e($title) ?></strong><span class="iw-journal-art-tag"><?= e($tag) ?></span>
+    <header class="iw-reading-masthead">
+      <div class="container public-container iw-reading-width">
+        <nav class="iw-editorial-breadcrumb iw-reading-breadcrumb" aria-label="Breadcrumb">
+          <a href="<?= e(public_url('home')) ?>">Home</a>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          <a href="<?= e(public_url('blog')) ?>">Insights</a>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          <span aria-current="page"><?= e($title) ?></span>
+        </nav>
+        <div class="iw-article-head iw-reading-heading">
+          <span class="iw-editorial-eyebrow"><?= e($tag) ?></span>
+          <h1><?= e($title) ?></h1>
+          <?php if(trim((string)($blogPost['excerpt']??''))!==''): ?><p><?= e((string)$blogPost['excerpt']) ?></p><?php endif; ?>
+          <div class="iw-article-byline iw-reading-meta">
+            <span class="iw-reading-author"><?= e($author) ?></span>
+            <span aria-hidden="true" class="iw-reading-dot">·</span>
+            <?php if($published!==''): ?><time datetime="<?= e($published) ?>"><?= e($publishedTimestamp!==false?date('j F Y',$publishedTimestamp):$published) ?></time><?php endif; ?>
+            <span aria-hidden="true" class="iw-reading-dot">·</span>
+            <span><?= max(1,(int)ceil(str_word_count(strip_tags((string)($blogPost['body_html']??'')))/220)) ?> min read</span>
           </div>
         </div>
-      <?php endif; ?>
-
-      <div class="iw-article-body rich-text">
-        <?= sanitize_limited_html((string)($blogPost['body_html']??'')) ?>
       </div>
+    </header>
+    <div class="container public-container iw-reading-width iw-reading-content">
+      <?php if($cover!==''): ?>
+        <figure class="iw-article-cover iw-reading-cover">
+          <img src="<?= e($cover) ?>" alt="" loading="lazy" decoding="async" width="960" height="480">
+        </figure>
+      <?php endif; ?>
+      <div class="iw-reading-column">
+        <div class="iw-article-body rich-text">
+          <?= sanitize_limited_html((string)($blogPost['body_html']??'')) ?>
+        </div>
       <?php if($tag!==''): ?><div class="iw-article-tags"><span>TOPIC</span><span><?= e($tag) ?></span></div><?php endif; ?>
       <div class="iw-article-actions">
         <form method="post" action="<?= e($link) ?>" class="iw-article-like-form">
@@ -55,6 +61,8 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
         <div class="iw-editorial-section-head"><div><span>DISCUSSION</span>
           <h2 id="iw-comments-heading">Join the conversation</h2></div>
           <small><?= count($blogComments??[]) ?> approved comments</small></div>
+        <details class="iw-reading-discussion" <?= !empty($blogComments)||!empty($success)||!empty($error)?'open':'' ?>>
+          <summary><span>Read comments or leave a comment</span><i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
         <div class="iw-article-comments-grid">
           <div class="iw-article-comment-list">
             <?php if(empty($blogComments)): ?><p>No comments yet. Share your perspective below.</p><?php endif; ?>
@@ -81,7 +89,9 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
             </form>
           </div>
         </div>
+        </details>
       </section>
+      </div>
     </div>
   </article>
   <?php if($related): ?>

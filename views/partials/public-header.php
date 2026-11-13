@@ -60,7 +60,7 @@ $seoJsonLd = $seoIndexable
     : '';
 $seoBreadcrumb = $seoIndexable ? iworks_seo_breadcrumb_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl) : '';
 $seoOgImage = $ogImage !== '' ? public_absolute_url($ogImage) : '';
-$bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'services' ? ' page-public-services' : '');
+$bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'services' ? ' page-public-services' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'blog_post' ? ' page-public-article' : '');
 $headerAnnouncement = trim((string) ($publicHeaderConfig['announcement'] ?? ''));
 $aboutLabel = trim((string) ($publicHeaderConfig['aboutLabel'] ?? 'About'));
 $aboutHref = normalize_public_href(trim((string) ($publicHeaderConfig['aboutHref'] ?? public_url('about'))), public_url('about'));
@@ -179,6 +179,18 @@ $isLaunchHome = $currentPublicSlug === 'home';
       <style id="iw-journal-css"><?= (string) file_get_contents($iwJournalCss) ?></style>
     <?php else: ?>
       <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/blog-journal.css')) ?>?v=20261113-journal1">
+    <?php endif; ?>
+  <?php endif; ?>
+  <?php if ($currentPublicSlug === 'blog_post'): ?>
+    <?php
+      // Critical article typography is available on the split-root public
+      // domain even when /assets/ does not resolve there. Load AFTER journal CSS.
+      $iwReadingCss = __DIR__ . '/../../assets/css/blog-reading.css';
+    ?>
+    <?php if (is_file($iwReadingCss) && is_readable($iwReadingCss)): ?>
+      <style id="iw-reading-critical-css"><?= (string) file_get_contents($iwReadingCss) ?></style>
+    <?php else: ?>
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/blog-reading.css')) ?>?v=20261113-reading2">
     <?php endif; ?>
   <?php endif; ?>
   <style>
