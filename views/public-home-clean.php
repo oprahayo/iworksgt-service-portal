@@ -306,13 +306,24 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <a href="<?= e(public_url('blog')) ?>">All insights <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
       </div>
       <div class="iw-home-insights-carousel" id="iwHomeInsights" tabindex="0" aria-label="Recent insights" aria-roledescription="carousel">
-        <?php foreach ($featuredInsights as $insight): ?>
-          <?php $insightImage = trim((string)($insight['featured_image']['url']??'')); ?>
+        <?php foreach ($featuredInsights as $index => $insight): ?>
+          <?php
+            $insightImage = trim((string)($insight['featured_image']['url']??''));
+            $insightTitle = trim((string)($insight['title']??'Business insight'));
+            $insightTag = trim((string)($insight['tag']??'')) ?: 'Insights';
+          ?>
           <article class="iw-home-insight">
             <a href="<?= e(public_url('blog_post',['slug'=>(string)($insight['slug']??'')])) ?>">
-              <div class="iw-home-insight-media <?= $insightImage===''?'iw-editorial-abstract':'' ?>">
-                <?php if($insightImage!==''): ?><img src="<?= e($insightImage) ?>" loading="lazy" alt="">
-                <?php else: ?><i class="bi bi-journal-richtext" aria-hidden="true"></i><?php endif; ?>
+              <div class="iw-home-insight-media <?= $insightImage===''?'iw-home-journal-no-cover':'' ?>" data-art-variant="<?= (int)($index % 4) + 1 ?>">
+                <?php if($insightImage!==''): ?>
+                  <img src="<?= e($insightImage) ?>" loading="lazy" decoding="async" alt="">
+                <?php else: ?>
+                  <div class="iw-home-journal-art" aria-hidden="true">
+                    <span class="iw-home-journal-brand">iWORKS <em>GLOBAL</em></span>
+                    <strong><?= e($insightTitle) ?></strong>
+                    <span class="iw-home-journal-tag"><?= e($insightTag) ?></span>
+                  </div>
+                <?php endif; ?>
                 <span class="iw-home-read-overlay">Read article <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
               </div>
               <div class="iw-home-insight-copy">
