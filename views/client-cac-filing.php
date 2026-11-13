@@ -57,10 +57,8 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <?php else: ?>
           <div class="iw-tm-fields">
             <div class="iw-tm-field"><label for="cacCompanyType">Company type</label>
-              <select name="filing[company_type]" id="cacCompanyType">
-                <option value="private_limited" <?= $first('company_type')!=='limited_by_guarantee'?'selected':'' ?>>Private company limited by shares</option>
-                <option value="limited_by_guarantee" <?= $first('company_type')==='limited_by_guarantee'?'selected':'' ?>>Company limited by guarantee (special review)</option>
-              </select>
+              <input type="hidden" name="filing[company_type]" value="private_limited">
+              <p class="iw-cac-explain">This guided application is for private companies limited by shares. Limited by Guarantee requires specialist review. <a href="<?= e(url('support')) ?>">Request help</a>.</p>
             </div>
             <div class="iw-tm-field"><label for="cacShareCapital">Issued share capital (NGN)</label><input id="cacShareCapital" type="number" min="1" step="1" name="filing[share_capital]" value="<?= e($first('share_capital')) ?>" placeholder="e.g. 1000000"></div>
           </div>
@@ -165,8 +163,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                 <div class="iw-tm-fields">
                 <?php foreach ([
                   'full_name'=>'Full legal name','dob'=>'Date of birth','nationality'=>'Nationality',
-                  'occupation'=>'Occupation','email'=>'Email address','phone'=>'Phone number',
-                  'residential_address'=>'Residential address','nin'=>'NIN (if applicable)',
+                  'residential_address'=>'Residential address',
                   'id_type'=>'Government ID type','id_number'=>'ID / passport number',
                 ] as $key=>$label): ?>
                   <div class="iw-tm-field <?= $key==='residential_address'?'iw-tm-field-full':'' ?>">
@@ -188,6 +185,23 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
                     <?php endif; ?>
                   </div>
                 <?php endforeach; ?>
+                <details class="iw-cac-advanced-options iw-tm-field-full">
+                  <summary>Additional contact information (optional)</summary>
+                  <div class="iw-tm-fields">
+                    <?php foreach ([
+                      'occupation'=>'Occupation','email'=>'Email address','phone'=>'Phone number',
+                      'nin'=>'NIN (if applicable)',
+                    ] as $key=>$label): ?>
+                      <div class="iw-tm-field">
+                        <label><?= e($label) ?></label>
+                        <input type="<?= $key==='email'?'email':($key==='phone'?'tel':'text') ?>"
+                          name="filing[people][<?= (int)$i ?>][<?= e($key) ?>]"
+                          <?= $key==='nin'?'inputmode="numeric" pattern="[0-9]{11}" maxlength="11" title="NIN must be 11 digits"':'' ?>
+                          value="<?= e((string)($person[$key]??'')) ?>">
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </details>
                 <?php if (!$business): ?>
                   <div class="iw-tm-field"><label>Role</label><select name="filing[people][<?= (int)$i ?>][role]">
                     <?php foreach (['Director and shareholder','Director','Shareholder'] as $role): ?>
