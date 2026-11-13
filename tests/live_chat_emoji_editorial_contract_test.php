@@ -42,6 +42,7 @@ foreach(['iw_live_threads','iw_live_messages','iw_live_staff_presence'] as $tabl
 $check(str_contains($deploy,"'--check'") && str_contains($deploy,"'--apply'"),'Chat migration needs explicit check and apply modes.');
 $check(str_contains($reviews,'job_review_five_point_score') && str_contains($reviews,'$rating * 2'),'New reviews must normalize while preserving historical database scale.');
 $check(str_contains($client,'iw-review-emoji-options') && str_contains($job,'iw-review-emoji-options'),'Both completed-order views must show visual emoji choices.');
+$check(!str_contains($job,'completed order <?= (int)') && !str_contains($client,"/10."),'Old ten-point confirmation must not appear in customer-facing views.');
 $check(str_contains($publicReviews,'job_review_five_point_score'),'Public reviews must use new five-point format.');
 $check(str_contains($editorial,'Georgia') && str_contains($editorial,'iw-insights-grid'),'Editorial archive requires serif headings and compact grid.');
 $check(!str_contains($home,'track—everything'),'Home process text should not have an em dash.');

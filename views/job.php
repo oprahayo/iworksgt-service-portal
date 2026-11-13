@@ -100,7 +100,7 @@ if (!empty($job['managed_by_admin_name'])) {
   <section class="iw-job-feedback mb-3" aria-labelledby="iw-job-feedback-title">
     <?php if (!empty($clientOrderReview)): ?>
       <h2 class="h5" id="iw-job-feedback-title">Your review</h2>
-      <p class="mb-2 fw-semibold">You rated this completed order <?= (int) ($clientOrderReview['rating'] ?? 0) ?>/10.</p>
+      <p class="mb-2 fw-semibold">You rated this completed order <?= job_review_emoji((int)($clientOrderReview['rating'] ?? 0)) ?> <?= e(job_review_label((int)($clientOrderReview['rating'] ?? 0))) ?>.</p>
       <?php if (trim((string) ($clientOrderReview['feedback'] ?? '')) !== ''): ?>
         <p class="mb-2"><?= nl2br(e((string) $clientOrderReview['feedback'])) ?></p>
       <?php endif; ?>
