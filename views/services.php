@@ -6,6 +6,59 @@
   </div>
 </div>
 
+<section class="card mb-4 iw-cac-pricing-panel" id="cac-pricing">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+      <div>
+        <span class="iw-ops-eyebrow">ONE PRODUCT / MULTIPLE PATHWAYS</span>
+        <h2 class="h5 mb-1">Business Registration · CAC Nigeria</h2>
+        <p class="small text-muted mb-0">One product for Business Name (sole or partnership) and Private Limited Company (single or multiple owners). These are iWorks filing/support fees, not automatically CAC statutory charges.</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="<?= e(portal_url('dashboard')) ?>" target="_blank" rel="noopener">View customer portal</a>
+    </div>
+    <?php if (has_role(['admin'])): ?>
+    <form method="post" action="<?= e(url('services')) ?>" class="row g-3 mt-1">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="form_action" value="save_cac_pricing">
+      <div class="col-md-4"><label class="form-label" for="cacBusinessBase">Business Name base · one proprietor (NGN)</label>
+        <input id="cacBusinessBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_business_base_ngn" value="<?= e((string)cac_money_setting('cac_business_base_ngn',26000)) ?>" required></div>
+      <div class="col-md-4"><label class="form-label" for="cacPartnerBase">Each additional partner (NGN)</label>
+        <input id="cacPartnerBase" class="form-control" type="number" min="0" max="100000000" step="0.01" name="cac_business_partner_extra_ngn" value="<?= e((string)cac_money_setting('cac_business_partner_extra_ngn',15000)) ?>" required></div>
+      <div class="col-md-4"><label class="form-label" for="cacCompanyBase">Private Limited Company base (NGN)</label>
+        <input id="cacCompanyBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_company_base_ngn" value="<?= e((string)($cacUnifiedCompany['price'] ?? 120000)) ?>" required>
+        <small class="form-text">Stored in the existing Company Registration service record for backwards-compatible invoices.</small></div>
+      <div class="col-md-4"><label class="form-label" for="cacDirectorBase">Each additional director (NGN)</label>
+        <input id="cacDirectorBase" class="form-control" type="number" min="0" max="100000000" step="0.01" name="cac_company_extra_director_ngn" value="<?= e((string)cac_money_setting('cac_company_extra_director_ngn',0)) ?>" required></div>
+      <div class="col-md-4"><label class="form-label" for="cacVirtualFee">Managed registered-office fee (NGN)</label>
+        <input id="cacVirtualFee" class="form-control" type="number" min="0" max="100000000" step="0.01" name="cac_virtual_address_ngn" value="<?= e((string)cac_money_setting('cac_virtual_address_ngn',0)) ?>" required></div>
+      <div class="col-md-4"><label class="form-label" for="cacPrivacyFee">Optional director privacy advisory per director (NGN)</label>
+        <input id="cacPrivacyFee" class="form-control" type="number" min="0" max="100000000" step="0.01" name="cac_privacy_advisory_per_director_ngn" value="<?= e((string)cac_money_setting('cac_privacy_advisory_per_director_ngn',50000)) ?>" required></div>
+      <div class="col-12">
+        <div class="iw-cac-office-config">
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="cac_virtual_address_enabled" value="1" <?= checked_if(setting('cac_virtual_address_enabled','0')==='1') ?>>
+            <span class="form-check-label fw-semibold">Offer managed registered-office address where authorised</span>
+          </label>
+          <label class="form-label mt-2" for="cacOfficeDetails">Approved, traceable Nigerian office address (visible to customers choosing this service)</label>
+          <textarea id="cacOfficeDetails" class="form-control" rows="2" maxlength="500" name="cac_virtual_address_details" placeholder="Building/number, street, city, LGA, state and postcode (where applicable)"><?= e(setting('cac_virtual_address_details','')) ?></textarea>
+          <label class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" name="cac_office_authorized" value="1">
+            <span class="form-check-label small">I confirm iWorks is authorised to offer this actual physical address for CAC registration and to receive official correspondence.</span>
+          </label>
+          <p class="small text-muted mt-2 mb-0">Virtual office means an eligible registered-office address, not a fictitious address or a guarantee of anonymity. An unconfigured service is unavailable at checkout.</p>
+        </div>
+      </div>
+      <div class="col-12">
+        <p class="small text-muted mb-2"><strong>Privacy advisory does not hide CAC-mandated public data.</strong> Beneficial owners, directors and other persons with significant control must be disclosed where required. The default ₦50,000 is a per-director advisory fee, not a statutory fee.</p>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i> Save registration pricing & options</button>
+      </div>
+    </form>
+    <?php else: ?>
+      <p class="small text-muted">Only admins can change the unified product's pricing.</p>
+    <?php endif; ?>
+  </div>
+</section>
+
 <?php
 require_once __DIR__ . '/partials/admin-media-picker.php';
 
@@ -35,11 +88,12 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
       <div class="row g-3">
         <div class="col-md-5">
           <label class="form-label">Service name</label>
-          <input class="form-control" name="name" required value="<?= e($editService['name'] ?? '') ?>">
+          <input class="form-control" name="name" required value="<?= e($editService['name'] ?? '') ?>" <?= ($editService['slug']??'')==='company-registration'?'readonly':'' ?>>
         </div>
         <div class="col-md-3">
           <label class="form-label">Price</label>
-          <input class="form-control" name="price" type="number" min="0" step="0.01" required value="<?= e($editService['price'] ?? '0') ?>">
+          <input class="form-control" name="price" type="number" min="0" step="0.01" required value="<?= e($editService['price'] ?? '0') ?>" <?= ($editService['slug']??'')==='company-registration'?'readonly':'' ?>>
+          <?php if (($editService['slug']??'')==='company-registration'): ?><small class="text-muted">Controlled by Business Registration pricing above, not by individual service editing.</small><?php endif; ?>
         </div>
         <div class="col-md-2">
           <label class="form-label">Currency</label>
@@ -240,7 +294,9 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
             <div class="text-muted small"><?= e((string) ($service['short_description'] ?: (strlen(trim(strip_tags((string) $service['description']))) > 90 ? substr(trim(strip_tags((string) $service['description'])), 0, 87) . '...' : trim(strip_tags((string) $service['description']))))) ?></div>
           </td>
           <td data-label="Category"><?= e(ucwords(str_replace(['-', '_'], ' ', (string) ($service['category'] ?? 'general')))) ?></td>
-          <td data-label="Price"><?= e(money((float) $service['price'], $service['currency'] ?? default_currency())) ?></td>
+          <td data-label="Price"><?= ($service['slug']??'')==='company-registration'
+                ? 'From NGN ' . e(number_format(cac_money_setting('cac_business_base_ngn',26000),0)) . ' (select pathway)'
+                : e(money((float) $service['price'], $service['currency'] ?? default_currency())) ?></td>
           <td data-label="Tax"><?= e(number_format((float) ($service['tax_percent'] ?? 0), 2)) ?>%</td>
           <td data-label="Commission"><?= e(number_format((float) $service['commission_percent'], 2)) ?>%</td>
           <td data-label="Status"><?= status_badge((int) $service['is_active'] === 1 ? 'active' : 'inactive') ?></td>
