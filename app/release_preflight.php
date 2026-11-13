@@ -64,6 +64,7 @@ function iworks_required_release_schema(): array
             ['services', 'featured_bullets'],
             ['services', 'featured_image_id'],
             ['otp_codes', 'failed_attempts'],
+            ['job_payments', 'gateway_session_id'],
             ['media_library', 'label'],
             ['media_assets', 'label'],
         ],
