@@ -41,15 +41,18 @@ $metric = [
 $exitCode = 0;
 try {
     if ($task === 'queue') {
-        $result = process_otp_dispatch_queue(25);
-        $metric['processed'] = (int) ($result['processed'] ?? 0);
-        $metric['sent'] = (int) ($result['sent'] ?? 0);
-        $metric['failed'] = (int) ($result['failed'] ?? 0);
+        $otp = process_otp_dispatch_queue(25);
+        $email = iworks_process_notification_email_outbox(25);
         $pending = db_one(
             "SELECT COUNT(*) AS n FROM otp_dispatch_queue
              WHERE status IN ('queued','retrying','processing')"
         );
-        $metric['pending'] = (int) ($pending['n'] ?? 0);
+        $metric['processed'] = (int) ($otp['processed'] ?? 0) + (int) ($email['processed'] ?? 0);
+        $metric['sent'] = (int) ($otp['sent'] ?? 0) + (int) ($email['accepted'] ?? 0);
+        $metric['failed'] = (int) ($otp['failed'] ?? 0) + (int) ($email['failed'] ?? 0);
+        $metric['pending'] = (int) ($pending['n'] ?? 0) + (int) ($email['pending'] ?? 0);
+        $metric['otp_processed'] = (int) ($otp['processed'] ?? 0);
+        $metric['notification_processed'] = (int) ($email['processed'] ?? 0);
         $metric['status'] = 'ok';
     } else {
         $result = refresh_crypto_rates_cache(true);
