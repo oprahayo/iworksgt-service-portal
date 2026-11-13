@@ -21,7 +21,7 @@ $iwAssistEndpoint = public_url('home');
 
   <section class="iw-assist-chat" id="iwAssistChat" role="dialog" aria-labelledby="iwAssistChatTitle" aria-modal="false" hidden>
     <header class="iw-assist-chat-head">
-      <div><h2 id="iwAssistChatTitle">iWorks Support</h2><p><span class="iw-assist-indicator" aria-hidden="true"></span><span id="iwAssistLiveStatus">Checking support availability…</span></p></div>
+      <div><h2 id="iwAssistChatTitle">iWorks Support</h2><p><span class="iw-assist-indicator" aria-hidden="true"></span><span id="iwAssistLiveStatus" role="status" aria-live="polite" aria-atomic="true">Send a message. Our team will reply here when available.</span></p></div>
       <div class="iw-assist-head-actions">
         <button type="button" class="iw-assist-end-trigger" data-assist-end-open hidden>End chat</button>
         <button type="button" data-assist-chat-minimize title="Minimize" aria-label="Minimize support chat"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
