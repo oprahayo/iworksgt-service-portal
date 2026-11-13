@@ -41,7 +41,7 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
         </figure>
       <?php endif; ?>
       <div class="iw-reading-column">
-        <div class="iw-article-body rich-text">
+        <div class="iw-article-body">
           <?= sanitize_limited_html((string)($blogPost['body_html']??'')) ?>
         </div>
       <?php if($tag!==''): ?><div class="iw-article-tags"><span>TOPIC</span><span><?= e($tag) ?></span></div><?php endif; ?>
