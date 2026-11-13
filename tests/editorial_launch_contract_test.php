@@ -24,7 +24,7 @@ editorial_check(str_contains($users,'value="author"'),'Admin user form must expo
 $index=editorial_src('index.php');
 editorial_check(str_contains($index,"case 'editorial_showcase':"),'Editorial admin route missing.');
 editorial_check(str_contains($index,"require_roles(['admin']);"),'Admin-only editorial route.');
-editorial_check(str_contains($index,"require_roles(['admin', 'author']);"),'Author blog route missing.');
+editorial_check(str_contains($index,"require_roles(['admin', 'agent', 'author']);"),'Author and agent Insights management route missing.');
 editorial_check(str_contains($index,"user_role() === 'author'"),'Author role must have explicit allowlist.');
 editorial_check(str_contains($index,"case 'public_auth_status':"),'Safe cross-subdomain session check missing.');
 editorial_check(str_contains($index,'iworks_blog_submit_comment'), 'Public post must process comments.');
@@ -40,7 +40,8 @@ foreach(['blog_like','blog_comment','data-iw-share','iw-article-comments','Relat
     editorial_check(str_contains($public,$marker),'Public article feature missing: '.$marker);
 $header=editorial_src('views/partials/public-header.php');
 $footer=editorial_src('views/partials/public-footer.php');
-editorial_check(str_contains($header,'iw-public-auth-status')&&str_contains($header,'data-iw-theme-toggle'),'Public sign-in state and theme missing.');
+editorial_check(str_contains($header,'iw-public-auth-status') && !str_contains($header,'data-iw-theme-toggle'), 'Public sign-in must remain while theme switch is removed.');
+editorial_check(str_contains($header,"dataset.iwTheme='light'") && !str_contains($footer,'var modes=['), 'Public website should render one light theme.');
 editorial_check(str_contains($footer,'public_auth_status') && str_contains($footer,'data-iw-to-top'),'Auth status and back-to-top missing.');
 editorial_check(!str_contains(editorial_src('views/frontend-editor-blocks.php'),'$packageOptions = list_travel_package_options(true);'),'Unrelated travel call must be removed.');
 $cases=editorial_src('views/public-case-studies-refined.php');
@@ -48,5 +49,5 @@ editorial_check(str_contains($cases,'iworks_editorial_cases(true'),'Public case 
 $home=editorial_src('views/public-home-clean.php');
 editorial_check(str_contains($home,'iworks_editorial_reviews(true')&&str_contains($home,'iw-home-benefits'),'Home has authentic feedback and illustrated benefits.');
 $css=editorial_src('assets/css/editorial-brand.css');
-editorial_check(str_contains($css,'data-iw-theme="dark"')&&str_contains($css,'prefers-reduced-motion'),'Dark colors and accessible motion setting required.');
+editorial_check(str_contains($css,'prefers-reduced-motion'), 'Accessible reduced motion support must remain.');
 echo "editorial_launch_contract_test passed\n";

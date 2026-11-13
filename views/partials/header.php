@@ -181,6 +181,21 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
         ];
     }
 }
+if ($user && (string)($user['role'] ?? '') === 'admin') {
+    $sidebarItems[] = ['page'=>'system_health','label'=>'System health','icon'=>'bi-heart-pulse','url'=>url('system_health')];
+}
+$sidebarPriority = [
+    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'messages'=>30, 'community'=>40,
+    'services'=>50, 'forms'=>60,
+    'blog'=>70, 'editorial_showcase'=>80, 'frontend'=>90, 'media'=>100,
+    'invoices'=>110, 'payments'=>120, 'payouts'=>130, 'withdrawals'=>140,
+    'users'=>150, 'settings'=>160, 'system_health'=>170, 'exports'=>180,
+];
+usort($sidebarItems, static function(array $a, array $b) use ($sidebarPriority):int {
+    return ($sidebarPriority[$a['page']] ?? 999) <=> ($sidebarPriority[$b['page']] ?? 999);
+});
+$publicPreviewRoutes = ['blog'=>'blog','services'=>'services','frontend'=>'home','editorial_showcase'=>'case-studies'];
+$publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 ?>
 <!doctype html>
 <html lang="en">
@@ -212,6 +227,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/reviews.css">
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
+  <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
     <link rel="stylesheet" href="assets/css/auth-clean.css">
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
@@ -248,6 +264,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
           <?php endif; ?>
         </span>
       </a>
+      <span class="iw-ops-sidebar-role"><?= e(ucfirst((string)($user['role'] ?? 'team'))) ?> workspace</span>
       <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" id="sidebarCloseBtn" aria-label="Close menu">
         <i class="bi bi-x-lg"></i>
       </button>
@@ -256,12 +273,14 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
     <nav class="sidebar-nav">
       <?php
         $portalGroups = [
-          'dashboard'=>'WORKSPACE','jobs'=>'OPERATIONS','invoices'=>'OPERATIONS',
-          'support'=>'OPERATIONS','withdrawals'=>'OPERATIONS','payments'=>'OPERATIONS','payouts'=>'OPERATIONS',
+          'dashboard'=>'OVERVIEW',
+          'jobs'=>'SERVICE DELIVERY','support'=>'SERVICE DELIVERY',
           'messages'=>'COMMUNICATION','community'=>'COMMUNICATION',
-          'blog'=>'CONTENT','editorial_showcase'=>'CONTENT','frontend'=>'CONTENT','media'=>'CONTENT',
-          'services'=>'SERVICES','forms'=>'SERVICES',
-          'users'=>'ADMINISTRATION','settings'=>'ADMINISTRATION',
+          'services'=>'SERVICE CATALOGUE','forms'=>'SERVICE CATALOGUE',
+          'blog'=>'WEBSITE CONTENT','editorial_showcase'=>'WEBSITE CONTENT','frontend'=>'WEBSITE CONTENT','media'=>'WEBSITE CONTENT',
+          'invoices'=>'FINANCE','payments'=>'FINANCE','payouts'=>'FINANCE','withdrawals'=>'FINANCE',
+          'users'=>'TEAM & SETTINGS','settings'=>'TEAM & SETTINGS','system_health'=>'TEAM & SETTINGS',
+          'exports'=>'REPORTS',
         ];
         $lastGroup='';
       ?>
@@ -276,6 +295,10 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
     </nav>
 
     <div class="sidebar-bottom">
+      <a class="sidebar-link iw-ops-site-link" href="<?= e(public_url('home')) ?>" target="_blank" rel="noopener" title="View public website">
+        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+        <span class="sidebar-label">View website</span>
+      </a>
       <a class="sidebar-link <?= $currentPage === 'profile' ? 'active' : '' ?>" href="<?= e(url('profile')) ?>" title="My Profile">
         <i class="bi bi-person-circle"></i>
         <span class="sidebar-label">My Profile</span>
@@ -302,6 +325,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
       </div>
 
       <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+        <a class="btn btn-sm btn-outline-secondary iw-ops-preview-link" href="<?= e(public_url($publicPreviewPage)) ?>" target="_blank" rel="noopener" title="Open corresponding public website page"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-md-inline">View website</span></a>
         <a class="btn btn-sm btn-outline-secondary position-relative" id="topbarNotificationBtn" href="<?= e(url('notifications')) ?>" title="Notifications">
           <i class="bi bi-bell"></i>
           <span

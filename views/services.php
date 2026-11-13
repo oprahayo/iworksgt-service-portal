@@ -1,8 +1,9 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 mb-0">Service Catalog</h1>
-  <?php if (has_role(['admin'])): ?>
-    <a class="btn btn-primary" href="<?= e(url('services', ['action' => 'new'])) ?>">Add service</a>
-  <?php endif; ?>
+<div class="iw-ops-page-head">
+  <div><span class="iw-ops-eyebrow">SERVICE CATALOGUE</span><h1>Services</h1><p>Manage the published services that visitors can discover and request from the website.</p></div>
+  <div class="iw-ops-head-actions">
+    <a class="btn btn-outline-secondary" href="<?= e(public_url('services')) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View public catalogue</a>
+    <?php if (has_role(['admin'])): ?><a class="btn btn-primary" href="<?= e(url('services', ['action' => 'new'])) ?>"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add service</a><?php endif; ?>
+  </div>
 </div>
 
 <?php
@@ -255,6 +256,9 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
             <?php if (has_role(['admin'])): ?>
               <div class="d-inline-flex gap-1 align-items-center flex-wrap justify-content-end">
                 <a class="btn btn-sm btn-outline-primary" href="<?= e(url('services', ['action' => 'edit', 'id' => (int) $service['id']])) ?>">Edit</a>
+                <?php if ((int)($service['is_active'] ?? 0) === 1 && (int)($service['is_public'] ?? 0) === 1 && trim((string)($service['slug'] ?? '')) !== ''): ?>
+                  <a class="btn btn-sm btn-outline-secondary" href="<?= e(public_url('service', ['slug'=>(string)$service['slug']])) ?>" target="_blank" rel="noopener" title="View published service"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View</a>
+                <?php endif; ?>
                 <form method="post" action="<?= e(url('services')) ?>" onsubmit="return confirm('Delete this service? This cannot be undone.');" class="d-inline">
                   <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                   <input type="hidden" name="form_action" value="delete_service">

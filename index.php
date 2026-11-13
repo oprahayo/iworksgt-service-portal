@@ -119,12 +119,23 @@ try {
 
     $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study'];
 
+    // "blog" and "services" are intentionally shared URL names: pretty URLs
+    // on the public host show published content, whereas ?page=blog and
+    // ?page=services on the secure portal must render management screens.
+    $portalManagementPage = in_array($page, ['blog', 'services'], true)
+        && !$requestedPrettyPublicPage
+        && array_key_exists('page', $_GET)
+        && (!should_enforce_split_domain()
+            || request_host() === configured_host(portal_base_url()));
+    $isPublicPageRoute = in_array($page, $publicPageSlugs, true) && !$portalManagementPage;
+
+
     if (should_enforce_split_domain()) {
         $requestHost = request_host();
         $publicHost = configured_host(public_base_url());
         $portalHost = configured_host(portal_base_url());
 
-        if (in_array($page, $publicPageSlugs, true) && $publicHost !== '' && $requestHost !== $publicHost) {
+        if ($isPublicPageRoute && $publicHost !== '' && $requestHost !== $publicHost) {
             if ($page === 'service') {
                 $target = public_url('service', ['slug' => (string) ($_GET['slug'] ?? '')] + current_query_params_without_page(['slug']));
             } elseif ($page === 'blog_post') {
@@ -139,7 +150,7 @@ try {
             exit;
         }
 
-        if (!in_array($page, $publicPageSlugs, true) && $portalHost !== '' && $requestHost !== $portalHost) {
+        if (!$isPublicPageRoute && $portalHost !== '' && $requestHost !== $portalHost) {
             redirect(portal_url($page, current_query_params_without_page()));
         }
     }
@@ -148,7 +159,7 @@ try {
     // out of public search results. Published marketing URLs live on apex.
     if (should_enforce_split_domain()
         && request_host() === configured_host(portal_base_url())
-        && !in_array($page, $publicPageSlugs, true)) {
+        && !$isPublicPageRoute) {
         header('X-Robots-Tag: noindex, nofollow');
     }
 
@@ -164,7 +175,7 @@ try {
         }
     }
 
-    if (in_array($page, $publicPageSlugs, true)
+    if ($isPublicPageRoute
         && (!is_logged_in() || $requestedPrettyPublicPage
             || (should_enforce_split_domain() && request_host() === configured_host(public_base_url())))) {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
@@ -661,10 +672,45 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
+        case 'system_health':
+            require_roles(['admin']);
+            $schemaRequirements = [
+                'users' => ['id','full_name','role','email','account_state'],
+                'services' => ['id','slug','is_active','is_public','category'],
+                'jobs' => ['id','job_code','status'],
+                'pages' => ['slug','status','published_layout_json'],
+                'website_leads' => ['id','email','message','page_slug'],
+                'media_assets' => ['id','url'],
+                'blog_posts' => ['id','author_id','slug','title','body_html','status','published_at','updated_at'],
+                'iworks_case_studies' => ['id','slug','story_html','status'],
+                'iworks_testimonials' => ['id','customer_name','status','consent_confirmed'],
+                'iworks_blog_comments' => ['id','post_id','status'],
+                'iworks_blog_likes' => ['post_id','visitor_hash'],
+            ];
+            $schemaReport = [];
+            foreach ($schemaRequirements as $schemaTable => $requiredColumns) {
+                $schemaColumns = db_all(
+                    'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=:table',
+                    ['table' => $schemaTable]
+                );
+                $present = array_column($schemaColumns, 'COLUMN_NAME');
+                $schemaReport[$schemaTable] = [
+                    'ready' => count(array_diff($requiredColumns, $present)) === 0,
+                    'exists' => $present !== [],
+                    'missing' => array_values(array_diff($requiredColumns, $present)),
+                ];
+            }
+            $title = 'System Health - ' . app_name();
+            require __DIR__ . '/views/partials/header.php';
+            require __DIR__ . '/views/system-health.php';
+            require __DIR__ . '/views/partials/footer.php';
+            break;
+
         case 'blog':
-            require_roles(['admin', 'author']);
+            require_roles(['admin', 'agent', 'author']);
             $user = current_user();
             $isAdminBlog = has_role(['admin']);
+            $blogSchemaReady = schema_table_exists('blog_posts');
             $blogAction = strtolower(trim((string) ($_GET['action'] ?? '')));
             $editBlogPost = null;
 

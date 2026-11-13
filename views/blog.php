@@ -19,7 +19,20 @@ if ($editingPost && !empty($formPost['id'])) {
 }
 $blogReturnUrl = url('blog', $blogReturnParams);
 ?>
+<?php if (!($blogSchemaReady ?? true)): ?>
+  <div class="iw-ops-page-head"><div><span class="iw-ops-eyebrow">CONTENT MANAGEMENT</span><h1>Insights</h1><p>The article database needs an upgrade before editing or publishing can be enabled.</p></div></div>
+  <div class="alert alert-warning" role="alert">
+    <strong>Insights database not installed.</strong> The <code>blog_posts</code> table is missing.
+    <?php if (has_role(['admin'])): ?><a href="<?= e(url('system_health')) ?>" class="alert-link">Open System Health</a> to review the schema.<?php else: ?>Ask your administrator to repair the content schema.<?php endif; ?>
+    No published posts or drafts have been deleted.
+  </div>
+<?php else: ?>
 
+
+<div class="iw-ops-page-head">
+  <div><span class="iw-ops-eyebrow">CONTENT MANAGEMENT</span><h1>Insights</h1><p>Draft, publish and preview articles on the public iWorks website.</p></div>
+  <div class="iw-ops-head-actions"><a class="btn btn-outline-secondary" href="<?= e(public_url('blog')) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View website</a><a class="btn btn-primary" href="<?= e(url('blog')) ?>">New insight</a></div>
+</div>
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div>
     <h1 class="h4 mb-1">Insights</h1>
@@ -238,3 +251,5 @@ $blogReturnUrl = url('blog', $blogReturnParams);
   });
 })();
 </script>
+
+<?php endif; // blogSchemaReady ?>
