@@ -144,6 +144,7 @@ if ($description === '' || $description === 'Browse what you need.') {
             $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
             $amount = 'USD ' . number_format($price, 2) . ' / class';
         }
+        $manualReview = (string)($service['_iworks_checkout_mode'] ?? '') === 'consultation';
         $href = public_url('service', ['slug' => (string) ($service['slug'] ?? '')]);
         $searchText = strtolower($name . ' ' . $short . ' ' . $categoryLabel($category));
         ?>
