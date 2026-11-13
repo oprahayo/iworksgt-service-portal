@@ -124,9 +124,11 @@ function iworks_client_catalogue(array $services): array
             if (str_contains($name, $term)) { $excluded = true; break; }
         }
         if ($excluded) { continue; }
-        $result[] = $service;
+        $item = function_exists('cac_public_service_record') ? cac_public_service_record($service) : $service;
+        if ($item === null) continue;
+        $result[] = $item;
     }
-    $priority = ['business-name-registration-cac-nigeria','company-registration','trademark','website-design-development'];
+    $priority = ['company-registration','trademark','website-design-development'];
     usort($result, static function (array $a, array $b) use ($priority): int {
         $rank = static fn(array $s) => ($index = array_search((string) ($s['slug'] ?? ''), $priority, true)) === false ? 99 : $index;
         return ($rank($a) <=> $rank($b)) ?: strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
