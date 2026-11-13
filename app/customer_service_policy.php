@@ -164,3 +164,59 @@ function iworks_customer_can_standard_checkout(array $service): bool
     return $visible !== null && ($visible['_iworks_checkout_mode'] ?? '') === 'standard'
         && (float)($service['price'] ?? 0) > 0;
 }
+
+
+/**
+ * Single product price presentation for the public directory, detail page and
+ * authenticated customer catalogue. Never accepts user-submitted prices.
+ *
+ * The product policy has already applied CAC variants before calling this.
+ * Actual invoices and filing quotations are still calculated by the
+ * existing trusted checkout services at the time an order is placed.
+ */
+function iworks_customer_product_price(array $service): array
+{
+    $slug = strtolower(trim((string) ($service['slug'] ?? '')));
+    $mode = strtolower(trim((string) ($service['_iworks_checkout_mode'] ?? 'standard')));
+    $currency = strtoupper(trim((string) ($service['currency'] ?? default_currency())));
+    if ($currency === '') {
+        $currency = default_currency();
+    }
+    $amount = max(0.0, (float) ($service['price'] ?? 0));
+
+    if ($slug === 'trademark' && function_exists('trademark_price_usd')) {
+        try {
+            $amount = max(0.0, (float) trademark_price_usd());
+            $currency = 'USD';
+        } catch (Throwable $error) {
+            // Do not invent a filing fee if current configuration fails.
+            $amount = 0.0;
+        }
+    }
+
+    // Standard checkout explicitly rejects zero-price catalogue products.
+    // An unconfigured CAC/trademark price must also never look "free".
+    $isEnquiry = $mode === 'consultation' || $amount <= 0.0;
+    $display = $mode === 'consultation'
+        ? 'Specialist quote'
+        : ($isEnquiry
+            ? 'Request a quote'
+            : ($slug === 'trademark'
+                ? 'USD ' . number_format($amount, 2) . ' per class'
+                : money($amount, $currency)));
+
+    $tax = max(0.0, (float) ($service['tax_percent'] ?? 0));
+    $taxNote = !$isEnquiry && $tax > 0
+        ? 'Tax rate: ' . number_format($tax, 2) . '%. Final total is shown before payment.'
+        : '';
+
+    return [
+        'display' => $display,
+        'label' => $isEnquiry ? 'Pricing' : 'Starting from',
+        'amount' => $amount,
+        'currency' => $currency,
+        'is_enquiry' => $isEnquiry,
+        'tax_note' => $taxNote,
+        'checkout_mode' => $mode,
+    ];
+}
