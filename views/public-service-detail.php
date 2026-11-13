@@ -85,7 +85,7 @@ if ($imageUrl === '') {
             <?php if ($manualReview): ?>
               <a class="iw-detail-primary" href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="<?= e($serviceName) ?>">Request a specialist quote <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             <?php else: ?>
-              <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+              <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>"><?= $registrationType === 'business' ? 'Start Business Name registration' : ($registrationType === 'company' ? 'Start Limited Company registration' : 'Continue to order') ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             <?php endif; ?>
             <a class="iw-detail-secondary" href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="<?= e($serviceName) ?>">Ask a question</a>
           </div>
