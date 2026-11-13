@@ -130,7 +130,7 @@ function iworks_client_catalogue(array $services): array
         if ($item === null) continue;
         $result[] = $item;
     }
-    $priority = ['company-registration','trademark','website-design-development'];
+    $priority = ['cac-business-name','company-registration','trademark','website-design-development'];
     usort($result, static function (array $a, array $b) use ($priority): int {
         $rank = static fn(array $s) => ($index = array_search((string) ($s['slug'] ?? ''), $priority, true)) === false ? 99 : $index;
         return ($rank($a) <=> $rank($b)) ?: strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
