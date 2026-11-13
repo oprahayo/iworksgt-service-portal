@@ -115,7 +115,8 @@ function cac_name_review(string $raw, string $kind): array
 {
     $name = trim(preg_replace('/\s+/u', ' ', $raw) ?? '');
     $flags = [];
-    if (mb_safe_trim($name, 190) !== $name || mb_strlen($name, 'UTF-8') < 4) {
+    if (mb_safe_trim($name, 190) !== $name ||
+        (function_exists('mb_strlen') ? mb_strlen($name,'UTF-8') : strlen($name)) < 4) {
         $flags[] = 'Choose a distinct proposed name of at least four characters (maximum 190).';
     }
     if (!preg_match('/[\p{L}]/u', $name)) $flags[] = 'The name should contain letters.';
