@@ -86,23 +86,25 @@ while IFS= read -r file; do
 done < "$TMP/list"
 echo "Portal changes: $(wc -l < "$TMP/portal-change")"
 echo "Public static asset changes: $(wc -l < "$TMP/public-change")"
+# A coherent source update is unsafe when its authentication, payment or
+# outbox schema is missing. The immutable source's preflight is READ-ONLY.
+# Run it for BOTH --check and --apply so operators can discover blockers
+# without copying application files. Never proceed after a failed check.
+[[ -f "$SRC/scripts/check_remediation_release.php" && -f "$SRC/app/release_preflight.php" ]] || {
+  echo 'BLOCK: mandatory release safety preflight missing; no site files changed.' >&2
+  exit 1
+}
+echo "Checking immutable release $RELEASE against the current cPanel configuration..."
+if ! "$PHP_BIN" "$SRC/scripts/check_remediation_release.php" "$PORTAL/app/config.php" "$PORTAL" "$PUBLIC"; then
+  echo 'Release safety preflight blocked deployment; no site files or database records changed.' >&2
+  exit 3
+fi
 if [[ "$MODE" == "--check" ]]; then
+  echo 'READINESS PASSED: prerequisite schema, mail settings and private-file controls detected.'
   echo 'CHECK ONLY: no site files or database records changed.'
-  echo 'IMPORTANT: --apply is gated on private-file denial, mandatory DB migrations and working mail configuration.'
+  echo 'A verified SQL backup, mailbox delivery, provider sandbox and rollback rehearsal are still required before --apply.'
   exit 0
 fi
-# A coherent source update is unsafe when its auth/payment/outbox schema is
-# missing. Run the preflight from the immutable release, not an older live
-# script. It does only read-only queries and MUST run before any file backups
-# or changes. An absent or failing preflight aborts without modifying the site.
-[[ -f "$SRC/scripts/check_remediation_release.php" && -f "$SRC/app/release_preflight.php" ]] || {
-  echo 'Mandatory release safety preflight missing; nothing changed.' >&2
-  exit 1
-}
-"$PHP_BIN" "$SRC/scripts/check_remediation_release.php" "$PORTAL/app/config.php" "$PORTAL" "$PUBLIC" || {
-  echo 'Release safety preflight blocked deployment; no site files changed.' >&2
-  exit 1
-}
 OLD_UMASK="$(umask)"
 umask 077
 BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-${BASHPID}"
