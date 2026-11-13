@@ -30,9 +30,13 @@
     var guestList = document.getElementById('iwAssistGuestList');
     var timezoneLabel = document.getElementById('iwAssistTimezone');
     var endpoint = root.dataset.endpoint;
+    var liveEndpoint = root.dataset.liveEndpoint || '';
+    var onlineStatus = document.getElementById('iwAssistLiveStatus');
+    var startError = document.getElementById('iwAssistStartError');
     var csrf = root.dataset.csrf;
     var storagePrefix = 'iworks-assistance-v1:';
-    var session = { name: '', email: '', id: '', items: [], status: 'new' };
+    var session = { name: '', email: '', id: '', token: '', items: [], lastMessageId: 0, status: 'new' };
+    var pollInterval = null;
     var busy = false;
     var focusReturn = null;
     var oldOverflow = '';
@@ -76,14 +80,18 @@
     try {
       var saved = JSON.parse(getStore('chat') || 'null');
       if (saved && saved.status === 'active' && typeof saved.name === 'string' && typeof saved.email === 'string' && Array.isArray(saved.items)) {
-        session = {name: saved.name.slice(0, 150), email: saved.email.slice(0, 254), id: String(saved.id || '').slice(0, 50), items: saved.items.slice(-30), status: 'active'};
+        if (typeof saved.token === 'string' && /^[a-f0-9]{64}$/.test(saved.token)) {
+          session = {name: saved.name.slice(0, 150), email: saved.email.slice(0, 254),
+            id: String(saved.id || '').slice(0, 50), token: saved.token,
+            lastMessageId: Number(saved.lastMessageId || 0), items: saved.items.slice(-80), status: 'active'};
+        }
       }
     } catch (ignore) {}
     if (!getStore('first-seen')) setStore('first-seen', String(Date.now()));
 
     function renderMessage(item) {
       var bubble = document.createElement('div');
-      bubble.className = 'iw-assist-bubble ' + (item.kind === 'user' ? 'is-user' : 'is-system');
+      bubble.className = 'iw-assist-bubble ' + (item.kind === 'user' ? 'is-user' : item.kind === 'staff' ? 'is-staff' : 'is-system');
       var body = document.createElement('span');
       body.textContent = String(item.text || '');
       bubble.appendChild(body);
@@ -104,6 +112,61 @@
       messages.scrollTop = messages.scrollHeight;
       conversation.parentElement.scrollTop = conversation.parentElement.scrollHeight;
     }
+    async function liveApi(action, extra) {
+      if (!liveEndpoint) throw new Error('Live chat is not configured yet. Please use Contact.');
+      var form = new FormData();
+      form.append('csrf_token', csrf);
+      form.append('action', action);
+      if (session.token) form.append('token', session.token);
+      Object.keys(extra || {}).forEach(function (key) { form.append(key, String(extra[key])); });
+      var result = await fetch(liveEndpoint, {
+        method: 'POST', credentials: 'same-origin', cache: 'no-store',
+        headers: {'Accept':'application/json','X-Requested-With':'XMLHttpRequest'},
+        body: form
+      });
+      var data;
+      try { data = await result.json(); }
+      catch (ignore) { throw new Error('Chat is unavailable. Please use our Contact page.'); }
+      if (!result.ok || !data || !data.ok) throw new Error((data && data.message) || 'Message was not delivered.');
+      return data;
+    }
+    function ingestMessages(items) {
+      (Array.isArray(items) ? items : []).forEach(function (m) {
+        var id = Number(m.id || 0);
+        if (!id || session.items.some(function (x) { return Number(x.id) === id; })) return;
+        var item = { id:id, kind:m.sender === 'staff' ? 'staff' : 'user',
+          text:String(m.body || ''), when:String(m.created_at || '').slice(11,16) };
+        session.items.push(item);
+        if (session.items.length > 80) session.items.shift();
+        session.lastMessageId = Math.max(Number(session.lastMessageId || 0), id);
+        if (!conversation.hidden) renderMessage(item);
+      });
+      persist();
+      if (!conversation.hidden) messages.scrollTop = messages.scrollHeight;
+    }
+    function updatePresence(data) {
+      if (!onlineStatus) return;
+      var online = Boolean(data.staff_online);
+      onlineStatus.textContent = online ? 'Support is online' : 'Support is currently offline. Leave your message here.';
+      onlineStatus.classList.toggle('is-online',online);
+    }
+    async function pollLive() {
+      if (session.status !== 'active' || !session.token ||
+          document.visibilityState === 'hidden' || chat.hidden) return;
+      try {
+        var data = await liveApi('poll',{after_id:session.lastMessageId || 0});
+        ingestMessages(data.messages);
+        updatePresence(data);
+        if (data.status === 'ended') { session.status='ended'; persist(); showChatStage(); }
+      } catch (error) {
+        if (onlineStatus) { onlineStatus.textContent = 'Connection interrupted. Retrying…'; }
+      }
+    }
+    function startLivePoller() {
+      if (pollInterval !== null) window.clearInterval(pollInterval);
+      pollInterval = window.setInterval(pollLive, 5000);
+      pollLive();
+    }
     function showChatStage() {
       var active = session.status === 'active';
       var done = session.status === 'ended';
@@ -113,6 +176,7 @@
       compose.hidden = !active;
       endTrigger.hidden = !active;
       if (active) {
+        updatePresence({staff_online:false});
         messages.replaceChildren();
         session.items.forEach(renderMessage);
         conversation.parentElement.scrollTop = conversation.parentElement.scrollHeight;
@@ -126,6 +190,7 @@
       launcher.hidden = true;
       launcher.setAttribute('aria-expanded', 'true');
       showChatStage();
+      startLivePoller();
       window.requestAnimationFrame(function () {
         if (session.status === 'active') messageInput.focus();
         else if (session.status === 'ended') root.querySelector('[data-assist-restart]').focus();
@@ -140,15 +205,22 @@
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
     }
     function restartChat() {
-      session = {name: '', email: '', id: '', items: [], status: 'new'};
+      session = {name: '', email: '', id: '', token: '', items: [], lastMessageId: 0, status: 'new'};
       clearStore('chat');
       startForm.reset();
       showChatStage();
       startForm.elements.namedItem('full_name').focus();
     }
-    function finishChat() {
+    async function finishChat(rating) {
+      try {
+        if (session.token) await liveApi('end', rating ? {rating:rating} : {});
+      } catch (error) {
+        showError(errorBox, error.message || 'Unable to end chat. Retry.');
+        return;
+      }
       session.status = 'ended';
       session.items = [];
+      session.token = '';
       clearStore('chat');
       endSheet.hidden = true;
       showChatStage();
@@ -233,13 +305,10 @@
         if (!(rating >= 1 && rating <= 5) || busy) return;
         busy = true;
         root.querySelectorAll('[data-assist-rate], [data-assist-rate-skip]').forEach(function (button) { button.disabled = true; });
-        postLead(session.name, session.email, 'Support chat experience rating: ' + rating + '/5. Reference: ' + session.id)
-          .catch(function () { /* Rating feedback is optional; ending chat must still work. */ })
-          .finally(function () {
-            busy = false;
-            root.querySelectorAll('[data-assist-rate], [data-assist-rate-skip]').forEach(function (button) { button.disabled = false; });
-            finishChat();
-          });
+        finishChat(rating).finally(function () {
+          busy = false;
+          root.querySelectorAll('[data-assist-rate], [data-assist-rate-skip]').forEach(function (button) { button.disabled = false; });
+        });
         return;
       }
       if (el.matches('[data-assist-add-guest]')) {
@@ -298,42 +367,46 @@
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
     });
-    startForm.addEventListener('submit', function (event) {
+    startForm.addEventListener('submit', async function (event) {
       event.preventDefault();
-      if (!startForm.reportValidity()) return;
+      if (!startForm.reportValidity() || busy) return;
       var name = startForm.elements.namedItem('full_name').value.trim();
       var email = startForm.elements.namedItem('email').value.trim();
       if (!name || !email) return;
-      session = {
-        name: name,
-        email: email,
-        id: (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : String(Date.now()) + '-' + String(Math.random()).slice(2, 10),
-        items: [], status: 'active'
-      };
-      persist();
-      showChatStage();
-      messageInput.focus();
+      busy=true;
+      var submit=startForm.querySelector('[type=submit]');
+      submit.disabled=true;
+      hideError(startError);
+      try {
+        var live=await liveApi('start',{name:name,email:email});
+        session = {name:name,email:email,id:String(live.id),token:String(live.token),
+          items:[],lastMessageId:0,status:'active'};
+        persist();
+        showChatStage();
+        updatePresence(live);
+        startLivePoller();
+        messageInput.focus();
+      } catch (error) {
+        showError(startError,error.message || 'Unable to start chat.');
+      } finally { busy=false;submit.disabled=false; }
     });
     messageForm.addEventListener('submit', async function (event) {
       event.preventDefault();
       var text = messageInput.value.trim();
-      if (!text || !session.email || busy) return;
+      if (!text || !session.token || busy) return;
       busy = true;
       hideError(errorBox);
       var button = messageForm.querySelector('button[type=submit]');
       button.disabled = true;
       try {
-        await postLead(session.name, session.email, 'Support conversation ' + session.id + '\n\n' + text);
-        addMessage('user', text);
-        if (session.items.length === 1) addMessage('system', 'Your message has been delivered to our enquiry team. A team member can reply to you by email at ' + session.email + '.');
-        messageInput.value = '';
+        var result=await liveApi('send',{message:text,after_id:session.lastMessageId || 0});
+        ingestMessages(result.messages);
+        updatePresence(result);
+        messageInput.value='';
         messageInput.focus();
       } catch (error) {
-        showError(errorBox, error && error.message ? error.message : 'Could not send message.');
-      } finally {
-        busy = false;
-        button.disabled = false;
-      }
+        showError(errorBox, error.message || 'Could not send message.');
+      } finally { busy=false;button.disabled=false; }
     });
     messageInput.addEventListener('keydown', function (event) {
       if (event.key === 'Enter' && !event.shiftKey) {
@@ -383,6 +456,10 @@
     });
 
     showChatStage();
+    if (session.status === 'active') startLivePoller();
+    document.addEventListener('visibilitychange',function () {
+      if (document.visibilityState === 'visible') pollLive();
+    });
     // Keep the invitation session-aware but resilient to background tabs.
     // The original one-shot timer was lost if the page was hidden at expiry.
     var nudgeTimer = null;
