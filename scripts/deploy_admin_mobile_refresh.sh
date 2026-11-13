@@ -88,8 +88,21 @@ echo "Portal changes: $(wc -l < "$TMP/portal-change")"
 echo "Public static asset changes: $(wc -l < "$TMP/public-change")"
 if [[ "$MODE" == "--check" ]]; then
   echo 'CHECK ONLY: no site files or database records changed.'
+  echo 'IMPORTANT: --apply is gated on private-file denial, mandatory DB migrations and working mail configuration.'
   exit 0
 fi
+# A coherent source update is unsafe when its auth/payment/outbox schema is
+# missing. Run the preflight from the immutable release, not an older live
+# script. It does only read-only queries and MUST run before any file backups
+# or changes. An absent or failing preflight aborts without modifying the site.
+[[ -f "$SRC/scripts/check_remediation_release.php" && -f "$SRC/app/release_preflight.php" ]] || {
+  echo 'Mandatory release safety preflight missing; nothing changed.' >&2
+  exit 1
+}
+"$PHP_BIN" "$SRC/scripts/check_remediation_release.php" "$PORTAL/app/config.php" "$PORTAL" "$PUBLIC" || {
+  echo 'Release safety preflight blocked deployment; no site files changed.' >&2
+  exit 1
+}
 OLD_UMASK="$(umask)"
 umask 077
 BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-${BASHPID}"
