@@ -67,7 +67,7 @@ $display=iworks_customer_product_price($service);
 check_quote(str_contains($display['tax_note'],'7.50%'),
     'Public detail must reflect the same configured CAC tax policy.');
 $source=file_get_contents(__DIR__.'/../app/cac_filing.php');
-check_quote(str_contains($source,"'amount'=>$quote['subtotal']")
-    && str_contains($source,"'tax_percent'=>$quote['tax_percent']"),
+check_quote(str_contains($source,"'amount'=>" . '$quote' . "['subtotal']")
+    && str_contains($source,"'tax_percent'=>" . '$quote' . "['tax_percent']"),
     'Checkout must pass the calculated subtotal and rate to the trusted invoice builder.');
 echo "f13_cac_quote_consistency_test passed\n";
