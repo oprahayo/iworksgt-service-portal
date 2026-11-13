@@ -1,3 +1,18 @@
+# BEGIN IWORKS PRIVATE FILE PROTECTION
+# Required on BOTH the public and portal Apache document roots.
+# Restrict direct HTTP access even when the path points to an existing file.
+<IfModule mod_authz_core.c>
+  <FilesMatch "(?i)^(?:database\.sql|(?:\.env(?:\..*)?|composer\.(?:json|lock)|phpunit\.xml|.*\.(?:bak|backup|sql|sqlite|log|lock|ini)))$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(?:storage|app|tests|scripts)(?:/|$) - [F,L,NC]
+  RewriteRule ^(?:database\.sql|\.env(?:\..*)?|.*\.(?:sql|sqlite|bak|backup|log|lock|ini))$ - [F,L,NC]
+</IfModule>
+# END IWORKS PRIVATE FILE PROTECTION
+
 DirectoryIndex index.php
 
 <IfModule mod_autoindex.c>
