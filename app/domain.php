@@ -63,7 +63,7 @@ function schema_column_type(string $table, string $column): ?string
 function ensure_crypto_schema_upgrades(): void
 {
     static $done = false;
-    if ($done || !is_configured()) {
+    if ($done || !is_configured() || !iworks_schema_mutation_allowed()) {
         return;
     }
 
@@ -464,7 +464,7 @@ function ensure_crypto_schema_upgrades(): void
 function ensure_media_schema_upgrades(): void
 {
     static $done = false;
-    if ($done || !is_configured()) {
+    if ($done || !is_configured() || !iworks_schema_mutation_allowed()) {
         return;
     }
 
