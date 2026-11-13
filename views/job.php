@@ -35,14 +35,6 @@ if (!empty($job['managed_by_admin_name'])) {
     </nav>
   <?php endif; ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 iw-job-legacy-heading" hidden>
-  <div>
-    <h1 class="h4 mb-0"><?= e($job['job_code']) ?> - <?= e($job['service_name']) ?></h1>
-    <div class="text-muted small">Client: <?= e($job['client_name']) ?> | Handler: <?= e($jobAssigneeLabel) ?></div>
-  </div>
-  <a class="btn btn-outline-secondary" href="<?= e(url('jobs')) ?>">Back to jobs</a>
-</div>
-
 <?php if (!empty($cacLinked) && $user['role'] !== 'client'): ?>
   <div class="alert alert-info d-flex justify-content-between gap-3 align-items-center flex-wrap">
     <span><i class="bi bi-file-earmark-lock"></i> Secure CAC registration details and proprietor/director documents are attached to this job.</span>
