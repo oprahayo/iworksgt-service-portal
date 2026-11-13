@@ -22,8 +22,22 @@ function current_user(): ?array
     $user = db_one('SELECT * FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1', ['id' => $userId]);
 
     if ($user && (($user['status'] ?? 'active') !== 'active' || ($user['account_state'] ?? 'active') !== 'active')) {
-        unset($_SESSION['user_id']);
+        unset($_SESSION['user_id'], $_SESSION['auth_password_marker']);
         $user = null;
+    }
+
+    // A password reset rotates password_hash; older sessions and sessions
+    // predating this release fail closed without a database schema change.
+    if ($user) {
+        $expected = hash('sha256', (string) ($user['password_hash'] ?? ''));
+        $current = (string) ($_SESSION['auth_password_marker'] ?? '');
+        if ($current === '' || !hash_equals($expected, $current)) {
+            unset($_SESSION['user_id'], $_SESSION['auth_password_marker']);
+            $user = null;
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+        }
     }
 
     if ($user) {
@@ -134,15 +148,22 @@ function login_with_password(string $email, string $password): bool
         return false;
     }
 
-    $_SESSION['user_id'] = (int) $user['id'];
-    reset_current_user_cache();
-
+    login_user((int) $user['id']);
     return true;
 }
 
 function login_user(int $userId): void
 {
+    $user = find_user_by_id($userId);
+    if (!$user || ($user['status'] ?? '') !== 'active'
+        || ($user['account_state'] ?? '') !== 'active') {
+        throw new RuntimeException('Account is not eligible for sign-in.');
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
     $_SESSION['user_id'] = $userId;
+    $_SESSION['auth_password_marker'] = hash('sha256', (string) ($user['password_hash'] ?? ''));
     try {
         db_execute('UPDATE users SET last_seen_at = :last_seen_at WHERE id = :id', [
             'last_seen_at' => now(),
@@ -156,8 +177,12 @@ function login_user(int $userId): void
 
 function logout_user(): void
 {
-    unset($_SESSION['iworks_pending_order']);
-    unset($_SESSION['user_id']);
+    // The anonymous session gets a fresh identifier. No authenticated
+    // state, previous OAuth OTP context or order intent can survive logout.
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
     reset_current_user_cache();
 }
 
