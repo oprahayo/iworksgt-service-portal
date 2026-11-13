@@ -135,11 +135,7 @@ if ($description === '' || $description === 'Browse what you need.') {
         $name = trim((string) ($service['name'] ?? 'Service'));
         $category = trim((string) ($service['category'] ?? 'general')) ?: 'general';
         $short = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($service['short_description'] ?? ''))));
-        if (stripos($name, 'launch a company package') !== false) {
-            $short = 'Company formation, compliance documentation, branding and launch support.';
-        } else {
-            $short = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $short));
-        }
+        $short = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $short));
         if ($short === '') { $short = 'View the full requirements and service details.'; }
         $price = (float) ($service['price'] ?? 0);
         $currency = strtoupper(trim((string) ($service['currency'] ?? default_currency())));
