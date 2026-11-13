@@ -516,10 +516,8 @@ try {
                 } else {
                     if (!is_email_verified($user)) {
                         if (!email_enabled()) {
-                            login_user((int) $user['id']);
-                            mark_email_verified((int) $user['id']);
-                            flash('success', 'Welcome back. Email OTP is temporarily disabled until mail settings are enabled.');
-                            redirect(iworks_post_login_destination(current_user()));
+                            flash('error', 'Email verification is currently unavailable. Please contact support.');
+                            redirect(url('login'));
                         }
 
                         start_otp_challenge((int) $user['id'], 'verify_email');
@@ -535,9 +533,8 @@ try {
                     }
 
                     if (!email_enabled()) {
-                        login_user((int) $user['id']);
-                        flash('success', 'Welcome back. Email OTP is temporarily disabled until mail settings are enabled.');
-                        redirect(iworks_post_login_destination(current_user()));
+                        flash('error', 'Email sign-in verification is temporarily unavailable. Please contact support.');
+                        redirect(url('login'));
                     }
 
                     start_otp_challenge((int) $user['id'], 'login');
@@ -980,6 +977,9 @@ try {
                     flash('error', 'Phone, country, state/region, city, and address are required.');
                 } elseif (find_user_by_email($email)) {
                     flash('error', 'This email already exists.');
+                } elseif (!email_enabled()) {
+                    // Never create a verified account without a delivered code.
+                    flash('error', 'New account verification is temporarily unavailable. Please contact support.');
                 } else {
                     $gender = trim((string) ($_POST['gender'] ?? ''));
                     if ($gender !== '' && !in_array($gender, ['male', 'female', 'other', 'prefer_not_say'], true)) {
@@ -1012,13 +1012,6 @@ try {
                         'password' => $password,
                         'role' => 'client',
                     ]);
-
-                    if (!email_enabled()) {
-                        mark_email_verified($userId);
-                        login_user($userId);
-                        flash('success', 'Account created successfully. Email OTP will activate after mail setup is enabled.');
-                        redirect(iworks_post_login_destination(current_user()));
-                    }
 
                     $_SESSION['pending_otp_remember'] = !empty($_POST['remember_30days']) ? '1' : '0';
                     start_otp_challenge($userId, 'verify_email');
