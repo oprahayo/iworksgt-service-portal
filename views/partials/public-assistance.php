@@ -5,7 +5,7 @@
  */
 $iwAssistEndpoint = public_url('home');
 ?>
-<div class="iw-assist" id="iwAssist" data-endpoint="<?= e($iwAssistEndpoint) ?>" data-csrf="<?= e(csrf_token()) ?>">
+<div class="iw-assist" id="iwAssist" data-endpoint="<?= e($iwAssistEndpoint) ?>" data-live-endpoint="<?= e(public_url('home',['page'=>'live_chat'])) ?>" data-csrf="<?= e(csrf_token()) ?>">
   <div class="iw-assist-nudge" id="iwAssistNudge" hidden>
     <button type="button" class="iw-assist-nudge-dismiss" data-assist-nudge-dismiss aria-label="Dismiss consultation suggestion"><i class="bi bi-x" aria-hidden="true"></i></button>
     <strong>Have a question about our services?</strong>
@@ -21,7 +21,7 @@ $iwAssistEndpoint = public_url('home');
 
   <section class="iw-assist-chat" id="iwAssistChat" role="dialog" aria-labelledby="iwAssistChatTitle" aria-modal="false" hidden>
     <header class="iw-assist-chat-head">
-      <div><h2 id="iwAssistChatTitle">iWorks Support</h2><p><span class="iw-assist-indicator" aria-hidden="true"></span>Leave a message for our team</p></div>
+      <div><h2 id="iwAssistChatTitle">iWorks Support</h2><p><span class="iw-assist-indicator" aria-hidden="true"></span><span id="iwAssistLiveStatus">Checking support availability…</span></p></div>
       <div class="iw-assist-head-actions">
         <button type="button" class="iw-assist-end-trigger" data-assist-end-open hidden>End chat</button>
         <button type="button" data-assist-chat-minimize title="Minimize" aria-label="Minimize support chat"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
@@ -38,11 +38,13 @@ $iwAssistEndpoint = public_url('home');
           <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+          <p class="iw-assist-chat-privacy">To handle your enquiry, we record the conversation, its time and a masked network address. Approximate country may be shown to staff when available. No precise GPS is collected.</p>
           <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          <p class="iw-assist-error" id="iwAssistStartError" role="alert" hidden></p>
         </form>
       </div>
       <div class="iw-assist-conversation" id="iwAssistConversation" hidden>
-        <p class="iw-assist-chat-intro">How can we help? Messages sent here reach our enquiry team. Replies will be sent to your email.</p>
+        <p class="iw-assist-chat-intro">How can we help you today? Our team can reply here when online. If support is offline, you can still leave your message.</p>
         <div class="iw-assist-messages" id="iwAssistMessages" role="log" aria-live="polite" aria-label="Support conversation"></div>
       </div>
       <div class="iw-assist-ended" id="iwAssistEnded" hidden>
