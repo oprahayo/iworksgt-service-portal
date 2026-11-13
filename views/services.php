@@ -265,6 +265,9 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
 })();
 </script>
 
+<div class="alert alert-light border mb-3 small">
+  <strong>Customer catalogue:</strong> only active, published services shown in the public website are offered in New Application. Business Registration and Trademark use guided application flows. Incorporated Trustees and Ltd by Guarantee require specialist enquiry. Legacy company bundles and system placeholders remain in admin records but are not sold as new customer orders.
+</div>
 <div class="card service-catalog-card">
   <div class="table-responsive">
     <table class="table table-mobile-cards table-hover align-middle mb-0 table-borderless service-catalog-table">
@@ -292,6 +295,19 @@ if ($serviceFormMode && $editService && !empty($editService['id'])) {
               <?php endif; ?>
             </div>
             <div class="text-muted small"><?= e((string) ($service['short_description'] ?: (strlen(trim(strip_tags((string) $service['description']))) > 90 ? substr(trim(strip_tags((string) $service['description'])), 0, 87) . '...' : trim(strip_tags((string) $service['description']))))) ?></div>
+            <?php
+              $customerOffer = iworks_customer_published_service($service);
+              $customerMode = (string)($customerOffer['_iworks_checkout_mode'] ?? '');
+              $customerStatus = $customerOffer === null ? 'Not offered to customers'
+                : ($customerMode === 'cac' ? 'Customer: guided Business Registration'
+                : ($customerMode === 'trademark' ? 'Customer: guided Trademark'
+                : ($customerMode === 'consultation' ? 'Customer: specialist enquiry'
+                : 'Customer: standard checkout')));
+            ?>
+            <div class="small mt-1 <?= $customerOffer === null ? 'text-secondary' : 'text-success' ?>">
+              <i class="bi <?= $customerOffer === null ? 'bi-eye-slash' : 'bi-eye' ?>" aria-hidden="true"></i>
+              <?= e($customerStatus) ?>
+            </div>
           </td>
           <td data-label="Category"><?= e(ucwords(str_replace(['-', '_'], ' ', (string) ($service['category'] ?? 'general')))) ?></td>
           <td data-label="Price"><?= ($service['slug']??'')==='company-registration'
