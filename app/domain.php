@@ -2141,6 +2141,10 @@ function list_public_services_catalog(): array
     );
 
     $catalog = array_map('service_marketing_payload', $rows);
+    if (function_exists('iworks_customer_published_catalogue')) {
+        return iworks_customer_published_catalogue($catalog);
+    }
+    // Compatibility for isolated domain tests that do not boot the entire app.
     return array_values(array_filter(array_map(static fn(array $item): ?array =>
         function_exists('cac_public_service_record') ? cac_public_service_record($item) : $item, $catalog)));
 }

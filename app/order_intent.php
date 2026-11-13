@@ -16,7 +16,16 @@ function iworks_order_intent_capture(array $query): void
 {
     if (!array_key_exists('service', $query)) { return; }
     $slug = iworks_order_slug($query['service']);
-    if ($slug === '' || !get_service_by_slug($slug)) {
+    $service = $slug !== '' ? get_service_by_slug($slug) : null;
+    if (!$service) {
+        iworks_order_intent_clear();
+        return;
+    }
+    // Old business-name links still resume the guided business intake.
+    $legacyBusiness = in_array($slug,
+        ['business-name-registration', 'business-name-registration-cac-nigeria'], true);
+    if (!$legacyBusiness && function_exists('iworks_customer_published_service')
+        && iworks_customer_published_service($service) === null) {
         iworks_order_intent_clear();
         return;
     }
@@ -49,11 +58,11 @@ function iworks_post_login_destination(?array $user): string
         return url('trademark');
     }
     if ((string) ($user['role'] ?? '') === 'client') {
-        if ($slug === 'business-name-registration-cac-nigeria') {
+        if (in_array($slug, ['business-name-registration','business-name-registration-cac-nigeria'], true)) {
             return url('cac_filing', ['type' => 'business']);
         }
         if ($slug === 'company-registration') {
-            return url('cac_filing', ['type' => 'company']);
+            return url('cac_filing');
         }
     }
     if ($slug !== '' && (string) ($user['role'] ?? '') === 'client') {

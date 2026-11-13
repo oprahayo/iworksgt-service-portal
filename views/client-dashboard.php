@@ -37,19 +37,23 @@ foreach ($clientCatalogue as $catalogItem) {
     $name = trim((string) ($service['name'] ?? 'Service'));
     $category = trim((string) ($service['category'] ?? 'general')) ?: 'general';
     $description = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($service['short_description'] ?? ''))));
-    if (stripos($name, 'launch a company package') !== false) { $description = 'Company formation, compliance, branding and launch support.'; }
+    // Retired bundles are filtered by the shared catalogue policy, not
+    // cosmetically renamed on customer-facing cards.
     $description = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $description));
     if ($description === '') { $description = 'View the requirements, fees and next steps for this service.'; }
     $price = (float) ($service['price'] ?? 0);
     $pricing = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request quote';
     if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
-    $startUrl = $slug === 'trademark'
-        ? url('trademark')
-        : ($slug === 'business-name-registration-cac-nigeria'
-            ? url('cac_filing', ['type'=>'business'])
+    $checkoutMode = (string)($service['_iworks_checkout_mode'] ?? 'standard');
+    if ($checkoutMode === 'consultation') { $pricing = 'Specialist quote'; }
+    $startUrl = $checkoutMode === 'consultation'
+        ? public_url('service',['slug'=>$slug])
+        : ($slug === 'trademark'
+            ? url('trademark')
             : ($slug === 'company-registration'
                 ? url('cac_filing')
-                : url('jobs', ['action'=>'new', 'service'=>$slug])));
+                : url('jobs', ['action'=>'new','service'=>$slug])));
+    $startLabel = $checkoutMode === 'consultation' ? 'Enquire' : 'Start';
     $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
   ?>
   <article class="iw-client-service iw-client-catalog-item" data-search="<?= e($searchValue) ?>" data-category="<?= e($category) ?>" data-tone="<?= (int) ($index % 4) ?>">
@@ -61,7 +65,7 @@ foreach ($clientCatalogue as $catalogItem) {
       <span class="iw-client-catalog-price"><?= e($pricing) ?></span>
       <div class="iw-client-catalog-actions">
         <a href="<?= e(public_url('service',['slug'=>$slug])) ?>" class="iw-client-catalog-learn" aria-label="Learn more about <?= e($name) ?>">Details</a>
-        <a href="<?= e($startUrl) ?>" class="iw-client-service-action">Start <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="<?= e($startUrl) ?>" class="iw-client-service-action"><?= e($startLabel) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       </div>
     </div>
   </article>

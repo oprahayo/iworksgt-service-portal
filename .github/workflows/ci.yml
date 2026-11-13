@@ -72,6 +72,7 @@ jobs:
           php tests/trademark_pricing_test.php
           php tests/stripe_card_vault_contract_test.php
           php tests/client_workspace_unification_test.php
+          php tests/customer_catalogue_unification_test.php
           php tests/cac_launch_preparation_test.php
           php tests/cac_unified_product_contract_test.php
           php tests/editorial_launch_contract_test.php

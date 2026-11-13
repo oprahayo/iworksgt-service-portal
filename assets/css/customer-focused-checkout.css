@@ -1,0 +1,40 @@
+/* Purpose-built customer checkout. No legacy multi-product cart on this route. */
+.iw-focused-checkout{max-width:1120px;margin:0 auto;padding:8px 2px 44px;color:#242830}
+.iw-focused-checkout-heading{margin:0 0 21px}
+.iw-focused-back{display:inline-flex;align-items:center;gap:8px;color:#a64d1b;text-decoration:none;font-size:13px;font-weight:650;margin-bottom:16px}
+.iw-focused-back:hover,.iw-focused-details-link:hover{text-decoration:underline;color:#943807}
+.iw-focused-checkout .iw-client-eyebrow{display:block;color:#d35e1b;letter-spacing:.1em;font-size:10px;font-weight:800;margin-bottom:6px}
+.iw-focused-checkout-heading h1{font-size:clamp(27px,3vw,36px);line-height:1.15;letter-spacing:-.04em;margin:0 0 8px;font-weight:790}
+.iw-focused-checkout-heading p{color:#65717d;font-size:14px;line-height:1.5;margin:0}
+.iw-focused-checkout-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,385px);align-items:start;gap:22px}
+.iw-focused-main,.iw-focused-summary-card{border:1px solid #eaded4;background:#fff;border-radius:13px;box-shadow:0 5px 24px rgba(45,25,10,.045);padding:clamp(19px,2.5vw,28px);min-width:0}
+.iw-focused-category{display:flex;align-items:center;gap:9px;color:#b74c10;font-size:12px;font-weight:750;margin-bottom:17px}
+.iw-focused-category i{display:grid;place-items:center;font-size:20px;width:43px;height:43px;border-radius:10px;background:#fff1e8;color:#db621c}
+.iw-focused-main h2{font-size:clamp(22px,2.5vw,31px);line-height:1.24;letter-spacing:-.025em;color:#24282e;font-weight:790;margin:0 0 12px}
+.iw-focused-summary{font-size:14px;line-height:1.75;color:#59626d;margin:0 0 14px;max-width:670px}
+.iw-focused-benefits{list-style:none;padding:0;margin:19px 0;display:grid;gap:10px}
+.iw-focused-benefits li{display:flex;gap:9px;align-items:flex-start;color:#3d454c;font-size:13px;line-height:1.6}
+.iw-focused-benefits i{color:#de641e;flex:none;margin-top:1px}
+.iw-focused-details-link{display:inline-flex;align-items:center;gap:5px;color:#ad4f16;text-decoration:none;font-size:13px;font-weight:700;margin:8px 0 0}
+.iw-focused-next{display:flex;gap:10px;border-top:1px solid #ebe4de;margin-top:23px;padding-top:20px}
+.iw-focused-next i{color:#dd6320;flex:none}
+.iw-focused-next p{font-size:12px;line-height:1.6;color:#697079;margin:0}
+.iw-focused-summary-card h2{font-size:19px;font-weight:780;margin:0 0 18px;letter-spacing:-.025em;color:#24282e}
+.iw-focused-prices{margin:0 0 23px;border-bottom:1px solid #e9e0d9;padding-bottom:16px}
+.iw-focused-prices>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.iw-focused-prices dt{font-size:13px;color:#697079;font-weight:500}
+.iw-focused-prices dd{font-size:13px;font-weight:750;margin:0;text-align:right;white-space:nowrap;color:#242a31}
+.iw-focused-prices .iw-focused-grand{padding-top:14px;margin-top:14px;border-top:1px solid #eee5df}
+.iw-focused-prices .iw-focused-grand :is(dt,dd){font-size:16px;color:#24282e;font-weight:790}
+.iw-focused-summary-card form{display:grid;gap:9px}
+.iw-focused-summary-card label{font-size:12px;font-weight:750;color:#2f343a;margin:2px 0 0}
+.iw-focused-optional{color:#7b8085;font-weight:500}
+.iw-focused-summary-card textarea,.iw-focused-summary-card select{width:100%;min-width:0;border:1px solid #dce0e4;border-radius:8px;padding:11px 12px;font:400 14px/1.5 Inter,system-ui,sans-serif;color:#24282e;background:#fff;outline:none}
+.iw-focused-summary-card textarea:focus,.iw-focused-summary-card select:focus{border-color:#e46c29;box-shadow:0 0 0 3px #f9e0ce}
+.iw-focused-fx-note{margin:0 0 5px;color:#6d737b;font-size:11px;line-height:1.56}
+.iw-focused-submit{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;margin:11px 0 0;background:#e86720;border:1px solid #e86720;border-radius:9px;min-height:47px;font-weight:750;font-size:13px;color:#fff;cursor:pointer}
+.iw-focused-submit:hover{background:#c85012;border-color:#c85012}
+.iw-focused-cancel{display:inline-block;text-align:center;color:#63676e;text-decoration:none;font-size:12px;padding:5px}
+.iw-focused-cancel:hover{text-decoration:underline}
+@media(max-width:820px){.iw-focused-checkout-grid{grid-template-columns:minmax(0,1fr)}.iw-focused-checkout{padding-bottom:24px}.iw-focused-summary-card{max-width:none}}
+@media(max-width:480px){.iw-focused-checkout-grid{gap:14px}.iw-focused-main,.iw-focused-summary-card{padding:17px;border-radius:11px}.iw-focused-prices dd{white-space:normal}}

@@ -48,6 +48,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/domain.php';
+require_once __DIR__ . '/customer_service_policy.php';
 require_once __DIR__ . '/live_chat.php';
 require_once __DIR__ . '/editorial.php';
 require_once __DIR__ . '/job_reviews.php';

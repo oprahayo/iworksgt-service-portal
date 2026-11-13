@@ -43,6 +43,11 @@ if ($isTrademarkService) {
     $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
     $priceText = 'USD ' . number_format($price, 2) . ' per class';
 }
+$manualReview = (string)($service['_iworks_checkout_mode'] ?? '') === 'consultation';
+if ($manualReview) {
+    $priceText = 'Tailored quote after review';
+    $price = 0;
+}
 $tax = (float) ($service['tax_percent'] ?? 0);
 $featured = !empty($service['featured_image_id']) ? get_media_asset((int) $service['featured_image_id']) : null;
 $imageUrl = trim((string) ($featured['url'] ?? ''));
@@ -73,13 +78,19 @@ if ($imageUrl === '') {
           <div class="iw-detail-price">
             <span><?= $price > 0 ? 'Starting from' : 'Pricing' ?></span>
             <strong><?= e($priceText) ?></strong>
-            <?php if ($tax > 0): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
+            <?php if ($tax > 0 && !$manualReview): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
           </div>
           <div class="iw-detail-actions">
-            <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <?php if ($manualReview): ?>
+              <a class="iw-detail-primary" href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="<?= e($serviceName) ?>">Request a specialist quote <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <?php else: ?>
+              <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <?php endif; ?>
             <a class="iw-detail-secondary" href="<?= e(public_url('contact')) ?>" data-iw-help-open data-iw-service="<?= e($serviceName) ?>">Ask a question</a>
           </div>
-          <p class="iw-detail-note">Submit requirements and follow updates through your iWorks account.</p>
+          <p class="iw-detail-note"><?= $manualReview
+                ? 'A specialist will confirm the correct legal structure, documents and fees before any filing is started.'
+                : 'Submit requirements and follow updates through your iWorks account.' ?></p>
         </div>
         <div class="iw-detail-photo"><img src="<?= e($imageUrl) ?>" alt="" width="560" height="430" decoding="async" fetchpriority="high"></div>
       </div>

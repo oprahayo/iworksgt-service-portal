@@ -135,11 +135,7 @@ if ($description === '' || $description === 'Browse what you need.') {
         $name = trim((string) ($service['name'] ?? 'Service'));
         $category = trim((string) ($service['category'] ?? 'general')) ?: 'general';
         $short = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($service['short_description'] ?? ''))));
-        if (stripos($name, 'launch a company package') !== false) {
-            $short = 'Company formation, compliance documentation, branding and launch support.';
-        } else {
-            $short = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $short));
-        }
+        $short = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $short));
         if ($short === '') { $short = 'View the full requirements and service details.'; }
         $price = (float) ($service['price'] ?? 0);
         $currency = strtoupper(trim((string) ($service['currency'] ?? default_currency())));
@@ -148,6 +144,7 @@ if ($description === '' || $description === 'Browse what you need.') {
             $price = (function_exists('trademark_price_usd') ? trademark_price_usd() : 185.00);
             $amount = 'USD ' . number_format($price, 2) . ' / class';
         }
+        $manualReview = (string)($service['_iworks_checkout_mode'] ?? '') === 'consultation';
         $href = public_url('service', ['slug' => (string) ($service['slug'] ?? '')]);
         $searchText = strtolower($name . ' ' . $short . ' ' . $categoryLabel($category));
         ?>
@@ -161,7 +158,7 @@ if ($description === '' || $description === 'Browse what you need.') {
           <span class="iw-service-index-end">
             <span class="iw-service-index-pricing">
               <small><?= $price > 0 ? 'From' : 'Pricing' ?></small>
-              <strong><?= e($price > 0 ? $amount : 'Request a quote') ?></strong>
+              <strong><?= e($manualReview ? 'Specialist quote' : ($price > 0 ? $amount : 'Request a quote')) ?></strong>
             </span>
             <i class="bi bi-arrow-up-right iw-service-index-arrow" aria-hidden="true"></i>
           </span>
