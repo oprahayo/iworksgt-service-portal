@@ -1,7 +1,11 @@
 <?php
 $businessFrom = cac_money_setting('cac_business_base_ngn', 26000);
 $companyService = get_service_by_slug('company-registration');
-$companyFrom = $companyService ? cac_company_quote(1) : 0;
+$companyFrom = 0;
+if ($companyService) {
+    try { $companyFrom = cac_company_quote(1); }
+    catch (Throwable $error) { $companyFrom = 0; }
+}
 ?>
 <div class="iw-client-heading">
   <div>
