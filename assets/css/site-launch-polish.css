@@ -35,6 +35,12 @@ body.page-public .iw-back-to-top{
   display:grid;place-items:center;background:#e86720!important;
   color:#fff!important;border:0!important;box-shadow:0 8px 19px rgba(51,34,25,.18)!important
 }
+body.page-public .iw-back-to-top:not(.iw-visible){
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important
+}
+body.page-public .iw-back-to-top.iw-visible{
+  opacity:1!important;visibility:visible!important;pointer-events:auto!important
+}
 body.page-public.iw-assist-chat-open .iw-back-to-top,
 body.page-public.iw-assist-book-open .iw-back-to-top{display:none!important}
 body.page-public .iw-back-to-top:focus-visible{outline:3px solid #ffc398;outline-offset:3px}
