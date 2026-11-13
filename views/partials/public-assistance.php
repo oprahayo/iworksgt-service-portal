@@ -62,8 +62,14 @@ $iwAssistEndpoint = public_url('home');
         <div class="iw-assist-sheet-rate" data-assist-end-rate hidden>
           <strong>How was your experience?</strong>
           <p>Rate this conversation, or skip.</p>
-          <div class="iw-assist-ratings" role="group" aria-label="Rate the conversation from 1 to 5">
-            <?php foreach ([1, 2, 3, 4, 5] as $score): ?><button type="button" data-assist-rate="<?= $score ?>" aria-label="Rate <?= $score ?> out of 5"><?= $score ?></button><?php endforeach; ?>
+          <div class="iw-assist-ratings" role="group" aria-label="How was your support experience?">
+            <?php foreach ([1=>'Very unhappy',2=>'Unhappy',3=>'Okay',4=>'Happy',5=>'Excellent'] as $score=>$label): ?>
+              <?php $icon=[1=>'😠',2=>'🙁',3=>'😐',4=>'🙂',5=>'😍'][$score]; ?>
+              <button type="button" data-assist-rate="<?= (int)$score ?>" aria-label="<?= e($label) ?>" title="<?= e($label) ?>">
+                <span aria-hidden="true"><?= $icon ?></span>
+                <small><?= e($label) ?></small>
+              </button>
+            <?php endforeach; ?>
           </div>
           <button type="button" class="iw-assist-skip" data-assist-rate-skip>Skip</button>
         </div>
