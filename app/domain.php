@@ -8744,7 +8744,7 @@ function handle_gateway_callback(string $provider, int $invoiceId, array $query)
         }
 
         $verify = gateway_json_get('https://api.paystack.co/transaction/verify/' . rawurlencode($reference), $secret);
-        $ok = !empty($verify['status']) && strtolower((string) ($verify['data']['status'] ?? '')) === 'success';
+        $ok = iworks_gateway_verified_matches('paystack', $payment, $verify);
         if ($ok) {
             $txId = (string) ($verify['data']['id'] ?? '');
             mark_gateway_payment_confirmed((int) $payment['id'], $txId !== '' ? $txId : null, $verify);
@@ -8775,9 +8775,8 @@ function handle_gateway_callback(string $provider, int $invoiceId, array $query)
         }
 
         $verify = gateway_json_get('https://api.flutterwave.com/v3/transactions/' . rawurlencode($transactionId) . '/verify', $secret);
-        $status = strtolower((string) ($verify['data']['status'] ?? ''));
-        $refMatches = (string) ($verify['data']['tx_ref'] ?? '') === $reference;
-        $ok = strtolower((string) ($verify['status'] ?? '')) === 'success' && $status === 'successful' && $refMatches;
+        $ok = iworks_gateway_verified_matches('flutterwave', $payment, $verify)
+            && (string) ($verify['data']['id'] ?? '') === $transactionId;
 
         if ($ok) {
             mark_gateway_payment_confirmed((int) $payment['id'], $transactionId, $verify);
@@ -8807,7 +8806,7 @@ function handle_gateway_callback(string $provider, int $invoiceId, array $query)
     }
 
     $verify = gateway_form_get('https://api.stripe.com/v1/checkout/sessions/' . rawurlencode($sessionId), $secret);
-    $ok = strtolower((string) ($verify['payment_status'] ?? '')) === 'paid' && strtolower((string) ($verify['status'] ?? '')) === 'complete';
+    $ok = iworks_gateway_verified_matches('stripe', $payment, $verify);
 
     if ($ok) {
         $txId = (string) ($verify['payment_intent'] ?? '');
@@ -8865,7 +8864,7 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
         }
 
         $verify = gateway_json_get('https://api.paystack.co/transaction/verify/' . rawurlencode($reference), $secret);
-        $ok = !empty($verify['status']) && strtolower((string) ($verify['data']['status'] ?? '')) === 'success';
+        $ok = iworks_gateway_verified_matches('paystack', $payment, $verify);
         if ($ok) {
             $txId = (string) ($verify['data']['id'] ?? '');
             mark_gateway_payment_confirmed((int) $payment['id'], $txId !== '' ? $txId : null, $verify);
@@ -8879,11 +8878,13 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
 
     if ($provider === 'flutterwave') {
         $webhookHash = trim((string) ($method['private_key'] ?? ''));
-        if ($webhookHash !== '') {
-            $incomingHash = header_value($headers, 'verif-hash');
-            if ($incomingHash === '' || !hash_equals($webhookHash, $incomingHash)) {
-                return ['success' => false, 'status_code' => 403, 'message' => 'Invalid Flutterwave webhook hash.'];
-            }
+        if ($webhookHash === '') {
+            return ['success' => false, 'status_code' => 503, 'message' => 'Webhook signing is not configured.'];
+        }
+        // This integration uses Flutterwave v3's verif-hash secret header.
+        $incomingHash = header_value($headers, 'verif-hash');
+        if ($incomingHash === '' || !hash_equals($webhookHash, $incomingHash)) {
+            return ['success' => false, 'status_code' => 403, 'message' => 'Invalid Flutterwave webhook hash.'];
         }
 
         $reference = trim((string) ($payload['data']['tx_ref'] ?? ''));
@@ -8898,9 +8899,8 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
         }
 
         $verify = gateway_json_get('https://api.flutterwave.com/v3/transactions/' . rawurlencode($transactionId) . '/verify', $secret);
-        $status = strtolower((string) ($verify['data']['status'] ?? ''));
-        $refMatches = (string) ($verify['data']['tx_ref'] ?? '') === $reference;
-        $ok = strtolower((string) ($verify['status'] ?? '')) === 'success' && $status === 'successful' && $refMatches;
+        $ok = iworks_gateway_verified_matches('flutterwave', $payment, $verify)
+            && (string) ($verify['data']['id'] ?? '') === $transactionId;
 
         if ($ok) {
             mark_gateway_payment_confirmed((int) $payment['id'], $transactionId, $verify);
@@ -8913,11 +8913,12 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
     }
 
     $webhookSecret = trim((string) ($method['private_key'] ?? ''));
-    if ($webhookSecret !== '') {
-        $signatureHeader = header_value($headers, 'stripe-signature');
-        if (!verify_stripe_webhook_signature($rawPayload, $signatureHeader, $webhookSecret)) {
-            return ['success' => false, 'status_code' => 403, 'message' => 'Invalid Stripe signature.'];
-        }
+    if ($webhookSecret === '') {
+        return ['success' => false, 'status_code' => 503, 'message' => 'Webhook signing is not configured.'];
+    }
+    $signatureHeader = header_value($headers, 'stripe-signature');
+    if (!verify_stripe_webhook_signature($rawPayload, $signatureHeader, $webhookSecret)) {
+        return ['success' => false, 'status_code' => 403, 'message' => 'Invalid Stripe signature.'];
     }
 
     $eventType = strtolower((string) ($payload['type'] ?? ''));
@@ -8936,7 +8937,7 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
     }
 
     $verify = gateway_form_get('https://api.stripe.com/v1/checkout/sessions/' . rawurlencode($sessionId), $secret);
-    $ok = strtolower((string) ($verify['payment_status'] ?? '')) === 'paid' && strtolower((string) ($verify['status'] ?? '')) === 'complete';
+    $ok = iworks_gateway_verified_matches('stripe', $payment, $verify);
 
     if ($ok) {
         $txId = (string) ($verify['payment_intent'] ?? '');
