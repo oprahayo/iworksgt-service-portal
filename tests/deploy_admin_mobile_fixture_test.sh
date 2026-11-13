@@ -43,6 +43,9 @@ grep -q 'Portal changes:' "$TMP/check.log"
 [[ ! -e "$PORTAL/assets/branding/iworks-desktop.svg" ]]
 [[ ! -e "$PUBLIC/assets/branding/iworks-compact.svg" ]]
 grep -q 'old portal' "$PORTAL/index.php"
+# Reproduce legacy 0700 public asset directory permissions before deployment.
+mkdir -p "$PORTAL/assets/branding" "$PUBLIC/assets/branding"
+chmod 0700 "$PORTAL/assets" "$PORTAL/assets/branding" "$PUBLIC/assets" "$PUBLIC/assets/branding"
 
 bash "$ROOT/scripts/deploy_admin_mobile_refresh.sh" --apply "$PORTAL" "$PUBLIC" > "$TMP/apply.log"
 grep -q 'SUCCESS: source files deployed' "$TMP/apply.log"
@@ -55,6 +58,16 @@ grep -q 'new portal' "$PORTAL/index.php"
 [[ -s "$PUBLIC/assets/branding/iworks-desktop.svg" ]]
 [[ -s "$PUBLIC/assets/branding/iworks-compact.svg" ]]
 cmp "$PORTAL/app/config.php" "$TMP/expected-config.php"
+for dir in "$PORTAL/assets" "$PORTAL/assets/branding" "$PUBLIC/assets" "$PUBLIC/assets/branding"; do
+  [[ "$(stat -c %a "$dir")" == "755" ]] || { echo "Public asset directory not traversable: $dir"; exit 1; }
+done
+for file in "$PORTAL/assets/branding/iworks-desktop.svg" "$PUBLIC/assets/branding/iworks-compact.svg"; do
+  [[ "$(stat -c %a "$file")" == "644" ]]
+done
+MANIFEST="$(find "$HOME/iworks-deployment-backups" -type f -name source-release-manifest.sha256 | head -1)"
+[[ -n "$MANIFEST" && -s "$MANIFEST" ]]
+grep -Fq 'assets/branding/iworks-desktop.svg' "$MANIFEST"
+[[ "$(stat -c %a "$(dirname "$MANIFEST")")" == "700" ]]
 grep -q 'customer record' "$PORTAL/storage/private.txt"
 grep -q 'customer upload' "$PORTAL/assets/uploads/file.txt"
 

@@ -8,7 +8,7 @@ PORTAL_INPUT="${2:-$HOME/public_html/portal.iworksgt.com}"
 PUBLIC_INPUT="${3:-$HOME/public_html}"
 [[ "$MODE" == "--check" || "$MODE" == "--apply" ]] || { echo 'Use --check or --apply' >&2; exit 2; }
 PHP_BIN="${IWORKS_PHP_BIN:-php}"
-for command in curl tar cmp find mktemp readlink; do
+for command in curl tar cmp find mktemp readlink sha256sum; do
   command -v "$command" >/dev/null || { echo "Missing $command" >&2; exit 1; }
 done
 command -v "$PHP_BIN" >/dev/null || { echo "Missing PHP CLI: $PHP_BIN" >&2; exit 1; }
@@ -90,14 +90,22 @@ if [[ "$MODE" == "--check" ]]; then
   echo 'CHECK ONLY: no site files or database records changed.'
   exit 0
 fi
+OLD_UMASK="$(umask)"
 umask 077
-BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+BACKUP="$HOME/iworks-deployment-backups/admin-public-$(date -u +%Y%m%dT%H%M%SZ)-$"
 mkdir -p "$BACKUP"
+chmod 0700 "$BACKUP"
 if [[ -s "$TMP/portal-existing" ]]; then tar -C "$PORTAL" -czf "$BACKUP/portal.tar.gz" -T "$TMP/portal-existing"; fi
 if [[ -s "$TMP/public-existing" ]]; then tar -C "$PUBLIC" -czf "$BACKUP/public-assets.tar.gz" -T "$TMP/public-existing"; fi
 cp "$TMP/portal-added" "$BACKUP/added-portal.txt"
 cp "$TMP/public-added" "$BACKUP/added-public-assets.txt"
-echo "Backup: $BACKUP"
+printf '%s\n' "$RELEASE" > "$BACKUP/pinned-release.txt"
+(
+  cd "$SRC"
+  while IFS= read -r file; do sha256sum "$file"; done < "$TMP/list"
+) > "$BACKUP/source-release-manifest.sha256"
+umask "$OLD_UMASK"
+echo "Backup and source manifest: $BACKUP"
 STARTED=0
 restore() {
   status=$?
@@ -112,16 +120,49 @@ restore() {
 }
 trap restore ERR
 STARTED=1
+ensure_asset_permissions() {
+  asset_file="$1"
+  asset_root="$2"
+  case "$asset_file" in "$asset_root"/assets/*) ;; *) return 0 ;; esac
+  dir="$(dirname "$asset_file")"
+  # Assets are web-public; stop at the assets root and never chmod storage,
+  # uploads, config, evidence or the account home directory.
+  while [[ "$dir" != "$asset_root" ]]; do
+    [[ -d "$dir" ]] && chmod 0755 "$dir"
+    [[ "$dir" == "$asset_root/assets" ]] && break
+    dir="$(dirname "$dir")"
+  done
+  [[ -f "$asset_file" ]] && chmod 0644 "$asset_file"
+}
 copy_file() {
-  srcfile="$1"; destfile="$2"
+  srcfile="$1"; destfile="$2"; root="$3"
   mkdir -p "$(dirname "$destfile")"
   stage="$(mktemp "$(dirname "$destfile")/.iworks-release.XXXXXXXX")"
   cat "$srcfile" > "$stage"
   chmod 0644 "$stage"
   mv -f "$stage" "$destfile"
+  ensure_asset_permissions "$destfile" "$root"
 }
-while IFS= read -r file; do copy_file "$SRC/$file" "$PORTAL/$file"; done < "$TMP/portal-change"
-while IFS= read -r file; do copy_file "$SRC/$file" "$PUBLIC/$file"; done < "$TMP/public-change"
+while IFS= read -r file; do copy_file "$SRC/$file" "$PORTAL/$file" "$PORTAL"; done < "$TMP/portal-change"
+while IFS= read -r file; do copy_file "$SRC/$file" "$PUBLIC/$file" "$PUBLIC"; done < "$TMP/public-change"
+# Repair prior 0700 branding paths even when asset bytes did not change.
+while IFS= read -r file; do
+  case "$file" in assets/css/*|assets/js/*|assets/illustrations/*|assets/branding/*)
+    ensure_asset_permissions "$PORTAL/$file" "$PORTAL"
+    [[ "$MIRROR" -eq 1 ]] && ensure_asset_permissions "$PUBLIC/$file" "$PUBLIC"
+    ;;
+  esac
+done < "$TMP/list"
+# A successful no-op is a verified match, not an assumed current release.
+while IFS= read -r file; do
+  cmp -s "$SRC/$file" "$PORTAL/$file" || { echo "Release mismatch in portal: $file" >&2; false; }
+  case "$file" in assets/css/*|assets/js/*|assets/illustrations/*|assets/branding/*)
+    if [[ "$MIRROR" -eq 1 ]]; then
+      cmp -s "$SRC/$file" "$PUBLIC/$file" || { echo "Release mismatch in public assets: $file" >&2; false; }
+    fi
+    ;;
+  esac
+done < "$TMP/list"
 "$PHP_BIN" -l "$PORTAL/index.php" >/dev/null
 "$PHP_BIN" -l "$PORTAL/views/partials/public-header.php" >/dev/null
 STARTED=0
