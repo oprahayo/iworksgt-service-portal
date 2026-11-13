@@ -112,7 +112,12 @@ function iw_chat_public_request(): void
                 return;
             }
             $token = bin2hex(random_bytes(32));
-            $ref = substr(trim((string)($_SERVER['HTTP_REFERER'] ?? '')), 0, 250);
+            // Keep only public origin/path, never referer query parameters or tokens.
+            $refRaw = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
+            $refParts = parse_url($refRaw);
+            $ref = is_array($refParts)
+                ? substr((string)($refParts['path'] ?? '/'),0,250)
+                : '/';
             db_execute(
                 "INSERT INTO iw_live_threads
                  (visitor_token_hash,name,email,ip_prefix,country_code,landing_page,status,visitor_last_seen_at,created_at,updated_at)
@@ -120,7 +125,14 @@ function iw_chat_public_request(): void
                 ['token'=>hash('sha256', $token),'name'=>$name,'email'=>$email,
                  'ip'=>$ip,'country'=>iw_chat_country_code(),'landing'=>$ref]
             );
-            iw_chat_send_json(['ok'=>true,'token'=>$token,'id'=>db_last_id(),
+            $createdId = db_last_id();
+            try {
+                notify_users(admin_user_ids(), 'Visitor waiting in live chat',
+                    $name . ' opened a website support conversation.',url('live_inbox'));
+            } catch (Throwable $notificationFailure) {
+                error_log('[iWorks live chat notification] '.$notificationFailure->getMessage());
+            }
+            iw_chat_send_json(['ok'=>true,'token'=>$token,'id'=>$createdId,
                 'staff_online'=>iw_chat_staff_online(), 'messages'=>[]]);
             return;
         }
@@ -156,13 +168,6 @@ function iw_chat_public_request(): void
                             VALUES (:id,'visitor',:body,NOW())",['id'=>$threadId,'body'=>$body]);
                 db_execute('UPDATE iw_live_threads SET last_message_at=NOW(),updated_at=NOW() WHERE id=:id',
                     ['id'=>$threadId]);
-                if ((int)($freq['n'] ?? 0) === 0) {
-                    // The staff inbox polls regardless. Notification is a fallback, not a fake reply.
-                    try {
-                        notify_users(admin_user_ids(), 'New visitor live chat',
-                            $thread['name'] . ' started a support conversation.',url('live_inbox'));
-                    } catch (Throwable $ignored) {}
-                }
             }
             $after = min(2147483647,max(0,(int)($_POST['after_id'] ?? 0)));
             iw_chat_send_json(['ok'=>true,'status'=>'open','staff_online'=>iw_chat_staff_online(),
