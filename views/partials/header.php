@@ -236,6 +236,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <link rel="stylesheet" href="assets/css/cac-registration.css?v=20261113-cac1">
   <link rel="stylesheet" href="assets/css/brand-color-pass.css?v=20261113-live1">
   <link rel="stylesheet" href="assets/css/site-launch-polish.css?v=20261113-launch2">
+  <?php if ($currentPage === 'jobs'): ?><link rel="stylesheet" href="assets/css/customer-focused-checkout.css?v=20261113-catalog1"><?php endif; ?>
   <?php if ($currentPage === 'live_inbox'): ?><link rel="stylesheet" href="assets/css/live-inbox.css?v=20261113-live1"><?php endif; ?>
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
   <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
