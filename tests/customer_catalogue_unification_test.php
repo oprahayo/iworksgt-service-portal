@@ -116,10 +116,11 @@ check_catalogue(str_contains($router,'unset($payload') &&
     'POST cannot override prices and product titles.');
 check_catalogue(str_contains($auth,"return url('cac_filing');"),
     'CAC sign-in must land at the company/business-name structure selector.');
-check_catalogue(str_contains($client,"$"."checkoutMode === 'consultation'") &&
+check_catalogue(str_contains($client,'iworks_customer_product_price($service)') &&
+    str_contains($detail,'iworks_customer_product_price($service)') &&
     str_contains($detail,'Request a specialist quote') &&
-    str_contains($services,'Specialist quote'),
-    'Public/customer product action must agree on assisted services.');
+    str_contains($services,'iworks_customer_product_price($service)'),
+    'Public/customer product surfaces must use the same backend pricing and assisted-service policy.');
 check_catalogue(str_contains(file_get_contents($root.'/views/partials/client-header.php'),
     'customer-focused-checkout.css'),'Customer checkout styles must load from the actual client header, not only the admin shell.');
 check_catalogue(str_contains(file_get_contents($root.'/views/services.php'),
