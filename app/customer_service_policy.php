@@ -96,6 +96,13 @@ function iworks_customer_registration_variants(array $service): array
     $business['short_description'] =
         'For sole proprietors and partnerships. Register your trading name without forming a separate limited company.';
     $business['_iworks_registration_type'] = 'business';
+    $business['description'] = '<p>Register an Enterprise or Business Name with CAC. Choose one proprietor or a partnership, then provide a proposed name, nature of business, registered address and valid identification.</p>';
+    $business['featured_bullets'] = [
+        'Sole proprietorship or partnership',
+        'Preliminary proposed-name screening',
+        'Traceable registered business address',
+        'Owner identification and document checklist',
+    ];
 
     $company = $base;
     $company['slug'] = 'company-registration';
@@ -103,6 +110,13 @@ function iworks_customer_registration_variants(array $service): array
     $company['short_description'] =
         'For a registered company limited by shares, with one or more directors and shareholders.';
     $company['_iworks_registration_type'] = 'company';
+    $company['description'] = '<p>Register a private Nigerian company limited by shares (Ltd). Provide its name, business activity, registered address, director/shareholder details and share capital. Specialist legal structures require a separate consultation.</p>';
+    $company['featured_bullets'] = [
+        'Private company limited by shares',
+        'Directors and shareholders',
+        'Share capital and ownership details',
+        'Guided CAC filing documentation',
+    ];
     $companyAmount = max(0, (float)($service['price'] ?? 0));
     if (function_exists('cac_company_quote')) {
         try { $companyAmount = cac_company_quote(1); }
