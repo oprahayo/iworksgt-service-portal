@@ -6,6 +6,7 @@
  *
  * No duplicate pricing, product IDs, or client-side order calculations.
  */
+require_once __DIR__ . '/../app/public_marketing.php';
 $service = is_array($service ?? null) ? $service : [];
 $serviceName = trim((string) ($service['name'] ?? 'Service'));
 $serviceSlug = trim((string) ($service['slug'] ?? ''));
