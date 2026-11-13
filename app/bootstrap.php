@@ -19,6 +19,25 @@ if (!isset($__appConfig['app']['timezone'])) {
 date_default_timezone_set($__appConfig['app']['timezone']);
 
 if (session_status() === PHP_SESSION_NONE) {
+    // Must be configured BEFORE session_start(), including embedded auth,
+    // OAuth and SSO entrypoints. Existing browser sessions without an auth
+    // marker are invalidated after the corresponding security release.
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.use_trans_sid', '0');
+    if (PHP_SAPI !== 'cli') {
+        $host = strtolower((string) preg_replace('/:\\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+        $local = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (string) ($_SERVER['SERVER_PORT'] ?? '') === '443';
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'secure' => !$local || $https,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
     session_start();
 }
 
