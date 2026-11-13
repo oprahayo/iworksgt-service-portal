@@ -15,7 +15,7 @@ check_review(str_contains($html,'4.8'), 'Verified Google score must be shown onc
 check_review(substr_count($html, 'iw-reviews-google-score') === 1, 'Google rating must be one centered element.');
 check_review(substr_count($html, 'class="iw-review-slide"') === 3, 'Three consenting reviews should render.');
 check_review(str_contains($html,'Ola A.') && str_contains($html,'Ada M.'), 'Shortened customer names should render.');
-check_review(str_contains($html,'5/10'), 'All authentic scores, including mixed reviews, must be allowed.');
+check_review(str_contains($html,'3/5'), 'Historical ratings should map onto five-point scale without hiding mixed reviews.');
 check_review(str_contains($html, 'data-iw-review-next'), 'Carousel navigation must work with multiple reviews.');
 $reviews = [];
 ob_start();
