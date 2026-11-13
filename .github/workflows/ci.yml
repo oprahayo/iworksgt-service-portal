@@ -81,6 +81,7 @@ jobs:
           php tests/blog_journal_render_test.php
           php tests/admin_public_navigation_schema_contract_test.php
           php tests/job_support_refresh_contract_test.php
+          php tests/support_reply_email_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
 
       - name: Validate public interaction JavaScript
