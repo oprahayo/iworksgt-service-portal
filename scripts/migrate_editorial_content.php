@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit('Forbidden'); }
-require dirname(__DIR__) . '/app/bootstrap.php';
+require_once dirname(__DIR__) . '/app/bootstrap.php';
 try {
     $column=db_one("SELECT COLUMN_TYPE AS type FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='role' LIMIT 1");
     if (!$column) throw new RuntimeException('User role column not found.');
