@@ -1903,7 +1903,8 @@ try {
                 if ($requested === 'trademark') {
                     redirect(url('trademark'));
                 }
-                $checkoutService = $requested !== '' ? get_service_by_slug($requested) : null;
+                $checkoutService = $requested !== '' ? get_service_by_slug($requested === 'cac-business-name'
+                    ? 'company-registration' : $requested) : null;
                 if (!$checkoutService) {
                     redirect(url('dashboard'));
                 }
