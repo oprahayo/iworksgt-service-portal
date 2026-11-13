@@ -219,7 +219,7 @@ try {
         $publicSlug = $page === 'service' ? trim((string) ($_GET['slug'] ?? '')) : $page;
         if ($page === 'service') {
             if (in_array((string)$publicSlug,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
-                header('Location: ' . public_url('service',['slug'=>'company-registration']), true, 301);
+                header('Location: ' . public_url('service',['slug'=>'cac-business-name']), true, 301);
                 return;
             }
             $rawService = get_service_by_slug($publicSlug === 'cac-business-name'
