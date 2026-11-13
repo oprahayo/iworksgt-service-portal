@@ -158,7 +158,7 @@ if ($description === '' || $description === 'Browse what you need.') {
           <span class="iw-service-index-end">
             <span class="iw-service-index-pricing">
               <small><?= $price > 0 ? 'From' : 'Pricing' ?></small>
-              <strong><?= e($price > 0 ? $amount : 'Request a quote') ?></strong>
+              <strong><?= e($manualReview ? 'Specialist quote' : ($price > 0 ? $amount : 'Request a quote')) ?></strong>
             </span>
             <i class="bi bi-arrow-up-right iw-service-index-arrow" aria-hidden="true"></i>
           </span>
