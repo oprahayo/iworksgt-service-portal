@@ -7,6 +7,9 @@ declare(strict_types=1);
  */
 function cac_filing_schema(): void {
     if (schema_table_exists('cac_filing_applications')) return;
+    if (!iworks_schema_mutation_allowed()) {
+        throw new RuntimeException('The site requires a controlled database schema update.');
+    }
     db_execute("CREATE TABLE IF NOT EXISTS cac_filing_applications (
         id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
         client_id INT UNSIGNED NOT NULL,

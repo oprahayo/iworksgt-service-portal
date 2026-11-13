@@ -17,6 +17,9 @@ function ensure_job_review_schema(): void
     if (schema_table_exists('job_reviews')) {
         return;
     }
+    if (!iworks_schema_mutation_allowed()) {
+        throw new RuntimeException('The site requires a controlled database schema update.');
+    }
     db_execute(
         "CREATE TABLE IF NOT EXISTS job_reviews (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

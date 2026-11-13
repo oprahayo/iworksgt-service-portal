@@ -90,12 +90,5 @@ require_once __DIR__ . '/stripe_card_vault.php';
 require_once __DIR__ . '/client_workspace.php';
 require_once __DIR__ . '/file_access.php';
 
-if (is_configured()) {
-    try {
-        ensure_crypto_schema_upgrades();
-        ensure_media_schema_upgrades();
-        ensure_job_review_schema();
-    } catch (Throwable $e) {
-        // Ignore runtime schema patch failures in bootstrap.
-    }
-}
+// Never execute DDL implicitly in bootstrap. Schema changes are applied
+// through the backup-gated CLI migration and validated by release preflight.

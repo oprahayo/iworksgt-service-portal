@@ -21,7 +21,7 @@ if (!str_contains($router,"set_exception_handler('iworks_public_error_response')
     throw new RuntimeException('Uncaught errors or webhooks may reveal exception details.');
 }
 $db=(string)file_get_contents(__DIR__.'/../app/db.php');
-if (str_contains($db,"' . $e->getMessage()") || !str_contains($db,'Database service is temporarily unavailable.')) {
+if (str_contains($db, '. $e->getMessage()') || !str_contains($db,'Database service is temporarily unavailable.')) {
     throw new RuntimeException('Database driver details are not redacted.');
 }
 echo "f22_safe_error_response_test passed\n";

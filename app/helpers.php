@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/** Database DDL is forbidden in HTTP requests and read-only CLI checks. */
+function iworks_schema_mutation_allowed(): bool
+{
+    return PHP_SAPI === 'cli'
+        && defined('IWORKS_SCHEMA_MIGRATION')
+        && IWORKS_SCHEMA_MIGRATION === true;
+}
+
 $__settings_cache = null;
 
 function e(?string $value): string

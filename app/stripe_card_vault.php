@@ -15,6 +15,9 @@ function stripe_vault_schema(): void
     static $ready = false;
     if ($ready) { return; }
     if (!schema_table_exists('stripe_customer_vault')) {
+        if (!iworks_schema_mutation_allowed()) {
+            throw new RuntimeException('The site requires a controlled database schema update.');
+        }
         db_execute("CREATE TABLE IF NOT EXISTS stripe_customer_vault (
             user_id INT UNSIGNED NOT NULL PRIMARY KEY,
             stripe_customer_id VARCHAR(90) NOT NULL,
