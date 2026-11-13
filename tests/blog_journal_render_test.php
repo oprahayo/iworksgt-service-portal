@@ -118,10 +118,30 @@ check_journal(str_contains($detail,'/uploads/feature.webp') &&
     str_contains($detail,'data-iw-share') &&
     str_contains($detail,'blog_like') && str_contains($detail,'blog_comment'),
     'Simple article must preserve real cover, sharing, likes and moderated comments.');
-check_journal(str_contains($readingCss,'max-width:700px') &&
+check_journal(str_contains($readingCss,'max-width:1140px') &&
     str_contains($readingCss,'.iw-reading-masthead') &&
     str_contains($readingCss,'@media(max-width:520px)'),
-    'Reading mode needs narrow desktop column and compact phone layout.');
+    'Article content must match public website grid and adapt to phone widths.');
+check_journal(str_contains($detail,'class="iw-article-body"') &&
+    !str_contains($detail,'class="iw-article-body rich-text"') &&
+    str_contains($readingCss,'background:transparent!important;border:0!important;') &&
+    str_contains($readingCss,'box-shadow:none!important;padding:0!important;'),
+    'Article text must sit directly on page background without generic rich-text card or shadow.');
+check_journal(str_contains($readingCss,'max-width:none;') &&
+    str_contains($readingCss,'font:400 clamp(16px,1.4vw,18px)'),
+    'Reading layout must not be capped at 700px or use overly small text.');
+$homeSource = file_get_contents($root . '/views/public-home-clean.php');
+$homeCoverCss = file_get_contents($root . '/assets/css/site-launch-polish.css');
+check_journal(str_contains($homeSource,'iw-home-journal-no-cover') &&
+    str_contains($homeSource,'iw-home-journal-art') &&
+    str_contains($homeSource,'data-art-variant=') &&
+    str_contains($homeSource,'if($insightImage!==\'\')'),
+    'Homepage Insights must keep real uploaded media and render original branded fallback artwork.');
+check_journal(str_contains($homeCoverCss,'iw-home-journal-no-cover[data-art-variant="3"]') &&
+    str_contains($homeCoverCss,'linear-gradient(127deg,#302c29,#5c4536 57%,#d66d2b)') &&
+    str_contains($homeCoverCss,'.iw-home-journal-art::before') &&
+    str_contains($homeCoverCss,'.iw-home-journal-art::after'),
+    'Homepage Insights must use the same four-gradient, abstract shape treatment as Related Insights.');
 check_journal(str_contains($readingCss,'body.page-public-article .iw-sitewide-cta{display:none}'),
     'Article reading must not be interrupted by the unrelated large selling banner.');
 $journalPosition = strpos($header,'id="iw-journal-css"');
