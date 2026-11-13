@@ -96,7 +96,8 @@ function iw_chat_public_request(): void
         if ($action === 'start') {
             $name = trim((string)($_POST['name'] ?? ''));
             $email = strtolower(trim((string)($_POST['email'] ?? '')));
-            if (mb_strlen($name) < 2 || mb_strlen($name) > 150
+            if ((function_exists('mb_strlen') ? mb_strlen($name) : strlen($name)) < 2
+                || (function_exists('mb_strlen') ? mb_strlen($name) : strlen($name)) > 150
                 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
                 throw new InvalidArgumentException('Enter your name and a valid email address.');
             }
@@ -141,7 +142,7 @@ function iw_chat_public_request(): void
                 ['id'=>$threadId]);
             if ($action === 'send') {
                 $body = trim((string)($_POST['message'] ?? ''));
-                if ($body === '' || mb_strlen($body) > 2000) {
+                if ($body === '' || (function_exists('mb_strlen') ? mb_strlen($body) : strlen($body)) > 2000) {
                     throw new InvalidArgumentException('Message must be between 1 and 2,000 characters.');
                 }
                 $freq = db_one("SELECT COUNT(*) AS n FROM iw_live_messages
@@ -219,7 +220,7 @@ function iw_chat_staff_request(): void
                     return;
                 }
                 $body = trim((string)($_POST['message'] ?? ''));
-                if ($body === '' || mb_strlen($body) > 2000) {
+                if ($body === '' || (function_exists('mb_strlen') ? mb_strlen($body) : strlen($body)) > 2000) {
                     throw new InvalidArgumentException('Enter a reply of up to 2,000 characters.');
                 }
                 db_execute("INSERT INTO iw_live_messages (thread_id,sender,staff_user_id,body,created_at)
