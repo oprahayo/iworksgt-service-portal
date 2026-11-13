@@ -23,7 +23,8 @@ $expect(!str_contains($footer, 'id="iwPublicHelpDialog"'), 'Legacy support modal
 $expect(str_contains($js, 'data-iw-help-open'), 'Existing public help links must still work.');
 $expect(str_contains($widget, "csrf_token()") && str_contains($js, "data.append('csrf_token'"), 'Enquiry forms must use server-provided CSRF tokens.');
 $expect(str_contains($router, "save_website_lead("), 'Chat and booking requests must reach the existing lead backend.');
-$expect(str_contains($js, "'website_lead'"), 'Avoid adding a non-existent support endpoint.');
+$expect(str_contains($js, "liveApi('start'") && str_contains($js, "liveApi('send'") && str_contains($js, "liveApi('poll'"), 'Visitor chat must use persistent live conversation backend.');
+$expect(str_contains($js, "'website_lead'"), 'Consultation form must still route to existing lead handler.');
 $expect(str_contains($js, "'X-Requested-With': 'XMLHttpRequest'"), 'Lead requests must use server JSON responses.');
 $expect(str_contains($widget, 'data-assist-end-accept') && str_contains($widget, 'data-assist-rate-skip'), 'End chat confirmation and rating skip must be available.');
 foreach ([1, 2, 3, 4, 5] as $score) {
