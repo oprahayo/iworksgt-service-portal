@@ -217,8 +217,8 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <meta property="og:title" content="<?= e($title ?: app_name()) ?>">
   <meta property="og:description" content="<?= e($seoDescriptionText) ?>">
   <?php if ($favicon !== ''): ?>
-    <link rel="icon" type="image/png" href="<?= e($favicon) ?>">
-    <link rel="apple-touch-icon" href="<?= e($favicon) ?>">
+    <link rel="icon" type="<?= e(favicon_mime_type($favicon)) ?>" href="<?= e($favicon) ?>" sizes="any">
+    <?php if (favicon_mime_type($favicon) !== 'image/svg+xml'): ?><link rel="apple-touch-icon" href="<?= e($favicon) ?>"><?php endif; ?>
   <?php endif; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
