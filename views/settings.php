@@ -4,24 +4,11 @@
 
 <?php $partnerLogos = website_partner_logos(); ?>
 
-<div class="card mb-3 border-warning-subtle" id="cacPricingSettings">
-  <div class="card-body">
-    <h2 class="h5 mb-2"><i class="bi bi-calculator"></i> CAC registration pricing</h2>
-    <p class="small text-muted">These are iWorks service prices, not necessarily CAC statutory charges. Business name: ₦26,000 for sole proprietorship plus ₦15,000 for each additional partner. Company base pricing comes from the Company Registration service record and extra-director fee can be set below.</p>
-    <form method="post" action="<?= e(url('settings')) ?>" class="row g-3">
-      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-      <input type="hidden" name="form_action" value="save_cac_pricing">
-      <div class="col-md-4"><label class="form-label" for="cacBaseFee">Business name base fee (NGN)</label>
-        <input class="form-control" id="cacBaseFee" type="number" min="0" max="100000000" step="0.01" name="cac_business_base_ngn" value="<?= e((string)cac_money_setting('cac_business_base_ngn',26000)) ?>" required>
-      </div>
-      <div class="col-md-4"><label class="form-label" for="cacPartnerFee">Each additional proprietor (NGN)</label>
-        <input class="form-control" id="cacPartnerFee" type="number" min="0" max="100000000" step="0.01" name="cac_business_partner_extra_ngn" value="<?= e((string)cac_money_setting('cac_business_partner_extra_ngn',15000)) ?>" required>
-      </div>
-      <div class="col-md-4"><label class="form-label" for="cacDirectorFee">Each additional company director (NGN)</label>
-        <input class="form-control" id="cacDirectorFee" type="number" min="0" max="100000000" step="0.01" name="cac_company_extra_director_ngn" value="<?= e((string)cac_money_setting('cac_company_extra_director_ngn',0)) ?>" required>
-      </div>
-      <div class="col-12"><button class="btn btn-primary" type="submit">Save CAC registration pricing</button></div>
-    </form>
+<div class="card mb-3" id="cacPricingSettings">
+  <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div><h2 class="h6 mb-1">Business Registration pricing</h2>
+      <p class="small text-muted mb-0">All CAC Business Name, Partnership, Limited Company and optional service prices are managed centrally, without conflicting product prices.</p></div>
+    <a class="btn btn-outline-primary btn-sm" href="<?= e(url('services',['section'=>'cac-pricing'])) ?>">Open Business Registration pricing</a>
   </div>
 </div>
 <div class="accordion settings-accordion" id="settingsAccordion">
