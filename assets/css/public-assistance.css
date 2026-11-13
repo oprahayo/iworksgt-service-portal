@@ -111,3 +111,39 @@
 .iw-assist .iw-assist-primary:hover,.iw-assist .iw-assist-chat-compose button:hover,.iw-assist .iw-assist-launcher:hover{background:var(--iw-assist-accent-strong)}
 .iw-assist-nudge-actions button:first-child:hover{background:var(--iw-assist-accent-strong)}
 .iw-assist .iw-assist-end-sheet{max-height:85%;overflow:auto}
+
+/* Digital consultation date/time selector; short, accessible and responsive. */
+.iw-assist-slot-fieldset{border:0;padding:0;margin:0;min-width:0}
+.iw-assist-slot-fieldset legend{font-size:12px;font-weight:750;color:#24303a;margin:0 0 8px}
+.iw-assist-slot-fieldset legend span{color:#c43b24}
+.iw-assist-slot-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 10px}
+.iw-assist-slot-navigation strong{font-size:12px;line-height:1.4;font-weight:750;color:#22272d;text-align:center}
+.iw-assist-slot-navigation button{width:33px;height:33px;flex:none;display:grid;place-items:center;background:#fff;border:1px solid #e3d9d0;border-radius:9px;color:#d45c1d;font-size:13px}
+.iw-assist-slot-navigation button:disabled{opacity:.38;cursor:default}
+.iw-assist-date-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.iw-assist-date-choice{min-width:0;min-height:75px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;border:1px solid #e0e3e6;border-radius:10px;background:#fff;color:#34383d;line-height:1}
+.iw-assist-date-choice small{font-size:10px;color:#77818b;line-height:1.2}
+.iw-assist-date-choice strong{font-size:19px;line-height:1.2;font-weight:750}
+.iw-assist-date-choice span{font-size:10px;color:#77818b}
+.iw-assist-date-choice[aria-pressed=true]{border:2px solid #e86720;background:#fff3e9;color:#9d420d}
+.iw-assist-date-choice[aria-pressed=true] :is(small,span){color:#985028}
+.iw-assist-time-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;max-height:156px;overflow-y:auto;padding:2px 2px 2px 0}
+.iw-assist-time-choice{min-height:38px;padding:8px 4px;border:1px solid #dde1e5;border-radius:9px;background:#fff;color:#353b42;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums}
+.iw-assist-time-choice:hover,.iw-assist-date-choice:hover{border-color:#dc7134;background:#fff7f0}
+.iw-assist-time-choice[aria-pressed=true]{border:2px solid #e86720;background:#fff1e5;color:#913c0d}
+.iw-assist-time-hint{grid-column:1/-1;font-size:12px;color:#77818b;line-height:1.5;margin:0;padding:12px 9px;background:#f8f9fa;border-radius:9px}
+.iw-assist-slot-note{display:flex;align-items:flex-start;gap:7px;margin:-5px 0 0;font-size:11px;line-height:1.55;color:#686f77}
+.iw-assist-slot-note i{flex:none;color:#df671e;font-size:14px}
+.iw-assist-slot-fieldset button:focus-visible{outline:3px solid #f6b787;outline-offset:2px}
+/* A five-point emotional scale, not five numeric score buttons. */
+.iw-assist-ratings{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:12px 0 10px}
+.iw-assist-ratings button{width:auto;height:auto;min-width:0;min-height:64px;padding:7px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #e2e3e8;border-radius:10px;background:#fff;color:#26282c}
+.iw-assist-ratings button span{font-size:23px;line-height:1}
+.iw-assist-ratings button small{font-size:9px;font-weight:650;line-height:1.1}
+.iw-assist-ratings button:hover,.iw-assist-ratings button:focus-visible{border-color:#e86720;background:#fff6ed;color:#9c480c}
+@media(max-width:400px){
+  .iw-assist-date-options{gap:5px}
+  .iw-assist-date-choice{min-height:68px}
+  .iw-assist-time-options{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .iw-assist-ratings button small{font-size:8px}
+}
