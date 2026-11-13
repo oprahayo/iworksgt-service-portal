@@ -1894,7 +1894,7 @@ try {
             if (has_role(['client']) && !method_is('POST')
                 && (string) ($_GET['action'] ?? '') === 'new') {
                 $requested = iworks_order_slug($_GET['service'] ?? iworks_order_intent_peek());
-                if (in_array($requested,['business-name-registration','business-name-registration-cac-nigeria'],true)) {
+                if (in_array($requested,['business-name-registration','business-name-registration-cac-nigeria','cac-business-name'],true)) {
                     redirect(url('cac_filing',['type'=>'business']));
                 }
                 if ($requested === 'company-registration') {
