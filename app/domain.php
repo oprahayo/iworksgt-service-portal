@@ -8614,93 +8614,174 @@ function verify_stripe_webhook_signature(string $payload, string $signatureHeade
     return false;
 }
 
+/**
+ * Transactional finalization of a server-verified gateway payment.
+ * No email, webhook side effect or client notification is sent before commit.
+ */
 function mark_gateway_payment_confirmed(int $paymentId, ?string $transactionId, array $payload): void
 {
-    $payment = db_one('SELECT * FROM job_payments WHERE id = :id LIMIT 1', ['id' => $paymentId]);
-    if (!$payment) {
-        throw new RuntimeException('Payment record not found.');
-    }
-
-    if ($payment['status'] === 'confirmed') {
-        return;
-    }
-
-    $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES);
-    db_execute(
-        'UPDATE job_payments
-         SET status = :status, reviewed_by = :reviewed_by, reviewed_at = :reviewed_at, confirmed_at = :confirmed_at,
-             rejection_reason = :rejection_reason, gateway_transaction_id = :gateway_transaction_id, gateway_payload = :gateway_payload
-         WHERE id = :id',
-        [
-            'status' => 'confirmed',
-            'reviewed_by' => null,
-            'reviewed_at' => now(),
-            'confirmed_at' => now(),
-            'rejection_reason' => null,
-            'gateway_transaction_id' => $transactionId,
-            'gateway_payload' => $payloadJson,
-            'id' => $paymentId,
-        ]
-    );
-
-    $invoice = db_one('SELECT * FROM invoices WHERE id = :id LIMIT 1', ['id' => (int) $payment['invoice_id']]);
-    if (!$invoice) {
-        throw new RuntimeException('Invoice not found for this payment.');
-    }
-
-    mark_invoice_jobs_payment_state($invoice, 'paid', (string) $payment['reference']);
-    db_execute("UPDATE invoices SET status = 'paid' WHERE id = :id", ['id' => (int) $payment['invoice_id']]);
-
-    add_comment((int) $payment['job_id'], (int) $payment['client_id'], 'Gateway payment confirmed. Reference: ' . (string) $payment['reference']);
-    create_notification((int) $payment['client_id'], 'Payment confirmed', 'Your payment was confirmed automatically and your order is now active.', 'invoice.php?id=' . (int) $payment['invoice_id']);
-    notify_roles(['admin', 'finance'], 'Payment auto-confirmed', 'A gateway payment has been confirmed for invoice #' . (int) $payment['invoice_id'] . '.', url('payments'));
-
-    if (!empty($invoice['payment_group'])) {
-        $jobs = db_all('SELECT id FROM jobs WHERE payment_group = :payment_group', ['payment_group' => (string) $invoice['payment_group']]);
-        foreach ($jobs as $row) {
-            maybe_accrue_commission((int) $row['id']);
+    $pdo = db();
+    $pdo->beginTransaction();
+    $firstConfirmation = false;
+    $payment = [];
+    $invoice = [];
+    $jobIds = [];
+    try {
+        $payment = db_one('SELECT * FROM job_payments WHERE id = :id FOR UPDATE', ['id' => $paymentId]) ?? [];
+        if (!$payment) {
+            throw new RuntimeException('Payment record not found.');
         }
-    } else {
-        maybe_accrue_commission((int) $payment['job_id']);
+        $invoice = db_one('SELECT * FROM invoices WHERE id = :id FOR UPDATE',
+            ['id' => (int) $payment['invoice_id']]) ?? [];
+        if (!$invoice || (int) $invoice['client_id'] !== (int) $payment['client_id']) {
+            throw new RuntimeException('Invoice relationship is invalid.');
+        }
+        if (($invoice['status'] ?? '') === 'void') {
+            throw new RuntimeException('Voided invoice requires manual payment reconciliation.');
+        }
+        $firstConfirmation = (string) $payment['status'] !== 'confirmed';
+        if (!$firstConfirmation && (string) $invoice['status'] === 'paid') {
+            $pdo->commit();
+            return; // Duplicate event: never notify or accrue twice.
+        }
+        if ($firstConfirmation && (string) $invoice['status'] === 'paid') {
+            throw new RuntimeException('Already-paid invoice needs duplicate-charge review.');
+        }
+
+        $tx = trim((string) $transactionId);
+        if ($tx !== '') {
+            // Also enforce a UNIQUE gateway/provider transaction constraint
+            // in the controlled F09 schema migration before production rollout.
+            $other = db_one(
+                "SELECT id FROM job_payments
+                 WHERE gateway_provider = :provider AND gateway_transaction_id = :tx
+                   AND id <> :id AND status = 'confirmed' LIMIT 1 FOR UPDATE",
+                ['provider' => (string) $payment['gateway_provider'], 'tx' => $tx, 'id' => $paymentId]
+            );
+            if ($other) {
+                throw new RuntimeException('Gateway transaction is already associated with another payment.');
+            }
+        }
+
+        $group = trim((string) ($invoice['payment_group'] ?? ''));
+        if ($group !== '') {
+            $rows = db_all('SELECT id FROM jobs WHERE payment_group = :group_key FOR UPDATE',
+                ['group_key' => $group]);
+            $jobIds = array_values(array_map(static fn(array $row): int => (int) $row['id'], $rows));
+            if (!$jobIds) {
+                throw new RuntimeException('Invoice jobs were not found.');
+            }
+            db_execute("UPDATE jobs SET payment_status = 'paid',
+                payment_reference = :reference, updated_at = :at WHERE payment_group = :group_key",
+                ['reference' => (string) $payment['reference'], 'at' => now(), 'group_key' => $group]);
+        } else {
+            $jobId = (int) ($payment['job_id'] ?? 0);
+            $job = db_one('SELECT id FROM jobs WHERE id = :id FOR UPDATE', ['id' => $jobId]);
+            if (!$job) {
+                throw new RuntimeException('Invoice job was not found.');
+            }
+            $jobIds = [$jobId];
+            db_execute("UPDATE jobs SET payment_status = 'paid',
+                payment_reference = :reference, updated_at = :at WHERE id = :id",
+                ['reference' => (string) $payment['reference'], 'at' => now(), 'id' => $jobId]);
+        }
+        db_execute("UPDATE invoices SET status = 'paid' WHERE id = :id",
+            ['id' => (int) $invoice['id']]);
+        db_execute(
+            "UPDATE job_payments SET status = 'confirmed',
+               reviewed_by = NULL, reviewed_at = :reviewed_at, confirmed_at = :confirmed_at,
+               rejection_reason = NULL, gateway_transaction_id = :tx, gateway_payload = :payload
+             WHERE id = :id",
+            [
+                'reviewed_at' => now(), 'confirmed_at' => now(),
+                'tx' => $tx !== '' ? $tx : null,
+                'payload' => json_encode($payload, JSON_UNESCAPED_SLASHES),
+                'id' => $paymentId,
+            ]
+        );
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
+
+    // All downstream effects occur AFTER the financial transaction commits.
+    // A durable retryable notification/outbox migration is tracked under F06.
+    foreach ($jobIds as $jobId) {
+        maybe_prepare_job_intake_requirements($jobId, (int) $payment['client_id'], 'payment_confirmed');
+        maybe_accrue_commission($jobId);
+    }
+    if ($firstConfirmation) {
+        add_system_job_comment((int) $payment['job_id'], (int) $payment['client_id'],
+            'Gateway payment confirmed. Reference: ' . (string) $payment['reference'], false);
+        create_notification((int) $payment['client_id'], 'Payment confirmed',
+            'Your payment was confirmed automatically and your order is now active.',
+            'invoice.php?id=' . (int) $payment['invoice_id']);
+        notify_roles(['admin', 'finance'], 'Payment auto-confirmed',
+            'A gateway payment has been confirmed for invoice #' . (int) $payment['invoice_id'] . '.',
+            url('payments'));
     }
 }
 
+/** A delayed or repeated negative event must never downgrade paid records. */
 function mark_gateway_payment_rejected(int $paymentId, string $reason, array $payload): void
 {
-    $payment = db_one('SELECT * FROM job_payments WHERE id = :id LIMIT 1', ['id' => $paymentId]);
-    if (!$payment) {
-        throw new RuntimeException('Payment record not found.');
-    }
-
-    $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES);
-    db_execute(
-        'UPDATE job_payments
-         SET status = :status, reviewed_by = :reviewed_by, reviewed_at = :reviewed_at, rejection_reason = :rejection_reason, gateway_payload = :gateway_payload
-         WHERE id = :id',
-        [
-            'status' => 'rejected',
-            'reviewed_by' => null,
-            'reviewed_at' => now(),
-            'rejection_reason' => $reason,
-            'gateway_payload' => $payloadJson,
-            'id' => $paymentId,
-        ]
-    );
-
-    $confirmedCount = (int) (db_one(
-        "SELECT COUNT(*) AS c FROM job_payments WHERE invoice_id = :invoice_id AND status = 'confirmed'",
-        ['invoice_id' => (int) $payment['invoice_id']]
-    )['c'] ?? 0);
-
-    if ($confirmedCount === 0) {
-        $invoice = db_one('SELECT * FROM invoices WHERE id = :id LIMIT 1', ['id' => (int) $payment['invoice_id']]);
-        if ($invoice) {
-            mark_invoice_jobs_payment_state($invoice, 'unpaid');
+    $pdo = db();
+    $pdo->beginTransaction();
+    $payment = [];
+    try {
+        $payment = db_one('SELECT * FROM job_payments WHERE id = :id FOR UPDATE', ['id' => $paymentId]) ?? [];
+        if (!$payment) {
+            throw new RuntimeException('Payment record not found.');
         }
-        db_execute("UPDATE invoices SET status = 'issued' WHERE id = :id", ['id' => (int) $payment['invoice_id']]);
-    }
+        if (in_array((string) $payment['status'], ['confirmed', 'rejected'], true)) {
+            $pdo->commit();
+            return; // Stale failure, replay or previously rejected event.
+        }
 
-    create_notification((int) $payment['client_id'], 'Payment failed', 'Automatic payment verification failed. Please try again or use another method.', 'invoice.php?id=' . (int) $payment['invoice_id']);
+        $invoice = db_one('SELECT * FROM invoices WHERE id = :id FOR UPDATE',
+            ['id' => (int) $payment['invoice_id']]);
+        if (!$invoice) {
+            throw new RuntimeException('Invoice for rejected payment was not found.');
+        }
+        db_execute(
+            "UPDATE job_payments SET status = 'rejected', reviewed_by = NULL,
+             reviewed_at = :at, rejection_reason = :reason, gateway_payload = :payload
+             WHERE id = :id AND status = 'submitted'",
+            [
+                'at' => now(), 'reason' => $reason,
+                'payload' => json_encode($payload, JSON_UNESCAPED_SLASHES),
+                'id' => $paymentId,
+            ]
+        );
+        $confirmed = (int) (db_one(
+            "SELECT COUNT(*) AS n FROM job_payments
+             WHERE invoice_id = :id AND status = 'confirmed'",
+            ['id' => (int) $payment['invoice_id']]
+        )['n'] ?? 0);
+        if ($confirmed === 0 && (string) $invoice['status'] !== 'paid'
+            && (string) $invoice['status'] !== 'void') {
+            $group = trim((string) ($invoice['payment_group'] ?? ''));
+            if ($group !== '') {
+                db_execute("UPDATE jobs SET payment_status = 'unpaid', updated_at = :at
+                    WHERE payment_group = :group_key AND payment_status <> 'paid'",
+                    ['at' => now(), 'group_key' => $group]);
+            } else {
+                db_execute("UPDATE jobs SET payment_status = 'unpaid', updated_at = :at
+                    WHERE id = :id AND payment_status <> 'paid'",
+                    ['at' => now(), 'id' => (int) $payment['job_id']]);
+            }
+            db_execute("UPDATE invoices SET status = 'issued' WHERE id = :id",
+                ['id' => (int) $invoice['id']]);
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
+    create_notification((int) $payment['client_id'], 'Payment failed',
+        'Automatic payment verification failed. Please try again or use another method.',
+        'invoice.php?id=' . (int) $payment['invoice_id']);
 }
 
 function gateway_return_redirect_url(array $payment, bool $success): string
