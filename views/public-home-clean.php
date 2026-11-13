@@ -53,6 +53,18 @@ $primaryHref = normalize_public_href(
     trim((string) ($heroPrimary['href'] ?? public_url('services'))),
     public_url('services')
 );
+// Old CMS defaults pointed the public Explore Services CTA at the private
+// portal host, which can render a management route instead of the catalogue.
+$heroUrlHost = strtolower((string)(parse_url($primaryHref, PHP_URL_HOST) ?? ''));
+$portalUrlHost = function_exists('portal_base_url')
+    ? strtolower((string)(parse_url(portal_base_url(), PHP_URL_HOST) ?? ''))
+    : 'portal.iworksgt.com';
+$heroUrlPath = rtrim((string)(parse_url($primaryHref, PHP_URL_PATH) ?? ''), '/');
+if ($heroUrlHost !== '' && $heroUrlHost === $portalUrlHost
+    && in_array($heroUrlPath, ['/services','/index.php'], true)) {
+    $primaryHref = public_url('services');
+}
+
 
 $catalog = array_values(array_filter(is_array($publicServices ?? null) ? $publicServices : [], static function ($service): bool {
     if (!is_array($service)) {
@@ -85,7 +97,7 @@ $findService = static function (array $terms, string $category) use ($catalog): 
     return public_url('services', ['category' => $category]);
 };
 
-$businessUrl = $findService(['business name registration', 'company registration'], 'business-registration');
+$businessUrl = $findService(['business registration','company registration','business name registration'], 'business-registration');
 $trademarkUrl = $findService(['trademark'], 'trademark');
 $websiteUrl = $findService(['website design', 'domain & web hosting'], 'growth');
 

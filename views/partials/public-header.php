@@ -163,6 +163,12 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/editorial-brand.css')) ?>?v=20261112a">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-editorial-refinement.css')) ?>?v=20261113-live1">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/brand-color-pass.css')) ?>?v=20261113-live1">
+  <?php $iwLaunchPolishCss = __DIR__.'/../../assets/css/site-launch-polish.css'; ?>
+  <?php if (is_file($iwLaunchPolishCss) && is_readable($iwLaunchPolishCss)): ?>
+    <style id="iw-site-launch-polish"><?= (string)file_get_contents($iwLaunchPolishCss) ?></style>
+  <?php else: ?>
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261113-launch2">
+  <?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;

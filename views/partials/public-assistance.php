@@ -62,8 +62,14 @@ $iwAssistEndpoint = public_url('home');
         <div class="iw-assist-sheet-rate" data-assist-end-rate hidden>
           <strong>How was your experience?</strong>
           <p>Rate this conversation, or skip.</p>
-          <div class="iw-assist-ratings" role="group" aria-label="Rate the conversation from 1 to 5">
-            <?php foreach ([1, 2, 3, 4, 5] as $score): ?><button type="button" data-assist-rate="<?= $score ?>" aria-label="Rate <?= $score ?> out of 5"><?= $score ?></button><?php endforeach; ?>
+          <div class="iw-assist-ratings" role="group" aria-label="How was your support experience?">
+            <?php foreach ([1=>'Very unhappy',2=>'Unhappy',3=>'Okay',4=>'Happy',5=>'Excellent'] as $score=>$label): ?>
+              <?php $icon=[1=>'😠',2=>'🙁',3=>'😐',4=>'🙂',5=>'😍'][$score]; ?>
+              <button type="button" data-assist-rate="<?= (int)$score ?>" aria-label="<?= e($label) ?>" title="<?= e($label) ?>">
+                <span aria-hidden="true"><?= $icon ?></span>
+                <small><?= e($label) ?></small>
+              </button>
+            <?php endforeach; ?>
           </div>
           <button type="button" class="iw-assist-skip" data-assist-rate-skip>Skip</button>
         </div>
@@ -87,7 +93,7 @@ $iwAssistEndpoint = public_url('home');
       <button type="button" data-assist-book-close aria-label="Close consultation panel"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     </header>
     <div class="iw-assist-book-content" id="iwAssistBookContent">
-      <div class="iw-assist-book-intro"><i class="bi bi-calendar2-week" aria-hidden="true"></i><h3>Tell us when you're available</h3><p>Choose a preferred date and time. Our team will email you to confirm availability before any meeting is scheduled.</p></div>
+      <div class="iw-assist-book-intro"><i class="bi bi-calendar2-week" aria-hidden="true"></i><h3>Choose a consultation time</h3><p>Pick a weekday and preferred 15-minute consultation start time. We will confirm it by email.</p></div>
       <form id="iwAssistBookForm">
         <fieldset><legend>What can we help with?</legend>
           <label class="iw-assist-radio"><input type="radio" name="stage" value="Exploring options" checked> I'm exploring my options</label>
@@ -100,11 +106,23 @@ $iwAssistEndpoint = public_url('home');
         </div>
         <label>Location or country <span aria-hidden="true">*</span><input name="country" autocomplete="country-name" maxlength="100" required placeholder="e.g. Nigeria"></label>
         <label>What would you like to discuss? <textarea name="notes" rows="3" maxlength="1000" placeholder="Briefly describe your question or project"></textarea></label>
-        <div class="iw-assist-book-grid">
-          <label>Preferred date <span aria-hidden="true">*</span><input name="date" type="date" required></label>
-          <label>Preferred time <span aria-hidden="true">*</span><input name="time" type="time" required></label>
-        </div>
-        <p class="iw-assist-tz"><i class="bi bi-globe" aria-hidden="true"></i> Your timezone: <strong id="iwAssistTimezone">Local time</strong></p>
+        <fieldset class="iw-assist-slot-fieldset" id="iwAssistDatePicker">
+          <legend>Preferred date <span aria-hidden="true">*</span></legend>
+          <div class="iw-assist-slot-navigation">
+            <button type="button" data-assist-dates-prev aria-label="Previous dates" disabled><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+            <strong id="iwAssistDateRange" aria-live="polite">Choose a day</strong>
+            <button type="button" data-assist-dates-next aria-label="More dates"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+          </div>
+          <div class="iw-assist-date-options" id="iwAssistDateOptions" role="group" aria-label="Select a preferred consultation date"></div>
+          <input type="hidden" name="date" id="iwAssistSelectedDate">
+        </fieldset>
+        <fieldset class="iw-assist-slot-fieldset" id="iwAssistTimePicker">
+          <legend>Preferred time <span aria-hidden="true">*</span></legend>
+          <div class="iw-assist-time-options" id="iwAssistTimeOptions" role="group" aria-label="Select a preferred consultation time"></div>
+          <input type="hidden" name="time" id="iwAssistSelectedTime">
+        </fieldset>
+        <p class="iw-assist-tz"><i class="bi bi-globe" aria-hidden="true"></i> Requested times in <strong>West Africa Time (Lagos, UTC+1)</strong>. Your local timezone: <strong id="iwAssistTimezone">Local time</strong></p>
+        <p class="iw-assist-slot-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Choose one of the suggested request times. Dates and times are not live availability; our team confirms the meeting before it is booked.</p>
         <fieldset class="iw-assist-guests">
           <legend>Additional guests <small>(optional)</small></legend>
           <div id="iwAssistGuestList"></div>

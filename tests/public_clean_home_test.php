@@ -95,4 +95,23 @@ $customHtml = (string) ob_get_clean();
 check_home(str_contains($customHtml, 'A tailored headline from the Website Editor'), 'Custom hero headline should not be overwritten.');
 check_home(str_contains($customHtml, 'Short custom copy entered by the administrator.'), 'Custom hero introduction should not be overwritten.');
 
+
+// Regress a formerly broken CMS destination that sent public visitors to
+// portal /services instead of the apex public service catalogue.
+$layout[0]['data']['primaryCta'] = ['label'=>'Explore services',
+    'href'=>'https://portal.iworksgt.com/services'];
+$publicServices[0] = [
+    'id'=>1,'name'=>'Business Registration','slug'=>'company-registration',
+    'category'=>'business-registration','price'=>26000,
+];
+ob_start();
+require __DIR__ . '/../views/public-home-clean.php';
+$fixedLinksHtml=(string)ob_get_clean();
+check_home(!str_contains($fixedLinksHtml,'href="https://portal.iworksgt.com/services"'),
+    'Old CMS portal services CTA must not send visitors to a management route.');
+check_home(str_contains($fixedLinksHtml,'href="/services"'),
+    'Explore Services must use the public catalogue URL.');
+check_home(str_contains($fixedLinksHtml,'href="/services/company-registration"'),
+    'Homepage Business Registration must use the unified legal pathway product.');
+
 echo "public_clean_home_test passed\n";

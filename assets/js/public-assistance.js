@@ -74,8 +74,104 @@
     function localDateISO(d) {
       return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
     }
+    // Request candidates, not actual diary availability. All displayed start
+    // times are explicitly in Lagos WAT (UTC+1), without an implicit local
+    // timezone conversion or a false confirmed-booking promise.
     var dateField = bookForm.elements.namedItem('date');
-    if (dateField) dateField.min = localDateISO(new Date());
+    var timeField = bookForm.elements.namedItem('time');
+    var dateOptions = document.getElementById('iwAssistDateOptions');
+    var timeOptions = document.getElementById('iwAssistTimeOptions');
+    var dateRange = document.getElementById('iwAssistDateRange');
+    var prevDates = root.querySelector('[data-assist-dates-prev]');
+    var nextDates = root.querySelector('[data-assist-dates-next]');
+    var datePage = 0;
+    var requestDays = [];
+    var requestTimes = [];
+    for (var hr = 9; hr <= 16; hr++) {
+      for (var mn = 0; mn < 60; mn += 30) {
+        if (hr === 16 && mn > 30) break;
+        requestTimes.push(String(hr).padStart(2, '0') + ':' + String(mn).padStart(2, '0'));
+      }
+    }
+    function rebuildRequestDays() {
+      requestDays = [];
+      var today = new Date();
+      today.setHours(12, 0, 0, 0);
+      for (var n = 1; n <= 48 && requestDays.length < 25; n++) {
+        var next = new Date(today);
+        next.setDate(today.getDate() + n);
+        if (next.getDay() === 0 || next.getDay() === 6) continue;
+        requestDays.push({
+          iso: localDateISO(next),
+          dow: new Intl.DateTimeFormat('en', {weekday: 'short'}).format(next),
+          day: String(next.getDate()),
+          month: new Intl.DateTimeFormat('en', {month: 'short'}).format(next),
+          full: new Intl.DateTimeFormat('en', {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'}).format(next)
+        });
+      }
+      if (!requestDays.some(function (d) { return d.iso === dateField.value; })) {
+        dateField.value = '';
+        timeField.value = '';
+      }
+      datePage = 0;
+      renderRequestDays();
+      renderRequestTimes();
+    }
+    function renderRequestDays() {
+      dateOptions.replaceChildren();
+      var current = requestDays.slice(datePage * 5, datePage * 5 + 5);
+      if (!current.length) return;
+      dateRange.textContent = current[0].month + ' ' + current[0].day + ' – ' + current[current.length - 1].month + ' ' + current[current.length - 1].day;
+      prevDates.disabled = datePage === 0;
+      nextDates.disabled = (datePage + 1) * 5 >= requestDays.length;
+      current.forEach(function (day) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'iw-assist-date-choice';
+        button.setAttribute('aria-label', day.full);
+        button.setAttribute('aria-pressed', String(dateField.value === day.iso));
+        button.innerHTML = '<small>' + day.dow + '</small><strong>' + day.day + '</strong><span>' + day.month + '</span>';
+        button.addEventListener('click', function () {
+          dateField.value = day.iso;
+          timeField.value = '';
+          hideError(bookError);
+          renderRequestDays();
+          renderRequestTimes();
+        });
+        dateOptions.appendChild(button);
+      });
+    }
+    function renderRequestTimes() {
+      timeOptions.replaceChildren();
+      if (!dateField.value) {
+        var hint = document.createElement('p');
+        hint.className = 'iw-assist-time-hint';
+        hint.textContent = 'Select a day first to see suggested times.';
+        timeOptions.appendChild(hint);
+        return;
+      }
+      requestTimes.forEach(function (time) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'iw-assist-time-choice';
+        button.textContent = time;
+        button.setAttribute('aria-label', time + ' West Africa Time');
+        button.setAttribute('aria-pressed', String(timeField.value === time));
+        button.addEventListener('click', function () {
+          timeField.value = time;
+          hideError(bookError);
+          renderRequestTimes();
+        });
+        timeOptions.appendChild(button);
+      });
+    }
+    if (prevDates) prevDates.addEventListener('click', function () {
+      if (datePage > 0) { datePage--; renderRequestDays(); }
+    });
+    if (nextDates) nextDates.addEventListener('click', function () {
+      if ((datePage + 1) * 5 < requestDays.length) { datePage++; renderRequestDays(); }
+    });
+    rebuildRequestDays();
 
     try {
       var saved = JSON.parse(getStore('chat') || 'null');
@@ -187,6 +283,7 @@
       focusReturn = trigger || document.activeElement;
       hideNudge(true);
       chat.hidden = false;
+      document.body.classList.add('iw-assist-chat-open');
       launcher.hidden = true;
       launcher.setAttribute('aria-expanded', 'true');
       showChatStage();
@@ -200,6 +297,7 @@
     function closeChat() {
       endSheet.hidden = true;
       chat.hidden = true;
+      document.body.classList.remove('iw-assist-chat-open');
       launcher.hidden = false;
       launcher.setAttribute('aria-expanded', 'false');
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
@@ -227,6 +325,7 @@
     }
     function closeBook() {
       book.hidden = true;
+      document.body.classList.remove('iw-assist-book-open');
       backdrop.hidden = true;
       document.body.style.overflow = oldOverflow;
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
@@ -235,7 +334,9 @@
       if (!chat.hidden) closeChat();
       focusReturn = trigger || document.activeElement;
       hideNudge(true);
+      rebuildRequestDays();
       book.hidden = false;
+      document.body.classList.add('iw-assist-book-open');
       backdrop.hidden = false;
       oldOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -423,7 +524,12 @@
       var country = bookForm.elements.namedItem('country').value.trim();
       var date = bookForm.elements.namedItem('date').value;
       var time = bookForm.elements.namedItem('time').value;
-      if (date < localDateISO(new Date())) { showError(bookError, 'Choose today or a future date.'); return; }
+      if (!date || !requestDays.some(function (day) { return day.iso === date; })) {
+        showError(bookError, 'Select a suggested future weekday.'); return;
+      }
+      if (!time || !requestTimes.includes(time)) {
+        showError(bookError, 'Select a suggested start time.'); return;
+      }
       var guests = Array.from(guestList.querySelectorAll('input[type=email]')).map(function (input) { return input.value.trim().toLowerCase(); });
       if ((new Set(guests)).size !== guests.length || guests.includes(email.toLowerCase())) { showError(bookError, 'Each guest needs a different email address.'); return; }
       var stage = bookForm.querySelector('input[name=stage]:checked').value;
@@ -432,9 +538,10 @@
         'CONSULTATION REQUEST — not a confirmed booking',
         'Stage: ' + stage,
         'Country/location: ' + country,
-        'Preferred date: ' + date,
-        'Preferred time: ' + time,
-        'Timezone: ' + tz,
+        'Preferred date (request, unconfirmed): ' + date,
+        'Preferred time (Lagos, Africa/Lagos UTC+1): ' + time,
+        'Visitor local timezone: ' + tz,
+        'Slot status: requested, not live availability or confirmed appointment',
         'Additional guests: ' + (guests.join(', ') || 'None'),
         'Discussion: ' + (notes || 'Not specified'),
         'Origin: public website consultation panel'
