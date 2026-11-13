@@ -457,6 +457,25 @@ CREATE TABLE IF NOT EXISTS media_assets (
     CONSTRAINT fk_media_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Public Insights and admin/agent editorial use this shared table.
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    author_id INT UNSIGNED NOT NULL,
+    slug VARCHAR(190) NOT NULL UNIQUE,
+    title VARCHAR(240) NOT NULL,
+    tag VARCHAR(100) NULL,
+    excerpt TEXT NULL,
+    body_html LONGTEXT NOT NULL,
+    featured_image_id INT UNSIGNED NULL,
+    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    published_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    KEY idx_blog_public (status,published_at),
+    KEY idx_blog_author (author_id,updated_at),
+    CONSTRAINT fk_blog_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS website_leads (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(190) NOT NULL,
