@@ -138,3 +138,5 @@
 @media(prefers-reduced-motion:reduce){
   .iw-cac-journey-progress button{transition:none}
 }
+
+.iw-cac-field-value{margin:5px 0 3px;color:#303944;font-weight:750;font-size:14px;line-height:1.5}
