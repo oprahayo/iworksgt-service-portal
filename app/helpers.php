@@ -1221,13 +1221,48 @@ function ai_ready(): bool
 
 function mail_log_path(): string
 {
-    return __DIR__ . '/../storage/mail.log';
+    // This path must never be beneath the web document root. Production
+    // installations may override the location with a private absolute path.
+    $configured = trim((string) (getenv('IWORKS_PRIVATE_LOG_DIR') ?: ''));
+    $home = trim((string) (getenv('HOME') ?: ($_SERVER['HOME'] ?? '')));
+    $base = $configured !== '' ? $configured : (
+        $home !== '' ? rtrim($home, '/') . '/iworks-private-logs'
+            : rtrim(sys_get_temp_dir(), '/') . '/iworks-private-logs-' . (string) getmyuid()
+    );
+    if (!str_starts_with($base, '/')
+        || preg_match('~(?:^|/)(?:public_html|htdocs|www)(?:/|$)~i', $base) === 1) {
+        throw new RuntimeException('Private mail diagnostics directory is not configured safely.');
+    }
+    if (!is_dir($base) && !@mkdir($base, 0700, true) && !is_dir($base)) {
+        throw new RuntimeException('Private mail diagnostics directory is unavailable.');
+    }
+    return rtrim($base, '/') . '/mail-events.log';
 }
 
 function log_email_message(string $to, string $subject, string $message): void
 {
-    $line = '[' . now() . '] TO=' . $to . ' SUBJECT=' . $subject . ' BODY=' . str_replace(["\r", "\n"], ' ', $message) . PHP_EOL;
-    @file_put_contents(mail_log_path(), $line, FILE_APPEND);
+    // Never persist OTPs, reset URLs, message bodies, raw recipient addresses
+    // or ticket correspondence. Only minimal pseudonymous metadata is useful
+    // for tracing a delivery problem. No customer content is retained.
+    try {
+        $path = mail_log_path();
+        $event = json_encode([
+            'at' => now(),
+            'recipient_sha256' => hash('sha256', strtolower(trim($to))),
+            'subject_sha256' => hash('sha256', $subject),
+            'kind' => 'email_attempt',
+        ], JSON_UNESCAPED_SLASHES);
+        $prior = umask(0077);
+        try {
+            @file_put_contents($path, $event . PHP_EOL, FILE_APPEND | LOCK_EX);
+            @chmod($path, 0600);
+        } finally {
+            umask($prior);
+        }
+    } catch (Throwable $e) {
+        // Failure to write diagnostics must not block a transactional email.
+        error_log('iWorks: private email diagnostics unavailable.');
+    }
 }
 
 function send_email(string $to, string $subject, string $message): bool
