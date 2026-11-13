@@ -123,6 +123,9 @@ function trademark_ensure_schema(): void
     if ($ready) { return; }
     // Existing installs should not require CREATE privilege on every page.
     if (schema_table_exists('trademark_applications')) { $ready = true; return; }
+    if (!iworks_schema_mutation_allowed()) {
+        throw new RuntimeException('The site requires a controlled database schema update.');
+    }
     db_execute("CREATE TABLE IF NOT EXISTS trademark_applications (
         id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
         client_id INT UNSIGNED NOT NULL,
