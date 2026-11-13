@@ -43,7 +43,10 @@ function iworks_support_email_payload(array $ticket, array $agent, array $client
 
     // Only embed a first-party HTTPS logo. Email clients will otherwise show
     // the typographic wordmark; no substitute or invented logo artwork.
-    $logo = trim(logo_path());
+    $rawLogoPath = ltrim(trim(setting('logo_path', '')), '/');
+    $logo = preg_match('~^assets/uploads/branding/[A-Za-z0-9_.-]+\\.(?:png|jpe?g|gif|webp)$~i', $rawLogoPath)
+        ? portal_absolute_url($rawLogoPath)
+        : trim(logo_path());
     $logoHost = strtolower((string) parse_url($logo, PHP_URL_HOST));
     $allowedHosts = array_filter([
         strtolower((string) parse_url(public_base_url(), PHP_URL_HOST)),
