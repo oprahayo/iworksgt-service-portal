@@ -5245,6 +5245,13 @@ function can_access_job(array $user, array $job): bool
     }
 
     if ($user['role'] === 'agent') {
+        // Missing ownership/management fields must never imply a job is in
+        // the unassigned agent pool. The same policy gates pages and files.
+        if (!array_key_exists('agent_id', $job)
+            || !array_key_exists('managed_by_admin_id', $job)
+            || !array_key_exists('payment_status', $job)) {
+            return false;
+        }
         $paymentStatus = (string) ($job['payment_status_effective'] ?? $job['payment_status'] ?? 'unpaid');
         if ($paymentStatus !== 'paid') {
             return false;
@@ -7061,7 +7068,7 @@ function store_uploaded_file(int $jobId, int $userId, array $file, bool $notify 
 function find_file(int $fileId): ?array
 {
     return db_one(
-        'SELECT f.*, j.client_id, j.agent_id, j.payment_status FROM job_files f
+        'SELECT f.*, j.client_id, j.agent_id, j.managed_by_admin_id, j.payment_status FROM job_files f
          JOIN jobs j ON j.id = f.job_id
          WHERE f.id = :id LIMIT 1',
         ['id' => $fileId]
