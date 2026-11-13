@@ -65,6 +65,40 @@ function iworks_customer_published_service(array $service): ?array
     return $service;
 }
 
+
+/**
+ * Two separate customer-facing CAC offers, one underlying service/price editor.
+ * The Enterprise slug is virtual: it does not create a duplicate DB service.
+ * Company pricing remains based on the underlying Ltd record; Business Name
+ * pricing comes from the dedicated admin CAC settings.
+ */
+function iworks_customer_registration_variants(array $service): array
+{
+    if ((string)($service['slug'] ?? '') !== 'company-registration') return [];
+    $base = iworks_customer_published_service($service);
+    if ($base === null) return [];
+
+    $business = $base;
+    $business['slug'] = 'cac-business-name';
+    $business['name'] = 'Business Name (Enterprise)';
+    $business['short_description'] =
+        'For sole proprietors and partnerships. Register your trading name without forming a separate limited company.';
+    $business['_iworks_registration_type'] = 'business';
+
+    $company = $base;
+    $company['slug'] = 'company-registration';
+    $company['name'] = 'Private Limited Company (Ltd)';
+    $company['short_description'] =
+        'For a registered company limited by shares, with one or more directors and shareholders.';
+    $company['_iworks_registration_type'] = 'company';
+    $company['price'] = function_exists('cac_company_quote')
+        ? cac_company_quote(1)
+        : max(0, (float)($service['price'] ?? 0));
+    $company['currency'] = 'NGN';
+
+    return [$business, $company];
+}
+
 /** Reusable, deduplicated published catalogue for both public and portal. */
 function iworks_customer_published_catalogue(array $services): array
 {
@@ -74,6 +108,15 @@ function iworks_customer_published_catalogue(array $services): array
         $item = iworks_customer_published_service($service);
         if ($item === null) continue;
         $slug = (string)($item['slug'] ?? '');
+        if ($slug === 'company-registration') {
+            // Two distinct customer choices backed by one existing CAC
+            // service ID. Do not clone or renumber historical DB records.
+            foreach (iworks_customer_registration_variants($service) as $choice) {
+                $choiceSlug = (string)$choice['slug'];
+                $visible[$choiceSlug] = $choice;
+            }
+            continue;
+        }
         if (!isset($visible[$slug])) $visible[$slug] = $item;
     }
     return array_values($visible);
