@@ -37,7 +37,8 @@ foreach ($clientCatalogue as $catalogItem) {
     $name = trim((string) ($service['name'] ?? 'Service'));
     $category = trim((string) ($service['category'] ?? 'general')) ?: 'general';
     $description = trim((string) preg_replace('/\s+/', ' ', strip_tags((string) ($service['short_description'] ?? ''))));
-    if (stripos($name, 'launch a company package') !== false) { $description = 'Company formation, compliance, branding and launch support.'; }
+    // Retired bundles are filtered by the shared catalogue policy, not
+    // cosmetically renamed on customer-facing cards.
     $description = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $description));
     if ($description === '') { $description = 'View the requirements, fees and next steps for this service.'; }
     $price = (float) ($service['price'] ?? 0);
