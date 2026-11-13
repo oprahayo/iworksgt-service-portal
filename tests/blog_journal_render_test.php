@@ -24,7 +24,7 @@ function check_journal(bool $condition, string $description): void {
     if (!$condition) { throw new RuntimeException($description); }
 }
 $root = dirname(__DIR__);
-$post = static function (string $slug, string $title, string $cover = ''): array {
+$makePost = static function (string $slug, string $title, string $cover = ''): array {
     return [
         'id' => 42, 'slug' => $slug, 'title' => $title,
         'excerpt' => 'Practical steps for founders, from research to registration.',
@@ -36,10 +36,10 @@ $post = static function (string $slug, string $title, string $cover = ''): array
 };
 $fixtureFeed = [
     'items' => [
-        $post('featured-post', 'Doing business in Nigeria', '/uploads/feature.webp'),
-        $post('second-post', 'When to register a business'),
-        $post('third-post', 'Protecting your brand', '/uploads/brand.webp'),
-        $post('fourth-post', 'Grow & scale <carefully>'),
+        $makePost(featured-post', 'Doing business in Nigeria', '/uploads/feature.webp'),
+        $makePost(second-post', 'When to register a business'),
+        $makePost(third-post', 'Protecting your brand', '/uploads/brand.webp'),
+        $makePost(fourth-post', 'Grow & scale <carefully>'),
     ],
     'total'=>32,'page'=>1,'pages'=>4,
 ];
@@ -63,7 +63,7 @@ check_journal(str_contains($listing,'/blog?p=2') && str_contains($listing,'aria-
 check_journal(str_contains($listing,'<time datetime="2026-11-12">'),
     'Article dates must have machine-readable time elements.');
 $fixtureFeed = [
-    'items' => [$post('later-post', 'How to prepare a filing')],
+    'items' => [$makePost(later-post', 'How to prepare a filing')],
     'total'=>32,'page'=>2,'pages'=>4,
 ];
 $_GET = ['p'=>'2'];
@@ -75,8 +75,8 @@ check_journal(!str_contains($pageTwo,'iw-journal-featured-link'),
 check_journal(str_contains($pageTwo,'/blog/later-post') &&
     str_contains($pageTwo,'rel="prev"') && str_contains($pageTwo,'rel="next"'),
     'Subsequent pages must retain articles and previous/next navigation.');
-$blogPost = $post('featured-post', 'Doing business in Nigeria', '/uploads/feature.webp');
-$relatedBlogPosts = [$post('second-post','When to register a business')];
+$blogPost = $makePost(featured-post', 'Doing business in Nigeria', '/uploads/feature.webp');
+$relatedBlogPosts = [$makePost(second-post','When to register a business')];
 $blogComments = [];
 $blogLiked = false;
 $blogLikes = 3;
