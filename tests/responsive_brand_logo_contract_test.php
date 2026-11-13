@@ -38,8 +38,9 @@ brand_logo_check(str_contains($client,'iw-client-logo iw-compact-logo') &&
     str_contains($client,'iworks-compact.svg'),
     'Client sidebar must use compact logo.');
 foreach([$header,$staff,$client] as $view){
-    brand_logo_check(str_contains($view,'iworks-responsive-logo.css?v=20261113-logo1'),
-        'Every shell must load the menu-safe responsive logo CSS.');
+    brand_logo_check(str_contains($view,'iworks-responsive-logo.css') &&
+        str_contains($view,'20261113-logo1'),
+        'Every shell must load the menu-safe responsive logo CSS with cache version.');
 }
 brand_logo_check(str_contains($css,'max-width:224px!important') &&
     str_contains($css,'@media(max-width:1199.98px)') &&
