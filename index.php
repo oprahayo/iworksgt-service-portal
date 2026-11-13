@@ -1430,8 +1430,8 @@ try {
                 try {
                     if ($action==='save_draft') {
                         $newId=cac_filing_save($clientId,$filingId,$filingKind, is_array($_POST['filing'] ?? null) ? $_POST['filing'] : []);
-                        flash('success','Application details saved. Now add identification, photographs and signatures for each person.');
-                        redirect(url('cac_filing',['id'=>$newId]));
+                        flash('success','Details saved securely. Add the identity documents and signatures for each person.');
+                        redirect(url('cac_filing',['id'=>$newId,'step'=>'documents']));
                     }
                     if ($action==='delete_draft') {
                         cac_filing_delete_draft($clientId,$filingId);
