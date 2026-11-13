@@ -157,8 +157,8 @@
       var changes = false;
       newThreads.forEach(function (thread) {
         var id=String(thread.id), inbound=Number(thread.last_inbound_id || 0);
-        if (started && inbound > Number(lastInbound[id] || 0) &&
-            (Object.prototype.hasOwnProperty.call(lastInbound,id) || inbound > 0)) changes = true;
+        if (started && (!Object.prototype.hasOwnProperty.call(lastInbound,id) ||
+              inbound > Number(lastInbound[id] || 0))) changes = true;
         lastInbound[id] = Math.max(Number(lastInbound[id] || 0), inbound);
       });
       if (started && changes) beep();
