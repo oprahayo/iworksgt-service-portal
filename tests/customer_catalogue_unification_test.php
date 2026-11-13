@@ -99,8 +99,8 @@ check_catalogue(str_contains($router,"require __DIR__.'/views/client-service-che
     'Legacy client cart must be bypassed.');
 check_catalogue(str_contains($router,'iworks_customer_can_standard_checkout($requestedService)'),
     'POST cannot bypass product eligibility.');
-check_catalogue(str_contains($router,"unset($payload['agent_id'], $payload['amount']") &&
-    str_contains($router,"$"."payload['title'] = (string)$"."requestedService['name']"),
+check_catalogue(str_contains($router,'unset($payload') &&
+    str_contains($router,'$payload[\'title\'] = (string)$requestedService[\'name\']'),
     'POST cannot override prices and product titles.');
 check_catalogue(str_contains($auth,"return url('cac_filing');"),
     'CAC sign-in must land at the company/business-name structure selector.');
