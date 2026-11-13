@@ -110,4 +110,8 @@ check_catalogue(str_contains($client,"$"."checkoutMode === 'consultation'") &&
     'Public/customer product action must agree on assisted services.');
 check_catalogue(str_contains(file_get_contents($root.'/views/partials/header.php'),
     'customer-focused-checkout.css'),'Customer checkout needs its responsive stylesheet.');
+check_catalogue(str_contains(file_get_contents($root.'/views/services.php'),
+    'Customer: guided Business Registration') &&
+    str_contains(file_get_contents($root.'/views/services.php'),
+    'Not offered to customers'), 'Admin Services must report which records customers can see.');
 echo "customer_catalogue_unification_test passed\n";
