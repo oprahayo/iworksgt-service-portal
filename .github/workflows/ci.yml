@@ -43,6 +43,7 @@ jobs:
           bash -n scripts/deploy_google_seo_mobile_complete.sh
           bash -n scripts/deploy_public_root_split.sh
           bash -n scripts/deploy_admin_mobile_refresh.sh
+          bash tests/deploy_admin_mobile_fixture_test.sh
           bash tests/deploy_split_installer_contract.sh
           bash -n scripts/audit_public_seo_live.sh
 
