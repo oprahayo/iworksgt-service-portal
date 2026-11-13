@@ -1,6 +1,7 @@
 <?php $user = current_user(); ?>
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <h1 class="h4 mb-0">Support Center</h1>
+  <div><span class="iw-ops-eyebrow">SUPPORT</span><h1 class="h4 mb-0">Support Center</h1></div>
+  <?php if (has_role(['admin'])): ?><a class="btn btn-outline-primary btn-sm" href="<?= e(url('live_inbox')) ?>"><i class="bi bi-chat-left-text"></i> Website live chats</a><?php endif; ?>
   <?php if ($user['role'] === 'client'): ?>
     <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#createSupportTicketModal">
       <i class="bi bi-plus-lg"></i> New Ticket
