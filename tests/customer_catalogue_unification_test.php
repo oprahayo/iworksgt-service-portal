@@ -41,7 +41,7 @@ $rows=[
 ];
 $catalogue=iworks_customer_published_catalogue($rows);
 $slugs=array_column($catalogue,'slug');
-check_catalogue(count($catalogue)===5,'Only five current public customer products should remain visible.');
+check_catalogue(count($catalogue)===6,'Two registration choices and four additional current products should be visible.');
 check_catalogue(count(array_unique($slugs))===count($slugs),'Catalogue slugs must be unique.');
 check_catalogue(in_array('company-registration',$slugs,true),'One canonical CAC product must remain.');
 check_catalogue(!in_array('launch-a-company-package',$slugs,true),'Legacy company bundle must never be a new customer purchase.');
@@ -49,9 +49,14 @@ check_catalogue(!in_array('business-name-registration-cac-nigeria',$slugs,true),
 check_catalogue(!in_array('custom-service-system',$slugs,true),'Internal placeholder must never appear.');
 check_catalogue(!in_array('bank-account-opening',$slugs,true),'Banking products must be excluded.');
 $bySlug=array_column($catalogue,null,'slug');
-check_catalogue($bySlug['company-registration']['name']==='Business Registration' &&
-    (float)$bySlug['company-registration']['price']===26000.0,
-    'Public CAC price must be the unified Business Name starting fee, not the old Ltd price.');
+check_catalogue($bySlug['cac-business-name']['name']==='Business Name (Enterprise)' &&
+    (float)$bySlug['cac-business-name']['price']===26000.0,
+    'Enterprise must show the configured Business Name starting fee.');
+check_catalogue($bySlug['company-registration']['name']==='Private Limited Company (Ltd)' &&
+    (float)$bySlug['company-registration']['price']===45000.0,
+    'Ltd must show the company base price, not the Enterprise starting fee.');
+check_catalogue((int)$bySlug['cac-business-name']['id']===(int)$bySlug['company-registration']['id'],
+    'Both choices must use the same real registration product ID without duplicating database rows.');
 check_catalogue($bySlug['company-registration']['_iworks_checkout_mode']==='cac',
     'CAC must use its guided structure-specific intake.');
 check_catalogue($bySlug['trademark']['_iworks_checkout_mode']==='trademark',
@@ -61,7 +66,7 @@ check_catalogue($bySlug['incorporated-trustees']['_iworks_checkout_mode']==='con
     'Specialist NGO/legal products must not use generic checkout.');
 check_catalogue(iworks_customer_can_standard_checkout($bySlug['website-design-development']),
     'Website design should retain ordinary invoice checkout.');
-foreach(['company-registration','trademark','incorporated-trustees','social-enterprise-ltd-by-guarantee'] as $slug) {
+foreach(['cac-business-name','company-registration','trademark','incorporated-trustees','social-enterprise-ltd-by-guarantee'] as $slug) {
     check_catalogue(!iworks_customer_can_standard_checkout($bySlug[$slug]),'Unsafe checkout allowed: '.$slug);
 }
 check_catalogue(!iworks_customer_can_standard_checkout($rows[10]),'Inactive products must not be purchased.');
@@ -108,8 +113,8 @@ check_catalogue(str_contains($client,"$"."checkoutMode === 'consultation'") &&
     str_contains($detail,'Request a specialist quote') &&
     str_contains($services,'Specialist quote'),
     'Public/customer product action must agree on assisted services.');
-check_catalogue(str_contains(file_get_contents($root.'/views/partials/header.php'),
-    'customer-focused-checkout.css'),'Customer checkout needs its responsive stylesheet.');
+check_catalogue(str_contains(file_get_contents($root.'/views/partials/client-header.php'),
+    'customer-focused-checkout.css'),'Customer checkout styles must load from the actual client header, not only the admin shell.');
 check_catalogue(str_contains(file_get_contents($root.'/views/services.php'),
     'Customer: guided Business Registration') &&
     str_contains(file_get_contents($root.'/views/services.php'),
