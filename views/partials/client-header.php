@@ -23,6 +23,9 @@ $clientLogo = logo_path();
   <link rel="stylesheet" href="assets/css/emoji-rating.css?v=20261113-live1">
   <link rel="stylesheet" href="assets/css/cac-registration.css?v=20261113-cac1">
   <link rel="stylesheet" href="assets/css/brand-color-pass.css?v=20261113-live1">
+  <?php if ($clientRoute === 'jobs'): ?>
+    <link rel="stylesheet" href="assets/css/customer-focused-checkout.css?v=20261113-catalog2">
+  <?php endif; ?>
 </head>
 <body class="portal-authenticated iw-client-page <?= e($pageBodyClass ?? '') ?>">
 <div class="portal-layout iw-client-layout">
