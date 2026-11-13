@@ -30,6 +30,18 @@ function cac_money_setting(string $name, float $default): float {
     if (!is_numeric($v)) return $default;
     return max(0, min(100000000, (float)$v));
 }
+/**
+ * Existing self-serve CAC checkout historically used 0% tax, despite a
+ * generic service-page display showing 7.5%. Preserve the actual 0% billing
+ * baseline until an explicit business/tax decision changes this setting.
+ */
+function cac_filing_tax_percent(): float {
+    $value = setting('cac_filing_tax_percent', '0');
+    if (!is_numeric($value) || (float)$value < 0 || (float)$value > 100) {
+        throw new RuntimeException('CAC tax configuration is invalid. Contact support.');
+    }
+    return round((float)$value, 2);
+}
 function cac_business_quote(string $structure, int $peopleCount): float {
     $base = cac_money_setting('cac_business_base_ngn', 26000);
     $extra = cac_money_setting('cac_business_partner_extra_ngn', 15000);
@@ -76,12 +88,22 @@ function cac_filing_quote(string $kind, array $data): array {
         if ($kind !== 'company') throw new RuntimeException('Director privacy advisory is offered for companies only.');
         $extras['privacy_advisory'] = $directors * cac_money_setting('cac_privacy_advisory_per_director_ngn', 50000);
     }
-    $ngn += array_sum($extras);
+    $baseNgn = $ngn;
+    $subtotalNgn = round($baseNgn + array_sum($extras), 2);
     $currency = strtoupper((string) ($data['currency'] ?? 'NGN'));
     if (!in_array($currency, ['NGN','USD'], true)) $currency = 'NGN';
-    $amount = $currency === 'NGN' ? $ngn : round($ngn / max(1, fx_ngn_per_usd()), 2);
-    return ['ngn'=>$ngn, 'currency'=>$currency, 'total'=>$amount,
-        'base_ngn'=>$ngn-array_sum($extras), 'extras_ngn'=>$extras, 'fx'=>fx_ngn_per_usd()];
+    $fx = max(1, fx_ngn_per_usd());
+    $subtotal = $currency === 'NGN' ? $subtotalNgn : round($subtotalNgn / $fx, 2);
+    $taxPercent = cac_filing_tax_percent();
+    $taxAmount = round($subtotal * $taxPercent / 100, 2);
+    $total = round($subtotal + $taxAmount, 2);
+    return [
+        'ngn'=>round($subtotalNgn * (1 + $taxPercent / 100),2),
+        'currency'=>$currency, 'subtotal'=>$subtotal, 'total'=>$total,
+        'tax_percent'=>$taxPercent, 'tax_amount'=>$taxAmount,
+        'base_ngn'=>$baseNgn, 'extras_ngn'=>$extras,
+        'subtotal_ngn'=>$subtotalNgn, 'fx'=>$fx,
+    ];
 }
 function cac_filing_decode(array $row): array {
     $row['data'] = is_array(json_decode((string)($row['data_json'] ?? '{}'), true)) ? json_decode((string)$row['data_json'],true) : [];
@@ -317,8 +339,8 @@ function cac_filing_checkout(int $clientId,int $id): int {
         $jobId=create_job([
             'service_id'=>(int)$service['id'],'client_id'=>$clientId,'created_by'=>$clientId,
             'title'=>($row['kind']==='business'?'Business Name: ':'Company: ').$data['first_choice'],
-            'description'=>$description,'amount'=>$quote['total'],'currency'=>$quote['currency'],
-            'pay_currency'=>$quote['currency'],'tax_percent'=>0,
+            'description'=>$description,'amount'=>$quote['subtotal'],'currency'=>$quote['currency'],
+            'pay_currency'=>$quote['currency'],'tax_percent'=>$quote['tax_percent'],
             'checkout_pay_method'=>'card','payment_status'=>'unpaid',
         ],['skip_duplicate_intake'=>true]);
         $invoice=get_invoice_by_job_id($jobId);
