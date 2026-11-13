@@ -14,6 +14,12 @@ function iworks_customer_published_service(array $service): ?array
     $slug = strtolower(trim((string)($service['slug'] ?? '')));
     $name = trim((string)($service['name'] ?? ''));
     if ($slug === '' || $name === '') return null;
+    // Presentation-only catalogue child. Never eligible for generic invoices.
+    if ($slug === 'cac-business-name') {
+        $service['_iworks_checkout_mode'] = 'cac';
+        $service['_iworks_registration_type'] = 'business';
+        return $service;
+    }
     if (isset($service['is_active']) && (int)$service['is_active'] !== 1) return null;
     if (isset($service['is_public']) && (int)$service['is_public'] !== 1) return null;
 
@@ -91,10 +97,18 @@ function iworks_customer_registration_variants(array $service): array
     $company['short_description'] =
         'For a registered company limited by shares, with one or more directors and shareholders.';
     $company['_iworks_registration_type'] = 'company';
-    $company['price'] = function_exists('cac_company_quote')
-        ? cac_company_quote(1)
-        : max(0, (float)($service['price'] ?? 0));
+    $companyAmount = max(0, (float)($service['price'] ?? 0));
+    if (function_exists('cac_company_quote')) {
+        try { $companyAmount = cac_company_quote(1); }
+        catch (Throwable $error) { $companyAmount = 0; }
+    }
+    $company['price'] = $companyAmount;
     $company['currency'] = 'NGN';
+    if ($companyAmount <= 0) {
+        // A missing price must never crash the public site or show a
+        // misleading free-company offer.
+        $company['_iworks_checkout_mode'] = 'consultation';
+    }
 
     return [$business, $company];
 }
