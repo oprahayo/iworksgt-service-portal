@@ -8,7 +8,8 @@
       <p>Reply to visitors, track conversations and see who is currently online.</p></div>
     <div class="iw-live-head-actions">
       <button type="button" class="btn btn-outline-secondary" id="iwLiveSound"><i class="bi bi-bell"></i> Enable sound alerts</button>
-      <a class="btn btn-outline-secondary" href="<?= e(url('support')) ?>"><i class="bi bi-life-preserver"></i> Support tickets</a>
+      <a class="btn btn-outline-secondary" href="<?= e(url('messages')) ?>"><i class="bi bi-chat-dots"></i> Team messages</a>
+      <?php if (has_role(['admin'])): ?><a class="btn btn-outline-secondary" href="<?= e(url('support')) ?>"><i class="bi bi-life-preserver"></i> Support tickets</a><?php endif; ?>
     </div>
   </header>
   <?php if (!$liveChatInstalled): ?>
