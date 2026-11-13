@@ -27,6 +27,11 @@ printf '%s\n' '<?php // iw-sitewide-cta' > "$TMP/fixture/views/partials/public-f
 printf '%s\n' '<?php // iw-mobile-menu-group' > "$TMP/fixture/views/partials/public-header.php"
 printf '%s\n' '<?php // new header' > "$TMP/fixture/views/partials/header.php"
 printf '%s\n' '<?php // repair script' > "$TMP/fixture/scripts/repair_public_content_schema.php"
+# Synthetic preflight is the ONLY mocked external boundary for this fixture.
+# Real deployments always run the immutable source preflight with the live
+# DB/config/root locations before writing any files.
+printf '%s\n' '<?php exit(3); // preflight blocked' > "$TMP/fixture/scripts/check_remediation_release.php"
+printf '%s\n' '<?php // required schema manifest' > "$TMP/fixture/app/release_preflight.php"
 printf '%s\n' 'CREATE TABLE IF NOT EXISTS blog_posts (' > "$TMP/fixture/database.sql"
 printf '%s\n' '.fixture{display:block}' > "$TMP/fixture/assets/css/fixture.css"
 printf '%s\n' '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"></svg>' > "$TMP/fixture/assets/branding/iworks-desktop.svg"
@@ -35,6 +40,18 @@ tar -C "$TMP" -czf "$TMP/release.tar.gz" --transform='s#^fixture/#release-root/#
 
 # No internet needed, and no /dev/fd process substitution used by installer.
 export IWORKS_RELEASE_ARCHIVE="$TMP/release.tar.gz"
+# Fail-closed rehearsal: missing migrations/mail/private HTTP controls block
+# the entire release before any portal or asset writes occur.
+if bash "$ROOT/scripts/deploy_admin_mobile_refresh.sh" --apply "$PORTAL" "$PUBLIC" > "$TMP/blocked.log" 2>&1; then
+  echo 'An unsafe release unexpectedly applied.' >&2
+  exit 1
+fi
+grep -Fq 'Release safety preflight blocked deployment' "$TMP/blocked.log"
+grep -q 'old portal' "$PORTAL/index.php"
+[[ ! -e "$PORTAL/assets/css/fixture.css" ]]
+# Emulate completed preflight only for the safe offline release test.
+printf '%s\n' '<?php exit(0); // synthetic read-only preflight succeeded' > "$TMP/fixture/scripts/check_remediation_release.php"
+tar -C "$TMP" -czf "$TMP/release.tar.gz" --transform='s#^fixture/#release-root/#' fixture
 bash "$ROOT/scripts/deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC" > "$TMP/check.log"
 grep -q 'CHECK ONLY' "$TMP/check.log"
 grep -q 'Portal changes:' "$TMP/check.log"

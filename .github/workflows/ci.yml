@@ -103,6 +103,7 @@ jobs:
           php tests/f22_safe_error_response_test.php
           php tests/f06_notification_outbox_test.php
           php tests/f13_cac_quote_consistency_test.php
+          php tests/remediation_release_gate_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
 
       - name: Validate public interaction JavaScript
