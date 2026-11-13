@@ -143,15 +143,12 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112launch1">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261113a">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-navigation-cta.css')) ?>?v=20261113a">
   <script>
-  (function(){
-    var theme='system';
-    try {theme=localStorage.getItem('iworks_theme')||'system';}catch(e){}
-    if(!['system','light','dark'].includes(theme))theme='system';
-    var dark=theme==='dark'||(theme==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.dataset.iwTheme=dark?'dark':'light';
-    document.documentElement.dataset.iwThemeMode=theme;
-  })();
+  // Public website now uses one consistent light theme; ignore older saved
+  // dark-mode choices from visitors' previous sessions.
+  document.documentElement.dataset.iwTheme='light';
+  document.documentElement.dataset.iwThemeMode='light';
   </script>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/editorial-brand.css')) ?>?v=20261112a">
   <style>
@@ -188,6 +185,39 @@ $isLaunchHome = $currentPublicSlug === 'home';
           </button>
         </div>
         <div class="collapse navbar-collapse" id="publicNav">
+          <div class="iw-mobile-menu d-xl-none" aria-label="Mobile navigation">
+            <details class="iw-mobile-menu-group">
+              <summary>What we do <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+              <div class="iw-mobile-menu-sub">
+                <a href="<?= e(public_url('services')) ?>">All services</a>
+                <a href="<?= e(public_url('services', ['category' => 'business-registration'])) ?>">Business registration &amp; compliance</a>
+                <a href="<?= e(public_url('services', ['category' => 'trademark'])) ?>">Trademarks</a>
+                <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>">Websites, hosting &amp; digital growth</a>
+              </div>
+            </details>
+            <details class="iw-mobile-menu-group">
+              <summary>Explore iWorks <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+              <div class="iw-mobile-menu-sub">
+                <a href="<?= e(public_url('services')) ?>">Find a service</a>
+                <a href="<?= e(public_url('track')) ?>">Track an order</a>
+                <a href="<?= e(public_url('blog')) ?>">Insights &amp; guides</a>
+              </div>
+            </details>
+            <details class="iw-mobile-menu-group">
+              <summary>About <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+              <div class="iw-mobile-menu-sub">
+                <a href="<?= e(public_url('about')) ?>">Our company</a>
+                <a href="<?= e(public_url('case-studies')) ?>">Case studies</a>
+                <a href="<?= e(public_url('contact')) ?>">Contact</a>
+              </div>
+            </details>
+            <a class="iw-mobile-menu-link" href="<?= e(public_url('services')) ?>">Pricing &amp; services</a>
+            <div class="iw-mobile-menu-bottom">
+              <a class="iw-mobile-menu-signin iw-public-auth-status" data-iw-auth="login" data-iw-auth-status href="<?= e(portal_url('login')) ?>">Sign in</a>
+              <button type="button" class="iw-mobile-menu-book" data-assist-book-open><i class="bi bi-calendar3" aria-hidden="true"></i> Request a consultation</button>
+              <a class="iw-mobile-menu-start" href="<?= e(public_url('services')) ?>">Get started <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </div>
+          </div>
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
             <?php if ($aboutLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>><?= e($aboutLabel) ?></a></li><?php endif; ?>
@@ -196,7 +226,6 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">
-            <button class="iw-public-theme-switch" type="button" data-iw-theme-toggle aria-label="Change color theme" title="Theme: system"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
             <a class="public-signin-link iw-public-auth-status" href="<?= e(portal_url('login')) ?>" data-iw-auth="login" data-iw-auth-status title="Sign in" aria-label="Sign in to your iWorks account"><span><?= e($signInLabel?:'Sign In') ?></span></a>
             <a class="btn btn-primary btn-sm public-header-main-cta" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           </div>
