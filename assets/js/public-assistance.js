@@ -250,6 +250,16 @@
     backdrop.addEventListener('click', closeBook);
     // Existing service links previously targeted a general-purpose modal.
     document.addEventListener('click', function (event) {
+      var booking = event.target.closest('[data-assist-book-open]');
+      if (booking && !root.contains(booking)) {
+        event.preventDefault();
+        var mobileMenu = document.getElementById('publicNav');
+        if (mobileMenu && mobileMenu.classList.contains('show') && window.bootstrap) {
+          window.bootstrap.Collapse.getOrCreateInstance(mobileMenu).hide();
+        }
+        openBook(booking);
+        return;
+      }
       var trigger = event.target.closest('[data-iw-help-open]');
       if (!trigger) return;
       event.preventDefault();
