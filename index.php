@@ -1358,6 +1358,13 @@ try {
             $clientId = (int) $client['id'];
             $filingId = (int) ($_GET['id'] ?? 0);
             $filingKind = strtolower(trim((string) ($_GET['type'] ?? 'business')));
+            if (!$filingId && ($filingKind === 'choose' || !isset($_GET['type']))) {
+                $title = 'Business Registration - ' . app_name();
+                require __DIR__ . '/views/partials/header.php';
+                require __DIR__ . '/views/client-cac-pathway.php';
+                require __DIR__ . '/views/partials/footer.php';
+                break;
+            }
             if (!in_array($filingKind, ['business','company'], true)) $filingKind='business';
             cac_filing_schema();
             if ($filingId>0) {
@@ -1683,6 +1690,53 @@ try {
 
                 try {
                     $serviceAction = (string) ($_POST['form_action'] ?? '');
+
+                    if ($serviceAction === 'save_cac_pricing') {
+                        $amounts = [];
+                        foreach ([
+                            'cac_business_base_ngn' => 26000,
+                            'cac_business_partner_extra_ngn' => 15000,
+                            'cac_company_base_ngn' => 120000,
+                            'cac_company_extra_director_ngn' => 0,
+                            'cac_virtual_address_ngn' => 0,
+                            'cac_privacy_advisory_per_director_ngn' => 50000,
+                        ] as $key => $default) {
+                            $raw = $_POST[$key] ?? $default;
+                            $value = filter_var($raw, FILTER_VALIDATE_FLOAT);
+                            if ($value === false || !is_finite((float)$value) || $value < 0 || $value > 100000000) {
+                                throw new RuntimeException('Check the CAC pricing fields. All amounts must be between ₦0 and ₦100 million.');
+                            }
+                            $amounts[$key] = round((float)$value,2);
+                        }
+                        if ($amounts['cac_business_base_ngn'] <= 0 || $amounts['cac_company_base_ngn'] <= 0) {
+                            throw new RuntimeException('Business Name and Limited Company base prices must be greater than zero.');
+                        }
+                        $virtualEnabled = isset($_POST['cac_virtual_address_enabled']);
+                        $office = trim((string)($_POST['cac_virtual_address_details'] ?? ''));
+                        if ($virtualEnabled && ($amounts['cac_virtual_address_ngn'] <= 0 || mb_safe_trim($office, 500) !== $office
+                            || $office === '' || empty($_POST['cac_office_authorized']))) {
+                            throw new RuntimeException('Managed office requires a positive price, traceable address and confirmation that iWorks has permission to provide it.');
+                        }
+                        $companyRecord = db_one("SELECT id FROM services WHERE slug='company-registration' LIMIT 1");
+                        if (!$companyRecord) throw new RuntimeException('The main CAC company service record is missing; do not modify other services.');
+                        db()->beginTransaction();
+                        try {
+                            foreach ($amounts as $key=>$value) {
+                                if ($key === 'cac_company_base_ngn') continue;
+                                set_setting($key, number_format($value,2,'.',''));
+                            }
+                            set_setting('cac_virtual_address_enabled', $virtualEnabled ? '1' : '0');
+                            set_setting('cac_virtual_address_details', $virtualEnabled ? $office : '');
+                            db_execute("UPDATE services SET price=:price, currency='NGN' WHERE id=:id",
+                                ['price'=>$amounts['cac_company_base_ngn'],'id'=>(int)$companyRecord['id']]);
+                            db()->commit();
+                        } catch (Throwable $error) {
+                            if (db()->inTransaction()) db()->rollBack();
+                            throw $error;
+                        }
+                        flash('success', 'Unified Business Registration prices saved for future quotes. Existing invoices are unchanged.');
+                        redirect(url('services',['section'=>'cac-pricing']));
+                    }
 
                     if ($serviceAction === 'save_service') {
                         $serviceId = !empty($_POST['service_id']) ? (int) $_POST['service_id'] : null;
@@ -3027,18 +3081,8 @@ try {
                     }
 
                     if ($action === 'save_cac_pricing') {
-                        foreach ([
-                            'cac_business_base_ngn' => 26000,
-                            'cac_business_partner_extra_ngn' => 15000,
-                            'cac_company_extra_director_ngn' => 0,
-                        ] as $key=>$default) {
-                            $value = filter_var($_POST[$key] ?? $default, FILTER_VALIDATE_FLOAT);
-                            if ($value === false || !is_finite((float)$value) || $value < 0 || $value > 100000000) {
-                                throw new RuntimeException('CAC pricing entries must be non-negative and below ₦100 million.');
-                            }
-                            set_setting($key, number_format((float)$value,2,'.',''));
-                        }
-                        flash('success', 'CAC service pricing updated.');
+                        flash('error', 'CAC pricing has moved to Services → Business Registration to avoid conflicting prices.');
+                        redirect(url('services',['section'=>'cac-pricing']));
                     }
 
                     if ($action === 'save_rules') {
