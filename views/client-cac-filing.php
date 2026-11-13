@@ -58,6 +58,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <div class="iw-tm-fields">
             <div class="iw-tm-field"><label>Company type</label>
               <input type="hidden" name="filing[company_type]" value="<?= $first('company_type')==='limited_by_guarantee'?'limited_by_guarantee':'private_limited' ?>">
+              <p class="iw-cac-field-value">Private company limited by shares</p>
               <?php if($first('company_type')==='limited_by_guarantee'): ?>
                 <p class="alert alert-warning small">This older draft is marked Limited by Guarantee. It cannot be submitted through the standard Private Ltd flow. Contact support or start a new Private Ltd application.</p>
               <?php endif; ?>
