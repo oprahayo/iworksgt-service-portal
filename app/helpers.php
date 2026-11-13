@@ -393,7 +393,25 @@ function logo_path(): string
 
 function favicon_path(): string
 {
-    return normalize_public_asset_path(setting('favicon_path', ''));
+    $configured = normalize_public_asset_path(setting('favicon_path', ''));
+    if ($configured !== '') return $configured;
+    // Reliable no-request fallback on every public, portal and client page.
+    // This uses a lightweight first-party orange/charcoal icon when no custom
+    // uploaded brand favicon has been configured in Settings.
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+        . '<rect width="64" height="64" rx="15" fill="#191919"/>'
+        . '<path d="M16 13h10v38H16zM33 20h10v16l8-10h10L49 40l12 11H49L43 44v7H33z" fill="#ff6600"/>'
+        . '</svg>';
+    return 'data:image/svg+xml,' . rawurlencode($svg);
+}
+
+function favicon_mime_type(string $favicon): string
+{
+    if (str_starts_with($favicon,'data:image/svg+xml') || preg_match('~\.svg(?:[?#]|$)~i', $favicon)) return 'image/svg+xml';
+    if (preg_match('~\.ico(?:[?#]|$)~i', $favicon)) return 'image/x-icon';
+    if (preg_match('~\.webp(?:[?#]|$)~i', $favicon)) return 'image/webp';
+    if (preg_match('~\.jpe?g(?:[?#]|$)~i', $favicon)) return 'image/jpeg';
+    return 'image/png';
 }
 
 function seo_description(): string
