@@ -59,6 +59,13 @@ check_catalogue((int)$bySlug['cac-business-name']['id']===(int)$bySlug['company-
     'Both choices must use the same real registration product ID without duplicating database rows.');
 check_catalogue($bySlug['company-registration']['_iworks_checkout_mode']==='cac',
     'CAC must use its guided structure-specific intake.');
+$secondPass = iworks_customer_published_catalogue($catalogue);
+$againBySlug = array_column($secondPass,null,'slug');
+check_catalogue(($againBySlug['company-registration']['name'] ?? '') === 'Private Limited Company (Ltd)'
+    && (float)($againBySlug['company-registration']['price'] ?? 0) === 45000.0,
+    'Client second-pass filters must preserve actual Ltd pricing and name.');
+check_catalogue(($againBySlug['cac-business-name']['name'] ?? '') === 'Business Name (Enterprise)',
+    'Client second-pass filters must preserve Business Name choice.');
 check_catalogue($bySlug['trademark']['_iworks_checkout_mode']==='trademark',
     'Trademark must use its class-aware wizard.');
 check_catalogue($bySlug['incorporated-trustees']['_iworks_checkout_mode']==='consultation'
