@@ -27,4 +27,8 @@ HOME="$TMP" IWORKS_SECURITY_FIXTURE_MODE=1 bash "$REPO_ROOT/scripts/contain_priv
 [[ "$(grep -c 'BEGIN IWORKS PRIVATE FILE PROTECTION' "$TMP/public_html/portal.iworksgt.com/.htaccess")" -eq 1 ]]
 # Evidence base remains private.
 [[ "$(stat -c %a "$TMP/iworks-security-evidence")" == "700" ]]
+# HTTP/2 servers can produce PROTOCOL_ERROR for synthetic -X HEAD.
+# The verifier must use curl's true no-body HEAD with HTTP/1.1.
+grep -Fq 'curl --http1.1 --head -sS' "$REPO_ROOT/scripts/contain_private_http_access.sh"
+! grep -Fq -- '-X "$method"' "$REPO_ROOT/scripts/contain_private_http_access.sh"
 echo 'f01_containment_fixture_test passed'
