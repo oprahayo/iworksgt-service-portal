@@ -366,8 +366,18 @@ CREATE TABLE IF NOT EXISTS otp_codes (
     code_hash VARCHAR(255) NOT NULL,
     expires_at DATETIME NOT NULL,
     consumed_at DATETIME NULL,
+    failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL,
     CONSTRAINT fk_otp_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS auth_attempt_limits (
+    scope VARCHAR(32) NOT NULL,
+    subject_hash CHAR(64) NOT NULL,
+    window_started_at INT UNSIGNED NOT NULL,
+    attempts INT UNSIGNED NOT NULL DEFAULT 0,
+    PRIMARY KEY (scope, subject_hash, window_started_at),
+    KEY idx_auth_window_age (window_started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS otp_dispatch_queue (
