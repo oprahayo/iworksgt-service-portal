@@ -32,5 +32,5 @@ check_remediation(str_contains($chat,'Send a message. Our team will reply here w
 check_remediation(str_contains($chat,'aria-live="polite"'), 'Support status changes must be announced.');
 $deployer=file_get_contents(__DIR__.'/../scripts/deploy_admin_mobile_refresh.sh');
 check_remediation(str_contains($deployer,'|database.sql) continue'), 'SQL must not be copied to public document root.');
-check_remediation(str_contains($deployer,'-$' . '$' . '"'), 'Private backup path must include process ID.');
+check_remediation(str_contains($deployer,'-${BASHPID}'), 'Private backup path must include process ID.');
 echo "f16_f17_f18_f19_site_remediation_test passed\n";
