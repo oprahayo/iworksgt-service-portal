@@ -23,8 +23,8 @@ function iworks_client_service_icon(array $service):string{return 'bi-briefcase'
 require dirname(__DIR__).'/app/customer_service_policy.php';
 
 $offer=static fn(string $slug,string $name,array $other=[]):array =>
-    ['id'=>count($other)+8,'slug'=>$slug,'name'=>$name,'price'=>45000,
-     'currency'=>'NGN','is_active'=>1,'is_public'=>1,'category'=>'business-registration']+$other;
+    array_replace(['id'=>count($other)+8,'slug'=>$slug,'name'=>$name,'price'=>45000,
+     'currency'=>'NGN','is_active'=>1,'is_public'=>1,'category'=>'business-registration'],$other);
 $rows=[
     $offer('business-name-registration','Business Name Registration'),
     $offer('business-name-registration-cac-nigeria','Business Name Registration (CAC)'),
