@@ -112,7 +112,7 @@ function cac_clean_person(array $person): array {
 }
 function cac_clean_data(array $input, string $kind): array {
     $fields=['first_choice','second_choice','av_code','business_activity','nature_category','business_email',
-        'business_phone','business_address','address_mode','commencement_date','structure','currency','share_capital','company_type'];
+        'business_phone','business_address','address_mode','commencement_date','structure','currency','share_capital','company_type','company_ownership'];
     $out=[];
     foreach($fields as $key) {
         $out[$key]=mb_safe_trim(trim((string)($input[$key] ?? '')), $key==='business_address'?500:240);
@@ -246,6 +246,9 @@ function cac_filing_missing(array $row): array {
             $errors[] = 'Use a different alternative name.';
         }
     }
+    if (trim((string)($d['nature_category'] ?? '')) === '') {
+        $errors[] = 'Select your main nature of business or profession.';
+    }
     $people=is_array($d['people']??null)?$d['people']:[];
     try { cac_filing_quote((string)$row['kind'],$d); }
     catch(Throwable $e){$errors[]=$e->getMessage();}
@@ -272,6 +275,11 @@ function cac_filing_missing(array $row): array {
         if(!is_numeric($d['share_capital']??null) || (float)$d['share_capital']<=0)$errors[]='Company share capital is required.';
         $directorCount = count(array_filter($people, static fn(array $p): bool =>
             str_contains(strtolower((string)($p['role'] ?? 'Director and shareholder')), 'director')));
+        if (($d['company_ownership'] ?? '') === 'single') {
+            $shareholders = count(array_filter($people, static fn(array $p): bool =>
+                str_contains(strtolower((string)($p['role'] ?? 'Director and shareholder')), 'shareholder')));
+            if ($shareholders > 1) $errors[] = 'Single-owner company selected, but multiple shareholders were added. Choose multiple owners.';
+        }
         if ($directorCount < 1) $errors[] = 'At least one director is required.';
         $shares = array_values(array_filter(array_map(static fn(array $p): string =>
             trim((string)($p['share_percent'] ?? '')), $people),static fn(string $v):bool=>$v!==''));
