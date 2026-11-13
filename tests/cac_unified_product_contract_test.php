@@ -92,4 +92,8 @@ foreach(['views/partials/header.php','views/partials/public-header.php','views/p
 }
 check_cac(str_contains((string)file_get_contents($root.'/app/helpers.php'),'data:image/svg+xml'),
     'Fallback first-party icon must be available even if no asset uploaded.');
+check_cac(str_contains($router,"if ($"."page === 'brand_icon')") &&
+    str_contains($router,"'image/webp'") &&
+    str_contains($router,"str_starts_with($"."file,$"."brandRoot.DIRECTORY_SEPARATOR)"),
+    'Uploaded favicons must use a restricted public route with MIME and path checks.');
 echo "cac_unified_product_contract_test passed\n";
