@@ -69,6 +69,21 @@ function has_role(array $roles): bool
     return $role !== null && in_array($role, $roles, true);
 }
 
+/**
+ * Compatibility helpers for role-dependent support/job templates.
+ * When a role is given (e.g. the message sender), check that role, not
+ * the logged-in viewer. When omitted, check the logged-in user.
+ */
+function role_has_admin_access(?string $role = null): bool
+{
+    return ($role ?? user_role()) === 'admin';
+}
+
+function role_has_admin_or_finance_access(?string $role = null): bool
+{
+    return in_array($role ?? user_role(), ['admin', 'finance'], true);
+}
+
 function require_login(): void
 {
     if (!is_logged_in()) {
