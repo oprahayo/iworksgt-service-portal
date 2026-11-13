@@ -123,7 +123,7 @@ check_catalogue(str_contains($client,"$"."checkoutMode === 'consultation'") &&
 check_catalogue(str_contains(file_get_contents($root.'/views/partials/client-header.php'),
     'customer-focused-checkout.css'),'Customer checkout styles must load from the actual client header, not only the admin shell.');
 check_catalogue(str_contains(file_get_contents($root.'/views/services.php'),
-    'Customer: guided Business Registration') &&
+    'Customer: Enterprise + Private Ltd (guided)') &&
     str_contains(file_get_contents($root.'/views/services.php'),
     'Not offered to customers'), 'Admin Services must report which records customers can see.');
 echo "customer_catalogue_unification_test passed\n";
