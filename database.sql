@@ -476,6 +476,61 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     CONSTRAINT fk_blog_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Additional editorial modules used by the administrator's Stories & Feedback.
+CREATE TABLE IF NOT EXISTS iworks_case_studies (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(190) NOT NULL UNIQUE,
+    title VARCHAR(240) NOT NULL,
+    client_name VARCHAR(190) NULL,
+    category VARCHAR(100) NULL,
+    summary TEXT NULL,
+    story_html LONGTEXT NOT NULL,
+    outcome VARCHAR(240) NULL,
+    image_id INT UNSIGNED NULL,
+    logo_id INT UNSIGNED NULL,
+    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    author_id INT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    INDEX idx_case_public (status,updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS iworks_testimonials (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(190) NOT NULL,
+    position VARCHAR(140) NULL,
+    company VARCHAR(190) NULL,
+    quote_text TEXT NOT NULL,
+    company_logo_id INT UNSIGNED NULL,
+    portrait_id INT UNSIGNED NULL,
+    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    consent_confirmed TINYINT(1) NOT NULL DEFAULT 0,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    INDEX idx_testimonial_public(status,sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS iworks_blog_comments (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    post_id INT UNSIGNED NOT NULL,
+    display_name VARCHAR(120) NOT NULL,
+    email VARCHAR(190) NOT NULL,
+    comment_text TEXT NOT NULL,
+    visitor_hash CHAR(64) NOT NULL,
+    status ENUM('pending','approved') NOT NULL DEFAULT 'pending',
+    created_at DATETIME NOT NULL,
+    INDEX idx_comment_public(post_id,status,created_at),
+    INDEX idx_comment_limit(visitor_hash,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS iworks_blog_likes (
+    post_id INT UNSIGNED NOT NULL,
+    visitor_hash CHAR(64) NOT NULL,
+    created_at DATETIME NOT NULL,
+    PRIMARY KEY(post_id,visitor_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS website_leads (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(190) NOT NULL,
