@@ -1236,7 +1236,16 @@ function mail_log_path(): string
     if (!is_dir($base) && !@mkdir($base, 0700, true) && !is_dir($base)) {
         throw new RuntimeException('Private mail diagnostics directory is unavailable.');
     }
-    return rtrim($base, '/') . '/mail-events.log';
+    $resolved = realpath($base);
+    $documentRoot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+    if ($resolved === false
+        || preg_match('~(?:^|/)(?:public_html|htdocs|www)(?:/|$)~i', $resolved) === 1
+        || ($documentRoot !== false
+            && ($resolved === $documentRoot
+                || str_starts_with($resolved, $documentRoot . '/')))) {
+        throw new RuntimeException('Private mail diagnostics directory points into a web-accessible path.');
+    }
+    return $resolved . '/mail-events.log';
 }
 
 function log_email_message(string $to, string $subject, string $message): void
