@@ -1,6 +1,7 @@
 <?php $currentUser = current_user(); ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 mb-0">Direct Messages</h1>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div><span class="iw-ops-eyebrow">COMMUNICATION</span><h1 class="h4 mb-0">Team messages</h1></div>
+  <?php if (has_role(['admin','agent'])): ?><a class="btn btn-outline-primary btn-sm" href="<?= e(url('live_inbox')) ?>"><i class="bi bi-chat-left-text"></i> Website live chats</a><?php endif; ?>
 </div>
 
 <?php if (role_has_admin_access((string) ($currentUser['role'] ?? ''))): ?>
