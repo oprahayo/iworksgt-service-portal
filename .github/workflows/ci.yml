@@ -12,6 +12,10 @@ permissions:
 jobs:
   php:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.2", "8.3"]
 
     steps:
       - name: Check out repository
@@ -20,7 +24,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: ${{ matrix.php }}
           extensions: pdo_mysql
           coverage: none
 
@@ -45,6 +49,8 @@ jobs:
           bash -n scripts/deploy_admin_mobile_refresh.sh
           bash tests/deploy_admin_mobile_fixture_test.sh
           bash tests/deploy_split_installer_contract.sh
+          bash -n scripts/contain_private_http_access.sh
+          bash tests/f01_containment_fixture_test.sh
           bash -n scripts/audit_public_seo_live.sh
           bash -n scripts/audit_launch_public.sh
 
@@ -84,9 +90,11 @@ jobs:
           php tests/admin_public_navigation_schema_contract_test.php
           php tests/job_support_refresh_contract_test.php
           php tests/support_reply_email_test.php
+          php tests/f01_mail_metadata_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
 
       - name: Validate public interaction JavaScript
-        run: node --check assets/js/public-ux.js
+        run: |
+          node --check assets/js/public-ux.js
           node --check assets/js/public-assistance.js
           node --check assets/js/live-inbox.js

@@ -12,7 +12,8 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 FAIL=0
 check_page() {
-  local label="$1" url="$2" expected="$3" body="$TMP/$(printf %s "$label" | tr ' /' '__').html"
+  local label="$1" url="$2" expected="$3"
+  local body="$TMP/$(printf %s "$label" | tr ' /' '__').html"
   local status final
   final="$TMP/out"
   : > "$final"
