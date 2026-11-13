@@ -9379,7 +9379,7 @@ function list_active_banners(): array
     return list_banners(true);
 }
 
-function create_notification(int $userId, string $title, string $message, string $targetUrl = ''): void
+function create_notification(int $userId, string $title, string $message, string $targetUrl = '', ?array $emailOverride = null): void
 {
     db_execute(
         'INSERT INTO notifications (user_id, title, message, target_url, is_read, created_at)
@@ -9401,7 +9401,16 @@ function create_notification(int $userId, string $title, string $message, string
             if ($targetUrl !== '') {
                 $mailMessage .= "\n\nOpen: " . portal_absolute_url($targetUrl);
             }
-            send_email((string) $user['email'], $title, $mailMessage);
+            if ($emailOverride !== null) {
+                iworks_send_html_email(
+                    (string) $user['email'],
+                    (string) ($emailOverride['subject'] ?? $title),
+                    (string) ($emailOverride['plain'] ?? $mailMessage),
+                    (string) ($emailOverride['html'] ?? '')
+                );
+            } else {
+                send_email((string) $user['email'], $title, $mailMessage);
+            }
         }
     }
 }
@@ -10668,7 +10677,8 @@ function add_support_ticket_message(int $ticketId, int $senderId, string $messag
             (int) $ticket['client_id'],
             'Support ticket update',
             'Support responded to your ticket ' . (string) $ticket['ticket_code'] . '.',
-            url('support', ['ticket_id' => $ticketId])
+            url('support', ['ticket_id' => $ticketId]),
+            iworks_support_email_payload($ticket, $sender, ['full_name' => (string) ($ticket['client_name'] ?? '')])
         );
     }
 }
