@@ -30,9 +30,9 @@ $iwGoogleMaps = 'https://www.google.com/maps/search/?api=1&query=iWorks%20Global
         </div>
         <div class="iw-review-viewport" data-iw-review-viewport tabindex="0" role="region" aria-roledescription="carousel" aria-label="Customer testimonials">
           <?php foreach ($iwPublishedReviews as $review): ?>
-            <?php $rating = max(1, min(10, (int) ($review['rating'] ?? 0))); ?>
+            <?php $rating = job_review_five_point_score((int) ($review['rating'] ?? 0)); ?>
             <figure class="iw-review-slide">
-              <div class="iw-review-stars" aria-label="Rating <?= $rating ?> out of 10"><i class="bi bi-star-fill" aria-hidden="true"></i> <?= $rating ?>/10</div>
+              <div class="iw-review-stars" aria-label="Rating <?= $rating ?> out of 5"><i class="bi bi-star-fill" aria-hidden="true"></i> <?= $rating ?>/5</div>
               <blockquote><?= e((string) ($review['feedback'] ?? '')) ?></blockquote>
               <figcaption>
                 <strong><?= e((string) ($review['display_name'] ?? 'Verified customer')) ?></strong>
