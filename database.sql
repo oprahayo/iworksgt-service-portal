@@ -291,6 +291,8 @@ CREATE TABLE IF NOT EXISTS job_payments (
     created_at DATETIME NOT NULL,
     reviewed_at DATETIME NULL,
     confirmed_at DATETIME NULL,
+    UNIQUE KEY uniq_gateway_provider_tx (gateway_provider, gateway_transaction_id),
+    UNIQUE KEY uniq_gateway_provider_session (gateway_provider, gateway_session_id),
     CONSTRAINT fk_payments_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     CONSTRAINT fk_payments_invoice FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
     CONSTRAINT fk_payments_client FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
