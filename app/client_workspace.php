@@ -124,7 +124,9 @@ function iworks_client_catalogue(array $services): array
             if (str_contains($name, $term)) { $excluded = true; break; }
         }
         if ($excluded) { continue; }
-        $item = function_exists('cac_public_service_record') ? cac_public_service_record($service) : $service;
+        $item = function_exists('iworks_customer_published_service')
+            ? iworks_customer_published_service($service)
+            : (function_exists('cac_public_service_record') ? cac_public_service_record($service) : $service);
         if ($item === null) continue;
         $result[] = $item;
     }
