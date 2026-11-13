@@ -41,21 +41,22 @@ foreach ($clientCatalogue as $catalogItem) {
     // cosmetically renamed on customer-facing cards.
     $description = trim((string) preg_replace('/\b(?:banking|bank account opening)\b\s*,?\s*/i', '', $description));
     if ($description === '') { $description = 'View the requirements, fees and next steps for this service.'; }
-    $price = (float) ($service['price'] ?? 0);
-    $pricing = $price > 0 ? money($price, (string) ($service['currency'] ?? default_currency())) : 'Request quote';
-    if ($slug === 'trademark') { $pricing = 'USD ' . number_format(trademark_price_usd(), 2) . ' / class'; }
-    $checkoutMode = (string)($service['_iworks_checkout_mode'] ?? 'standard');
-    if ($checkoutMode === 'consultation') { $pricing = 'Specialist quote'; }
-    $startUrl = $slug === 'cac-business-name'
-        ? url('cac_filing', ['type'=>'business'])
-        : ($checkoutMode === 'consultation'
-        ? public_url('service',['slug'=>$slug])
-        : ($slug === 'trademark'
-            ? url('trademark')
-            : ($slug === 'company-registration'
-                ? url('cac_filing')
-                : url('jobs', ['action'=>'new','service'=>$slug]))));
-    $startLabel = $checkoutMode === 'consultation' ? 'Enquire' : 'Start';
+    $priceDetails = iworks_customer_product_price($service);
+    $pricing = (string) $priceDetails['display'];
+    $checkoutMode = (string) $priceDetails['checkout_mode'];
+    $needsEnquiry = (bool) $priceDetails['is_enquiry'];
+    // Unpriced and specialist services must not enter the generic invoice
+    // route. CAC/Trademark keep their established guided application flows.
+    $startUrl = $needsEnquiry
+        ? public_url('service', ['slug'=>$slug])
+        : ($slug === 'cac-business-name'
+            ? url('cac_filing', ['type'=>'business'])
+            : ($slug === 'trademark'
+                ? url('trademark')
+                : ($slug === 'company-registration'
+                    ? url('cac_filing')
+                    : url('jobs', ['action'=>'new','service'=>$slug]))));
+    $startLabel = $needsEnquiry ? 'Enquire' : 'Start';
     $searchValue = strtolower($name . ' ' . $description . ' ' . ($categoryNames[$category] ?? ''));
   ?>
   <article class="iw-client-service iw-client-catalog-item" data-search="<?= e($searchValue) ?>" data-category="<?= e($category) ?>" data-tone="<?= (int) ($index % 4) ?>">
