@@ -111,20 +111,21 @@ if (!empty($job['managed_by_admin_name'])) {
       </p>
     <?php else: ?>
       <h2 class="h5" id="iw-job-feedback-title">How was your experience?</h2>
-      <p class="small text-muted">Your order is complete. Please rate the service from 1 to 10. Your feedback helps us improve.</p>
+      <p class="small text-muted">Your order is complete. Tap the emoji that best describes your experience.</p>
       <form method="post" action="<?= e(url('job', ['id' => (int) $job['id']])) ?>">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="form_action" value="submit_order_review">
         <fieldset class="iw-review-rating-fieldset">
           <legend class="small fw-semibold mb-2">Your rating</legend>
-          <div class="iw-review-rating-options">
-            <?php for ($rating = 1; $rating <= 10; $rating++): ?>
-              <label><input type="radio" name="rating" value="<?= $rating ?>" <?= $rating === 10 ? 'required' : '' ?>>
-                <span><?= $rating ?></span>
+          <div class="iw-review-emoji-options" role="radiogroup" aria-label="Rate this service from very unhappy to excellent">
+            <?php foreach ([1=>['😠','Very unhappy'],2=>['🙁','Unhappy'],3=>['😐','Okay'],4=>['🙂','Happy'],5=>['😍','Excellent']] as $rating => $face): ?>
+              <label class="iw-review-emoji-choice">
+                <input type="radio" name="rating" value="<?= $rating ?>" required aria-label="<?= e($face[1]) ?>">
+                <span class="iw-review-emoji-face" aria-hidden="true"><?= $face[0] ?></span>
+                <span class="iw-review-emoji-caption"><?= e($face[1]) ?></span>
               </label>
-            <?php endfor; ?>
+            <?php endforeach; ?>
           </div>
-          <p class="small text-muted mt-2">1 = Very poor, 10 = Excellent</p>
         </fieldset>
         <label class="form-label fw-semibold small" for="iwJobReviewText">Your feedback</label>
         <textarea id="iwJobReviewText" class="form-control" name="feedback" rows="3" maxlength="1400" placeholder="How did this service go?"></textarea>
