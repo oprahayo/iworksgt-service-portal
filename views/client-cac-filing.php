@@ -56,7 +56,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <p class="iw-cac-explain">Partnership pricing adds ₦<?= e(number_format(cac_money_setting('cac_business_partner_extra_ngn',15000),0)) ?> for each additional proprietor after the first. A sole proprietor cannot add partners.</p>
           <?php else: ?>
           <div class="iw-tm-fields">
-            <div class="iw-tm-field"><label for="cacCompanyType">Company type</label>
+            <div class="iw-tm-field"><label>Company type</label>
               <input type="hidden" name="filing[company_type]" value="<?= $first('company_type')==='limited_by_guarantee'?'limited_by_guarantee':'private_limited' ?>">
               <?php if($first('company_type')==='limited_by_guarantee'): ?>
                 <p class="alert alert-warning small">This older draft is marked Limited by Guarantee. It cannot be submitted through the standard Private Ltd flow. Contact support or start a new Private Ltd application.</p>
