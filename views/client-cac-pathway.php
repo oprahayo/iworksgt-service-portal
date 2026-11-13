@@ -6,38 +6,40 @@ $companyFrom = $companyService ? cac_company_quote(1) : 0;
 <div class="iw-client-heading">
   <div>
     <a class="iw-client-back" href="<?= e(url('dashboard')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i> All services</a>
-    <span class="iw-client-eyebrow">CAC NIGERIA / BUSINESS REGISTRATION</span>
+    <span class="iw-client-eyebrow">CAC NIGERIA · START REGISTRATION</span>
     <h1>What would you like to register?</h1>
-    <p>One guided registration service. Choose the legal structure that matches your business.</p>
+    <p>Choose the type that fits your business. Each option has its own questions and pricing.</p>
   </div>
 </div>
-<div class="row g-3" style="max-width:1050px">
-  <div class="col-lg-6">
-    <article class="card h-100">
-      <div class="card-body p-4">
-        <div class="iw-cac-pathway-icon"><i class="bi bi-person-workspace" aria-hidden="true"></i></div>
-        <p class="iw-cac-pathway-kicker">BUSINESS NAME</p>
-        <h2 class="h4">Enterprise or Business Name</h2>
-        <p class="text-muted">For individuals and partnerships trading under a registered business name. Choose a single proprietor or multiple partners in the next step. This is not a Limited Company.</p>
-        <p class="fw-semibold mt-3 mb-2">From ₦<?= e(number_format($businessFrom,0)) ?></p>
-        <a class="btn btn-primary w-100" href="<?= e(url('cac_filing',['type'=>'business'])) ?>">Continue with Business Name <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-      </div>
-    </article>
-  </div>
-  <div class="col-lg-6">
-    <article class="card h-100">
-      <div class="card-body p-4">
-        <div class="iw-cac-pathway-icon"><i class="bi bi-buildings" aria-hidden="true"></i></div>
-        <p class="iw-cac-pathway-kicker">PRIVATE COMPANY LIMITED BY SHARES</p>
-        <h2 class="h4">Limited Company (Ltd)</h2>
-        <p class="text-muted">For one or more owners using a separate company structure. Add directors, shareholders, share allocation and beneficial ownership particulars. A Nigerian Ltd is not a US LLC.</p>
-        <p class="fw-semibold mt-3 mb-2"><?= $companyFrom > 0 ? 'From ₦'.e(number_format($companyFrom,0)) : 'Contact support for pricing' ?></p>
-        <a class="btn btn-primary w-100" href="<?= e(url('cac_filing',['type'=>'company'])) ?>">Continue with Limited Company <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-      </div>
-    </article>
-  </div>
+<div class="iw-cac-path-choice" aria-label="Choose registration type">
+  <article>
+    <div class="iw-cac-pathway-icon"><i class="bi bi-shop" aria-hidden="true"></i></div>
+    <span class="iw-cac-pathway-kicker">OPTION 1 · BUSINESS NAME</span>
+    <h2>Enterprise / Business Name</h2>
+    <p>Register a trading name for yourself or with partners. This does not create a separate limited company.</p>
+    <ul>
+      <li><i class="bi bi-check2-circle" aria-hidden="true"></i> One proprietor or multiple partners</li>
+      <li><i class="bi bi-check2-circle" aria-hidden="true"></i> For independent businesses and everyday trading</li>
+      <li><i class="bi bi-check2-circle" aria-hidden="true"></i> No shareholders or share capital form</li>
+    </ul>
+    <p class="iw-cac-price">From ₦<?= e(number_format($businessFrom,0)) ?></p>
+    <a class="iw-cac-path-link" href="<?= e(url('cac_filing',['type'=>'business'])) ?>">Continue with Business Name <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  </article>
+  <article>
+    <div class="iw-cac-pathway-icon"><i class="bi bi-buildings" aria-hidden="true"></i></div>
+    <span class="iw-cac-pathway-kicker">OPTION 2 · PRIVATE LIMITED COMPANY</span>
+    <h2>Limited Company (Ltd)</h2>
+    <p>Form a Nigerian company limited by shares, with directors and shareholders. A Nigerian Ltd is different from a U.S. LLC.</p>
+    <ul>
+      <li><i class="bi bi-check2-circle" aria-hidden="true"></i> One or more shareholders</li>
+      <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Separate company structure and ownership records</li>
+      <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Directors, share capital and ownership details</li>
+    </ul>
+    <p class="iw-cac-price"><?= $companyFrom > 0 ? 'From ₦'.e(number_format($companyFrom,0)) : 'Request a company quote' ?></p>
+    <a class="iw-cac-path-link" href="<?= e(url('cac_filing',['type'=>'company'])) ?>">Continue with Limited Company <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  </article>
 </div>
-<div class="alert alert-light border mt-3" style="max-width:1050px">
-  <strong>Name reservation is not guaranteed.</strong> We screen names and assist with CAC filing, but the final decision comes from the Corporate Affairs Commission. Some professions require regulator consent or special licences.
-  <a href="https://icrp.cac.gov.ng/public-search/" target="_blank" rel="noopener noreferrer">Search the official CAC registry</a>.
+<div class="alert alert-light border mt-3" style="max-width:1060px">
+  <strong>Unsure which to choose?</strong> A Business Name is not a Limited Company. Special structures such as Incorporated Trustees, LLP and company limited by guarantee require a separate consultation. <a href="<?= e(url('support')) ?>">Ask iWorks support</a>.
+  <p class="mb-0 mt-2 small">Name suggestions are preliminary. Only the official CAC portal can confirm name availability and final approval. <a href="https://icrp.cac.gov.ng/public-search/" target="_blank" rel="noopener noreferrer">Check the CAC public search</a>.</p>
 </div>
