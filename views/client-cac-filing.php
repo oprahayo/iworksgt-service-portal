@@ -57,7 +57,10 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <?php else: ?>
           <div class="iw-tm-fields">
             <div class="iw-tm-field"><label for="cacCompanyType">Company type</label>
-              <input type="hidden" name="filing[company_type]" value="private_limited">
+              <input type="hidden" name="filing[company_type]" value="<?= $first('company_type')==='limited_by_guarantee'?'limited_by_guarantee':'private_limited' ?>">
+              <?php if($first('company_type')==='limited_by_guarantee'): ?>
+                <p class="alert alert-warning small">This older draft is marked Limited by Guarantee. It cannot be submitted through the standard Private Ltd flow. Contact support or start a new Private Ltd application.</p>
+              <?php endif; ?>
               <p class="iw-cac-explain">This guided application is for private companies limited by shares. Limited by Guarantee requires specialist review. <a href="<?= e(url('support')) ?>">Request help</a>.</p>
             </div>
             <div class="iw-tm-field"><label for="cacShareCapital">Issued share capital (NGN)</label><input id="cacShareCapital" type="number" min="1" step="1" name="filing[share_capital]" value="<?= e($first('share_capital')) ?>" placeholder="e.g. 1000000"></div>
