@@ -46,6 +46,7 @@ jobs:
           bash tests/deploy_admin_mobile_fixture_test.sh
           bash tests/deploy_split_installer_contract.sh
           bash -n scripts/audit_public_seo_live.sh
+          bash -n scripts/audit_launch_public.sh
 
       - name: Run smoke tests
         run: |
