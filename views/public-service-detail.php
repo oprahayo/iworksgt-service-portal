@@ -78,7 +78,7 @@ if ($imageUrl === '') {
           <div class="iw-detail-price">
             <span><?= $price > 0 ? 'Starting from' : 'Pricing' ?></span>
             <strong><?= e($priceText) ?></strong>
-            <?php if ($tax > 0): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
+            <?php if ($tax > 0 && !$manualReview): ?><small>Tax rate: <?= e(number_format($tax, 2)) ?>%. Final total shown at checkout.</small><?php endif; ?>
           </div>
           <div class="iw-detail-actions">
             <a class="iw-detail-primary" href="<?= e(portal_url('login', ['service' => (string) ($service['slug'] ?? '')])) ?>">Continue to order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
