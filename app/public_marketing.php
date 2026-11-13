@@ -1,5 +1,16 @@
 <?php
 declare(strict_types=1);
+
+/**
+ * Unknown pretty paths must never silently serve the homepage with HTTP 200.
+ * Explicit ?page= routes and direct index.php / legacy index.html stay intact.
+ */
+function iworks_unmatched_pretty_path(string $path, bool $recognized): bool
+{
+    $path = trim($path, '/');
+    return !$recognized && $path !== ''
+        && !in_array($path, ['index.php', 'index.html'], true);
+}
 /**
  * Search-intent copy for published iWorks services. Complements CMS descriptions;
  * intentionally makes no promises about CAC approvals, filing speed or rankings.
