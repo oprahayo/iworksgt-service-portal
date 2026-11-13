@@ -194,6 +194,20 @@ $isLaunchHome = $currentPublicSlug === 'home';
     <?php endif; ?>
   <?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/iworks-responsive-logo.css')) ?>?v=20261113-logo1">
+
+  <?php if ($currentPublicSlug === 'service'): ?>
+    <?php
+      // Split-root cPanel can serve the public site through the portal PHP
+      // tree without sharing the apex /assets mapping. Inline this scoped
+      // stylesheet AFTER the other public styles, with an asset fallback.
+      $iwProductCss = __DIR__ . '/../../assets/css/product-detail.css';
+    ?>
+    <?php if (is_file($iwProductCss) && is_readable($iwProductCss)): ?>
+      <style id="iw-product-detail-css"><?= (string) file_get_contents($iwProductCss) ?></style>
+    <?php else: ?>
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/product-detail.css')) ?>?v=20261113-product1">
+    <?php endif; ?>
+  <?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
