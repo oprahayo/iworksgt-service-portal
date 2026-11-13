@@ -58,7 +58,7 @@ function iworks_post_login_destination(?array $user): string
         return url('trademark');
     }
     if ((string) ($user['role'] ?? '') === 'client') {
-        if (in_array($slug, ['business-name-registration','business-name-registration-cac-nigeria'], true)) {
+        if (in_array($slug, ['business-name-registration','business-name-registration-cac-nigeria','cac-business-name'], true)) {
             return url('cac_filing', ['type' => 'business']);
         }
         if ($slug === 'company-registration') {
