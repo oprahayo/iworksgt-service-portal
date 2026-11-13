@@ -22,8 +22,22 @@ function current_user(): ?array
     $user = db_one('SELECT * FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1', ['id' => $userId]);
 
     if ($user && (($user['status'] ?? 'active') !== 'active' || ($user['account_state'] ?? 'active') !== 'active')) {
-        unset($_SESSION['user_id']);
+        unset($_SESSION['user_id'], $_SESSION['auth_password_marker']);
         $user = null;
+    }
+
+    // A password reset rotates password_hash; older sessions and sessions
+    // predating this release fail closed without a database schema change.
+    if ($user) {
+        $expected = hash('sha256', (string) ($user['password_hash'] ?? ''));
+        $current = (string) ($_SESSION['auth_password_marker'] ?? '');
+        if ($current === '' || !hash_equals($expected, $current)) {
+            unset($_SESSION['user_id'], $_SESSION['auth_password_marker']);
+            $user = null;
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+        }
     }
 
     if ($user) {
@@ -134,15 +148,22 @@ function login_with_password(string $email, string $password): bool
         return false;
     }
 
-    $_SESSION['user_id'] = (int) $user['id'];
-    reset_current_user_cache();
-
+    login_user((int) $user['id']);
     return true;
 }
 
 function login_user(int $userId): void
 {
+    $user = find_user_by_id($userId);
+    if (!$user || ($user['status'] ?? '') !== 'active'
+        || ($user['account_state'] ?? '') !== 'active') {
+        throw new RuntimeException('Account is not eligible for sign-in.');
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
     $_SESSION['user_id'] = $userId;
+    $_SESSION['auth_password_marker'] = hash('sha256', (string) ($user['password_hash'] ?? ''));
     try {
         db_execute('UPDATE users SET last_seen_at = :last_seen_at WHERE id = :id', [
             'last_seen_at' => now(),
@@ -156,8 +177,12 @@ function login_user(int $userId): void
 
 function logout_user(): void
 {
-    unset($_SESSION['iworks_pending_order']);
-    unset($_SESSION['user_id']);
+    // The anonymous session gets a fresh identifier. No authenticated
+    // state, previous OAuth OTP context or order intent can survive logout.
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
     reset_current_user_cache();
 }
 
@@ -829,6 +854,11 @@ function send_password_reset_link_to_user(int $userId): bool
         return false;
     }
 
+    // Never create an undeliverable reset token when transport is disabled.
+    if (!email_enabled()) {
+        return false;
+    }
+
     $token = create_password_reset_token($userId);
     $link = portal_absolute_url(url('reset_password', ['token' => $token]));
     $subject = 'Reset your iWorks GT portal password';
@@ -857,38 +887,58 @@ function reset_password_with_token(string $token, string $newPassword, string $c
     if ($token === '') {
         throw new RuntimeException('Invalid reset token.');
     }
-
-    $record = find_password_reset_by_token($token);
-    if (!$record) {
-        throw new RuntimeException('Reset link is invalid.');
-    }
-
-    if (!empty($record['used_at'])) {
-        throw new RuntimeException('Reset link has already been used.');
-    }
-
-    if (strtotime((string) $record['expires_at']) < time()) {
-        throw new RuntimeException('Reset link has expired. Request a new one.');
-    }
-
     if (strlen($newPassword) < 6) {
         throw new RuntimeException('New password must be at least 6 characters.');
     }
-
     if ($newPassword !== $confirmPassword) {
         throw new RuntimeException('New password and confirmation do not match.');
     }
 
-    db_execute(
-        'UPDATE users SET password_hash = :password_hash, must_change_password = 0 WHERE id = :id',
-        [
-            'password_hash' => password_hash($newPassword, PASSWORD_DEFAULT),
-            'id' => (int) $record['user_id'],
-        ]
-    );
+    // One transaction and row locks for ALL tokens of the same user. Two
+    // concurrent requests cannot both succeed, nor can an old link reset
+    // the account after a newer reset has completed.
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $record = db_one(
+            'SELECT * FROM password_resets WHERE token_hash = :token_hash FOR UPDATE',
+            ['token_hash' => hash('sha256', $token)]
+        );
+        if (!$record || !empty($record['used_at'])) {
+            throw new RuntimeException('Reset link is invalid or has already been used.');
+        }
+        if (strtotime((string) $record['expires_at']) <= time()) {
+            throw new RuntimeException('Reset link has expired. Request a new one.');
+        }
 
-    db_execute('DELETE FROM trusted_devices WHERE user_id = :user_id', ['user_id' => (int) $record['user_id']]);
-    db_execute('UPDATE password_resets SET used_at = :used_at WHERE id = :id', ['used_at' => now(), 'id' => (int) $record['id']]);
+        $user = db_one(
+            'SELECT id, status, account_state, deleted_at FROM users WHERE id = :id FOR UPDATE',
+            ['id' => (int) $record['user_id']]
+        );
+        if (!$user || $user['status'] !== 'active' || $user['account_state'] !== 'active'
+            || $user['deleted_at'] !== null) {
+            throw new RuntimeException('This account is not eligible for password recovery.');
+        }
+
+        db_execute(
+            'UPDATE users SET password_hash = :password_hash, must_change_password = 0 WHERE id = :id',
+            [
+                'password_hash' => password_hash($newPassword, PASSWORD_DEFAULT),
+                'id' => (int) $user['id'],
+            ]
+        );
+        db_execute('DELETE FROM trusted_devices WHERE user_id = :user_id', ['user_id' => (int) $user['id']]);
+        db_execute('UPDATE password_resets SET used_at = :used_at WHERE user_id = :user_id AND used_at IS NULL',
+            ['used_at' => now(), 'user_id' => (int) $user['id']]);
+        // Older PHP sessions carry a fingerprint of password_hash and will
+        // fail current_user() after this commit. Never disclose old tokens.
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
 }
 
 function send_password_reset_links_to_all_active_users(): int
