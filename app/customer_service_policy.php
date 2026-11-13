@@ -14,14 +14,15 @@ function iworks_customer_published_service(array $service): ?array
     $slug = strtolower(trim((string)($service['slug'] ?? '')));
     $name = trim((string)($service['name'] ?? ''));
     if ($slug === '' || $name === '') return null;
+    if (isset($service['is_active']) && (int)$service['is_active'] !== 1) return null;
+    if (isset($service['is_public']) && (int)$service['is_public'] !== 1) return null;
     // Presentation-only catalogue child. Never eligible for generic invoices.
     if ($slug === 'cac-business-name') {
         $service['_iworks_checkout_mode'] = 'cac';
         $service['_iworks_registration_type'] = 'business';
         return $service;
     }
-    if (isset($service['is_active']) && (int)$service['is_active'] !== 1) return null;
-    if (isset($service['is_public']) && (int)$service['is_public'] !== 1) return null;
+
 
     // Historical BN records remain intact for prior orders, but CAC BN and
     // Nigerian private Ltd are now one canonical registration product.
