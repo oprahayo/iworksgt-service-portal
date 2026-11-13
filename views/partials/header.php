@@ -245,6 +245,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-clean.css">
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
+  <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -260,21 +261,12 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <aside class="portal-sidebar" id="portalSidebar">
     <div class="sidebar-head">
       <a class="sidebar-brand fw-bold" href="<?= e(url('dashboard')) ?>" aria-label="<?= e(brand_name()) ?> dashboard">
-        <span class="sidebar-brand-full">
-          <?php if ($logo !== ''): ?>
-            <img src="<?= e($logo) ?>" alt="Logo" class="brand-logo">
-          <?php else: ?>
-            <span class="brand-text"><?= e(brand_name()) ?> <span>Portal</span></span>
-          <?php endif; ?>
+        <span class="sidebar-brand-full iw-brand-sidebar-lockup">
+          <img src="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1" alt="" class="brand-logo iw-compact-logo" width="49" height="28" decoding="async">
+          <span class="iw-compact-wordmark">iWORKS<small>GLOBAL</small></span>
         </span>
         <span class="sidebar-brand-mini" aria-hidden="true">
-          <?php if ($favicon !== ''): ?>
-            <img src="<?= e($favicon) ?>" alt="" class="sidebar-favicon-logo">
-          <?php elseif ($logo !== ''): ?>
-            <img src="<?= e($logo) ?>" alt="" class="sidebar-favicon-logo">
-          <?php else: ?>
-            <i class="bi bi-grid-1x2-fill"></i>
-          <?php endif; ?>
+          <img src="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1" alt="" class="sidebar-favicon-logo iw-sidebar-mini-icon" width="30" height="20" decoding="async">
         </span>
       </a>
       <span class="iw-ops-sidebar-role"><?= e(ucfirst((string)($user['role'] ?? 'team'))) ?> workspace</span>
@@ -389,11 +381,10 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
   <div class="container">
     <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= e(url('login')) ?>">
-      <?php if ($logo !== ''): ?>
-        <img src="<?= e($logo) ?>" alt="Logo" class="brand-logo">
-      <?php else: ?>
-        <span class="brand-text"><?= e(brand_name()) ?> <span>Portal</span></span>
-      <?php endif; ?>
+      <picture class="iw-auth-brand-picture">
+        <source media="(max-width:575.98px)" srcset="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1">
+        <img src="<?= e(portal_absolute_url('assets/branding/iworks-desktop.svg')) ?>?v=20261113-logo1" alt="<?= e(brand_name()) ?>" class="brand-logo" width="204" height="19" decoding="async">
+      </picture>
     </a>
 
     <div class="d-flex align-items-center gap-2">
