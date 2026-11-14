@@ -1805,6 +1805,42 @@ try {
                 try {
                     $serviceAction = (string) ($_POST['form_action'] ?? '');
 
+                    if ($serviceAction === 'save_launch_prices') {
+                        $defaults=[
+                            'launch_bn_ngn'=>49000,'launch_bn_usd'=>95,
+                            'launch_company_small_ngn'=>60000,'launch_company_small_usd'=>175,
+                            'launch_company_large_ngn'=>150000,'launch_company_large_usd'=>325,
+                            'launch_ngo_ngn'=>180000,'launch_ngo_usd'=>495,
+                            'launch_web_starter_ngn'=>250000,'launch_web_starter_usd'=>480,
+                            'launch_web_business_ngn'=>500000,'launch_web_business_usd'=>950,
+                            'launch_web_store_ngn'=>900000,'launch_web_store_usd'=>1900,
+                        ];
+                        $newPrices=[];
+                        foreach($defaults as $key=>$default) {
+                            $value=filter_var($_POST[$key]??null,FILTER_VALIDATE_FLOAT);
+                            if ($value===false || !is_finite((float)$value) ||
+                                (float)$value<=0 || (float)$value>100000000) {
+                                throw new RuntimeException('Enter valid positive prices for every regional package.');
+                            }
+                            $newPrices[$key]=round((float)$value,2);
+                        }
+                        // Regional rates have their own price book and do not
+                        // modify historical orders, invoices or old CAC settings.
+                        db()->beginTransaction();
+                        try {
+                            foreach($newPrices as $key=>$amount) {
+                                set_setting($key,number_format($amount,2,'.',''));
+                            }
+                            db()->commit();
+                            reload_settings_cache();
+                        } catch(Throwable $error) {
+                            if (db()->inTransaction()) db()->rollBack();
+                            throw $error;
+                        }
+                        flash('success','New-order regional package prices saved. Existing invoices are unchanged.');
+                        redirect(url('services',['section'=>'launch-prices']));
+                    }
+
                     if ($serviceAction === 'save_cac_pricing') {
                         $amounts = [];
                         foreach ([
