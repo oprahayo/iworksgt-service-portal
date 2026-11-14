@@ -313,13 +313,33 @@ function iw_chat_public_request(): void
             $ref = is_array($refParts)
                 ? substr((string)($refParts['path'] ?? '/'),0,250)
                 : '/';
-            db_execute(
-                "INSERT INTO iw_live_threads
-                 (visitor_token_hash,name,email,ip_prefix,country_code,landing_page,status,visitor_last_seen_at,created_at,updated_at)
-                 VALUES (:token,:name,:email,:ip,:country,:landing,'open',NOW(),NOW(),NOW())",
-                ['token'=>hash('sha256', $token),'name'=>$name,'email'=>$email,
-                 'ip'=>$ip,'country'=>iw_chat_country_code(),'landing'=>$ref]
-            );
+            $engagement = iw_chat_engagement_ready();
+            $remember = $engagement && (string)($_POST['remember_chat'] ?? '') === '1';
+            $notify = $engagement && (string)($_POST['notify_offline'] ?? '') === '1';
+            $pageTracking = $engagement && (string)($_POST['track_page'] ?? '') === '1';
+            $currentPage = $pageTracking ? iw_chat_safe_page((string)($_POST['page_path'] ?? '')) : null;
+            if ($engagement) {
+                db_execute(
+                    "INSERT INTO iw_live_threads
+                     (visitor_token_hash,name,email,ip_prefix,country_code,landing_page,
+                      current_page,track_page,notify_offline,status,visitor_last_seen_at,created_at,updated_at)
+                     VALUES (:token,:name,:email,:ip,:country,:landing,
+                       :current_page,:track_page,:notify_offline,'open',NOW(),NOW(),NOW())",
+                    ['token'=>hash('sha256',$token),'name'=>$name,'email'=>$email,
+                     'ip'=>$ip,'country'=>iw_chat_country_code(),'landing'=>$ref,
+                     'current_page'=>$currentPage,'track_page'=>(int)$pageTracking,
+                     'notify_offline'=>(int)$notify]
+                );
+                iw_chat_remember_cookie($token,$remember);
+            } else {
+                db_execute(
+                    "INSERT INTO iw_live_threads
+                     (visitor_token_hash,name,email,ip_prefix,country_code,landing_page,status,visitor_last_seen_at,created_at,updated_at)
+                     VALUES (:token,:name,:email,:ip,:country,:landing,'open',NOW(),NOW(),NOW())",
+                    ['token'=>hash('sha256',$token),'name'=>$name,'email'=>$email,
+                     'ip'=>$ip,'country'=>iw_chat_country_code(),'landing'=>$ref]
+                );
+            }
             $createdId = db_last_id();
             try {
                 notify_users(admin_user_ids(), 'Visitor waiting in live chat',
@@ -328,11 +348,39 @@ function iw_chat_public_request(): void
                 error_log('[iWorks live chat notification] '.$notificationFailure->getMessage());
             }
             iw_chat_send_json(['ok'=>true,'token'=>$token,'id'=>$createdId,
-                'staff_online'=>iw_chat_staff_online(), 'messages'=>[]]);
+                'staff_online'=>iw_chat_staff_online(),'messages'=>[],
+                'features'=>$engagement ? ['resume'=>true,'offline_email'=>true,'page_presence'=>true] : []]);
             return;
         }
 
+        if ($action === 'resume') {
+            if (!iw_chat_engagement_ready()) {
+                iw_chat_send_json(['ok'=>true,'active'=>false]);
+                return;
+            }
+            $savedToken = iw_chat_resume_cookie_token();
+            $savedThread = $savedToken === '' ? null : iw_chat_public_thread($savedToken);
+            if (!$savedThread || (string)$savedThread['status'] !== 'open') {
+                if ($savedToken !== '') iw_chat_remember_cookie('',false);
+                iw_chat_send_json(['ok'=>true,'active'=>false]);
+                return;
+            }
+            iw_chat_touch_visitor($savedThread,$_POST);
+            $savedThread = db_one('SELECT * FROM iw_live_threads WHERE id=:id',
+                ['id'=>(int)$savedThread['id']]) ?: $savedThread;
+            iw_chat_send_json(['ok'=>true,'active'=>true,
+                'id'=>(int)$savedThread['id'],
+                'name'=>(string)$savedThread['name'],
+                'email'=>(string)$savedThread['email'],
+                'status'=>'open','staff_online'=>iw_chat_staff_online(),
+                'messages'=>iw_chat_messages((int)$savedThread['id']),
+                'unread'=>iw_chat_unread_for_visitor($savedThread)]);
+            return;
+        }
         $token = strtolower(trim((string)($_POST['token'] ?? '')));
+        // The HttpOnly remembered conversation is a fallback if the previous
+        // tab-session token is no longer available after closing the browser.
+        if ($token === '') $token = iw_chat_resume_cookie_token();
         $thread = iw_chat_public_thread($token);
         if (!$thread) {
             iw_chat_send_json(['ok'=>false,'message'=>'This chat session has expired. Start a new conversation.'],404);
@@ -345,8 +393,7 @@ function iw_chat_public_request(): void
                     'messages'=>iw_chat_messages($threadId, min(2147483647,max(0,(int)($_POST['after_id'] ?? 0))))]);
                 return;
             }
-            db_execute('UPDATE iw_live_threads SET visitor_last_seen_at=NOW() WHERE id=:id',
-                ['id'=>$threadId]);
+            iw_chat_touch_visitor($thread,$_POST);
             if ($action === 'send') {
                 $body = trim((string)($_POST['message'] ?? ''));
                 if ($body === '' || (function_exists('mb_strlen') ? mb_strlen($body) : strlen($body)) > 2000) {
@@ -365,8 +412,12 @@ function iw_chat_public_request(): void
                     ['id'=>$threadId]);
             }
             $after = min(2147483647,max(0,(int)($_POST['after_id'] ?? 0)));
+            // Reload the last-read watermark from the DB, since heartbeat
+            // updates and this request can share the same connection.
+            $fresh = db_one('SELECT * FROM iw_live_threads WHERE id=:id',['id'=>$threadId]) ?: $thread;
             iw_chat_send_json(['ok'=>true,'status'=>'open','staff_online'=>iw_chat_staff_online(),
-                'messages'=>iw_chat_messages($threadId,$after)]);
+                'messages'=>iw_chat_messages($threadId,$after),
+                'unread'=>iw_chat_unread_for_visitor($fresh)]);
             return;
         }
         if ($action === 'end') {
@@ -374,6 +425,7 @@ function iw_chat_public_request(): void
             db_execute("UPDATE iw_live_threads SET status='ended',
                     rating=:rating,updated_at=NOW() WHERE id=:id",
                 ['id'=>$threadId,'rating'=>($rating>=1 && $rating<=5)?$rating:null]);
+            if (iw_chat_resume_cookie_token() === $token) iw_chat_remember_cookie('',false);
             iw_chat_send_json(['ok'=>true,'status'=>'ended']);
             return;
         }
