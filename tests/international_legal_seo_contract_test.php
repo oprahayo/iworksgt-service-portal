@@ -30,8 +30,11 @@ foreach(['privacy'=>'Privacy Policy','terms'=>'Terms &amp; Conditions','cookies'
     international_check(!str_contains($html,'section-shell')&&!str_contains($html,'card shadow'),
       $slug.' must not use legacy boxed CMS section shell.');
     international_check(str_contains($html,'support@iworksgt.com'),$slug.' rights and contact address missing.');
-    international_check(str_contains($html,'/privacy')&&str_contains($html,'/terms')&&str_contains($html,'/cookies'),
-      $slug.' related policy navigation missing.');
+    foreach (['privacy','terms','cookies'] as $related) {
+        if ($related === $slug) { continue; }
+        international_check(str_contains($html,'/'.$related),
+            $slug.' related policy navigation missing: '.$related);
+    }
 }
 $privacy=render_official_page('privacy');
 foreach(['International customers and transfers','Your choices and rights','Retention and deletion',
