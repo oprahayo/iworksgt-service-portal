@@ -69,6 +69,26 @@ def main() -> None:
                                     break
                             except Exception:
                                 pass
+                        # Cornerstonetl has an independently reviewed
+                        # service-gallery page matching the client's supplied
+                        # screenshot. Capture that project-relevant page instead
+                        # of the homepage's promotional slider when available.
+                        if slug == "cornerstonetl-senior-care-website-design-hosting":
+                            try:
+                                service_link = page.get_by_role(
+                                    "link", name=re.compile(r"^Services$", re.I)
+                                ).first
+                                if service_link.count() and service_link.is_visible():
+                                    service_link.click(timeout=5000)
+                                    page.wait_for_load_state("domcontentloaded", timeout=12000)
+                                    page.wait_for_timeout(1200)
+                                    if page.get_by_text("What We Provide", exact=False).count():
+                                        print("CORNERSTONETL: captured actual What We Provide services gallery")
+                                    else:
+                                        page.go_back(wait_until="domcontentloaded", timeout=12000)
+                                        page.wait_for_timeout(800)
+                            except Exception as exc:
+                                print(f"CORNERSTONETL: services page unavailable; use real homepage: {type(exc).__name__}")
                         # Browsers may retain an accidental text selection
                         # from a consent click or an autoplaying slider.
                         # Clear that UI state so previews never show blue
