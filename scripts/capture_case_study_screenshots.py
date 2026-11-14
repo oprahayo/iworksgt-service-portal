@@ -69,6 +69,18 @@ def main() -> None:
                                     break
                             except Exception:
                                 pass
+                        # Browsers may retain an accidental text selection
+                        # from a consent click or an autoplaying slider.
+                        # Clear that UI state so previews never show blue
+                        # highlighted text, selected elements or focus rings.
+                        page.evaluate("""() => {
+                            const selection = window.getSelection();
+                            if (selection) selection.removeAllRanges();
+                            if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                            }
+                        }""")
+                        page.wait_for_timeout(250)
                         title = page.title().strip()
                         visible = page.locator("body").inner_text(timeout=10000).strip()
                         if DISALLOWED_TITLES.search(title) or len(visible) < 100:
