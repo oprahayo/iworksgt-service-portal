@@ -10,6 +10,7 @@
   var metaNode = document.getElementById('iwLiveChatMeta');
   var statusNode = document.getElementById('iwLiveStatus');
   var soundButton = document.getElementById('iwLiveSound');
+  var activityBars = document.getElementById('iwLiveActivityBars');
   var sendButton = document.getElementById('iwLiveSend');
   var closeButton = document.getElementById('iwLiveClose');
   var replyForm = document.getElementById('iwLiveReplyForm');
@@ -76,7 +77,7 @@
   function renderThreads() {
     var search = filterNode.value.trim().toLowerCase();
     var matches = allThreads.filter(function (thread) {
-      return !search || [thread.name,thread.email,thread.id,thread.country_code]
+      return !search || [thread.name,thread.email,thread.id,thread.country_code,thread.current_page]
         .some(function (x) { return String(x || '').toLowerCase().includes(search); });
     });
     threadsNode.replaceChildren();
@@ -97,7 +98,10 @@
       if (Number(thread.unread) > 0) top.append(el('b','iw-live-unread',Math.min(Number(thread.unread),99)));
       var middle=el('span','iw-live-thread-preview',thread.preview || 'Awaiting first message');
       var bottom=el('span','iw-live-thread-bottom');
-      bottom.append(el('span','', [thread.country_code || 'Location unavailable',thread.status].join(' · ')));
+      var currentPage = Number(thread.track_page) && thread.current_page
+        ? 'On ' + thread.current_page : 'Page not shared';
+      bottom.append(el('span','', [thread.country_code || 'Country unknown',
+        Number(thread.visitor_online) ? 'Active' : 'Away',currentPage].join(' · ')));
       bottom.append(el('span','', '#'+thread.id));
       button.append(top,middle,bottom);
       button.addEventListener('click',function () {
@@ -124,8 +128,11 @@
     text(titleNode,thread.name + ' · #' + thread.id);
     text(metaNode,thread.email + '  ·  ' +
        (thread.country_code ? 'Country hint: '+thread.country_code : 'Country unavailable') +
-       '  ·  Network: '+(thread.ip_prefix || 'unknown') +
-       '  ·  '+(Number(thread.visitor_online) ? 'Online' : 'Offline'));
+       '  ·  Masked network: '+(thread.ip_prefix || 'unknown') +
+       '  ·  '+(Number(thread.visitor_online) ? 'Active now' : 'Offline') +
+       '  ·  '+(Number(thread.track_page) && thread.current_page
+         ? 'Current page: '+thread.current_page : 'Current page not shared') +
+       '  ·  '+(Number(thread.notify_offline) ? 'Offline email opted in' : 'On-site replies only'));
     var open = thread.status === 'open';
     replyInput.disabled = !open; sendButton.disabled = !open; closeButton.disabled = !open;
     replyInput.placeholder = open ? 'Write a reply to this visitor…' : 'Conversation ended';
@@ -147,6 +154,33 @@
     if (newMessages.length) messagesNode.scrollTop=messagesNode.scrollHeight;
   }
 
+  function renderActivity(summary) {
+    if (!summary || !activityBars) return;
+    var map = {};
+    (Array.isArray(summary.activity) ? summary.activity : []).forEach(function (item) {
+      map[String(item.day)] = Number(item.total) || 0;
+    });
+    var days = [];
+    for (var x=6;x>=0;x--) {
+      var day = new Date(); day.setHours(12,0,0,0); day.setDate(day.getDate()-x);
+      var stamp = [day.getFullYear(),String(day.getMonth()+1).padStart(2,'0'),
+        String(day.getDate()).padStart(2,'0')].join('-');
+      days.push({date:stamp, count:map[stamp] || 0});
+    }
+    var max = Math.max(1,...days.map(function (d) { return d.count; }));
+    var items = document.createDocumentFragment();
+    days.forEach(function (day) {
+      var col = el('span','iw-live-activity-col');
+      col.title = day.date+' · '+day.count+' messages';
+      var bar = el('i');
+      bar.style.height = Math.max(4,Math.round(day.count/max*100))+'%';
+      col.append(bar,el('small','',day.date.slice(5)));
+      items.appendChild(col);
+    });
+    activityBars.replaceChildren(items);
+    activityBars.setAttribute('aria-label','Message activity: '+
+      days.map(function (day) { return day.date+': '+day.count; }).join(', '));
+  }
   var started = false;
   async function poll() {
     if (pending || document.visibilityState === 'hidden') return;
@@ -168,6 +202,11 @@
       text(document.getElementById('iwLiveOpen'),newThreads.filter(function (x) { return x.status==='open'; }).length);
       text(document.getElementById('iwLiveOnline'),newThreads.filter(function (x) { return Number(x.visitor_online); }).length);
       text(document.getElementById('iwLiveAgents'),data.online_agents || 0);
+      if (data.summary) {
+        text(document.getElementById('iwLiveAwaiting'),data.summary.unanswered || 0);
+        text(document.getElementById('iwLiveToday'),data.summary.new_today || 0);
+        renderActivity(data.summary);
+      }
       renderThreads();
       populateActive();
       renderMessages(data.messages || []);
@@ -188,7 +227,7 @@
       renderMessages(data.messages || []);
       allThreads=data.threads || allThreads;
       renderThreads();
-      text(statusNode,'Reply delivered.');
+      text(statusNode,'Reply saved. The visitor will see it on return; offline email is queued only if they opted in.');
     } catch (error) { text(statusNode,error.message || 'Message not sent.'); }
     finally { sendButton.disabled=false; }
   });
