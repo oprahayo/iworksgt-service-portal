@@ -1809,7 +1809,8 @@ try {
                         foreach ([
                             'cac_business_base_ngn' => 26000,
                             'cac_business_partner_extra_ngn' => 15000,
-                            'cac_company_base_ngn' => 120000,
+                            'cac_company_base_ngn' => 75000,
+                            'cac_company_growth_ngn' => 150000,
                             'cac_company_extra_director_ngn' => 0,
                             'cac_virtual_address_ngn' => 0,
                             'cac_privacy_advisory_per_director_ngn' => 50000,
@@ -1823,6 +1824,14 @@ try {
                         }
                         if ($amounts['cac_business_base_ngn'] <= 0 || $amounts['cac_company_base_ngn'] <= 0) {
                             throw new RuntimeException('Business Name and Limited Company base prices must be greater than zero.');
+                        }
+                        if ($amounts['cac_company_growth_ngn'] < $amounts['cac_company_base_ngn']) {
+                            throw new RuntimeException('Growth-company pricing cannot be lower than the basic company fee.');
+                        }
+                        $diasporaMultiplier = filter_var($_POST['diaspora_cac_service_multiplier'] ?? '1.6', FILTER_VALIDATE_FLOAT);
+                        if ($diasporaMultiplier === false || !is_finite((float)$diasporaMultiplier)
+                            || $diasporaMultiplier < 1.0 || $diasporaMultiplier > 4.0) {
+                            throw new RuntimeException('Set an overseas support multiplier between 1.0 and 4.0.');
                         }
                         $virtualEnabled = isset($_POST['cac_virtual_address_enabled']);
                         $office = trim((string)($_POST['cac_virtual_address_details'] ?? ''));
@@ -1838,6 +1847,7 @@ try {
                                 if ($key === 'cac_company_base_ngn') continue;
                                 set_setting($key, number_format($value,2,'.',''));
                             }
+                            set_setting('diaspora_cac_service_multiplier', number_format((float)$diasporaMultiplier,2,'.',''));
                             set_setting('cac_virtual_address_enabled', $virtualEnabled ? '1' : '0');
                             set_setting('cac_virtual_address_details', $virtualEnabled ? $office : '');
                             db_execute("UPDATE services SET price=:price, currency='NGN' WHERE id=:id",
