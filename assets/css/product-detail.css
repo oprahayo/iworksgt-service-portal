@@ -384,3 +384,34 @@ body.page-public .iw-product .iw-product-related li i {flex-shrink:0;font-size:1
   body.page-public .iw-product .iw-product-cta,
   body.page-public .iw-product .iw-product-faq summary i {transition:none}
 }
+
+
+/* Self-service launch options: scoped to real published service detail pages. */
+body.page-public .iw-launch-product-choices {margin-top:20px}
+body.page-public .iw-launch-product-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;
+  margin:17px 0 11px;
+}
+body.page-public .iw-launch-product-card {
+  min-width:0;padding:19px;border:1px solid #e8dcd3;border-radius:12px;
+  background:#fffdfb;display:flex;flex-direction:column;gap:9px;
+}
+body.page-public .iw-launch-product-card h3 {
+  margin:0;color:#28333d;font-weight:750;font-size:17px;line-height:1.4;
+}
+body.page-public .iw-launch-product-card p {
+  margin:0;color:#687480;font-size:13px;line-height:1.65;flex:1;
+}
+body.page-public .iw-launch-product-card strong {font-size:19px;color:#ba511c}
+body.page-public .iw-launch-product-card a {
+  display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
+  color:#a74914;font-size:13px;font-weight:750;min-height:40px;
+  text-decoration:underline;text-underline-offset:3px;
+}
+body.page-public .iw-launch-currency-note {
+  color:#69737d;font-size:12px;line-height:1.65;margin:10px 0 0;
+}
+@media(max-width:630px) {
+  body.page-public .iw-launch-product-grid {grid-template-columns:1fr;gap:11px}
+  body.page-public .iw-launch-product-card {padding:16px}
+}
