@@ -5,7 +5,13 @@ $checkoutId = (int)($checkoutService['id'] ?? 0);
 $checkoutName = trim((string)($checkoutService['name'] ?? 'Service'));
 $checkoutSummary = trim((string)preg_replace('/\s+/', ' ', strip_tags((string)($checkoutService['short_description'] ?? $checkoutService['description'] ?? ''))));
 $checkoutPrice = (float)($checkoutService['price'] ?? 0);
-$checkoutCurrency = strtoupper((string)($checkoutService['currency'] ?? default_currency()));
+$nativeCurrency = strtoupper((string)($checkoutService['currency'] ?? default_currency()));
+if ($checkoutCurrency !== $nativeCurrency) {
+    // Existing database price still belongs to its currency. Do not treat
+    // the same numeric amount as interchangeable NGN and USD.
+    $checkoutPrice = convert_amount($checkoutPrice, $nativeCurrency, $checkoutCurrency);
+}
+$checkoutCurrency = iworks_client_country_currency(current_user()) ?: strtoupper((string)($checkoutService['currency'] ?? default_currency()));
 $checkoutTaxPercent = max(0.0, min(100.0, (float)($checkoutService['tax_percent'] ?? 0)));
 $checkoutTax = round($checkoutPrice * $checkoutTaxPercent / 100, 2);
 $checkoutTotal = round($checkoutPrice + $checkoutTax, 2);
@@ -49,19 +55,15 @@ $checkoutTotal = round($checkoutPrice + $checkoutTax, 2);
         <input type="hidden" name="title" value="<?= e($checkoutName) ?>">
         <label for="iwFocusedRequirements">Your requirements <span class="iw-focused-optional">(optional)</span></label>
         <textarea name="description" id="iwFocusedRequirements" rows="4" maxlength="4000" placeholder="Tell us what you need, timelines and any important context."></textarea>
-        <label for="iwFocusedCurrency">Invoice currency</label>
-        <select name="pay_currency" id="iwFocusedCurrency" required>
-          <?php foreach (payment_currency_options() as $currency): ?>
-            <option value="<?= e($currency) ?>" <?= $currency === $checkoutCurrency ? 'selected' : '' ?>><?= e($currency) ?></option>
-          <?php endforeach; ?>
-        </select>
-        <p class="iw-focused-fx-note">The figures above are in <?= e($checkoutCurrency) ?>. If you select another invoice currency, the server recalculates the amount at the prevailing checkout exchange rate. Review the final invoice before paying.</p>
+        <input type="hidden" name="pay_currency" value="<?= e($checkoutCurrency) ?>">
+        <p class="iw-focused-fx-note">Billing currency: <strong><?= e($checkoutCurrency) ?></strong>, based on your account country of residence. The invoice is calculated on the server; confirm the final amount before payment. Contact support if your registered residence has changed.</p>
         <label for="iwFocusedPayMethod">Preferred payment method</label>
         <select id="iwFocusedPayMethod" name="checkout_pay_method">
           <option value="card">Card</option>
           <option value="bank">Bank transfer</option>
           <option value="crypto">Cryptocurrency (where supported)</option>
         </select>
+        <p class="iw-focused-fx-note">By continuing, you request this service under our <a href="<?= e(public_url('terms')) ?>">Terms &amp; Conditions</a> and acknowledge the <a href="<?= e(public_url('privacy')) ?>">Privacy Policy</a>. Any applicable official filing fees and refund terms will be shown in your final quotation or invoice.</p>
         <button type="submit" class="iw-focused-submit">Continue to invoice <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
         <a class="iw-focused-cancel" href="<?= e(url('dashboard')) ?>">Choose another service</a>
       </form>
