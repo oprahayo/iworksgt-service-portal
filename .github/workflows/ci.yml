@@ -104,6 +104,7 @@ jobs:
           php tests/iworks_original_favicon_contract_test.php
           php tests/home_insights_three_cards_contract_test.php
           php tests/admin_public_navigation_schema_contract_test.php
+          php tests/admin_transition_contract_test.php
           php tests/job_support_refresh_contract_test.php
           php tests/support_reply_email_test.php
           php tests/mail_envelope_sender_test.php
@@ -130,3 +131,5 @@ jobs:
           node --check assets/js/public-ux.js
           node --check assets/js/public-assistance.js
           node --check assets/js/live-inbox.js
+          node --check assets/js/admin-transition.js
+          node tests/admin_transition_behavior_test.js
