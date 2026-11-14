@@ -1,0 +1,54 @@
+name: Capture genuine client website screenshots
+
+on:
+  push:
+    branches:
+      - launch/publish-five-client-case-studies-20261114
+    paths:
+      - scripts/capture_case_study_screenshots.py
+      - .github/workflows/capture-case-study-screenshots.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image and browser dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright pillow
+          python -m playwright install chromium --with-deps
+      - name: Capture real website homepages (skip unavailable sites)
+        run: python scripts/capture_case_study_screenshots.py
+      - name: Upload reviewable captured assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-client-website-screenshots
+          path: assets/branding/case-studies/
+          retention-days: 30
+      - name: Commit screenshots only on the launch feature branch
+        run: |
+          git add assets/branding/case-studies/
+          if git diff --cached --quiet; then
+            echo 'No screenshot files captured.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'assets(portfolio): add real browser captures of client websites'
+          # Other launch changes may have reached the feature branch while
+          # Chromium was running; rebase binary capture commit, never force-push.
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

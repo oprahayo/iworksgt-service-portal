@@ -10,6 +10,16 @@ function iworks_editorial_media(int $id): string {
     $asset=get_media_asset($id);
     return trim((string)($asset['url']??''));
 }
+/** Prefer an approved Media Library image; otherwise display an actual local website
+ * screenshot captured for this client. Never construct arbitrary filesystem paths. */
+function iworks_editorial_case_cover(array $row): string {
+    $media=iworks_editorial_media((int)($row['image_id']??0));
+    if ($media!=='') return $media;
+    $slug=(string)($row['slug']??'');
+    if (!preg_match('/^[a-z0-9][a-z0-9-]{0,180}$/D',$slug)) return '';
+    $relative='assets/branding/case-studies/'.$slug.'.webp';
+    return is_file(dirname(__DIR__).'/'.$relative) ? public_absolute_url($relative) : '';
+}
 function iworks_editorial_slug(string $title,int $id=0): string {
     $base=substr(slugify($title),0,165);
     if($base==='')throw new RuntimeException('Provide a descriptive title.');
@@ -28,7 +38,7 @@ function iworks_editorial_cases(bool $published=true,int $limit=24):array {
     $sql.=' ORDER BY updated_at DESC,id DESC LIMIT '.max(1,min(100,$limit));
     $rows=db_all($sql);
     return array_map(static function(array $row):array {
-        $row['image_url']=iworks_editorial_media((int)($row['image_id']??0));
+        $row['image_url']=iworks_editorial_case_cover($row);
         $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
         return $row;
     },$rows);
@@ -42,7 +52,7 @@ function iworks_editorial_case_slug(string $slug):?array {
     if(!iworks_editorial_ready('iworks_case_studies'))return null;
     $row=db_one("SELECT * FROM iworks_case_studies WHERE slug=:slug AND status='published' LIMIT 1",['slug'=>$slug]);
     if(!$row)return null;
-    $row['image_url']=iworks_editorial_media((int)($row['image_id']??0));
+    $row['image_url']=iworks_editorial_case_cover($row);
     $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
     return $row;
 }
