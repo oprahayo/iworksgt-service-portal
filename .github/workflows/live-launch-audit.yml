@@ -1,0 +1,28 @@
+name: Live launch acceptance (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/live-launch-audit.yml"
+      - "scripts/audit_launch_public.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  public-launch-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Run read-only public launch gate against production
+        shell: bash
+        run: bash scripts/audit_launch_public.sh https://iworksgt.com https://portal.iworksgt.com
+      - name: State remaining launch acceptance
+        if: always()
+        run: |
+          echo 'Live public HTTP pass does not establish production launch approval.'
+          echo 'Still required: private backup and restore proof, mail/OTP and account acceptance, payment sandbox callbacks, statutory fees, privacy review, and mobile UX.'
