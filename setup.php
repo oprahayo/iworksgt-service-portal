@@ -2,6 +2,23 @@
 
 declare(strict_types=1);
 
+// The first-time installer must never be a public production endpoint.
+// A missing/removed setup.lock is NOT permission to recreate schema/admins.
+// To intentionally install a fresh instance, a server operator must set the
+// one-time IWORKS_ENABLE_WEB_SETUP=1 environment flag, with no lock file.
+// Remove this flag immediately after first install. Never accept it from HTTP.
+require_once __DIR__ . '/app/setup_access.php';
+if (PHP_SAPI !== 'cli'
+    && !iworks_web_setup_allowed(
+        getenv('IWORKS_ENABLE_WEB_SETUP') === '1',
+        is_file(__DIR__ . '/storage/setup.lock')
+    )) {
+    http_response_code(404);
+    header('X-Robots-Tag: noindex, nofollow');
+    header('Cache-Control: no-store, private');
+    exit;
+}
+
 require __DIR__ . '/app/bootstrap.php';
 
 $lockFile = __DIR__ . '/storage/setup.lock';
