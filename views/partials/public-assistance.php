@@ -4,6 +4,13 @@
  * handler; it is an asynchronous enquiry channel, not a simulated live agent.
  */
 $iwAssistEndpoint = public_url('home');
+$iwChatEngagementEnabled = false;
+try {
+    $iwChatEngagementEnabled = iw_chat_engagement_ready();
+} catch (Throwable $e) {
+    // The public website must not fail because the optional chat DB is down.
+    $iwChatEngagementEnabled = false;
+}
 ?>
 <div class="iw-assist" id="iwAssist" data-endpoint="<?= e($iwAssistEndpoint) ?>" data-live-endpoint="<?= e(public_url('home',['page'=>'live_chat'])) ?>" data-csrf="<?= e(csrf_token()) ?>">
   <div class="iw-assist-nudge" id="iwAssistNudge" hidden>
@@ -52,7 +59,7 @@ $iwAssistEndpoint = public_url('home');
           <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
-          <?php if (iw_chat_engagement_ready()): ?>
+          <?php if ($iwChatEngagementEnabled): ?>
           <div class="iw-assist-consent-options" role="group" aria-label="Support preferences">
             <label><input type="checkbox" name="remember_chat" value="1">
               Remember this conversation on this browser for 30 days</label>
