@@ -97,16 +97,17 @@ if (realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)
             )
         );
         $users = db_all(
-            "SELECT id,role FROM users WHERE role IN ('admin','author') AND status='active' ORDER BY id ASC LIMIT 100"
+            "SELECT id,role FROM users WHERE role IN ('admin','author') AND status='active' ORDER BY CASE WHEN role='admin' THEN 0 ELSE 1 END, id ASC LIMIT 100"
         );
         $ids = array_map('intval',array_column($users,'id'));
-        if ($authorId === 0 && count($ids) === 1) $authorId = $ids[0];
+        if ($authorId === 0 && $ids) $authorId = $ids[0];
         foreach ($actions as $step) {
             echo strtoupper($step['action']).': '.$step['case']['client_name']
                 .' /case-studies/'.$step['case']['slug']."\n";
         }
         if ($mode === '--check') {
             echo 'Eligible active editorial author IDs: '.($ids ? implode(', ',$ids) : '(none)')."\n";
+            echo 'Default publication author ID: '.($authorId ?: '(none)')."\n";
             echo "CHECK ONLY: no website or database content changed.\n";
             exit($ids ? 0 : 3);
         }
