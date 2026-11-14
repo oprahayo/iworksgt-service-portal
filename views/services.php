@@ -69,6 +69,11 @@
     'Starter website (indicative)'=>['launch_web_starter_ngn'=>250000,'launch_web_starter_usd'=>480],
     'Business website (indicative)'=>['launch_web_business_ngn'=>500000,'launch_web_business_usd'=>950],
     'Online store (indicative)'=>['launch_web_store_ngn'=>900000,'launch_web_store_usd'=>1900],
+    'Graphics / brand design'=>['launch_graphics-design_ngn'=>95000,'launch_graphics-design_usd'=>195],
+    'SEO / digital marketing'=>['launch_seo-smm-digital-marketing_ngn'=>180000,'launch_seo-smm-digital-marketing_usd'=>370],
+    'Domain / managed hosting'=>['launch_domain-web-hosting_ngn'=>55000,'launch_domain-web-hosting_usd'=>115],
+    'Business email / SMTP'=>['launch_email-list-smtp_ngn'=>95000,'launch_email-list-smtp_usd'=>195],
+    'Professional training'=>['launch_pro-training_ngn'=>90000,'launch_pro-training_usd'=>190],
   ];
 ?>
 <section class="card mb-4" id="launch-prices">
