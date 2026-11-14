@@ -22,6 +22,13 @@
   <p class="iw-auth-switch">New to iWorks? <a href="<?= e(url('register', !empty($_GET['embed']) ? ['embed'=>'1'] : [])) ?>"<?= !empty($_GET['embed']) ? ' data-iw-auth-switch="register"' : '' ?>>Create an account</a></p>
 </section>
 <script>
+<?php if (empty($iwEmbeddedPublicAuth)): ?>
+// Browsers may restore a sign-in form from back/forward memory even after
+// logout rotated its PHP session. Reload rather than submitting the old CSRF.
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) window.location.reload();
+});
+<?php endif; ?>
 document.querySelectorAll('[data-iw-password]').forEach(function (button) {
   button.addEventListener('click', function () {
     var input = document.getElementById(button.getAttribute('data-iw-password'));
