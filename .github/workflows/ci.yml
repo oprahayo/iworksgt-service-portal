@@ -37,6 +37,7 @@ jobs:
           bash -n scripts/deploy_business_photos.sh
           bash -n scripts/deploy_authentic_photography.sh
           bash -n scripts/deploy_home_brand_polish.sh
+          bash -n scripts/deploy_home_color_finish.sh
           bash -n scripts/deploy_businesshub_home.sh
           bash -n scripts/deploy_clean_home.sh
           bash -n scripts/deploy_clean_public_pages.sh
@@ -70,6 +71,7 @@ jobs:
           php tests/public_photo_config_test.php
           php tests/authentic_photography_contract_test.php
           php tests/home_brand_refinement_contract_test.php
+          php tests/home_color_harmony_contract_test.php
           php tests/public_businesshub_home_test.php
           php tests/public_clean_home_test.php
           php tests/public_inner_forms_test.php
