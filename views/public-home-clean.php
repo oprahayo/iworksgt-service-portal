@@ -280,6 +280,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       <p class="iw-home-compliance-extra">Looking for something else? <a href="<?= e(public_url('services')) ?>">Explore the full service catalogue <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+      <p class="iw-home-international-links">Building across borders? <a href="<?= e(public_url('register-company-nigeria-from-abroad')) ?>">Register a Nigerian company from abroad</a> or <a href="<?= e(public_url('us-llc-formation-from-nigeria')) ?>">explore US LLC formation from Nigeria</a>.</p>
     </div>
   </section>
 
