@@ -41,7 +41,7 @@ try {
                 thread_id BIGINT UNSIGNED NOT NULL,
                 message_id BIGINT UNSIGNED NOT NULL,
                 recipient_email VARCHAR(254) NOT NULL,
-                status ENUM('pending','sending','retry','sent','failed') NOT NULL DEFAULT 'pending',
+                status ENUM('pending','sending','retry','sent','failed','skipped') NOT NULL DEFAULT 'pending',
                 attempt_count TINYINT UNSIGNED NOT NULL DEFAULT 0,
                 next_attempt_at DATETIME NOT NULL,
                 sent_at DATETIME NULL,
