@@ -59,6 +59,44 @@
   </div>
 </section>
 
+
+<?php if (has_role(['admin'])):
+  $launchPriceGroups=[
+    'Business Name'=>['launch_bn_ngn'=>49000,'launch_bn_usd'=>95],
+    'Private Ltd · up to ₦1m capital'=>['launch_company_small_ngn'=>60000,'launch_company_small_usd'=>175],
+    'Private Ltd · ₦2m–₦5m capital'=>['launch_company_large_ngn'=>150000,'launch_company_large_usd'=>325],
+    'NGO / Incorporated Trustees (indicative)'=>['launch_ngo_ngn'=>180000,'launch_ngo_usd'=>495],
+    'Starter website (indicative)'=>['launch_web_starter_ngn'=>250000,'launch_web_starter_usd'=>480],
+    'Business website (indicative)'=>['launch_web_business_ngn'=>500000,'launch_web_business_usd'=>950],
+    'Online store (indicative)'=>['launch_web_store_ngn'=>900000,'launch_web_store_usd'=>1900],
+  ];
+?>
+<section class="card mb-4" id="launch-prices">
+  <div class="card-body">
+    <span class="iw-ops-eyebrow">NEW ORDERS ONLY · REGIONAL PRICE BOOK</span>
+    <h2 class="h5 mt-2">Launch prices · Nigeria &amp; international</h2>
+    <p class="text-muted small">These are separate commercial package rates, not NGN-to-USD conversions. Changing them affects only new quotes and invoices; earlier invoices and the historical CAC pricing panel remain unchanged. Website and NGO amounts are indicative and require a signed-off scope before invoicing.</p>
+    <form method="post" action="<?= e(url('services')) ?>">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="form_action" value="save_launch_prices">
+      <div class="row g-3">
+      <?php foreach($launchPriceGroups as $label=>$prices): ?>
+        <div class="col-12"><strong><?= e($label) ?></strong></div>
+        <?php foreach($prices as $key=>$fallback): ?>
+          <div class="col-md-6">
+            <label class="form-label" for="<?= e($key) ?>"><?= str_ends_with($key,'_ngn')?'Nigeria (NGN)':'International (USD)' ?></label>
+            <input class="form-control" id="<?= e($key) ?>" name="<?= e($key) ?>" type="number" required
+              min="1" max="100000000" step="0.01" value="<?= e((string)iworks_launch_amount($key,(float)$fallback)) ?>">
+          </div>
+        <?php endforeach; ?>
+      <?php endforeach; ?>
+      </div>
+      <button class="btn btn-primary mt-3" type="submit">Save regional launch price book</button>
+    </form>
+  </div>
+</section>
+<?php endif; ?>
+
 <?php
 require_once __DIR__ . '/partials/admin-media-picker.php';
 
