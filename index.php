@@ -1691,6 +1691,11 @@ try {
                     if ($action === 'submit_for_payment') {
                         if ($appId <= 0) { throw new RuntimeException('Save the application before proceeding.'); }
                         $invoiceId = trademark_checkout($appId, $clientId);
+                        $trademarkInvoice=get_invoice($invoiceId);
+                        if ($trademarkInvoice) {
+                            try { iworks_launch_notify_new_order((int)$trademarkInvoice['job_id']); }
+                            catch(Throwable $notifyError){ error_log('iWORKS trademark order notification queue error'); }
+                        }
                         iworks_order_intent_clear();
                         flash('success', 'Review your payment options to finalise your trademark application.');
                         redirect(url('trademark', ['id'=>$appId, 'step'=>'payment']));
