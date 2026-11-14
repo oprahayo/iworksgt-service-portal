@@ -1245,7 +1245,9 @@ function mail_log_path(): string
         throw new RuntimeException('Private mail diagnostics directory is unavailable.');
     }
     $resolved = realpath($base);
-    $documentRoot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+    $documentRootValue = trim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+    // realpath('') resolves the CLI working directory, not a web document root.
+    $documentRoot = $documentRootValue !== '' ? realpath($documentRootValue) : false;
     if ($resolved === false
         || preg_match('~(?:^|/)(?:public_html|htdocs|www)(?:/|$)~i', $resolved) === 1
         || ($documentRoot !== false
@@ -1282,6 +1284,18 @@ function log_email_message(string $to, string $subject, string $message): void
     }
 }
 
+/** Keep the envelope sender aligned with the visible sender on Unix hosts. */
+function iworks_mail_envelope_parameters(string $sender): ?string
+{
+    // Only a simple mailbox may reach sendmail's command-line options.
+    // Quoted addresses and shell metacharacters are intentionally rejected.
+    if (!filter_var($sender, FILTER_VALIDATE_EMAIL)
+        || !preg_match('/\A[A-Za-z0-9][A-Za-z0-9._+-]*@[A-Za-z0-9.-]+\z/D', $sender)) {
+        return null;
+    }
+    return '-f' . $sender;
+}
+
 function send_email(string $to, string $subject, string $message): bool
 {
     $to = trim($to);
@@ -1296,6 +1310,10 @@ function send_email(string $to, string $subject, string $message): bool
     }
 
     $fromEmail = trim(setting('mail_from_email', 'no-reply@iworksgt.com'));
+    $envelope = iworks_mail_envelope_parameters($fromEmail);
+    if ($envelope === null) {
+        return false;
+    }
     $fromName = trim(setting('mail_from_name', app_name()));
     $headers = [];
     $headers[] = 'MIME-Version: 1.0';
@@ -1303,7 +1321,7 @@ function send_email(string $to, string $subject, string $message): bool
     $headers[] = 'From: ' . $fromName . ' <' . $fromEmail . '>';
     $headers[] = 'Reply-To: ' . $fromEmail;
 
-    return @mail($to, $subject, $message, implode("\r\n", $headers));
+    return @mail($to, $subject, $message, implode("\r\n", $headers), $envelope);
 }
 
 function sso_secret(): string

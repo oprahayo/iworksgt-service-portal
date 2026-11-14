@@ -110,7 +110,8 @@ function iworks_send_html_email(string $to, string $subject, string $plain, stri
     }
 
     $fromEmail = trim(setting('mail_from_email', 'no-reply@iworksgt.com'));
-    if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+    $envelope = iworks_mail_envelope_parameters($fromEmail);
+    if ($envelope === null) {
         return false;
     }
 
@@ -139,5 +140,5 @@ function iworks_send_html_email(string $to, string $subject, string $plain, stri
     // Preserve the existing operational log, without storing private ticket
     // replies or the entire HTML message in a world-readable log.
     log_email_message($to, $subject, '[branded multipart support notification]');
-    return @mail($to, $subject, $message, implode("\r\n", $headers));
+    return @mail($to, $subject, $message, implode("\r\n", $headers), $envelope);
 }
