@@ -12,10 +12,13 @@ $detail=file_get_contents($root.'/views/public-service-detail.php');
 $policy=file_get_contents($root.'/app/customer_service_policy.php');
 cac_ui_assert(str_contains($clientHeader,'customer-focused-checkout.css'),
     'Focused checkout CSS must load in the real client shell.');
-cac_ui_assert(str_contains($chooser,'Enterprise / Business Name') && str_contains($chooser,'Limited Company (Ltd)'),
-    'Separate Business Name and Ltd customer choices must be clear.');
-cac_ui_assert(str_contains($chooser,"['type'=>'business']") && str_contains($chooser,"['type'=>'company']"),
-    'Pathway choices must each open the appropriate intake.');
+cac_ui_assert(str_contains($chooser,"iworks_launch_registration_options") &&
+    str_contains($chooser,"foreach ($"."registrationOptions as $"."option)"),
+    'Customer chooser must show regional, quote-aware registration choices.');
+cac_ui_assert(str_contains($chooser,"'type'=>$"."option['type']") &&
+    str_contains($chooser,"'package'=>$"."option['package']") &&
+    str_contains($chooser,"'incorporated-trustees'"),
+    'Four registration choices must link the right CAC intake or specialist quote.');
 foreach([1,2,3,4,5] as $i){
     cac_ui_assert(str_contains($wizard,'data-cac-stage="'.$i.'"'),
         'CAC wizard must have a stage '.$i);
