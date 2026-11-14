@@ -7,6 +7,7 @@
  * No duplicate pricing, product IDs, or client-side order calculations.
  */
 require_once __DIR__ . '/../app/public_marketing.php';
+require_once __DIR__ . '/../app/public-photo-config.php';
 $service = is_array($service ?? null) ? $service : [];
 $serviceName = trim((string) ($service['name'] ?? 'Service'));
 $serviceSlug = trim((string) ($service['slug'] ?? ''));
@@ -43,7 +44,7 @@ $actionHelp = $isEnquiry;
 $featured = !empty($service['featured_image_id'])
     ? get_media_asset((int) $service['featured_image_id'])
     : null;
-$imageUrl = trim((string) ($featured['url'] ?? ''));
+$imageUrl = iworks_service_photo_url($service, trim((string) ($featured['url'] ?? '')));
 $relatedServices = [];
 foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
     if (!is_array($item)
@@ -107,7 +108,7 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
       <article class="iw-product-content">
         <?php if ($imageUrl !== ''): ?>
           <figure class="iw-product-media">
-            <img src="<?= e($imageUrl) ?>" alt="<?= e($serviceName) ?>" width="960" height="540" loading="eager" decoding="async">
+            <img src="<?= e($imageUrl) ?>" alt="<?= e(str_starts_with($imageUrl, '/assets/photography/') ? 'Illustrative photograph for ' . $serviceName : $serviceName) ?>" width="960" height="540" loading="eager" decoding="async">
           </figure>
         <?php endif; ?>
 
