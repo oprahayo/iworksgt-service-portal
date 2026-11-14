@@ -46,6 +46,10 @@ if ($isWebsiteBuild) {
     $actionText = 'Choose a website package';
     $actionUrl = '#iwWebsitePackagesTitle';
     $actionHelp = false;
+} elseif ($isEnquiry) {
+    $actionText = 'Request a tailored quote';
+    $actionUrl = '#iwSpecialistQuoteForm';
+    $actionHelp = false;
 }
 if ($isWebsiteBuild) {
     require_once __DIR__ . '/../app/launch_packages.php';
@@ -94,6 +98,28 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
         <p class="iw-product-lead"><?= e($shortDescription) ?></p>
       <?php endif; ?>
     </header>
+
+    <?php if ($isEnquiry && !$isWebsiteBuild): ?>
+      <section class="iw-website-launch-packages" aria-labelledby="iwSpecialistTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwSpecialistTitle">Request a tailored quote</h2>
+          <p>Submit your requirements in one step. An iWORKS specialist will review the scope and provide a written quotation before any payment is requested.</p>
+        </div>
+        <form id="iwSpecialistQuoteForm" method="post" action="<?= e(public_url('contact')) ?>" class="iw-website-launch-form">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="form_action" value="website_lead">
+          <input type="hidden" name="company_name" value="<?= e('Service enquiry: '.$serviceName) ?>">
+          <div class="iw-website-launch-fields">
+            <label>Full name <input required autocomplete="name" name="full_name" maxlength="150"></label>
+            <label>Email address <input required type="email" autocomplete="email" name="email" maxlength="254"></label>
+            <label>Phone (optional) <input autocomplete="tel" type="tel" name="phone" maxlength="40"></label>
+          </div>
+          <label class="iw-website-launch-brief">What do you need? <textarea name="message" required minlength="10" maxlength="4000" rows="3" placeholder="Describe your request, deadlines and relevant requirements…"></textarea></label>
+          <p class="iw-website-launch-notice">This requests a quotation and creates no paid order. We will confirm fees and any official charges before proceeding. See <a href="<?= e(public_url('terms')) ?>">Terms</a> and <a href="<?= e(public_url('privacy')) ?>">Privacy</a>.</p>
+          <button type="submit" class="iw-product-cta">Send quote request <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </form>
+      </section>
+    <?php endif; ?>
 
     <?php if ($isWebsiteBuild): ?>
       <section class="iw-website-launch-packages" aria-labelledby="iwWebsitePackagesTitle">
