@@ -574,6 +574,10 @@ CREATE TABLE IF NOT EXISTS iw_live_threads (
     ip_prefix VARCHAR(80) NOT NULL,
     country_code CHAR(2) NULL,
     landing_page VARCHAR(255) NULL,
+    current_page VARCHAR(160) NULL,
+    track_page TINYINT(1) NOT NULL DEFAULT 0,
+    notify_offline TINYINT(1) NOT NULL DEFAULT 0,
+    visitor_last_read_message_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
     status ENUM('open','ended','closed') NOT NULL DEFAULT 'open',
     assigned_user_id INT UNSIGNED NULL,
     visitor_last_seen_at DATETIME NULL,
@@ -599,6 +603,25 @@ CREATE TABLE IF NOT EXISTS iw_live_messages (
     INDEX idx_live_messages_sender (thread_id,sender,created_at),
     CONSTRAINT fk_live_messages_thread FOREIGN KEY (thread_id)
         REFERENCES iw_live_threads (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Optional email-only alert, queued once for each staff message while the
+-- visitor is offline and has explicitly opted into email reminders.
+CREATE TABLE IF NOT EXISTS iw_live_email_outbox (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    thread_id BIGINT UNSIGNED NOT NULL,
+    message_id BIGINT UNSIGNED NOT NULL,
+    recipient_email VARCHAR(254) NOT NULL,
+    status ENUM('pending','sending','retry','sent','failed') NOT NULL DEFAULT 'pending',
+    attempt_count TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    next_attempt_at DATETIME NOT NULL,
+    sent_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    UNIQUE KEY uniq_iw_chat_email_message (message_id),
+    INDEX idx_iw_chat_email_due (status,next_attempt_at),
+    CONSTRAINT fk_iw_chat_email_thread FOREIGN KEY (thread_id)
+        REFERENCES iw_live_threads(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS iw_live_staff_presence (
