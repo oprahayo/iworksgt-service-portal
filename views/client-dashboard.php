@@ -48,7 +48,9 @@ foreach ($clientCatalogue as $catalogItem) {
     // Unpriced and specialist services must not enter the generic invoice
     // route. CAC/Trademark keep their established guided application flows.
     $startUrl = $needsEnquiry
-        ? public_url('service', ['slug'=>$slug])
+        ? ($checkoutMode==='consultation'
+            ? url('quote_request',['service'=>$slug])
+            : public_url('service', ['slug'=>$slug]))
         : ($slug === 'cac-business-name'
             ? url('cac_filing', ['type'=>'business'])
             : ($slug === 'trademark'
