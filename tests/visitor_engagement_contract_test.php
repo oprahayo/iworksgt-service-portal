@@ -107,12 +107,12 @@ $ok(str_contains($server,"$"."action === 'preferences'")
 $ok(str_contains($widget,'data-assist-country')
     && str_contains($client,'Intl.DisplayNames')
     && str_contains($server,"$"."countryCode = iw_chat_country_code(")
-    && str_contains($server,"'country_code'=>(string)($countryCode ?? '')")
-    && str_contains($server,"'country'=>$countryCode")
+    && str_contains($server,"'country_code'=>(string)($"."countryCode ?? '')")
+    && str_contains($server,"'country'=>$"."countryCode")
     && !str_contains($server,'HTTP_X_FORWARDED_FOR')
     && !str_contains($server,'ip-api.com'),
     'Country must remain optional and limited to local or server-provided hints.');
-$ok(str_contains($server,"'token'=>$savedToken")
+$ok(str_contains($server,"'token'=>$"."savedToken")
     && str_contains($client,'session.token = data.token')
     && str_contains($server,"'preferences'=>iw_chat_preferences")
     && str_contains($client,'applyPreferences(data.preferences)'),
