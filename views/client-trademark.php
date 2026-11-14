@@ -101,12 +101,10 @@ $tmMark = (string) ($trademarkData['mark_name'] ?? '');
             <input id="tmOwnerEmail" name="owner_email" type="email" maxlength="190" value="<?= e((string) ($trademarkData['owner_email'] ?? ($user['email'] ?? ''))) ?>" placeholder="owner@example.com"></div>
           <div class="iw-tm-field"><label for="tmOwnerPhone">Phone number <span>*</span></label>
             <input id="tmOwnerPhone" name="owner_phone" type="tel" maxlength="50" value="<?= e((string) ($trademarkData['owner_phone'] ?? ($user['phone'] ?? ''))) ?>" placeholder="+234…"></div>
-          <div class="iw-tm-field"><label for="tmCurrency">Payment currency</label>
-            <select id="tmCurrency" name="currency">
-              <option value="USD" <?= ($trademarkData['currency'] ?? 'USD') === 'USD' ? 'selected' : '' ?>>USD — US dollars</option>
-              <option value="NGN" <?= ($trademarkData['currency'] ?? 'USD') === 'NGN' ? 'selected' : '' ?>>NGN — Nigerian naira</option>
-            </select>
-            <small>Naira is calculated using the rate set in iWorks billing settings.</small>
+          <div class="iw-tm-field"><label for="tmCurrency">Invoice currency</label>
+            <input type="hidden" id="tmCurrency" name="currency" value="<?= e(iworks_launch_account_currency($user)) ?>">
+            <p class="iw-cac-field-value"><?= e(iworks_launch_account_currency($user)) ?></p>
+            <small>Set by your account billing country. Naira estimates use the configured invoice exchange rate for this legacy per-class trademark product.</small>
           </div>
           <div class="iw-tm-field iw-tm-field-full"><label for="tmOwnerAddress">Full address <span>*</span></label>
             <textarea id="tmOwnerAddress" name="owner_address" rows="2" maxlength="500" placeholder="Street, city, region and country"><?= e((string) ($trademarkData['owner_address'] ?? '')) ?></textarea></div>
@@ -129,7 +127,7 @@ $tmMark = (string) ($trademarkData['mark_name'] ?? '');
         document.getElementById('tmUsdTotal').textContent='$'+usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
         document.getElementById('tmPayTotal').textContent=cur+' '+(cur==='NGN'?usd*fx:usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
       }
-      list.addEventListener('change',update);currency.addEventListener('change',update);
+      list.addEventListener('change',update);
       search.addEventListener('input',function(){const q=search.value.toLowerCase().trim();list.querySelectorAll('.iw-tm-class-option').forEach(function(item){item.hidden=!item.dataset.label.includes(q);});});
       update();
     })();
