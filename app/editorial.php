@@ -29,7 +29,8 @@ function iworks_editorial_case_site(string $slug): string {
         $known = [];
         foreach (iworks_launch_case_studies() as $case) {
             $candidate = (string)($case['website'] ?? '');
-            if (preg_match('~^https://[a-z0-9.-]+(?:/[a-zA-Z0-9/._~-]*)?$~iD', $candidate)) {
+            if (filter_var($candidate, FILTER_VALIDATE_URL)
+                && parse_url($candidate, PHP_URL_SCHEME) === 'https') {
                 $known[(string)$case['slug']] = $candidate;
             }
         }
