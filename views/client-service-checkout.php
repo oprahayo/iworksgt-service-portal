@@ -4,7 +4,11 @@ $checkoutService = is_array($checkoutService ?? null) ? $checkoutService : [];
 $checkoutId = (int)($checkoutService['id'] ?? 0);
 $checkoutName = trim((string)($checkoutService['name'] ?? 'Service'));
 $checkoutSummary = trim((string)preg_replace('/\s+/', ' ', strip_tags((string)($checkoutService['short_description'] ?? $checkoutService['description'] ?? ''))));
-$checkoutCurrency = iworks_client_country_currency(current_user()) ?: strtoupper((string)($checkoutService['currency'] ?? default_currency()));
+$checkoutUser = function_exists('current_user') ? current_user() : null;
+$checkoutCurrency = function_exists('iworks_client_country_currency')
+    ? (iworks_client_country_currency(is_array($checkoutUser) ? $checkoutUser : null)
+        ?: strtoupper((string)($checkoutService['currency'] ?? default_currency())))
+    : strtoupper((string)($checkoutService['currency'] ?? default_currency()));
 $checkoutPrice = (float)($checkoutService['price'] ?? 0);
 $nativeCurrency = strtoupper((string)($checkoutService['currency'] ?? default_currency()));
 if ($checkoutCurrency !== $nativeCurrency) {
