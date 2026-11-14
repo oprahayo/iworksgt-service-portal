@@ -122,6 +122,10 @@ body.page-public .public-footer { background:#fafafa; border-top:1px solid #eded
   letter-spacing:.115em; text-align:center; margin:0 0 1.1rem;
 }
 .iw-clean-home .iw-home-brand-window { overflow:hidden; width:100%; }
+.iw-clean-home .iw-home-brand-disclaimer {
+  margin:.65rem auto 0; max-width:780px; color:#737c84;
+  text-align:center; font-size:.65rem; line-height:1.5;
+}
 .iw-clean-home .iw-home-brand-track { display:flex; width:max-content; max-width:none; align-items:center; }
 .iw-clean-home .iw-home-brand-sequence {
   display:flex; flex:0 0 auto; align-items:center; justify-content:center;
