@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - launch/publish-five-client-case-studies-20261114
+      - ux/ckdigital-inspired-portfolio-20261114
     paths:
       - scripts/capture_case_study_screenshots.py
       - .github/workflows/capture-case-study-screenshots.yml

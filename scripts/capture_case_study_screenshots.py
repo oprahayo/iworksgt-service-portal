@@ -69,6 +69,57 @@ def main() -> None:
                                     break
                             except Exception:
                                 pass
+                        # Match the client's supplied reference screenshot:
+                        # use the real services gallery if it is accessible.
+                        # Fall back to the actual homepage rather than using
+                        # an invented website preview or unrelated company.
+                        if slug == "cornerstonetl-senior-care-website-design-hosting":
+                            home_url = page.url
+                            try:
+                                candidates = [
+                                    "https://cornerstonetlllc.com/services",
+                                    "https://cornerstonetlllc.com/services/",
+                                    "https://cornerstonetlllc.com/our-services",
+                                ]
+                                for candidate in candidates:
+                                    nav = page.goto(candidate, wait_until="domcontentloaded", timeout=9000)
+                                    page.wait_for_timeout(750)
+                                    content = page.locator("body").inner_text(timeout=5000)
+                                    heading_ok = "What We Provide" in content or (
+                                        "Personal Care" in content and "Companionship" in content
+                                    )
+                                    print(f"CORNERSTONETL TRY {candidate} HTTP {nav.status if nav else 'none'} gallery={heading_ok}")
+                                    if nav and nav.status < 400 and heading_ok:
+                                        # Photograph the actual services cards, not
+                                        # the introductory hero: this matches the
+                                        # customer's supplied What We Provide view.
+                                        heading = page.get_by_text("What We Provide", exact=False).first
+                                        if heading.count():
+                                            heading.scroll_into_view_if_needed(timeout=6000)
+                                            page.evaluate("window.scrollBy(0, -110)")
+                                            print("CORNERSTONETL: viewport centered on What We Provide")
+                                        page.wait_for_timeout(450)
+                                        break
+                                else:
+                                    page.goto(home_url, wait_until="domcontentloaded", timeout=12000)
+                                    page.wait_for_timeout(750)
+                                    print("CORNERSTONETL: no verified services gallery; captured actual homepage")
+                            except Exception as exc:
+                                page.goto(home_url, wait_until="domcontentloaded", timeout=12000)
+                                page.wait_for_timeout(650)
+                                print(f"CORNERSTONETL: services gallery unavailable; actual homepage: {type(exc).__name__}")
+                        # Browsers may retain an accidental text selection
+                        # from a consent click or an autoplaying slider.
+                        # Clear that UI state so previews never show blue
+                        # highlighted text, selected elements or focus rings.
+                        page.evaluate("""() => {
+                            const selection = window.getSelection();
+                            if (selection) selection.removeAllRanges();
+                            if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                            }
+                        }""")
+                        page.wait_for_timeout(250)
                         title = page.title().strip()
                         visible = page.locator("body").inner_text(timeout=10000).strip()
                         if DISALLOWED_TITLES.search(title) or len(visible) < 100:

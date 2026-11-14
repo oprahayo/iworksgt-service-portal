@@ -20,6 +20,46 @@ function iworks_editorial_case_cover(array $row): string {
     $relative='assets/branding/case-studies/'.$slug.'.webp';
     return is_file(dirname(__DIR__).'/'.$relative) ? public_absolute_url($relative) : '';
 }
+/** Client websites are sourced from the reviewed launch case-study catalog, never
+ * arbitrary CMS HTML. An unrecognised case can be published without an outbound link. */
+function iworks_editorial_case_site(string $slug): string {
+    static $known = null;
+    if ($known === null) {
+        require_once __DIR__.'/launch_case_study_catalog.php';
+        $known = [];
+        foreach (iworks_launch_case_studies() as $case) {
+            $candidate = (string)($case['website'] ?? '');
+            if (filter_var($candidate, FILTER_VALIDATE_URL)
+                && parse_url($candidate, PHP_URL_SCHEME) === 'https') {
+                $known[(string)$case['slug']] = $candidate;
+            }
+        }
+    }
+    return $known[$slug] ?? '';
+}
+
+/** Real-service category mapping used for public portfolio filters.
+ * No invented results, customers, or industry labels. */
+function iworks_editorial_case_tags(array $row): array {
+    $known = [
+        'amandla-institute-formation-hosting' => ['formation','hosting','nonprofit'],
+        'triply-travels-company-formation-travel-website-portals' => ['formation','web','travel'],
+        'restoration-llc-healthcare-website-design-hosting-management' => ['web','hosting','healthcare'],
+        'karis-health-services-digital-healthcare-presence' => ['web','healthcare'],
+        'cornerstonetl-senior-care-website-design-hosting' => ['web','hosting','healthcare'],
+    ];
+    $slug = (string)($row['slug'] ?? '');
+    if (isset($known[$slug])) return $known[$slug];
+    $category = strtolower((string)($row['category'] ?? ''));
+    $tags = [];
+    if (preg_match('/incorporat|formati|registrat|business.setup/', $category)) $tags[] = 'formation';
+    if (preg_match('/website|web.design|web.develop|digital|software/', $category)) $tags[] = 'web';
+    if (preg_match('/host|maintenan/', $category)) $tags[] = 'hosting';
+    if (preg_match('/health|care|medical|clinic/', $category)) $tags[] = 'healthcare';
+    if (preg_match('/travel|tourism/', $category)) $tags[] = 'travel';
+    if (preg_match('/non.profit|institut|ngo|nonprofit/', $category)) $tags[] = 'nonprofit';
+    return array_values(array_unique($tags));
+}
 function iworks_editorial_slug(string $title,int $id=0): string {
     $base=substr(slugify($title),0,165);
     if($base==='')throw new RuntimeException('Provide a descriptive title.');

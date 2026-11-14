@@ -319,24 +319,39 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       <?php if ($homeCases !== []): ?>
         <div class="iw-home-case-grid">
           <?php foreach (array_slice($homeCases, 0, 3) as $story): ?>
+            <?php
+            $clientName = trim((string)($story['client_name'] ?? '')) ?: 'iWORKS client';
+            $caseLink = public_url('case_study',['slug'=>(string)$story['slug']]);
+            $clientWebsite = iworks_editorial_case_site((string)$story['slug']);
+            $siteHost = $clientWebsite !== '' ? (string)(parse_url($clientWebsite,PHP_URL_HOST) ?: '') : '';
+            ?>
             <article class="iw-home-case-card">
-              <a href="<?= e(public_url('case_study', ['slug' => (string) $story['slug']])) ?>">
-                <div class="iw-home-case-cover">
-                  <?php if (trim((string) ($story['image_url'] ?? '')) !== ''): ?>
-                    <img src="<?= e((string) $story['image_url']) ?>" alt="" loading="lazy" decoding="async" width="540" height="330">
-                  <?php elseif (trim((string) ($story['logo_url'] ?? '')) !== ''): ?>
-                    <img class="iw-home-case-logo-only" src="<?= e((string) $story['logo_url']) ?>" alt="" loading="lazy" decoding="async" width="540" height="330">
+              <a class="iw-home-case-cover" href="<?= e($caseLink) ?>" aria-label="View the <?= e($clientName) ?> case study">
+                <span class="iw-work-browser">
+                  <span class="iw-work-browser-bar" aria-hidden="true">
+                    <span class="iw-work-browser-dots"><i></i><i></i><i></i></span>
+                    <span class="iw-work-browser-domain"><?= e($siteHost !== ''?$siteHost:$clientName) ?></span>
+                  </span>
+                  <?php if (trim((string)($story['image_url'] ?? '')) !== ''): ?>
+                    <img src="<?= e((string)$story['image_url']) ?>" alt="Website screenshot of <?= e($clientName) ?>" loading="lazy" decoding="async" width="1440" height="900">
+                  <?php elseif (trim((string)($story['logo_url'] ?? '')) !== ''): ?>
+                    <img class="iw-home-case-logo-only" src="<?= e((string)$story['logo_url']) ?>" alt="" loading="lazy" decoding="async" width="540" height="330">
                   <?php else: ?>
-                    <div class="iw-home-case-no-image" aria-hidden="true"><i class="bi bi-briefcase"></i></div>
+                    <span class="iw-home-case-no-image" aria-hidden="true"><i class="bi bi-layout-text-window-reverse"></i></span>
+                  <?php endif; ?>
+                </span>
+              </a>
+              <div class="iw-home-case-card-copy">
+                <small><?= e((string)(($story['category'] ?? '') ?: 'CLIENT PROJECT')) ?></small>
+                <h3><a href="<?= e($caseLink) ?>"><?= e($clientName) ?></a></h3>
+                <p><?= e((string)($story['summary'] ?? '')) ?></p>
+                <div class="iw-home-case-actions">
+                  <a href="<?= e($caseLink) ?>">View project <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                  <?php if ($clientWebsite !== ''): ?>
+                    <a href="<?= e($clientWebsite) ?>" target="_blank" rel="noopener noreferrer" aria-label="Visit <?= e($clientName) ?> website (opens in a new tab)">Visit website <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
                   <?php endif; ?>
                 </div>
-                <div class="iw-home-case-card-copy">
-                  <small><?= e((string) (($story['category'] ?? '') ?: 'CLIENT PROJECT')) ?></small>
-                  <h3><?= e((string) $story['title']) ?></h3>
-                  <p><?= e((string) ($story['summary'] ?? '')) ?></p>
-                  <span>Read case study <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-                </div>
-              </a>
+              </div>
             </article>
           <?php endforeach; ?>
         </div>
