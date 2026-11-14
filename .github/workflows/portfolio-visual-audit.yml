@@ -48,7 +48,16 @@ jobs:
                   page = browser.new_page(viewport={"width": width, "height": height},device_scale_factor=1)
                   try:
                       result=page.goto(url, wait_until="domcontentloaded",timeout=35000)
-                      page.wait_for_timeout(1400)
+                      page.wait_for_timeout(1200)
+                      # full_page screenshots do not always trigger lazy image
+                      # loading outside the initial viewport. Force all static
+                      # preview images to decode before capturing the gallery.
+                      if "preview-iworks-" in name:
+                          page.evaluate("""async () => {
+                            const imgs = [...document.images];
+                            imgs.forEach(img => img.loading='eager');
+                            await Promise.all(imgs.map(img => img.decode().catch(() => {})));
+                          }""")
                       page.screenshot(path=f"portfolio-reference/{name}.png",full_page=True,animations="disabled")
                       print(f"{name}: HTTP {result.status if result else 'n/a'}, TITLE {page.title()}")
                   except Exception as e:
