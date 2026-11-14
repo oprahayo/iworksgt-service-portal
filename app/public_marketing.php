@@ -18,8 +18,8 @@ function iworks_unmatched_pretty_path(string $path, bool $recognized): bool
 function iworks_search_page_meta(string $page): array
 {
     $map = [
-        'home' => ['CAC Business Registration & Website Design in Nigeria | iWorks Global', 'Register a business in Nigeria, protect your trademark or build a website remotely. iWorks Global provides CAC filing support and digital services online.'],
-        'services' => ['Business Registration, CAC Filing & Web Design Services | iWorks', 'Explore Nigerian business name registration, company incorporation, trademarks, website development, hosting and digital marketing services.'],
+        'home' => ['Register a Company in Nigeria Remotely | CAC & Digital Services | iWorks', 'Register a Nigerian company or business name remotely from Nigeria or abroad. Explore CAC filing support, trademarks and online digital services with iWorks.'],
+        'services' => ['CAC Registration in Nigeria & Remote Business Services | iWorks', 'Explore Nigerian company registration from abroad, business names, trademarks, web development and US LLC enquiries through the iWorks service portal.'],
         'about' => ['About iWORKS GLOBAL LTD | Business & Digital Support in Nigeria', 'Learn about iWORKS GLOBAL LTD and its support for Nigerian founders: CAC registration, compliance, branding and remote website development.'],
         'contact' => ['Contact iWorks Global | CAC & Website Design Enquiries', 'Contact iWorks Global about business registration in Nigeria, trademarks, company compliance, web development and remote digital services.'],
         'faq' => ['Business Registration and Service FAQs | iWorks Global', 'Answers about CAC-related service requests, document submission, remote business support and tracking your iWorks Global service order.'],
@@ -29,7 +29,10 @@ function iworks_search_page_meta(string $page): array
         'pricing' => ['Business Services & Pricing | iWorks Global', 'Review published business registration and digital service prices; final quotes and applicable charges are confirmed before payment.'],
         'track' => ['Track Your iWorks Order | Service Progress', 'Find the latest status of your existing iWorks service request using your job reference and contact details.'],
         'terms' => ['Terms and Conditions | iWORKS GLOBAL', 'Read the terms governing service requests, account use, payments and delivery through iWORKS GLOBAL.'],
-        'privacy' => ['Privacy Policy | iWORKS GLOBAL', 'Understand how iWORKS GLOBAL handles account information, service requests, documents and contact details.'],
+        'privacy' => ['Privacy Policy | iWORKS GLOBAL LTD', 'Read how iWORKS handles registration documents, account details, service messages, payments, international transfers and personal data rights.'],
+        'cookies' => ['Cookie Policy | iWORKS GLOBAL LTD', 'Learn about necessary session cookies, support-chat storage, currency preferences and privacy controls on the iWORKS website and portal.'],
+        'register-company-nigeria-from-abroad' => ['Register a Nigerian Company from Abroad | CAC Support | iWORKS', 'Living in the UK, US, Canada, Germany or Australia? Learn how to prepare CAC Nigerian company registration remotely and what iWORKS can coordinate.'],
+        'us-llc-formation-from-nigeria' => ['US LLC Formation from Nigeria | Requirements & Support | iWORKS', 'Explore US LLC formation from Nigeria, state registered agents, EIN and tax reporting requirements. Review available support before filing.'],
     ];
     return isset($map[$page]) ? ['title'=>$map[$page][0], 'description'=>$map[$page][1]] : [];
 }
@@ -39,7 +42,7 @@ function iworks_search_service_meta(array $service): array
     $map = [
         'business-name-registration-cac-nigeria' => ['Register a Business Name in Nigeria | CAC Support | iWorks', 'Want to register a business name in Nigeria? iWorks helps with CAC name search, online filing preparation, documents and remote tracking.'],
         'cac-business-name' => ['Register a Business Name in Nigeria | CAC Support | iWorks', 'Review Business Name / Enterprise filing support and requirements with iWorks, including name checks, documents and remote tracking.'],
-        'company-registration' => ['Register a Company in Nigeria | CAC Incorporation | iWorks', 'Start company registration in Nigeria with structured CAC incorporation support. Prepare company and director details remotely with iWorks Global.'],
+        'company-registration' => ['Register a Company in Nigeria from Abroad | CAC | iWorks', 'Prepare Nigerian CAC company incorporation remotely from the UK, US, Canada, Germany, Australia or Nigeria. Review documents and official filing requirements.'],
         'website-design-development' => ['Website Design in Nigeria | Remote Web Development | iWorks', 'Need a professional website designed in Nigeria? iWorks builds and supports business websites remotely, with responsive design and technical support.'],
         'domain-web-hosting' => ['Domain Registration & Web Hosting in Nigeria | iWorks', 'Register domains and arrange managed website hosting with iWorks Global. Get help with DNS, SSL, business email and hosting support.'],
         'trademark' => ['Trademark Registration Support in Nigeria | iWorks Global', 'Protect your business name or brand with Nigerian trademark filing support, application guidance and remote document coordination.'],
@@ -48,7 +51,7 @@ function iworks_search_service_meta(array $service): array
         'graphics-design' => ['Graphic Design & Branding Services in Nigeria | iWorks', 'Business logo, identity and marketing graphics design for Nigerian and international clients, coordinated remotely with iWorks Global.'],
         'seo-smm-digital-marketing' => ['SEO & Digital Marketing Services in Nigeria | iWorks', 'Plan SEO, search visibility and social media marketing support for your business with iWorks Global. Remote delivery available.'],
         'email-list-smtp' => ['Business Email & SMTP Setup in Nigeria | iWorks Global', 'Set up business email delivery, SMTP and email domain configuration with help from iWorks Global.'],
-        'form-your-u-s-llc-in-minutes' => ['US LLC Formation Support from Nigeria | iWorks Global', 'Explore U.S. LLC formation support remotely with iWorks. Understand state selection, registered agent, documentation and filing requirements before ordering.'],
+        'form-your-u-s-llc-in-minutes' => ['US LLC Formation from Nigeria | iWorks Global', 'Explore US LLC company formation support from Nigeria, including state rules, registered agents, IRS EIN and reporting requirements. Verify the service scope first.'],
         'pro-training' => ['Business & Digital Skills Training in Nigeria | iWorks', 'Explore practical business operations, digital skills and professional training with iWorks. Confirm the programme format, topics and availability.'],
         'social-enterprise-ltd-by-guarantee' => ['Limited by Guarantee Registration in Nigeria | iWorks', 'Need a company limited by guarantee in Nigeria? Explore CAC filing preparation, governance documentation and regulatory considerations with iWorks.'],
         'vehicles-assets-tracking' => ['Vehicle & Asset Tracking Services in Nigeria | iWorks', 'Explore GPS and asset monitoring solutions, deployment requirements, device setup and ongoing support with iWorks Global.'],
