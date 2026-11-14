@@ -40,7 +40,7 @@ if ($page === null) {
             $page = 'service';
             $_GET['slug'] = urldecode((string) ($matches[1] ?? ''));
             $requestedPrettyPublicPage = true;
-        } elseif (in_array($rawPath, ['home', 'management', 'about', 'case-studies', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'login'], true)) {
+        } elseif (in_array($rawPath, ['home', 'management', 'about', 'case-studies', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'login'], true)) {
             $page = $rawPath;
             $requestedPrettyPublicPage = true;
         }
@@ -131,7 +131,7 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
@@ -360,6 +360,28 @@ try {
             require __DIR__.'/views/partials/public-header.php';
             require __DIR__.'/views/public-case-study-detail.php';
             require __DIR__.'/views/partials/public-footer.php';
+            return;
+        }
+
+        // Dedicated, current legal notices and substantive cross-border
+        // search guides share the public CMS shell, without boxed CMS blocks.
+        // No migration and no mutation of existing page drafts or revisions.
+        if (in_array($publicSlug, [
+            'privacy', 'terms', 'cookies',
+            'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria'
+        ], true)) {
+            $publicPageSlug = $publicSlug;
+            $publicServices = list_public_services_catalog();
+            $publicServiceCategories = list_public_service_categories();
+            $publicHeaderConfig = get_public_header_config();
+            $publicFooterData = get_public_footer_data('home');
+            $searchPage = iworks_search_page_meta($publicSlug);
+            $title = (string) ($searchPage['title'] ?? 'iWORKS GLOBAL');
+            $pageSeo = [];
+            require __DIR__ . '/views/partials/public-header.php';
+            require __DIR__ . ($publicSlug === 'privacy' || $publicSlug === 'terms' || $publicSlug === 'cookies'
+                ? '/views/public-legal-pages.php' : '/views/public-international-formation.php');
+            require __DIR__ . '/views/partials/public-footer.php';
             return;
         }
 

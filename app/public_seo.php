@@ -92,6 +92,20 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
               'mainEntityOfPage'=>$canonical,'publisher'=>$provider];
     } elseif ($type === 'home') {
         $obj = $provider + ['@context' => 'https://schema.org'];
+    } elseif (in_array($type, ['register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria'], true)) {
+        $names = [
+            'register-company-nigeria-from-abroad' => 'Register a company in Nigeria while living abroad',
+            'us-llc-formation-from-nigeria' => 'US LLC formation support for founders in Nigeria',
+        ];
+        $obj = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebPage',
+            'name' => $names[$type],
+            'description' => $description,
+            'url' => $canonical,
+            'inLanguage' => 'en',
+            'publisher' => $provider,
+        ];
     } else {
         return '';
     }
@@ -105,12 +119,18 @@ function iworks_seo_jsonld(string $type, array $record, string $canonical, strin
  */
 function iworks_seo_breadcrumb_jsonld(string $type, array $record, string $canonical): string
 {
-    if ($canonical === '' || !in_array($type, ['service', 'blog_post', 'case_study'], true)) { return ''; }
-    $title = trim((string) ($record[$type === 'service' ? 'name' : 'title'] ?? ''));
+    if ($canonical === '' || !in_array($type, ['service', 'blog_post', 'case_study',
+        'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria'], true)) { return ''; }
+    $guide = in_array($type, ['register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria'], true);
+    $guideTitles = [
+        'register-company-nigeria-from-abroad' => 'Register a Nigerian company from abroad',
+        'us-llc-formation-from-nigeria' => 'US LLC formation from Nigeria',
+    ];
+    $title = $guide ? $guideTitles[$type] : trim((string) ($record[$type === 'service' ? 'name' : 'title'] ?? ''));
     if ($title === '') { return ''; }
     $items = [
         ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => public_url('home')],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => $type === 'service' ? 'Services' : ($type === 'case_study' ? 'Case Studies' : 'Insights'), 'item' => public_url($type === 'service' ? 'services' : ($type === 'case_study' ? 'case-studies' : 'blog'))],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => ($type === 'service' || $guide) ? 'Services' : ($type === 'case_study' ? 'Case Studies' : 'Insights'), 'item' => public_url(($type === 'service' || $guide) ? 'services' : ($type === 'case_study' ? 'case-studies' : 'blog'))],
         ['@type' => 'ListItem', 'position' => 3, 'name' => $title, 'item' => $canonical],
     ];
     return json_encode([
@@ -169,6 +189,12 @@ function iworks_seo_public_sitemap(): string
     $services = list_public_services_catalog();
     // The site has a published page CMS; only published pages are ever surfaced.
     $pages = db_all("SELECT slug, updated_at FROM pages WHERE status = 'published'");
+    // First-party, server-rendered guidance and legal pages are public even
+    // though they are not duplicated in CMS page tables. Deduped by URL below.
+    foreach (['privacy', 'terms', 'cookies',
+        'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria'] as $sitePage) {
+        $pages[] = ['slug' => $sitePage];
+    }
     $posts = schema_table_exists('blog_posts')
         ? db_all("SELECT slug, updated_at, published_at FROM blog_posts WHERE status = 'published'")
         : [];

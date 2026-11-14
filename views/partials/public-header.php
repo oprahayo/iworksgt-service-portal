@@ -138,6 +138,14 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-layout-fixes.css')) ?>?v=20261114-refine1">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/auth-compact.css')) ?>?v=20261112c">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-inner-clean.css')) ?>">
+  <?php if (in_array($seoPageType, ['privacy','terms','cookies','register-company-nigeria-from-abroad','us-llc-formation-from-nigeria'], true)):
+    $iwLegalStyle = __DIR__ . '/../../assets/css/public-legal-international.css';
+    if (is_file($iwLegalStyle) && is_readable($iwLegalStyle)): ?>
+      <style id="iw-legal-international-css"><?= (string) file_get_contents($iwLegalStyle) ?></style>
+    <?php else: ?>
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-legal-international.css')) ?>?v=20261114-legal1">
+    <?php endif;
+  endif; ?>
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112launch1">
   <?php

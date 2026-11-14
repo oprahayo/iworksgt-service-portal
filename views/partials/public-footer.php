@@ -52,6 +52,7 @@ $fallbackFooterMenus = [
     'legal' => [
         ['label' => 'Terms & Conditions', 'href' => public_url('terms')],
         ['label' => 'Privacy Policy', 'href' => public_url('privacy')],
+        ['label' => 'Cookie Policy', 'href' => public_url('cookies')],
         ['label' => 'Track Order', 'href' => public_url('track')],
         ['label' => 'Portal Login', 'href' => portal_url('login')],
     ],
@@ -126,6 +127,15 @@ $socialIcons = [
                   ?>
                   <li><a href="<?= e($href) ?>"><?= e($label) ?></a></li>
                 <?php endforeach; ?>
+                <?php if (str_contains($columnKey, 'legal')): ?>
+                  <?php
+                    $hasCookieLink = false;
+                    foreach ($links as $entry) {
+                        if (trim((string)($entry['href'] ?? '')) === public_url('cookies')) { $hasCookieLink = true; break; }
+                    }
+                  ?>
+                  <?php if (!$hasCookieLink): ?><li><a href="<?= e(public_url('cookies')) ?>">Cookie Policy</a></li><?php endif; ?>
+                <?php endif; ?>
               </ul>
             </div>
           <?php endforeach; ?>
