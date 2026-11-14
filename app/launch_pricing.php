@@ -175,3 +175,43 @@ function iworks_launch_service_rate(array $service, string $country): ?array
     }
     return null;
 }
+
+
+/** After an invoice is committed, queue the customer's email and alert the
+ * processing team. Agent alerts contain no ID documents/client contact data. */
+function iworks_launch_notify_new_order(int $jobId): void
+{
+    if ($jobId<=0) return;
+    $job=get_job($jobId);
+    if (!is_array($job)) return;
+    $invoice=get_invoice_by_job_id($jobId);
+    $code=(string)($job['job_code']??('#'.$jobId));
+    $service=(string)($job['title']??'Service');
+    $amount=(float)($invoice['amount']??$job['amount']??0);
+    $currency=(string)($invoice['currency']??$job['currency']??'NGN');
+    $reference=$invoice ? (string)($invoice['invoice_number']??'') : '';
+    $link=$invoice ? 'invoice.php?id='.(int)$invoice['id'] : url('job',['id'=>$jobId]);
+    $details="Order reference: ".$code."\n"
+        ."Service: ".$service."\n"
+        ."Invoice: ".$reference."\n"
+        ."Amount due: ".money($amount,$currency)."\n"
+        ."Status: Awaiting payment. Processing starts after confirmation."."\n"
+        ."You can review the invoice securely from your iWORKS account.";
+    // The outbox may be pending when delivery has not yet been configured.
+    create_notification((int)$job['client_id'],
+        'Order received: '.$code,
+        'Your '.$service.' order was created. Invoice '.$reference.' is awaiting payment.',
+        $link,
+        ['subject'=>'iWORKS order confirmation — '.$code,'plain'=>$details]
+    );
+    notify_roles(['admin','finance'],
+        'New order awaiting payment: '.$code,
+        'A new '.$service.' order ('.$code.') has been placed. Review the invoice and allocate an agent.',
+        url('job',['id'=>$jobId])
+    );
+    notify_roles(['agent'],
+        'New customer order: '.$code,
+        'A new order has been received. Administrators will allocate the work when payment is verified.',
+        url('dashboard')
+    );
+}
