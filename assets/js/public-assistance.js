@@ -87,6 +87,10 @@
       if (nudgeTitle) nudgeTitle.textContent = config.title;
       if (nudgeText) nudgeText.textContent = config.text;
     }
+    function optedIn(name) {
+      var input = startForm.elements.namedItem(name);
+      return Boolean(input && input.checked);
+    }
     function hideNudge(dismiss) {
       nudge.hidden = true;
       if (dismiss) setStore('nudge-dismissed', 'yes');
@@ -312,6 +316,7 @@
         if (!chat.hidden) showChatStage();
         updatePresence(data);
         updateUnread(data.unread);
+        startLivePoller();
       } catch (ignore) {
         // A failed restore must not erase an existing, still-valid tab chat.
       }
@@ -550,18 +555,22 @@
       var name = startForm.elements.namedItem('full_name').value.trim();
       var email = startForm.elements.namedItem('email').value.trim();
       if (!name || !email) return;
+      if (optedIn('notify_offline') && !optedIn('remember_chat')) {
+        showError(startError,'To receive offline reply emails, also choose to remember this conversation on this browser.');
+        return;
+      }
       busy=true;
       var submit=startForm.querySelector('[type=submit]');
       submit.disabled=true;
       hideError(startError);
       try {
         var live=await liveApi('start',{name:name,email:email,
-          remember_chat:startForm.elements.namedItem('remember_chat').checked?'1':'0',
-          notify_offline:startForm.elements.namedItem('notify_offline').checked?'1':'0',
-          track_page:startForm.elements.namedItem('track_page').checked?'1':'0',
+          remember_chat:optedIn('remember_chat')?'1':'0',
+          notify_offline:optedIn('notify_offline')?'1':'0',
+          track_page:optedIn('track_page')?'1':'0',
           page_path:window.location.pathname});
         cookieActive = Boolean(live.features && live.features.resume &&
-          startForm.elements.namedItem('remember_chat').checked);
+          optedIn('remember_chat'));
         session = {name:name,email:email,id:String(live.id),token:String(live.token),
           items:[],lastMessageId:0,status:'active'};
         persist();
