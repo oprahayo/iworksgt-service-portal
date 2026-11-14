@@ -19,6 +19,7 @@ $otpCooldown = max(0, (int) ($otpResendCooldownRemaining ?? 0));
       <div class="card-body p-4">
         <h1 class="h5 mb-2">Enter 6-digit OTP</h1>
         <p class="text-muted small">Code sent to <strong><?= e($maskedEmail) ?></strong>. It expires in <?= (int) otp_expiry_minutes() ?> minutes.</p>
+        <p class="text-muted small">Email delivery may vary by provider. Use the newest code you receive. You can stay on this screen and request a new code when the resend button becomes available.</p>
         <?php if (in_array($otpQueueStatus, ['queued', 'processing', 'retrying'], true)): ?>
           <div class="alert alert-info py-2 small">
             OTP delivery is in progress. Please wait a few seconds.
@@ -34,6 +35,7 @@ $otpCooldown = max(0, (int) ($otpResendCooldownRemaining ?? 0));
 
         <form method="post" action="<?= e(url('otp')) ?>">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="otp_challenge_csrf" value="<?= e(otp_recovery_form_token()) ?>">
           <input type="hidden" name="form_action" value="verify_otp">
 
           <div class="mb-3">
@@ -52,6 +54,7 @@ $otpCooldown = max(0, (int) ($otpResendCooldownRemaining ?? 0));
         <div class="d-flex flex-wrap gap-2 mt-3">
           <form method="post" action="<?= e(url('otp')) ?>">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="otp_challenge_csrf" value="<?= e(otp_recovery_form_token()) ?>">
             <input type="hidden" name="form_action" value="resend_otp">
             <button
               class="btn btn-outline-secondary btn-sm"
@@ -66,6 +69,7 @@ $otpCooldown = max(0, (int) ($otpResendCooldownRemaining ?? 0));
           <?php if (!empty($otpFallbackAllowed)): ?>
             <form method="post" action="<?= e(url('otp')) ?>">
               <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="otp_challenge_csrf" value="<?= e(otp_recovery_form_token()) ?>">
               <input type="hidden" name="form_action" value="fallback_otp">
               <button class="btn btn-outline-warning btn-sm" type="submit">Send via fallback</button>
             </form>
