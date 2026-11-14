@@ -30,6 +30,15 @@ $ok(iw_chat_ip_prefix()==='198.51.100.0/24',
 $_SERVER['REMOTE_ADDR']='2001:db8:1234:5678:9999::11';
 $ok(str_ends_with(iw_chat_ip_prefix(),'/48') && !str_contains(iw_chat_ip_prefix(),'5678'),
     'IPv6 storage must mask at least the last 80 bits.');
+// An optional country selection can always be supplied without an external IP service.
+unset($_SERVER['GEOIP_COUNTRY_CODE'], $_SERVER['MM_COUNTRY_CODE'], $_SERVER['HTTP_CF_IPCOUNTRY']);
+$_SERVER['REMOTE_ADDR']='invalid address';
+$ok(iw_chat_country_code('ng')==='NG', 'Visitor-selected country must be normalized.');
+$ok(iw_chat_country_code('XX')===null, 'Unknown country must not be fabricated.');
+$_SERVER['GEOIP_COUNTRY_CODE']='ES';
+$ok(iw_chat_country_code()==='ES', 'Server-local GeoIP metadata should supply country when present.');
+$ok(iw_chat_country_code('NG')==='NG', 'Explicit country selection has precedence over hints.');
+unset($_SERVER['GEOIP_COUNTRY_CODE']);
 $_COOKIE[iw_chat_resume_cookie_name()]=str_repeat('a',64);
 $ok(iw_chat_resume_cookie_token()===str_repeat('a',64),
     'Valid opaque chat cookie should allow safe lookup.');
@@ -84,6 +93,30 @@ $ok(str_contains($widget,'name="notify_offline"')
     && str_contains($widget,'name="track_page"')
     && str_contains($widget,'iw_chat_engagement_ready()'),
     'Privacy/return options must be unchecked and hidden before schema migration.');
+$ok(str_contains($server,"$"."action === 'preferences'")
+    && str_contains($server,'function iw_chat_preferences(')
+    && str_contains($server,'notify_offline=:notify_offline')
+    && str_contains($server,"status IN ('pending','retry')")
+    && str_contains($server,'iw_chat_remember_cookie($token,$remember)')
+    && str_contains($server,'current_page=:current_page')
+    && str_contains($client,"liveApi('preferences'")
+    && str_contains($client,'preferencesDirty')
+    && str_contains($client,'syncOfflineControl(preferencesForm)')
+    && str_contains($widget,'id="iwAssistPreferencesForm"'),
+    'Existing visitors must explicitly edit/revoke preferences and stop outstanding emails.');
+$ok(str_contains($widget,'data-assist-country')
+    && str_contains($client,'Intl.DisplayNames')
+    && str_contains($server,"$"."countryCode = iw_chat_country_code(")
+    && str_contains($server,"'country_code'=>(string)($"."countryCode ?? '')")
+    && str_contains($server,"'country'=>$"."countryCode")
+    && !str_contains($server,'HTTP_X_FORWARDED_FOR')
+    && !str_contains($server,'ip-api.com'),
+    'Country must remain optional and limited to local or server-provided hints.');
+$ok(str_contains($server,"'token'=>$"."savedToken")
+    && str_contains($client,'session.token = data.token')
+    && str_contains($server,"'preferences'=>iw_chat_preferences")
+    && str_contains($client,'applyPreferences(data.preferences)'),
+    'Browser-returning visitors must retain chat access and see actual saved settings.');
 $ok(str_contains($server,"$"."engagement && $"."remember &&")
     && str_contains($server,'iw_chat_enqueue_offline_reply(')
     && str_contains($server,'INSERT IGNORE INTO iw_live_email_outbox')

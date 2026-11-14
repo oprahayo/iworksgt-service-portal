@@ -258,13 +258,51 @@ function iw_chat_ip_prefix(): string
     return inet_ntop(substr($binary, 0, 6) . str_repeat("\0", 10)) . '/48';
 }
 
-function iw_chat_country_code(): ?string
+/**
+ * Country-only hint. Prefer an optional visitor-selected country, then
+ * server-populated GeoIP metadata, then a locally installed GeoIP extension.
+ * No external address-lookup requests, raw-IP persistence or fake precision.
+ */
+function iw_chat_country_code(string $selected = ''): ?string
 {
-    // Optional country hint from CDN metadata. Never treat as verified GPS.
-    // REMOTE_ADDR remains the only network address used; ignore X-Forwarded-For.
-    $country = strtoupper(trim((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
-    return preg_match('/^[A-Z]{2}$/', $country) && !in_array($country, ['XX', 'T1'], true)
-        ? $country : null;
+    $candidates = [
+        $selected,
+        (string)($_SERVER['GEOIP_COUNTRY_CODE'] ?? ''),
+        (string)($_SERVER['MM_COUNTRY_CODE'] ?? ''),
+        (string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? ''),
+    ];
+    foreach ($candidates as $candidate) {
+        $country = strtoupper(trim($candidate));
+        if (preg_match('/^[A-Z]{2}$/D', $country)
+            && !in_array($country, ['XX', 'ZZ', 'T1', 'EU'], true)) {
+            return $country;
+        }
+    }
+    $raw = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    if (function_exists('geoip_country_code_by_name') && filter_var($raw, FILTER_VALIDATE_IP)) {
+        try {
+            $value = geoip_country_code_by_name($raw); // Local extension only.
+            $country = strtoupper(trim((string)$value));
+            if (preg_match('/^[A-Z]{2}$/D', $country)
+                && !in_array($country, ['XX', 'ZZ', 'T1', 'EU'], true)) {
+                return $country;
+            }
+        } catch (Throwable $ignored) {
+            // Unknown is safer than inventing a location.
+        }
+    }
+    return null;
+}
+
+/** Consistent status for the same conversation across start, resume and settings. */
+function iw_chat_preferences(array $thread, bool $remember): array
+{
+    return [
+        'remember_chat' => $remember,
+        'notify_offline' => !empty($thread['notify_offline']),
+        'track_page' => !empty($thread['track_page']),
+        'country_code' => (string)($thread['country_code'] ?? ''),
+    ];
 }
 
 function iw_chat_send_json(array $data, int $code = 200): void
@@ -365,6 +403,7 @@ function iw_chat_public_request(): void
             $notify = $engagement && $remember && (string)($_POST['notify_offline'] ?? '') === '1';
             $pageTracking = $engagement && (string)($_POST['track_page'] ?? '') === '1';
             $currentPage = $pageTracking ? iw_chat_safe_page((string)($_POST['page_path'] ?? '')) : null;
+            $countryCode = iw_chat_country_code((string)($_POST['country_code'] ?? ''));
             if ($engagement) {
                 db_execute(
                     "INSERT INTO iw_live_threads
@@ -373,7 +412,7 @@ function iw_chat_public_request(): void
                      VALUES (:token,:name,:email,:ip,:country,:landing,
                        :current_page,:track_page,:notify_offline,'open',NOW(),NOW(),NOW())",
                     ['token'=>hash('sha256',$token),'name'=>$name,'email'=>$email,
-                     'ip'=>$ip,'country'=>iw_chat_country_code(),'landing'=>$ref,
+                     'ip'=>$ip,'country'=>$countryCode,'landing'=>$ref,
                      'current_page'=>$currentPage,'track_page'=>(int)$pageTracking,
                      'notify_offline'=>(int)$notify]
                 );
@@ -384,7 +423,7 @@ function iw_chat_public_request(): void
                      (visitor_token_hash,name,email,ip_prefix,country_code,landing_page,status,visitor_last_seen_at,created_at,updated_at)
                      VALUES (:token,:name,:email,:ip,:country,:landing,'open',NOW(),NOW(),NOW())",
                     ['token'=>hash('sha256',$token),'name'=>$name,'email'=>$email,
-                     'ip'=>$ip,'country'=>iw_chat_country_code(),'landing'=>$ref]
+                     'ip'=>$ip,'country'=>$countryCode,'landing'=>$ref]
                 );
             }
             $createdId = db_last_id();
@@ -396,6 +435,8 @@ function iw_chat_public_request(): void
             }
             iw_chat_send_json(['ok'=>true,'token'=>$token,'id'=>$createdId,
                 'staff_online'=>iw_chat_staff_online(),'messages'=>[],
+                'preferences'=>['remember_chat'=>$remember,'notify_offline'=>$notify,
+                    'track_page'=>$pageTracking,'country_code'=>(string)($countryCode ?? '')],
                 'features'=>$engagement ? ['resume'=>true,'offline_email'=>true,'page_presence'=>true] : []]);
             return;
         }
@@ -420,6 +461,8 @@ function iw_chat_public_request(): void
                 'name'=>(string)$savedThread['name'],
                 'email'=>(string)$savedThread['email'],
                 'status'=>'open','staff_online'=>iw_chat_staff_online(),
+                'token'=>$savedToken,
+                'preferences'=>iw_chat_preferences($savedThread,true),
                 'messages'=>iw_chat_messages((int)$savedThread['id']),
                 'unread'=>iw_chat_unread_for_visitor($savedThread)]);
             return;
@@ -434,6 +477,49 @@ function iw_chat_public_request(): void
             return;
         }
         $threadId = (int)$thread['id'];
+        if ($action === 'preferences') {
+            if (!iw_chat_engagement_ready()) {
+                iw_chat_send_json(['ok'=>false,'message'=>'Chat preferences are temporarily unavailable.'],503);
+                return;
+            }
+            if ((string)$thread['status'] !== 'open') {
+                iw_chat_send_json(['ok'=>false,'message'=>'This conversation has ended.'],409);
+                return;
+            }
+            $remember = (string)($_POST['remember_chat'] ?? '') === '1';
+            $notify = (string)($_POST['notify_offline'] ?? '') === '1';
+            if ($notify && !$remember) {
+                throw new InvalidArgumentException('Remember this conversation first to enable offline email.');
+            }
+            $sharePage = (string)($_POST['track_page'] ?? '') === '1';
+            $currentPage = $sharePage
+                ? iw_chat_safe_page((string)($_POST['page_path'] ?? '')) : null;
+            // An omitted country keeps the previously known hint. Visitors can
+            // select a country, but the server never infers a street address.
+            $chosenCountry = strtoupper(trim((string)($_POST['country_code'] ?? '')));
+            if ($chosenCountry !== '' && (!preg_match('/^[A-Z]{2}$/D',$chosenCountry)
+                || in_array($chosenCountry,['XX','ZZ','T1','EU'],true))) {
+                throw new InvalidArgumentException('Choose a valid country or leave it blank.');
+            }
+            $country = $chosenCountry !== '' ? $chosenCountry
+                : ((string)($thread['country_code'] ?? '') ?: iw_chat_country_code());
+            db_execute("UPDATE iw_live_threads
+                SET track_page=:track_page,current_page=:current_page,
+                    notify_offline=:notify_offline,country_code=:country,
+                    updated_at=NOW() WHERE id=:id",
+                ['track_page'=>(int)$sharePage,'current_page'=>$currentPage,
+                 'notify_offline'=>(int)$notify,'country'=>$country,'id'=>$threadId]);
+            if (!$notify) {
+                db_execute("UPDATE iw_live_email_outbox
+                    SET status='skipped',updated_at=NOW()
+                    WHERE thread_id=:id AND status IN ('pending','retry')", ['id'=>$threadId]);
+            }
+            iw_chat_remember_cookie($token,$remember);
+            iw_chat_send_json(['ok'=>true,'token'=>$token,
+                'preferences'=>['remember_chat'=>$remember,'notify_offline'=>$notify,
+                    'track_page'=>$sharePage,'country_code'=>(string)($country ?? '')]]);
+            return;
+        }
         if ($action === 'poll' || $action === 'send') {
             if ((string)$thread['status'] !== 'open') {
                 iw_chat_send_json(['ok'=>true,'status'=>'ended','staff_online'=>iw_chat_staff_online(),
@@ -464,7 +550,11 @@ function iw_chat_public_request(): void
             $fresh = db_one('SELECT * FROM iw_live_threads WHERE id=:id',['id'=>$threadId]) ?: $thread;
             iw_chat_send_json(['ok'=>true,'status'=>'open','staff_online'=>iw_chat_staff_online(),
                 'messages'=>iw_chat_messages($threadId,$after),
-                'unread'=>iw_chat_unread_for_visitor($fresh)]);
+                'unread'=>iw_chat_unread_for_visitor($fresh),
+                'preferences'=>iw_chat_engagement_ready()
+                    ? iw_chat_preferences($fresh,
+                        iw_chat_resume_cookie_token() === $token)
+                    : null]);
             return;
         }
         if ($action === 'end') {

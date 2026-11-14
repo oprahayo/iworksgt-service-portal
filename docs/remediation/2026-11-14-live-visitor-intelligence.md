@@ -33,3 +33,13 @@ A cPanel operator must:
 CI PHP 8.2 / 8.3, JS syntax and contracts provide source validation, not proof of a live user-to-user exchange or mail delivery. Production is not marked deployed until the user’s cPanel Terminal shows a successful release and live chat/mail tests pass.
 
 Do not log raw visitor IPs, full URLs, private message contents, database credentials, unmasked client addresses, payment details or OTPs in cPanel status output or support emails. No unconsented cross-website tracking.
+
+## 2026-11-14 consent/country usability follow-up
+
+The original visitor chat only offered privacy preferences when opening a *new* conversation. Existing support chats now provide a collapsible **Notifications and privacy settings** form. A visitor can opt into or revoke thirty-day browser remembering, offline reply email notices, and consented public-page sharing without restarting the conversation. Every change is CSRF-protected, scoped by the conversation bearer token, and saved server-side. Offline email requires a separately selected remembered-chat preference; a revocation skips queued unsent reminders. Only supported public page paths are shareable; disabling sharing immediately clears the currently recorded page.
+
+The country badge accepts an optional explicit visitor selection from an accessible name-based country dropdown. When not provided, the server prefers locally configured GeoIP country headers or a locally installed GeoIP extension; no raw IP is forwarded to any third-party lookup service, no exact address is inferred and unknown remains honest. Existing saved conversations are not assigned a made-up country or email consent by this upgrade.
+
+The same settings are returned when restoring an opted-in browser conversation. Active visitors can turn remembering off without losing the current tab conversation. The staff view distinguishes an unknown country and the customer's optional offline/page-sharing choices.
+
+**Acceptance gates:** repeat tests with an existing active chat; change preferences while connected, minimize/reopen, leave and return in the same browser, revoke sharing/email, verify queued emails are suppressed after revocation, and confirm that a *newly consented* offline email can be received using configured production mail transport and queue cron. Source tests alone do not prove production delivery. Check the *published* privacy policy and live email transport configuration before claiming full production activation.

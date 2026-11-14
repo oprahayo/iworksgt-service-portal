@@ -60,7 +60,13 @@ try {
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
           <?php if ($iwChatEngagementEnabled): ?>
+          <label for="iwAssistCountry">Country <small>(optional)</small></label>
+          <select id="iwAssistCountry" name="country_code" data-assist-country aria-describedby="iwAssistCountryHint">
+            <option value="">Use an available approximate country hint</option>
+          </select>
+          <p class="iw-assist-country-hint" id="iwAssistCountryHint">No precise location is collected. Leave blank if you prefer.</p>
           <div class="iw-assist-consent-options" role="group" aria-label="Support preferences">
+            <strong class="iw-assist-option-heading">Choose how support can follow up</strong>
             <label><input type="checkbox" name="remember_chat" value="1">
               Remember this conversation on this browser for 30 days</label>
             <label><input type="checkbox" name="notify_offline" value="1">
@@ -79,6 +85,28 @@ try {
       </div>
       <div class="iw-assist-conversation" id="iwAssistConversation" hidden>
         <p class="iw-assist-chat-intro">Welcome back. Messages are kept in this conversation. Our team can reply here whenever available.</p>
+        <?php if ($iwChatEngagementEnabled): ?>
+        <details class="iw-assist-preferences" id="iwAssistPreferences">
+          <summary><i class="bi bi-sliders" aria-hidden="true"></i> Notifications and privacy settings</summary>
+          <form id="iwAssistPreferencesForm">
+            <p>Change these at any time. All optional features stay off unless you select them.</p>
+            <div class="iw-assist-consent-options" role="group" aria-label="Conversation settings">
+              <label><input type="checkbox" name="remember_chat" value="1">
+                Remember my chat in this browser for 30 days</label>
+              <label><input type="checkbox" name="notify_offline" value="1">
+                Email me when support replies while I am offline</label>
+              <label><input type="checkbox" name="track_page" value="1">
+                Share my current public website page while chatting</label>
+            </div>
+            <label for="iwAssistPreferencesCountry">Country <small>(optional; not a precise location)</small></label>
+            <select id="iwAssistPreferencesCountry" name="country_code" data-assist-country>
+              <option value="">Use an available approximate country hint</option>
+            </select>
+            <button type="submit" class="iw-assist-preferences-save">Save preferences</button>
+            <p id="iwAssistPreferencesStatus" role="status" aria-live="polite" class="iw-assist-preferences-status" hidden></p>
+          </form>
+        </details>
+        <?php endif ?>
         <div class="iw-assist-messages" id="iwAssistMessages" role="log" aria-live="polite" aria-label="Support conversation"></div>
       </div>
       <div class="iw-assist-ended" id="iwAssistEnded" hidden>

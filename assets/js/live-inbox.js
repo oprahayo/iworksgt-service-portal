@@ -100,7 +100,7 @@
       var bottom=el('span','iw-live-thread-bottom');
       var currentPage = Number(thread.track_page) && thread.current_page
         ? 'On ' + thread.current_page : 'Page not shared';
-      bottom.append(el('span','', [thread.country_code || 'Country unknown',
+      bottom.append(el('span','', [thread.country_code || 'Country not known',
         Number(thread.visitor_online) ? 'Active' : 'Away',currentPage].join(' · ')));
       bottom.append(el('span','', '#'+thread.id));
       button.append(top,middle,bottom);
@@ -127,12 +127,12 @@
     }
     text(titleNode,thread.name + ' · #' + thread.id);
     text(metaNode,thread.email + '  ·  ' +
-       (thread.country_code ? 'Country hint: '+thread.country_code : 'Country unavailable') +
+       (thread.country_code ? 'Country (selected or approximate): '+thread.country_code : 'Country not supplied; no reliable lookup') +
        '  ·  Masked network: '+(thread.ip_prefix || 'unknown') +
        '  ·  '+(Number(thread.visitor_online) ? 'Active now' : 'Offline') +
        '  ·  '+(Number(thread.track_page) && thread.current_page
-         ? 'Current page: '+thread.current_page : 'Current page not shared') +
-       '  ·  '+(Number(thread.notify_offline) ? 'Offline email opted in' : 'On-site replies only'));
+         ? 'Current page: '+thread.current_page : 'Current page not shared (permission off)') +
+       '  ·  '+(Number(thread.notify_offline) ? 'Offline email opted in' : 'Offline email off; replies remain in chat'));
     var open = thread.status === 'open';
     replyInput.disabled = !open; sendButton.disabled = !open; closeButton.disabled = !open;
     replyInput.placeholder = open ? 'Write a reply to this visitor…' : 'Conversation ended';
