@@ -1,7 +1,9 @@
 <?php
 $countryOptions = portal_country_options();
 $stateMap = portal_state_options_map();
-$oldCountryValue = (string) old_input('country', 'Nigeria');
+$suggestedRegion=iworks_launch_display_country();
+$countrySuggestion=portal_country_options()[$suggestedRegion]??'Nigeria';
+$oldCountryValue=(string)old_input('country',$countrySuggestion);
 $oldStateValue = (string) old_input('state_region');
 ?>
 <section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
@@ -41,7 +43,7 @@ $oldStateValue = (string) old_input('state_region');
         <div><label for="iwAddress">Street address *</label><input id="iwAddress" name="address_line" value="<?= e(old_input('address_line')) ?>" autocomplete="street-address" required></div>
       </div>
     </fieldset>
-    <p class="iw-auth-small">Your email may need a verification code before the account is ready.</p>
+    <p class="iw-auth-small">Your email may need a verification code before the account is ready. Confirm your actual billing country: new orders use NGN for Nigeria and USD elsewhere. It cannot be changed without a support review.</p>
     <div class="iw-register-controls">
       <button class="iw-auth-back" id="iwRegisterBack" type="button" hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</button>
       <button class="iw-auth-submit iw-auth-next" id="iwRegisterNext" type="button" hidden>Continue <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
