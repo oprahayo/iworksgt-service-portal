@@ -57,6 +57,18 @@ def main() -> None:
                         if not response or response.status >= 400:
                             raise RuntimeError(f"unexpected HTTP status: {response.status if response else 'none'}")
                         page.wait_for_timeout(1800)
+                        # Remove an obstructive consent banner via the site's
+                        # real UI in this fresh, isolated capture session.
+                        # Prefer privacy-preserving rejection where offered.
+                        for consent in ("Reject all", "Only necessary", "Decline all", "Accept all"):
+                            button = page.get_by_role("button", name=re.compile(r"^" + re.escape(consent) + r"$", re.I)).first
+                            try:
+                                if button.count() and button.is_visible():
+                                    button.click(timeout=2500)
+                                    page.wait_for_timeout(450)
+                                    break
+                            except Exception:
+                                pass
                         title = page.title().strip()
                         visible = page.locator("body").inner_text(timeout=10000).strip()
                         if DISALLOWED_TITLES.search(title) or len(visible) < 100:
