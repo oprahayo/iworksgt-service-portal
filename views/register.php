@@ -1,10 +1,9 @@
 <?php
 $countryOptions = portal_country_options();
 $stateMap = portal_state_options_map();
-// Geolocation is a form preselection hint, not billing verification.
-$countryHintIso = strtoupper(trim((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
-$countryHintName = $countryOptions[$countryHintIso] ?? 'Nigeria';
-$oldCountryValue = (string) old_input('country', $countryHintName);
+// Billing country must be actively selected by the customer. Neither an
+// absent CDN hint nor an IP-based guess may silently default to Nigeria.
+$oldCountryValue = (string) old_input('country', '');
 $oldStateValue = (string) old_input('state_region');
 ?>
 <section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
@@ -36,7 +35,8 @@ $oldStateValue = (string) old_input('state_region');
     <fieldset class="iw-auth-step" data-register-step="2">
       <legend class="iw-auth-step-title">Location and contact</legend>
       <div class="iw-auth-fields">
-        <div><label for="iwCountry">Country *</label><select id="iwCountry" name="country" required>
+        <div><label for="iwCountry">Country of residence *</label><select id="iwCountry" name="country" required>
+          <option value="" <?= $oldCountryValue === '' ? 'selected' : '' ?> disabled>Select your country of residence</option>
           <?php foreach ($countryOptions as $iso => $country): ?><option value="<?= e($country) ?>" data-iso="<?= e((string) $iso) ?>" <?= selected_if($country, $oldCountryValue) ?>><?= e($country) ?></option><?php endforeach; ?>
         </select></div>
         <div><label for="iwState">State / region *</label><select id="iwState" name="state_region" data-previous="<?= e($oldStateValue) ?>" required></select></div>
@@ -44,7 +44,8 @@ $oldStateValue = (string) old_input('state_region');
         <div><label for="iwAddress">Street address *</label><input id="iwAddress" name="address_line" value="<?= e(old_input('address_line')) ?>" autocomplete="street-address" required></div>
       </div>
     </fieldset>
-    <p class="iw-auth-small">Your email may need a verification code before the account is ready.</p>
+    <p class="iw-auth-small">Select your actual country of residence. It determines which verified billing market may be used; a network-location estimate is not proof of residence. Your email may need a verification code before the account is ready.</p>
+    <p class="iw-auth-small">By creating an account, you agree to the <a href="<?= e(public_url('terms')) ?>" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</a> and acknowledge our <a href="<?= e(public_url('privacy')) ?>" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. Review the relevant service fees and cancellation terms before payment.</p>
     <div class="iw-register-controls">
       <button class="iw-auth-back" id="iwRegisterBack" type="button" hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</button>
       <button class="iw-auth-submit iw-auth-next" id="iwRegisterNext" type="button" hidden>Continue <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
@@ -66,14 +67,17 @@ $oldStateValue = (string) old_input('state_region');
   function setStates() {
     if (!country || !state) return;
     var selected = country.options[country.selectedIndex];
-    var iso = (selected && selected.getAttribute('data-iso')) || 'NG';
+    var iso = (selected && selected.getAttribute('data-iso')) || '';
     var options = countries[String(iso).toUpperCase()] || [];
+    state.disabled = !iso;
+    state.required = Boolean(iso);
     var previous = state.getAttribute('data-previous') || state.value || '';
     state.textContent = '';
     var placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = 'Select state or region';
     state.appendChild(placeholder);
+    if (!iso) return;
     if (!options.length) options = ['Other'];
     options.forEach(function (name) {
       var option = document.createElement('option');
