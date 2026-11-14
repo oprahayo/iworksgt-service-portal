@@ -31,7 +31,7 @@ $blogReturnUrl = url('blog', $blogReturnParams);
 
 <div class="iw-ops-page-head">
   <div><span class="iw-ops-eyebrow">CONTENT MANAGEMENT</span><h1>Insights</h1><p>Draft, publish and preview articles on the public iWorks website.</p></div>
-  <div class="iw-ops-head-actions"><a class="btn btn-outline-secondary" href="<?= e(public_url('blog')) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View website</a><a class="btn btn-primary" href="<?= e(url('blog')) ?>">New insight</a></div>
+  <div class="iw-ops-head-actions"><a class="btn btn-outline-secondary" href="<?= e(public_url('blog')) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View website</a><a class="btn btn-primary" href="<?= e(url('blog')) ?>">New insight</a></div>
 </div>
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div>
@@ -41,7 +41,7 @@ $blogReturnUrl = url('blog', $blogReturnParams);
     </div>
   </div>
   <div class="d-flex gap-2">
-    <a class="btn btn-outline-secondary btn-sm" href="<?= e(public_url('blog')) ?>" target="_blank" rel="noopener">Open public insights</a>
+    <a class="btn btn-outline-secondary btn-sm" href="<?= e(public_url('blog')) ?>">Open public insights</a>
     <a class="btn btn-primary btn-sm" href="<?= e(url('blog')) ?>">New post</a>
   </div>
 </div>
@@ -183,7 +183,7 @@ $blogReturnUrl = url('blog', $blogReturnParams);
                 <div class="d-flex gap-2">
                   <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('blog', ['action' => 'edit', 'id' => (int) ($post['id'] ?? 0)])) ?>">Edit</a>
                   <?php if ((string) ($post['status'] ?? '') === 'published'): ?>
-                    <a class="btn btn-sm btn-outline-primary" href="<?= e((string) ($post['url'] ?? public_url('blog'))) ?>" target="_blank" rel="noopener">View</a>
+                    <a class="btn btn-sm btn-outline-primary" href="<?= e((string) ($post['url'] ?? public_url('blog'))) ?>">View</a>
                   <?php endif; ?>
                 </div>
                 <form method="post" action="<?= e(url('blog')) ?>" onsubmit="return confirm('Delete this insight?');">
