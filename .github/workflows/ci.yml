@@ -94,6 +94,7 @@ jobs:
           php tests/admin_public_navigation_schema_contract_test.php
           php tests/job_support_refresh_contract_test.php
           php tests/support_reply_email_test.php
+          php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
           php tests/f15_gateway_insert_id_test.php
