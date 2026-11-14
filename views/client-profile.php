@@ -44,10 +44,12 @@ $activePayCurrency = active_pay_currency();
         <h3>Contact address</h3>
         <div class="iw-tm-fields">
           <div class="iw-tm-field"><label for="cpCountry">Country</label>
-            <select id="cpCountry" name="country">
+            <select id="cpCountry" name="country" disabled aria-describedby="cpCountryHelp">
               <?php foreach ($countryOptions as $iso=>$name): ?>
               <option value="<?= e($name) ?>" data-iso="<?= e(strtoupper((string) $iso)) ?>" <?= selected_if($name, $country) ?>><?= e($name) ?></option>
-              <?php endforeach; ?></select></div>
+              <?php endforeach; ?></select>
+            <input type="hidden" name="country" value="<?= e($country) ?>">
+            <small id="cpCountryHelp">Your billing country is locked for pricing. Contact support if you relocate or need to correct it.</small></div>
           <div class="iw-tm-field"><label for="cpState">State / region</label>
             <select id="cpState" name="state_region" data-selected="<?= e($state) ?>"></select></div>
           <div class="iw-tm-field"><label for="cpCity">City</label>
@@ -65,16 +67,9 @@ $activePayCurrency = active_pay_currency();
   <aside class="iw-client-profile-side">
     <section class="iw-tm-panel">
       <div class="iw-client-detail-panel-title"><h2>Payment preference</h2></div>
-      <p class="iw-client-small-muted">Select the currency you prefer when starting an order. Invoices already issued keep their original currency.</p>
-      <form method="post" action="<?= e(url('profile')) ?>">
-        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="form_action" value="update_pay_currency">
-        <div class="iw-tm-field"><label for="cpCurrency">Preferred currency</label><select name="pay_currency" id="cpCurrency">
-          <?php foreach (payment_currency_options() as $currencyCode): ?>
-            <option value="<?= e($currencyCode) ?>" <?= selected_if($currencyCode, $activePayCurrency) ?>><?= e($currencyCode) ?></option>
-          <?php endforeach; ?></select></div>
-        <button class="iw-client-button iw-client-button-soft" type="submit">Save preference</button>
-      </form>
+      <p class="iw-client-small-muted">Your invoice currency is automatically determined by your account billing country. Prices differ between Nigeria and international customers; existing invoices retain their original amount and currency.</p>
+      <p class="fw-semibold">Billing currency: <?= e($activePayCurrency) ?></p>
+      <p class="iw-client-small-muted">Need to correct your country? <a href="<?= e(url('support')) ?>">Request a billing-country review</a>.</p>
       <a href="<?= e(url('card_vault')) ?>" class="iw-client-account-link"><i class="bi bi-credit-card"></i> Manage payment methods <i class="bi bi-arrow-right"></i></a>
     </section>
     <section class="iw-tm-panel">

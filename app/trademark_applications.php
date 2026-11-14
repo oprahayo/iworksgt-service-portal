@@ -223,6 +223,11 @@ function trademark_remove_logo(?string $name): void
 
 function trademark_save_draft(int $clientId, int $id, array $data, ?array $upload): int
 {
+    $account=find_user_by_id($clientId);
+    if (!is_array($account) || (string)($account['role']??'')!=='client') {
+        throw new RuntimeException('Valid customer account required for trademark orders.');
+    }
+    $data['currency']=iworks_launch_account_currency($account);
     $existing = $id > 0 ? trademark_find($id, $clientId) : null;
     if ($id > 0 && !$existing) { throw new RuntimeException('Application not found.'); }
     if ($existing && $existing['status'] !== 'draft') {
@@ -272,6 +277,11 @@ function trademark_checkout(int $id, int $clientId): int
         }
         $row = trademark_decode($row);
         $data = $row['data'];
+        $account=find_user_by_id($clientId);
+        if (!is_array($account) ||
+            (string)($data['currency']??'')!==iworks_launch_account_currency($account)) {
+            throw new RuntimeException('Billing country changed. Update this trademark draft before payment.');
+        }
         trademark_validate_complete($data, !empty($row['logo_filename']));
         $service = get_service_by_slug('trademark');
         if (!$service) {

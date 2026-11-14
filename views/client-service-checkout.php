@@ -4,8 +4,21 @@ $checkoutService = is_array($checkoutService ?? null) ? $checkoutService : [];
 $checkoutId = (int)($checkoutService['id'] ?? 0);
 $checkoutName = trim((string)($checkoutService['name'] ?? 'Service'));
 $checkoutSummary = trim((string)preg_replace('/\s+/', ' ', strip_tags((string)($checkoutService['short_description'] ?? $checkoutService['description'] ?? ''))));
-$checkoutPrice = (float)($checkoutService['price'] ?? 0);
-$checkoutCurrency = strtoupper((string)($checkoutService['currency'] ?? default_currency()));
+$checkoutCountry=iworks_launch_billing_country(current_user());
+$checkoutCurrency=iworks_launch_account_currency(current_user());
+$checkoutRate=iworks_launch_service_rate($checkoutService,$checkoutCountry);
+if ($checkoutRate !== null && ($checkoutRate['mode']??'')!=='fixed') {
+    throw new RuntimeException('This project needs a written quote before checkout.');
+}
+$checkoutPrice=$checkoutRate!==null
+    ? (float)$checkoutRate['amount']
+    : (float)($checkoutService['price']??0);
+if ($checkoutPrice<=0) {
+    throw new RuntimeException('This service has no payable fixed price. Request a quote.');
+}
+if ($checkoutRate===null && strtoupper((string)($checkoutService['currency']??''))!==$checkoutCurrency) {
+    throw new RuntimeException('A regional price is not configured for this product. Request a quote.');
+}
 $checkoutTaxPercent = max(0.0, min(100.0, (float)($checkoutService['tax_percent'] ?? 0)));
 $checkoutTax = round($checkoutPrice * $checkoutTaxPercent / 100, 2);
 $checkoutTotal = round($checkoutPrice + $checkoutTax, 2);
@@ -50,18 +63,15 @@ $checkoutTotal = round($checkoutPrice + $checkoutTax, 2);
         <label for="iwFocusedRequirements">Your requirements <span class="iw-focused-optional">(optional)</span></label>
         <textarea name="description" id="iwFocusedRequirements" rows="4" maxlength="4000" placeholder="Tell us what you need, timelines and any important context."></textarea>
         <label for="iwFocusedCurrency">Invoice currency</label>
-        <select name="pay_currency" id="iwFocusedCurrency" required>
-          <?php foreach (payment_currency_options() as $currency): ?>
-            <option value="<?= e($currency) ?>" <?= $currency === $checkoutCurrency ? 'selected' : '' ?>><?= e($currency) ?></option>
-          <?php endforeach; ?>
-        </select>
-        <p class="iw-focused-fx-note">The figures above are in <?= e($checkoutCurrency) ?>. If you select another invoice currency, the server recalculates the amount at the prevailing checkout exchange rate. Review the final invoice before paying.</p>
+        <input type="hidden" name="pay_currency" value="<?= e($checkoutCurrency) ?>">
+        <p class="iw-focused-fx-note" id="iwFocusedCurrency">Your billing country (<?= e($checkoutCountry) ?>) determines the <?= e($checkoutCurrency) ?> price. The invoice currency cannot be switched for a cheaper regional rate. Final charges are reviewed before payment.</p>
         <label for="iwFocusedPayMethod">Preferred payment method</label>
         <select id="iwFocusedPayMethod" name="checkout_pay_method">
           <option value="card">Card</option>
           <option value="bank">Bank transfer</option>
           <option value="crypto">Cryptocurrency (where supported)</option>
         </select>
+        <p class="iw-focused-fx-note">By continuing, you request this service under our <a href="<?= e(public_url('terms')) ?>">Terms &amp; Conditions</a> and acknowledge the <a href="<?= e(public_url('privacy')) ?>">Privacy Policy</a>. Refund eligibility and third-party charges are explained before payment.</p>
         <button type="submit" class="iw-focused-submit">Continue to invoice <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
         <a class="iw-focused-cancel" href="<?= e(url('dashboard')) ?>">Choose another service</a>
       </form>

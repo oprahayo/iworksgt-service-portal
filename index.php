@@ -941,8 +941,10 @@ try {
             }
 
             require_csrf();
-            $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
-            set_active_pay_currency($currency);
+            $requestedCurrency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
+            $currency = has_role(['client'])
+                ? iworks_launch_account_currency(current_user()) : $requestedCurrency;
+            if (!has_role(['client'])) set_active_pay_currency($currency);
 
             $redirectTo = trim((string) ($_POST['redirect_to'] ?? ''));
             if ($redirectTo === '' || str_contains($redirectTo, 'setup.php')) {
@@ -1490,6 +1492,11 @@ try {
                     }
                     if ($action==='checkout') {
                         $invoiceId=cac_filing_checkout($clientId,$filingId);
+                        $confirmedInvoice=get_invoice($invoiceId);
+                        if ($confirmedInvoice) {
+                            try { iworks_launch_notify_new_order((int)$confirmedInvoice['job_id']); }
+                            catch(Throwable $notifyError){ error_log('iWORKS CAC order notification queue error'); }
+                        }
                         redirect('invoice.php?id='.$invoiceId);
                     }
                     if ($action==='upload_document') {
@@ -1684,6 +1691,11 @@ try {
                     if ($action === 'submit_for_payment') {
                         if ($appId <= 0) { throw new RuntimeException('Save the application before proceeding.'); }
                         $invoiceId = trademark_checkout($appId, $clientId);
+                        $trademarkInvoice=get_invoice($invoiceId);
+                        if ($trademarkInvoice) {
+                            try { iworks_launch_notify_new_order((int)$trademarkInvoice['job_id']); }
+                            catch(Throwable $notifyError){ error_log('iWORKS trademark order notification queue error'); }
+                        }
                         iworks_order_intent_clear();
                         flash('success', 'Review your payment options to finalise your trademark application.');
                         redirect(url('trademark', ['id'=>$appId, 'step'=>'payment']));
@@ -1792,6 +1804,47 @@ try {
 
                 try {
                     $serviceAction = (string) ($_POST['form_action'] ?? '');
+
+                    if ($serviceAction === 'save_launch_prices') {
+                        $defaults=[
+                            'launch_bn_ngn'=>49000,'launch_bn_usd'=>95,
+                            'launch_company_small_ngn'=>60000,'launch_company_small_usd'=>175,
+                            'launch_company_large_ngn'=>150000,'launch_company_large_usd'=>325,
+                            'launch_ngo_ngn'=>180000,'launch_ngo_usd'=>495,
+                            'launch_web_starter_ngn'=>250000,'launch_web_starter_usd'=>480,
+                            'launch_web_business_ngn'=>500000,'launch_web_business_usd'=>950,
+                            'launch_web_store_ngn'=>900000,'launch_web_store_usd'=>1900,
+                            'launch_graphics-design_ngn'=>95000,'launch_graphics-design_usd'=>195,
+                            'launch_seo-smm-digital-marketing_ngn'=>180000,'launch_seo-smm-digital-marketing_usd'=>370,
+                            'launch_domain-web-hosting_ngn'=>55000,'launch_domain-web-hosting_usd'=>115,
+                            'launch_email-list-smtp_ngn'=>95000,'launch_email-list-smtp_usd'=>195,
+                            'launch_pro-training_ngn'=>90000,'launch_pro-training_usd'=>190,
+                        ];
+                        $newPrices=[];
+                        foreach($defaults as $key=>$default) {
+                            $value=filter_var($_POST[$key]??null,FILTER_VALIDATE_FLOAT);
+                            if ($value===false || !is_finite((float)$value) ||
+                                (float)$value<=0 || (float)$value>100000000) {
+                                throw new RuntimeException('Enter valid positive prices for every regional package.');
+                            }
+                            $newPrices[$key]=round((float)$value,2);
+                        }
+                        // Regional rates have their own price book and do not
+                        // modify historical orders, invoices or old CAC settings.
+                        db()->beginTransaction();
+                        try {
+                            foreach($newPrices as $key=>$amount) {
+                                set_setting($key,number_format($amount,2,'.',''));
+                            }
+                            db()->commit();
+                            reload_settings_cache();
+                        } catch(Throwable $error) {
+                            if (db()->inTransaction()) db()->rollBack();
+                            throw $error;
+                        }
+                        flash('success','New-order regional package prices saved. Existing invoices are unchanged.');
+                        redirect(url('services',['section'=>'launch-prices']));
+                    }
 
                     if ($serviceAction === 'save_cac_pricing') {
                         $amounts = [];
@@ -1935,6 +1988,81 @@ try {
             require __DIR__ . '/views/partials/header.php';
             require __DIR__ . '/views/forms.php';
             require __DIR__ . '/views/partials/footer.php';
+            break;
+
+        case 'quote_request':
+            require_roles(['client']);
+            $quoteUser=current_user();
+            $quoteSlug=iworks_order_slug($_GET['service'] ?? $_POST['service_slug'] ?? '');
+            $quoteService=$quoteSlug!==''?get_service_by_slug($quoteSlug):null;
+            $quoteVisible=is_array($quoteService)?iworks_customer_published_service($quoteService):null;
+            if (!$quoteVisible || ($quoteVisible['_iworks_checkout_mode']??'')!=='consultation') {
+                flash('error','Choose an available custom-project service from the catalogue.');
+                redirect(url('dashboard'));
+            }
+            $quoteService=$quoteVisible;
+            $quoteCountry=iworks_launch_billing_country($quoteUser);
+            $quotePackageSelection=iworks_order_slug($_GET['package']??$_POST['package']??'');
+            $quotePackages=(string)$quoteService['slug']==='website-design-development'
+                ? iworks_launch_website_packages($quoteCountry)
+                : ((string)$quoteService['slug']==='incorporated-trustees'
+                    ? ['ngo'=>iworks_launch_registration_options($quoteCountry)['ngo']]
+                    : ['custom'=>['name'=>'Custom service','amount'=>0,'currency'=>iworks_launch_account_currency($quoteUser)]]);
+            if (!isset($quotePackages[$quotePackageSelection])) {
+                $quotePackageSelection=(string)array_key_first($quotePackages);
+            }
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $requestedPackage=(string)($_POST['package']??'');
+                    if (!array_key_exists($requestedPackage,$quotePackages)) {
+                        throw new RuntimeException('Choose an available project package.');
+                    }
+                    $need=trim((string)($_POST['requirements']??''));
+                    if (strlen($need)<15 || strlen($need)>3000) {
+                        throw new RuntimeException('Describe your project in at least 15 and at most 3,000 characters.');
+                    }
+                    $company=mb_safe_trim(strip_tags((string)($_POST['company']??'')),160);
+                    $time=(string)($_POST['timeline']??'');
+                    if (!in_array($time,['','within-month','one-to-three','flexible'],true)) {
+                        throw new RuntimeException('Invalid project timing.');
+                    }
+                    if ((int)($_SESSION['last_quote_at']??0)>time()-30) {
+                        throw new RuntimeException('A request was just submitted. Check your Support Center before sending another.');
+                    }
+                    $selected=$quotePackages[$requestedPackage];
+                    $message='Service: '.(string)$quoteService['name']."\n";
+                    $message.='Package: '.(string)($selected['name']??$requestedPackage)."\n";
+                    $message.='Billing: '.$quoteCountry.' / '.iworks_launch_account_currency($quoteUser)."\n";
+                    if ((float)($selected['amount']??0)>0) {
+                        $message.='Indicative package: '.money((float)$selected['amount'],(string)$selected['currency'])." (not an invoice)\n";
+                    }
+                    if ($company!=='') $message.='Company/project: '.$company."\n";
+                    if ($time!=='') $message.='Timing: '.$time."\n";
+                    $message.="\nScope requested:\n".$need;
+                    $ticketId=create_support_ticket(
+                        (int)$quoteUser['id'],
+                        'Quotation request: '.(string)$quoteService['name'],
+                        $message,'normal','quotation'
+                    );
+                    $_SESSION['last_quote_at']=time();
+                    create_notification((int)$quoteUser['id'],
+                        'Quotation request received',
+                        'We received your '.(string)$quoteService['name'].' request. The team will review the scope before issuing an invoice.',
+                        url('support',['ticket_id'=>$ticketId])
+                    );
+                    iworks_order_intent_clear();
+                    flash('success','Your project request was recorded. You will receive updates in Support and by email where delivery is configured.');
+                    redirect(url('support',['ticket_id'=>$ticketId]));
+                } catch(Throwable $e) {
+                    flash('error',$e->getMessage());
+                    redirect(url('quote_request',['service'=>$quoteSlug,'package'=>$quotePackageSelection]));
+                }
+            }
+            $title='Request a quotation - '.app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/client-quote-request.php';
+            require __DIR__.'/views/partials/footer.php';
             break;
 
         case 'jobs':
@@ -2111,8 +2239,21 @@ try {
                             // or commission overrides for standard service jobs.
                             unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'],
                                 $payload['tax_percent'], $payload['tax_mode'], $payload['currency']);
-                            if (!empty($payload['pay_currency'])) {
-                                set_active_pay_currency((string) $payload['pay_currency']);
+                            $lockedCurrency=iworks_launch_account_currency(current_user());
+                            if (!empty($payload['pay_currency']) && strtoupper((string)$payload['pay_currency'])!==$lockedCurrency) {
+                                throw new RuntimeException('The payment currency is fixed by your account billing country.');
+                            }
+                            $payload['pay_currency']=$lockedCurrency;
+                            $launchRate=iworks_launch_service_rate($requestedService,
+                                iworks_launch_billing_country(current_user()));
+                            if ($launchRate!==null) {
+                                if (($launchRate['mode']??'')!=='fixed' || (float)$launchRate['amount']<=0) {
+                                    throw new RuntimeException('This service requires a quotation before payment.');
+                                }
+                                // Price is calculated on the server, never from
+                                // customer-submitted amounts or currency rates.
+                                $payload['amount']=(float)$launchRate['amount'];
+                                $payload['currency']=$lockedCurrency;
                             }
                         }
 
@@ -2125,7 +2266,7 @@ try {
                             if ($hasMultiServices) {
                                 $bundle = create_client_order_bundle($payload);
                                 $invoice = get_invoice((int) ($bundle['invoice_id'] ?? 0));
-                                notify_roles(['admin', 'finance'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
+                                notify_roles(['admin','finance','agent'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
                             } else {
                                 if (is_array($selectedServiceIds) && !empty($selectedServiceIds[0])) {
                                     $payload['service_id'] = (int) $selectedServiceIds[0];
@@ -2133,7 +2274,8 @@ try {
                                 $jobId = create_job($payload);
                                 $job = get_job($jobId);
                                 if ($job) {
-                                    notify_roles(['admin', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
+                                    try { iworks_launch_notify_new_order($jobId); }
+                                    catch(Throwable $notifyError){ error_log('iWORKS customer order notification queue error'); }
                                 }
                                 $invoice = get_invoice_by_job_id($jobId);
                             }
@@ -3018,7 +3160,7 @@ try {
             break;
 
         case 'support':
-            require_roles(['client', 'admin', 'finance']);
+            require_roles(['client', 'admin', 'finance', 'agent']);
             $user = current_user();
             $ticketFilters = [
                 'status' => strtolower(trim((string) ($_GET['status'] ?? ''))),
@@ -3044,12 +3186,16 @@ try {
                             $linkedJobs[] = (string) ($linkedJob['job_code'] ?? ('#' . $linkedId));
                         }
                         $relatedPrefix = $linkedJobs !== [] ? 'Related services: ' . implode(', ', $linkedJobs) . "\n\n" : '';
+                        $requestedCategory = (string) ($_POST['category'] ?? 'general');
+                        // Only the dedicated, validated quotation form may
+                        // put a ticket into the agent-visible queue.
+                        if ($requestedCategory === 'quotation') $requestedCategory = 'general';
                         $ticketId = create_support_ticket(
                             (int) $user['id'],
                             (string) ($_POST['subject'] ?? ''),
                             $relatedPrefix . (string) ($_POST['message'] ?? ''),
                             (string) ($_POST['priority'] ?? 'normal'),
-                            (string) ($_POST['category'] ?? 'general'),
+                            $requestedCategory,
                             $_FILES['attachment'] ?? null
                         );
                         flash('success', 'Support ticket created successfully.');
@@ -3441,6 +3587,13 @@ try {
                             throw new RuntimeException('Provide full name or both first and last name.');
                         }
 
+                        $submittedCountry=trim((string)($_POST['country']??''));
+                        $originalCountry=(string)($user['country']??'');
+                        if ((string)($user['role']??'')==='client' &&
+                            iworks_launch_country_code($originalCountry)!==null &&
+                            iworks_launch_country_code($submittedCountry)!==iworks_launch_country_code($originalCountry)) {
+                            throw new RuntimeException('Billing country changes require a support review.');
+                        }
                         db_execute(
                             'UPDATE users
                              SET full_name = :full_name,
@@ -3462,7 +3615,9 @@ try {
                                 'phone' => trim($_POST['phone'] ?? ''),
                                 'gender' => trim((string) ($_POST['gender'] ?? '')) ?: null,
                                 'date_of_birth' => trim((string) ($_POST['date_of_birth'] ?? '')) ?: null,
-                                'country' => trim((string) ($_POST['country'] ?? '')) ?: null,
+                                'country' => ((string)($user['role']??'')==='client' &&
+                                  iworks_launch_country_code($originalCountry)!==null)
+                                  ? $originalCountry : ($submittedCountry?:null),
                                 'state_region' => trim((string) ($_POST['state_region'] ?? '')) ?: null,
                                 'city' => trim((string) ($_POST['city'] ?? '')) ?: null,
                                 'address_line' => trim((string) ($_POST['address_line'] ?? '')) ?: null,
@@ -3501,6 +3656,9 @@ try {
                     }
 
                     if ($action === 'update_pay_currency') {
+                        if ((string)($user['role']??'')==='client') {
+                            throw new RuntimeException('Currency is set by your billing country and cannot be changed here.');
+                        }
                         $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
                         set_active_pay_currency($currency);
                         flash('success', 'Preferred pay currency updated.');

@@ -1,5 +1,10 @@
 <?php
 $filing = is_array($cacDraft['data'] ?? null) ? $cacDraft['data'] : [];
+if (!$cacDraft && $filingKind === 'company') {
+    // Preserve the capital band chosen on the four-option landing page.
+    $requestedPackage=(string)($_GET['package']??iworks_order_intent_package());
+    $filing['share_capital']=$requestedPackage==='company-large'?'2000000':'1000000';
+}
 $people = is_array($filing['people'] ?? null) && $filing['people'] !== [] ? $filing['people'] : [[]];
 $documents = is_array($cacDraft['docs'] ?? null) ? $cacDraft['docs'] : [];
 $editable = !$cacDraft || ($cacDraft['status'] ?? '') === 'draft';
@@ -143,11 +148,10 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
             </div>
             <?php endif; ?>
             <div class="iw-tm-field"><label for="cacAv">CAC name reservation / AV code (if available)</label><input id="cacAv" name="filing[av_code]" value="<?= e($first('av_code')) ?>"></div>
-            <div class="iw-tm-field"><label for="cacCurrency">Pay in</label>
-              <select name="filing[currency]" id="cacCurrency">
-                <option value="NGN" <?= $first('currency')!=='USD'?'selected':'' ?>>Nigerian naira (NGN)</option>
-                <option value="USD" <?= $first('currency')==='USD'?'selected':'' ?>>US dollar (USD)</option>
-              </select>
+            <div class="iw-tm-field"><label for="cacCurrency">Billing currency</label>
+              <input type="hidden" name="filing[currency]" id="cacCurrency" value="<?= e(iworks_launch_account_currency($client)) ?>">
+              <p class="iw-cac-field-value"><?= e(iworks_launch_account_currency($client)) ?></p>
+              <small class="iw-cac-explain">Set automatically from your account billing country. NGN and USD packages have different fixed rates.</small>
             </div>
           </div>
         </section>
@@ -271,7 +275,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
           <p>Verify names and documents before generating an invoice. CAC filing starts only after payment verification.</p></div></div>
         <?php if ($cacQuote): ?>
           <div class="iw-cac-total"><span>Total iWorks service and selected add-ons</span><strong><?= e(money((float)$cacQuote['total'],$cacQuote['currency'])) ?></strong>
-            <small>Base filing support: ₦<?= e(number_format((float)$cacQuote['base_ngn'],0)) ?><?php if(($cacQuote['extras_ngn']['registered_office'] ?? 0)>0): ?> · Registered office: ₦<?= e(number_format((float)$cacQuote['extras_ngn']['registered_office'],0)) ?><?php endif; ?><?php if(($cacQuote['extras_ngn']['privacy_advisory'] ?? 0)>0): ?> · Privacy advisory: ₦<?= e(number_format((float)$cacQuote['extras_ngn']['privacy_advisory'],0)) ?><?php endif; ?></small>
+            <small>Base filing support: <?= e(money((float)$cacQuote['base_price'],(string)$cacQuote['currency'])) ?><?php if(($cacQuote['extras_ngn']['registered_office'] ?? 0)>0): ?> · Registered office: ₦<?= e(number_format((float)$cacQuote['extras_ngn']['registered_office'],0)) ?><?php endif; ?><?php if(($cacQuote['extras_ngn']['privacy_advisory'] ?? 0)>0): ?> · Privacy advisory: ₦<?= e(number_format((float)$cacQuote['extras_ngn']['privacy_advisory'],0)) ?><?php endif; ?></small>
             <small><?= $business ? e(ucfirst((string)($filing['structure']??'sole'))) . ' · ' . count($people) . ' proprietor(s)' : count($people) . ' director(s)/owner(s)' ?></small>
           </div>
         <?php endif; ?>

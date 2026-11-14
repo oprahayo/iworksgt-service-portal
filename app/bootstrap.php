@@ -76,6 +76,7 @@ require_once __DIR__ . '/auth_rate_limits.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/gateway_verification.php';
 require_once __DIR__ . '/domain.php';
+require_once __DIR__ . '/launch_pricing.php';
 require_once __DIR__ . '/customer_service_policy.php';
 require_once __DIR__ . '/live_chat.php';
 require_once __DIR__ . '/editorial.php';

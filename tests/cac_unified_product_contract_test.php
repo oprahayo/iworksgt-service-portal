@@ -42,11 +42,11 @@ check_cac($unified['name']==='Business Registration' && $unified['price']===2600
     'Canonical public product should start at Business Name base price.');
 
 $base = ['people'=>[['role'=>'Director and shareholder']], 'currency'=>'NGN','address_mode'=>'own'];
-check_cac(cac_filing_quote('company',$base)['ngn']===100000.0,'Company base must come from canonical service record.');
+check_cac(cac_filing_quote('company',$base)['ngn']===60000.0,'New invoices must use the regional Ltd package rate; historical service records remain intact.');
 $base['privacy_advisory']=1;
-check_cac(cac_filing_quote('company',$base)['ngn']===150000.0,'Director advisory adds configured NGN 50,000 for one director.');
+check_cac(cac_filing_quote('company',$base)['ngn']===110000.0,'Director advisory adds configured NGN 50,000 for one director.');
 $base['people'][]=['role'=>'Director'];
-check_cac(cac_filing_quote('company',$base)['ngn']===200000.0,'Privacy advisory is per director, not per shareholder.');
+check_cac(cac_filing_quote('company',$base)['ngn']===160000.0,'Privacy advisory is per director, not per shareholder.');
 fails_cac(static fn()=>cac_filing_quote('business',[
     'people'=>[['role'=>'Proprietor']],'structure'=>'sole','privacy_advisory'=>1
 ]),'Company-only advisory cannot be sold on Business Name.');
@@ -61,7 +61,7 @@ $settings = [
 $quote = cac_filing_quote('business',[
     'people'=>[['role'=>'Proprietor']],'structure'=>'sole','currency'=>'NGN','address_mode'=>'virtual',
 ]);
-check_cac($quote['ngn']===56000.0,'Managed office fee must be added to Business Name quote on server.');
+check_cac($quote['ngn']===79000.0,'Managed office fee must be added to independent launch BN quote on server.');
 check_cac(cac_registered_office('virtual','client-supplied address')===$settings['cac_virtual_address_details'],
     'Virtual address must be administrator-owned, never taken from client input.');
 

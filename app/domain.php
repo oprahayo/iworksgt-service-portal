@@ -4851,7 +4851,8 @@ function create_job(array $input, array $trustedOptions = []): int
         : normalize_payment_currency(default_currency());
     $payMethod = normalize_pay_method((string) ($input['checkout_pay_method'] ?? $input['pay_method'] ?? 'card'));
     $fxRateUsed = (
-        $currency !== $serviceCurrency
+        !$hasCustomAmount
+        && $currency !== $serviceCurrency
         && in_array($currency, payment_currency_options(), true)
         && in_array($serviceCurrency, payment_currency_options(), true)
     ) ? fx_ngn_per_usd() : null;
@@ -10634,6 +10635,9 @@ function can_access_support_ticket(array $user, array $ticket): bool
     if (($user['role'] ?? '') === 'client') {
         return (int) $ticket['client_id'] === (int) $user['id'];
     }
+    if (($user['role'] ?? '') === 'agent') {
+        return (string)($ticket['category']??'') === 'quotation';
+    }
 
     return false;
 }
@@ -10694,8 +10698,8 @@ function create_support_ticket(int $clientId, string $subject, string $message, 
     );
 
     notify_roles(
-        ['admin', 'finance'],
-        'New support ticket',
+        $category === 'quotation' ? ['admin','finance','agent'] : ['admin','finance'],
+        $category === 'quotation' ? 'New quotation request' : 'New support ticket',
         'A client opened support ticket #' . $ticketId . ': ' . $subject,
         url('support', ['ticket_id' => $ticketId])
     );
@@ -10749,7 +10753,8 @@ function add_support_ticket_message(int $ticketId, int $senderId, string $messag
     );
 
     $newStatus = $currentStatus;
-    if (in_array($sender['role'], ['admin', 'finance'], true) && $newStatus === 'open') {
+    if ((in_array($sender['role'], ['admin', 'finance'], true) ||
+        ($sender['role']==='agent' && (string)$ticket['category']==='quotation')) && $newStatus === 'open') {
         $newStatus = 'in_progress';
     }
 
@@ -10845,6 +10850,10 @@ function list_support_tickets_for_user(array $user, array $filters = []): array
     if ($role === 'client') {
         $sql .= ' AND t.client_id = :client_id';
         $params['client_id'] = (int) $user['id'];
+    } elseif ($role === 'agent') {
+        // Agents see assigned-to-the-team quote requests only; private
+        // billing, complaints and unrelated support tickets remain hidden.
+        $sql .= " AND t.category = 'quotation'";
     }
 
     if ($status !== '') {
