@@ -3249,7 +3249,7 @@ try {
                         set_setting('mail_from_email', trim((string) ($_POST['mail_from_email'] ?? 'no-reply@iworksgt.com')));
                         set_setting('email_notifications_enabled', !empty($_POST['email_notifications_enabled']) ? '1' : '0');
 
-                        $otpExpiry = max((int) ($_POST['otp_expiry_minutes'] ?? 10), 1);
+                        $otpExpiry = max(10, min(20, (int) ($_POST['otp_expiry_minutes'] ?? 10)));
                         set_setting('otp_expiry_minutes', (string) $otpExpiry);
 
                         flash('success', 'Email and OTP settings saved.');
