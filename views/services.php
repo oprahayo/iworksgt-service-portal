@@ -21,12 +21,17 @@
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="form_action" value="save_cac_pricing">
       <div class="col-md-4"><label class="form-label" for="cacBusinessBase">Business Name base · one proprietor (NGN)</label>
-        <input id="cacBusinessBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_business_base_ngn" value="<?= e((string)cac_money_setting('cac_business_base_ngn',26000)) ?>" required></div>
+        <input id="cacBusinessBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_business_base_ngn" value="<?= e((string)cac_money_setting('cac_business_base_ngn',35000)) ?>" required></div>
       <div class="col-md-4"><label class="form-label" for="cacPartnerBase">Each additional partner (NGN)</label>
         <input id="cacPartnerBase" class="form-control" type="number" min="0" max="100000000" step="0.01" name="cac_business_partner_extra_ngn" value="<?= e((string)cac_money_setting('cac_business_partner_extra_ngn',15000)) ?>" required></div>
       <div class="col-md-4"><label class="form-label" for="cacCompanyBase">Private Limited Company base (NGN)</label>
-        <input id="cacCompanyBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_company_base_ngn" value="<?= e((string)($cacUnifiedCompany['price'] ?? 120000)) ?>" required>
+        <input id="cacCompanyBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_company_base_ngn" value="<?= e((string)($cacUnifiedCompany['price'] ?? 75000)) ?>" required>
         <small class="form-text">Stored in the existing Company Registration service record for backwards-compatible invoices.</small></div>
+      <div class="col-md-4"><label class="form-label" for="cacGrowthBase">Private Ltd ₦2m–₦5m share capital (NGN)</label>
+        <input id="cacGrowthBase" class="form-control" type="number" min="1" max="100000000" step="0.01" name="cac_company_growth_ngn" value="<?= e((string)cac_money_setting('cac_company_growth_ngn',150000)) ?>" required></div>
+      <div class="col-md-4"><label class="form-label" for="cacDiasporaMultiplier">Overseas CAC support multiplier</label>
+        <input id="cacDiasporaMultiplier" class="form-control" type="number" min="1" max="4" step="0.05" name="diaspora_cac_service_multiplier" value="<?= e(setting('diaspora_cac_service_multiplier','1.6')) ?>" required>
+        <small class="form-text">Separate international service fee; not a mark-up on government charges.</small></div>
       <div class="col-md-4"><label class="form-label" for="cacDirectorBase">Each additional director (NGN)</label>
         <input id="cacDirectorBase" class="form-control" type="number" min="0" max="100000000" step="0.01" name="cac_company_extra_director_ngn" value="<?= e((string)cac_money_setting('cac_company_extra_director_ngn',0)) ?>" required></div>
       <div class="col-md-4"><label class="form-label" for="cacVirtualFee">Managed registered-office fee (NGN)</label>
