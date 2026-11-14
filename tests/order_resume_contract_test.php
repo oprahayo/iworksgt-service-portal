@@ -67,7 +67,9 @@ check_order(str_contains($bootstrap, "require_once __DIR__ . '/order_intent.php'
 check_order(str_contains($index, "iworks_order_intent_capture(\$_GET)"), 'Portal login must persist selected service.');
 check_order(str_contains($index, "case 'google_callback':") && str_contains($index, 'redirect(iworks_post_login_destination(current_user()))'), 'Google callback must resume selected service.');
 check_order(str_contains($index, "case 'otp':") && str_contains($index, "case 'register':"), 'OTP and registration paths must exist.');
-check_order(str_contains($service, "portal_url('login', ['service'"), 'Public order button must carry selected service.');
+check_order(str_contains($service, "portal_url('login',['service'=>") &&
+    str_contains($service, "'package'=>(string)$"."key"),
+    'Public order button must carry service and selected registration/website package.');
 check_order(str_contains($index, 'iworks_order_catalog_selection('), 'Checkout must validate service against catalog.');
 check_order(str_contains($index, "require __DIR__.'/views/client-service-checkout.php'"),
     'Customer checkout must render the focused selected-product screen.');
