@@ -216,13 +216,25 @@ body.page-public .public-footer-contact-col p {
   word-break: normal;
 }
 @media (max-width: 640px) {
+  /* Restore the original two-column mobile footer: Company | Services,
+     Legal | Contact. The slightly wider right column accommodates contact
+     addresses without clipping at 320px. */
   body.page-public .public-footer-top-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
+    gap: 21px clamp(12px, 3.6vw, 22px);
     width: 100%;
   }
   body.page-public .public-footer-contact-col {
     width: 100%;
     overflow-wrap: anywhere;
+  }
+  body.page-public .public-footer-col h4 { font-size: clamp(15px, 4.2vw, 17px); }
+  body.page-public .public-footer-socials {
+    display: flex;
+    justify-content: center;
+    justify-self: center;
+    width: 100%;
+    margin-top: 5px;
   }
   body.page-public .public-footer-brand-row,
   body.page-public .public-footer-bottom,
@@ -237,6 +249,133 @@ body.page-public .public-footer-contact-col p {
   }
 }
 
+
+
+/* 2026-11 Mobile header: compact collapsed navigation with clear accordions.
+   Desktop public navigation is intentionally unaffected. */
+@media (max-width: 1199.98px) {
+  body.page-public .public-navbar .navbar-collapse {
+    margin-top: 0!important;
+    padding: 0!important;
+    border-top: 1px solid #e8ebee;
+    max-height: calc(100dvh - 65px);
+    overscroll-behavior: contain;
+  }
+  body.page-public .public-navbar #publicNav:not(.show):not(.collapsing) {
+    display: none!important;
+  }
+  body.page-public .public-navbar #publicNav.collapsing {
+    overflow: hidden!important;
+  }
+  body.page-public .iw-mobile-menu {
+    padding: 8px clamp(16px, 5vw, 30px) calc(12px + env(safe-area-inset-bottom));
+  }
+  body.page-public .iw-mobile-menu-group {
+    margin: 0;
+    border-bottom: 1px solid #edf0f2;
+  }
+  body.page-public .iw-mobile-menu-group summary {
+    min-height: 46px;
+    padding: 9px 0;
+    gap: 12px;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+  body.page-public .iw-mobile-menu-group summary i {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff0e6;
+    color: #c95a1b;
+    font-size: 12px;
+  }
+  body.page-public .iw-mobile-menu-group[open] summary {
+    color: #b84e15;
+  }
+  body.page-public .iw-mobile-menu-sub {
+    gap: 1px;
+    margin: 0 0 4px 2px;
+    padding: 0 0 6px 9px;
+  }
+  body.page-public .iw-mobile-menu-sub a {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  body.page-public .iw-mobile-menu-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 9px 0;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+  body.page-public .iw-mobile-menu-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 9px;
+  }
+  body.page-public .iw-mobile-menu-signin {
+    min-height: 40px;
+    padding: 3px 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 14px;
+    font-weight: 650;
+  }
+  body.page-public .iw-mobile-menu-cta-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 0;
+  }
+  body.page-public .iw-mobile-menu-cta-row > .iw-mobile-menu-start,
+  body.page-public .iw-mobile-menu-cta-row > .iw-mobile-menu-book {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 48px;
+    padding: 9px 7px;
+    border-radius: 10px;
+    gap: 6px;
+    font-size: 12.5px;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+  }
+  body.page-public .iw-mobile-menu-book {
+    background: #fff7f1;
+    border-color: #f2c8ad;
+    color: #aa4b18!important;
+  }
+  body.page-public .iw-mobile-menu-start { font-size: 13px; }
+  body.page-public .iw-mobile-menu-book i,
+  body.page-public .iw-mobile-menu-start i {
+    flex: 0 0 auto;
+    font-size: 14px;
+  }
+  body.page-public .iw-mobile-menu-group summary:focus-visible,
+  body.page-public .iw-mobile-menu-cta-row > *:focus-visible,
+  body.page-public .iw-mobile-menu-signin:focus-visible {
+    outline: 3px solid #e87b34;
+    outline-offset: 2px;
+  }
+}
+@media (max-width: 350px) {
+  body.page-public .iw-mobile-menu-cta-row > .iw-mobile-menu-book {
+    font-size: 11.5px;
+    gap: 4px;
+  }
+}
 
 /* Real-photo editorial accents. Decorative CSS only: never substitutes
    authentic photos, changes image files, or invents business statistics. */

@@ -62,7 +62,7 @@ $assert(str_contains($home,'Business services')
     && str_contains($home,'Web &amp; digital')
     && !str_contains($home,'830+ Countries'),
     'Decorative service labels must not invent numerical statistics.');
-$assert(str_contains($publicHeader,'20261114-photo2')
+$assert(str_contains($publicHeader,'20261114-mobile-footer2')
     && str_contains($publicHeader,'20261114-compact2')
     && str_contains($publicFooter,'20261114-compact2'),
     'Public split-root CSS/JS cache versions must be updated.');

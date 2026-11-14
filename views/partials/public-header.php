@@ -173,7 +173,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php if (is_file($iwLaunchPolishCss) && is_readable($iwLaunchPolishCss)): ?>
     <style id="iw-site-launch-polish"><?= (string)file_get_contents($iwLaunchPolishCss) ?></style>
   <?php else: ?>
-    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-photo2">
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-mobile-footer2">
   <?php endif; ?>
   <?php if (in_array($currentPublicSlug, ['blog', 'blog_post'], true)): ?>
     <?php
@@ -276,8 +276,10 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <a class="iw-mobile-menu-link" href="<?= e(public_url('services')) ?>">Pricing &amp; services</a>
             <div class="iw-mobile-menu-bottom">
               <a class="iw-mobile-menu-signin iw-public-auth-status" data-iw-auth="login" data-iw-auth-status href="<?= e(portal_url('login')) ?>">Sign in</a>
-              <button type="button" class="iw-mobile-menu-book" data-assist-book-open><i class="bi bi-calendar3" aria-hidden="true"></i> Request a consultation</button>
-              <a class="iw-mobile-menu-start" data-iw-guest-cta href="<?= e(public_url('services')) ?>">Get started <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+              <div class="iw-mobile-menu-cta-row">
+                <a class="iw-mobile-menu-start" data-iw-guest-cta href="<?= e(public_url('services')) ?>">Get started <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                <button type="button" class="iw-mobile-menu-book" data-assist-book-open aria-label="Request a consultation"><i class="bi bi-calendar3" aria-hidden="true"></i><span>Request consultation</span></button>
+              </div>
             </div>
           </div>
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
