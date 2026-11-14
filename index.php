@@ -1037,6 +1037,10 @@ try {
                     flash('error', 'Password and confirm password do not match.');
                 } elseif ($phone === '' || $country === '' || $stateRegion === '' || $city === '' || $addressLine === '') {
                     flash('error', 'Phone, country, state/region, city, and address are required.');
+                } elseif (!in_array($country, array_values(portal_country_options()), true)) {
+                    // Never accept a forged billing country from a crafted POST.
+                    // New accounts must choose from supported residence values.
+                    flash('error', 'Choose a valid country of residence from the list.');
                 } elseif (find_user_by_email($email)) {
                     flash('error', 'This email already exists.');
                 } elseif (!email_enabled()) {
