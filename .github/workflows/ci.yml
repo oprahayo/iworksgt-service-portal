@@ -39,6 +39,7 @@ jobs:
           bash -n scripts/deploy_home_brand_polish.sh
           bash -n scripts/deploy_home_color_finish.sh
           bash -n scripts/deploy_chat_launcher_bubble.sh
+          bash -n scripts/deploy_chat_photo_polish.sh
           bash -n scripts/deploy_businesshub_home.sh
           bash -n scripts/deploy_clean_home.sh
           bash -n scripts/deploy_clean_public_pages.sh
@@ -80,6 +81,7 @@ jobs:
           php tests/public_auth_modal_contract_test.php
           php tests/public_assistance_contract_test.php
           php tests/chat_launcher_bubble_contract_test.php
+          php tests/compact_chat_photo_contract_test.php
           php tests/site_launch_blockers_contract_test.php
           php tests/job_review_workflow_test.php
           php tests/public_review_carousel_test.php
