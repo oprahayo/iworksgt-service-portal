@@ -543,6 +543,10 @@ function portal_country_options(): array
         'IN' => 'India',
         'DE' => 'Germany',
         'FR' => 'France',
+        'AU' => 'Australia',
+        'ES' => 'Spain',
+        'NL' => 'Netherlands',
+        'IE' => 'Ireland',
     ];
 }
 
@@ -660,6 +664,14 @@ function normalize_payment_currency(string $currency): string
 
 function active_pay_currency(): string
 {
+    // Account location, not a user-selected cookie or query parameter, is
+    // authoritative for new customer invoices and account UI.
+    if (function_exists('current_user') && function_exists('iworks_launch_account_currency')) {
+        $customer = current_user();
+        if (is_array($customer) && ($customer['role'] ?? '') === 'client') {
+            return iworks_launch_account_currency($customer);
+        }
+    }
     $sessionCurrency = $_SESSION['pay_currency'] ?? '';
     if (is_string($sessionCurrency) && $sessionCurrency !== '') {
         return normalize_payment_currency($sessionCurrency);
@@ -678,6 +690,16 @@ function active_pay_currency(): string
 function set_active_pay_currency(string $currency): string
 {
     $normalized = normalize_payment_currency($currency);
+    if (function_exists('current_user') && function_exists('iworks_launch_account_currency')) {
+        $customer = current_user();
+        if (is_array($customer) && ($customer['role'] ?? '') === 'client') {
+            $fixed = iworks_launch_account_currency($customer);
+            if ($normalized !== $fixed) {
+                throw new RuntimeException('Your invoice currency is determined by your account billing country.');
+            }
+            $normalized = $fixed;
+        }
+    }
     $_SESSION['pay_currency'] = $normalized;
 
     if (!headers_sent()) {
