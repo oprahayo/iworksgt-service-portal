@@ -513,10 +513,10 @@ try {
                 redirect(iworks_post_login_destination(current_user()));
             }
 
-            if (!method_is('POST')) {
-                clear_pending_otp();
-                unset($_SESSION['pending_otp_remember']);
-            }
+            // Do not destroy an in-flight verification just because a
+            // different tab or public login link loads the sign-in page.
+            // The next successful password challenge replaces it; the
+            // signed fallback cookie expires automatically.
 
             if (method_is('POST')) {
                 require_csrf();
@@ -1061,7 +1061,12 @@ try {
             }
 
             if (method_is('POST')) {
-                require_csrf();
+                // The signed OTP form token permits recovery after a short
+                // PHP session eviction, without disabling CSRF validation.
+                if (!otp_submission_csrf_valid()) {
+                    http_response_code(419);
+                    exit('Verification form expired. Refresh the OTP page and retry.');
+                }
                 $action = $_POST['form_action'] ?? '';
 
                 try {
@@ -1104,7 +1109,7 @@ try {
                         }
 
                         if (!verify_otp_code((int) $otpUser['id'], (string) $pendingOtp['purpose'], $otpCode)) {
-                            throw new RuntimeException('Invalid or expired OTP code.');
+                            throw new RuntimeException('Invalid or expired OTP code. Use the latest code received or request a new one.');
                         }
 
                         if ((string) $pendingOtp['purpose'] === 'verify_email' && !is_email_verified($otpUser)) {
@@ -3244,7 +3249,7 @@ try {
                         set_setting('mail_from_email', trim((string) ($_POST['mail_from_email'] ?? 'no-reply@iworksgt.com')));
                         set_setting('email_notifications_enabled', !empty($_POST['email_notifications_enabled']) ? '1' : '0');
 
-                        $otpExpiry = max((int) ($_POST['otp_expiry_minutes'] ?? 10), 1);
+                        $otpExpiry = max(10, min(20, (int) ($_POST['otp_expiry_minutes'] ?? 10)));
                         set_setting('otp_expiry_minutes', (string) $otpExpiry);
 
                         flash('success', 'Email and OTP settings saved.');

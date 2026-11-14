@@ -104,6 +104,7 @@ jobs:
           php tests/f09_payment_atomic_transition_test.php
           php tests/f16_f17_f18_f19_site_remediation_test.php
           php tests/f04_auth_rate_limit_test.php
+          php tests/otp_session_recovery_test.php
           php tests/f22_safe_error_response_test.php
           php tests/f06_notification_outbox_test.php
           php tests/f13_cac_quote_consistency_test.php

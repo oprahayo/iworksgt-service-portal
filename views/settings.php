@@ -200,7 +200,7 @@
               <label class="form-check-label" for="email_notifications_enabled">Email activity notifications</label>
             </div>
           </div>
-          <div class="col-md-4"><label class="form-label">OTP expiry (minutes)</label><input class="form-control" type="number" name="otp_expiry_minutes" min="1" step="1" value="<?= e(setting('otp_expiry_minutes', '10')) ?>"></div>
+          <div class="col-md-4"><label class="form-label">OTP expiry (minutes)</label><input class="form-control" type="number" name="otp_expiry_minutes" min="10" max="20" step="1" value="<?= (int) otp_expiry_minutes() ?>"></div>
           <div class="col-md-6"><label class="form-label">From name</label><input class="form-control" name="mail_from_name" value="<?= e(setting('mail_from_name', app_name())) ?>"></div>
           <div class="col-md-6"><label class="form-label">From email</label><input class="form-control" type="email" name="mail_from_email" value="<?= e(setting('mail_from_email', 'no-reply@iworksgt.com')) ?>"></div>
           <div class="col-12"><button class="btn btn-outline-primary" type="submit">Save email settings</button></div>
