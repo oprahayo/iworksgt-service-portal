@@ -3093,7 +3093,7 @@ try {
             break;
 
         case 'support':
-            require_roles(['client', 'admin', 'finance']);
+            require_roles(['client', 'admin', 'finance', 'agent']);
             $user = current_user();
             $ticketFilters = [
                 'status' => strtolower(trim((string) ($_GET['status'] ?? ''))),
@@ -3119,12 +3119,16 @@ try {
                             $linkedJobs[] = (string) ($linkedJob['job_code'] ?? ('#' . $linkedId));
                         }
                         $relatedPrefix = $linkedJobs !== [] ? 'Related services: ' . implode(', ', $linkedJobs) . "\n\n" : '';
+                        $requestedCategory = (string) ($_POST['category'] ?? 'general');
+                        // Only the dedicated, validated quotation form may
+                        // put a ticket into the agent-visible queue.
+                        if ($requestedCategory === 'quotation') $requestedCategory = 'general';
                         $ticketId = create_support_ticket(
                             (int) $user['id'],
                             (string) ($_POST['subject'] ?? ''),
                             $relatedPrefix . (string) ($_POST['message'] ?? ''),
                             (string) ($_POST['priority'] ?? 'normal'),
-                            (string) ($_POST['category'] ?? 'general'),
+                            $requestedCategory,
                             $_FILES['attachment'] ?? null
                         );
                         flash('success', 'Support ticket created successfully.');
