@@ -44,7 +44,9 @@ $introduction = $oldIntroduction !== '' && !in_array($oldIntroduction, $defaultI
     : 'Register a business name or company in Nigeria with CAC filing support. Request website design, trademarks and digital services remotely, and track progress online.';
 
 $heroAsset = !empty($hero['imageId']) ? get_media_asset((int) $hero['imageId']) : null;
-$heroImage = trim((string) ($heroAsset['url'] ?? '')) ?: iworks_stock_photo_url('consultation', 1100);
+$cmsHeroImage = trim((string) ($heroAsset['url'] ?? ''));
+$heroImage = iworks_select_authentic_photo('hero-desktop', $cmsHeroImage) ?: iworks_stock_photo_url('consultation', 1100);
+$heroMobileImage = $heroImage === iworks_authentic_photo_url('hero-desktop') ? iworks_authentic_photo_url('hero-mobile') : '';
 
 $heroPrimary = is_array($hero['primaryCta'] ?? null) ? $hero['primaryCta'] : [];
 $primaryLabel = trim((string) ($heroPrimary['label'] ?? ''));
@@ -184,7 +186,10 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         <p class="iw-clean-detail">Order online <span aria-hidden="true">·</span> Submit documents <span aria-hidden="true">·</span> Track your request</p>
       </div>
       <figure class="iw-clean-hero-media">
-        <img src="<?= e($heroImage) ?>" alt="Professionals reviewing business documents" width="640" height="510" fetchpriority="high" decoding="async">
+        <picture>
+          <?php if ($heroMobileImage !== ''): ?><source media="(max-width: 767px)" srcset="<?= e($heroMobileImage) ?>"><?php endif; ?>
+          <img src="<?= e($heroImage) ?>" alt="<?= e($heroMobileImage !== '' ? 'Black business professional working on a laptop in an office' : 'Professionals reviewing business documents') ?>" width="640" height="510" fetchpriority="high" decoding="async">
+        </picture>
       </figure>
     </div>
   </section>
@@ -308,7 +313,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       <div class="iw-home-insights-carousel" id="iwHomeInsights" tabindex="0" aria-label="Recent insights" aria-roledescription="carousel">
         <?php foreach ($featuredInsights as $index => $insight): ?>
           <?php
-            $insightImage = trim((string)($insight['featured_image']['url']??''));
+            $insightImage = iworks_blog_photo_url($insight);
             $insightTitle = trim((string)($insight['title']??'Business insight'));
             $insightTag = trim((string)($insight['tag']??'')) ?: 'Insights';
           ?>
