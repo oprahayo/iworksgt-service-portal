@@ -26,10 +26,11 @@ $assert($backup !== false && $restore !== false && $migration !== false
     && $backup < $restore && $restore < $migration
     && $migration < $mail && $mail < $gate && $gate < $publish,
     'Restore and all mandatory gates must precede live source publication.');
-$assert(str_contains($operator, 'CREATE DATABASE $RESTORE_DB')
-    && str_contains($operator, 'DROP DATABASE $RESTORE_DB')
+$assert(str_contains($operator, 'uapi --output=json Mysql create_database')
+    && str_contains($operator, 'uapi --output=json Mysql set_privileges_on_database')
+    && str_contains($operator, 'uapi --output=json Mysql delete_database')
     && str_contains($operator, 'RESTORE_CREATED'),
-    'Backup restore must be rehearsed into an isolated, tracked database.');
+    'Backup restore must use cPanel-managed isolated database and cleanup.');
 $assert(str_contains($operator, 'openssl enc -aes-256-cbc -pbkdf2')
     && str_contains($operator, 'chmod 0700 "$KEYDIR"'),
     'Private backups must be encrypted and their key directory inaccessible to web users.');
