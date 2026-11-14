@@ -25,14 +25,14 @@ $input=['structure'=>'partnership','people'=>[
     ['full_name'=>'Other Proprietor','role'=>'Shareholder']
 ], 'currency'=>'NGN'];
 $quote=cac_filing_quote('business',$input);
-cac_assert($quote['ngn']===41000.0 && $quote['currency']==='NGN','NGN partnership quote must be calculated on server.');
+cac_assert($quote['ngn']===64000.0 && $quote['currency']==='NGN','New partnership quote must use launch BN base plus partner surcharge.');
 $input['currency']='USD';
 $quote=cac_filing_quote('business',$input);
-cac_assert($quote['ngn']===41000.0 && $quote['currency']==='USD','USD quote should preserve NGN base.');
+cac_assert($quote['subtotal']===105.0 && $quote['currency']==='USD','Independent diaspora USD base plus converted add-ons must determine invoice subtotal.');
 $company=cac_filing_quote('company',['people'=>[
     ['role'=>'Director and shareholder'],['role'=>'Shareholder']
 ], 'currency'=>'NGN']);
-cac_assert($company['total']===100000.0,'Shareholder-only person must not count as an extra director.');
+cac_assert($company['total']===60000.0,'Shareholder-only person must not count as an extra director; use new small-Ltd launch rate.');
 $root=dirname(__DIR__);
 $files=['app/cac_filing.php','index.php','views/client-cac-filing.php','views/staff-cac-review.php','views/client-dashboard.php','views/client-applications.php','views/intake-submission.php','views/support.php','views/client-billing.php','views/public-home-clean.php','views/partials/public-header.php'];
 foreach($files as $path){cac_assert(is_file($root.'/'.$path),'Missing file '.$path);}
