@@ -10,6 +10,7 @@ require_once $base.'/app/launch_case_study_catalog.php';
 function schema_table_exists(string $name): bool { return $name==='iworks_case_studies'; }
 function db_all(string $sql, array $params=[]): array { return $GLOBALS['workMockRows']; }
 function e(string $value):string { return htmlspecialchars($value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'); }
+function sanitize_limited_html(string $html):string { return $html; }
 function public_absolute_url(string $relative):string { return '/'.ltrim($relative,'/'); }
 function public_url(string $page,array $args=[]):string {
     if ($page==='home') return '/';
