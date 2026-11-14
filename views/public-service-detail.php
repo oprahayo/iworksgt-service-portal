@@ -103,7 +103,9 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
       <?php
         $domesticBusiness = function_exists('cac_money_setting')
             ? cac_money_setting('cac_business_base_ngn', 35000) : 35000;
-        $domesticBasic = (float)((get_service_by_slug('company-registration')['price'] ?? 75000));
+        $companyRecord = function_exists('get_service_by_slug')
+            ? get_service_by_slug('company-registration') : null;
+        $domesticBasic = (float)(($companyRecord['price'] ?? null) ?? 75000);
         $domesticGrowth = max($domesticBasic, function_exists('cac_money_setting')
             ? cac_money_setting('cac_company_growth_ngn', 150000) : 150000);
         $cacChoices = [
