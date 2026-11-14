@@ -941,8 +941,10 @@ try {
             }
 
             require_csrf();
-            $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
-            set_active_pay_currency($currency);
+            $requestedCurrency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
+            $currency = has_role(['client'])
+                ? iworks_launch_account_currency(current_user()) : $requestedCurrency;
+            if (!has_role(['client'])) set_active_pay_currency($currency);
 
             $redirectTo = trim((string) ($_POST['redirect_to'] ?? ''));
             if ($redirectTo === '' || str_contains($redirectTo, 'setup.php')) {
@@ -1490,6 +1492,11 @@ try {
                     }
                     if ($action==='checkout') {
                         $invoiceId=cac_filing_checkout($clientId,$filingId);
+                        $confirmedInvoice=get_invoice($invoiceId);
+                        if ($confirmedInvoice) {
+                            try { iworks_launch_notify_new_order((int)$confirmedInvoice['job_id']); }
+                            catch(Throwable $notifyError){ error_log('iWORKS CAC order notification queue error'); }
+                        }
                         redirect('invoice.php?id='.$invoiceId);
                     }
                     if ($action==='upload_document') {
@@ -2186,8 +2193,21 @@ try {
                             // or commission overrides for standard service jobs.
                             unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'],
                                 $payload['tax_percent'], $payload['tax_mode'], $payload['currency']);
-                            if (!empty($payload['pay_currency'])) {
-                                set_active_pay_currency((string) $payload['pay_currency']);
+                            $lockedCurrency=iworks_launch_account_currency(current_user());
+                            if (!empty($payload['pay_currency']) && strtoupper((string)$payload['pay_currency'])!==$lockedCurrency) {
+                                throw new RuntimeException('The payment currency is fixed by your account billing country.');
+                            }
+                            $payload['pay_currency']=$lockedCurrency;
+                            $launchRate=iworks_launch_service_rate($requestedService,
+                                iworks_launch_billing_country(current_user()));
+                            if ($launchRate!==null) {
+                                if (($launchRate['mode']??'')!=='fixed' || (float)$launchRate['amount']<=0) {
+                                    throw new RuntimeException('This service requires a quotation before payment.');
+                                }
+                                // Price is calculated on the server, never from
+                                // customer-submitted amounts or currency rates.
+                                $payload['amount']=(float)$launchRate['amount'];
+                                $payload['currency']=$lockedCurrency;
                             }
                         }
 
@@ -2200,7 +2220,7 @@ try {
                             if ($hasMultiServices) {
                                 $bundle = create_client_order_bundle($payload);
                                 $invoice = get_invoice((int) ($bundle['invoice_id'] ?? 0));
-                                notify_roles(['admin', 'finance'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
+                                notify_roles(['admin','finance','agent'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
                             } else {
                                 if (is_array($selectedServiceIds) && !empty($selectedServiceIds[0])) {
                                     $payload['service_id'] = (int) $selectedServiceIds[0];
@@ -2208,7 +2228,8 @@ try {
                                 $jobId = create_job($payload);
                                 $job = get_job($jobId);
                                 if ($job) {
-                                    notify_roles(['admin', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
+                                    try { iworks_launch_notify_new_order($jobId); }
+                                    catch(Throwable $notifyError){ error_log('iWORKS customer order notification queue error'); }
                                 }
                                 $invoice = get_invoice_by_job_id($jobId);
                             }
