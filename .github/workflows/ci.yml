@@ -54,6 +54,7 @@ jobs:
           bash -n scripts/install_scheduled_jobs.sh
           bash tests/f12_schedule_fixture_test.sh
           bash -n scripts/prepare_private_migration_stage.sh
+          bash -n scripts/cpanel_finalize_release.sh
           bash tests/f22_private_migration_stage_fixture_test.sh
           bash -n scripts/audit_public_seo_live.sh
           bash -n scripts/audit_launch_public.sh
@@ -107,6 +108,7 @@ jobs:
           php tests/f06_notification_outbox_test.php
           php tests/f13_cac_quote_consistency_test.php
           php tests/remediation_release_gate_test.php
+          php tests/cpanel_finalize_release_contract_test.php
           php tests/f22_controlled_schema_migrations_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
 
