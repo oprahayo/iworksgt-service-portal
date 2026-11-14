@@ -999,8 +999,8 @@ $socialIcons = [
   }
 })();
 </script>
-<?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?>
-  <script defer src="assets/js/admin-transition.js?v=20261114-pulse1"></script>
+<?php if ($user): ?>
+  <script defer src="assets/js/admin-transition.js?v=20261114-pulse2"></script>
 <?php endif; ?>
 </body>
 </html>
