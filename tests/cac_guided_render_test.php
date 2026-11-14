@@ -4,6 +4,8 @@ declare(strict_types=1);
 function e(string $v):string{return htmlspecialchars($v,ENT_QUOTES | ENT_SUBSTITUTE,'UTF-8');}
 function url(string $page,array $params=[]):string{return 'index.php?'.http_build_query(['page'=>$page]+$params);}
 function csrf_token():string{return 'test-csrf-token';}
+function current_user():array{return ['role'=>'client','country'=>'Nigeria'];}
+function iworks_client_country_currency(?array $user):string{return 'NGN';}
 function setting(string $key,string $default=''):string{return $default;}
 function cac_money_setting(string $key,float $default):float{return $default;}
 function cac_virtual_address_eligible():bool{return false;}
