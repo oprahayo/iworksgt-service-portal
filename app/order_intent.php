@@ -29,7 +29,12 @@ function iworks_order_intent_capture(array $query): void
         iworks_order_intent_clear();
         return;
     }
-    $_SESSION['iworks_pending_order'] = ['service' => $slug, 'at' => time()];
+    $_SESSION['iworks_pending_order'] = [
+        'service' => $slug,
+        'tier' => $slug === 'company-registration' && (string)($query['tier'] ?? '') === 'growth'
+            ? 'growth' : 'standard',
+        'at' => time(),
+    ];
 }
 
 function iworks_order_intent_peek(): string
@@ -62,9 +67,12 @@ function iworks_post_login_destination(?array $user): string
             return url('cac_filing', ['type' => 'business']);
         }
         if ($slug === 'company-registration') {
-            // Preserve the selected Limited Company pathway after password,
-            // OTP, registration or Google login; never return to the chooser.
-            return url('cac_filing', ['type' => 'company']);
+            // Preserve selected Limited Company and optional growth-capital
+            // tier after password, OTP, registration or Google login.
+            $pending = is_array($_SESSION['iworks_pending_order'] ?? null)
+                ? $_SESSION['iworks_pending_order'] : [];
+            return url('cac_filing', ['type' => 'company'] +
+                (($pending['tier'] ?? '') === 'growth' ? ['tier' => 'growth'] : []));
         }
     }
     if ($slug !== '' && (string) ($user['role'] ?? '') === 'client') {
