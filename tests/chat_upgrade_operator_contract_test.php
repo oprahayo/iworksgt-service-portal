@@ -11,7 +11,7 @@ $migration = (string)file_get_contents($root.'/scripts/migrate_live_chat_engagem
 $assert = static function (bool $condition, string $message): void {
     if (!$condition) throw new RuntimeException($message);
 };
-$pin = '47a368ba3c33ecd2c34e1ac717b746a2cfa1abd7';
+$pin = '59a79f1b94144321a8555ce4094d5d1b7615e35a';
 $assert(str_contains($installer,'RELEASE="'.$pin.'"')
     && str_contains($script,'RELEASE="'.$pin.'"'),
     'Operator and source-only installer must use the same immutable reviewed chat source.');
