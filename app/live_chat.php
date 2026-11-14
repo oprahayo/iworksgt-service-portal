@@ -104,15 +104,18 @@ function iw_chat_enqueue_offline_reply(array $thread, int $messageId): void
         || !filter_var((string)($thread['email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
         return;
     }
+    // Queue every opted-in staff reply with a short grace period. Otherwise
+    // a visitor who left 2 seconds ago would miss email entirely, because the
+    // 70-second online window still classifies their stale heartbeat as active.
     $last = strtotime((string)($thread['visitor_last_seen_at'] ?? '')) ?: 0;
-    if ($last > time() - 70) return;
+    $dueAt = date('Y-m-d H:i:s',max(time(),$last+80));
     db_execute(
         "INSERT IGNORE INTO iw_live_email_outbox
             (thread_id,message_id,recipient_email,status,attempt_count,
              next_attempt_at,created_at,updated_at)
-         VALUES (:thread,:message,:recipient,'pending',0,NOW(),NOW(),NOW())",
+         VALUES (:thread,:message,:recipient,'pending',0,:next,NOW(),NOW())",
         ['thread'=>(int)$thread['id'],'message'=>$messageId,
-         'recipient'=>(string)$thread['email']]
+         'recipient'=>(string)$thread['email'],'next'=>$dueAt]
     );
 }
 
@@ -140,6 +143,34 @@ function iw_chat_process_email_outbox(int $limit = 12): array
             ['id'=>(int)$item['id']]);
         if (!$entry) continue;
         $result['processed']++;
+        $visitor = db_one("SELECT notify_offline,visitor_last_seen_at,visitor_last_read_message_id
+            FROM iw_live_threads WHERE id=:id",
+            ['id'=>(int)$entry['thread_id']]);
+        $alreadyMailed = db_one("SELECT id FROM iw_live_email_outbox
+            WHERE thread_id=:thread AND status='sent'
+              AND sent_at>=DATE_SUB(NOW(),INTERVAL 15 MINUTE)
+            LIMIT 1", ['thread'=>(int)$entry['thread_id']]);
+        if (!$visitor || (int)$visitor['notify_offline'] !== 1
+            || (int)$visitor['visitor_last_read_message_id'] >= (int)$entry['message_id']
+            || $alreadyMailed) {
+            // The visitor already read the reply, disabled reminders, or was
+            // recently notified. Never send redundant or unsolicited mail.
+            db_execute("UPDATE iw_live_email_outbox SET status='skipped',updated_at=NOW()
+                WHERE id=:id", ['id'=>(int)$entry['id']]);
+            continue;
+        }
+        $seenAt = strtotime((string)($visitor['visitor_last_seen_at']??'')) ?: 0;
+        if ($seenAt > time()-70) {
+            // Still browsing: put it back until they are genuinely away.
+            // Do not spend a transport retry on an active visitor.
+            db_execute("UPDATE iw_live_email_outbox
+                SET status='retry',attempt_count=GREATEST(0,attempt_count-1),
+                    next_attempt_at=:next,updated_at=NOW()
+                WHERE id=:id",
+                ['id'=>(int)$entry['id'],
+                 'next'=>date('Y-m-d H:i:s',time()+90)]);
+            continue;
+        }
         $message = "iWORKS Support has replied to your website conversation.\n\n"
             ."Open https://iworksgt.com/ in the same browser and select the support chat "
             ."to read the new reply. This email does not include private chat content.\n\n"
