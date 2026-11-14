@@ -410,12 +410,22 @@ try {
             $isAsyncLead = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
             try {
                 require_csrf();
+                $leadMessage = trim((string) ($_POST['message'] ?? ''));
+                $leadPackage = trim((string) ($_POST['website_package'] ?? ''));
+                if ($leadPackage !== '') {
+                    require_once __DIR__ . '/app/launch_packages.php';
+                    $validPackages = array_column(iworks_website_package_options('NGN'), 'title', 'key');
+                    if (!array_key_exists($leadPackage, $validPackages)) {
+                        throw new RuntimeException('Select a valid website package.');
+                    }
+                    $leadMessage = 'Website package: ' . $validPackages[$leadPackage] . "\n" . $leadMessage;
+                }
                 save_website_lead([
                     'full_name' => (string) ($_POST['full_name'] ?? ''),
                     'email' => (string) ($_POST['email'] ?? ''),
                     'phone' => (string) ($_POST['phone'] ?? ''),
                     'company_name' => (string) ($_POST['company_name'] ?? ''),
-                    'message' => (string) ($_POST['message'] ?? ''),
+                    'message' => $leadMessage,
                     'page_slug' => $publicSlug,
                 ]);
                 $message = 'Your enquiry has been sent. Our team will respond as soon as possible.';
