@@ -110,6 +110,7 @@ jobs:
           php tests/cac_launch_preparation_test.php
           php tests/cac_unified_product_contract_test.php
           php tests/editorial_launch_contract_test.php
+          php tests/portfolio_work_layout_contract_test.php
           php tests/five_client_case_studies_publish_test.php
           php tests/cornerstone_editorial_publish_test.php
           php tests/blog_journal_render_test.php
@@ -145,6 +146,8 @@ jobs:
         run: |
           node --check assets/js/public-ux.js
           node --check assets/js/public-assistance.js
+          node --check assets/js/portfolio-work.js
+          node tests/portfolio_work_behavior_test.js
           node --check assets/js/live-inbox.js
           node --check assets/js/dashboard-live-visitors.js
           node --check assets/js/admin-transition.js
