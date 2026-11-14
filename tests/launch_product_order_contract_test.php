@@ -58,6 +58,7 @@ launch_check((float)($seoHome['price']??0)===150000.0 && ($seoHome['currency']??
     'Domestic product catalogue must preserve admin NGN price.');
 $source = static fn(string $p):string => (string)file_get_contents($root.'/'.$p);
 $detail = $source('views/public-service-detail.php');
+$intent = $source('app/order_intent.php');
 $checkout = $source('views/client-service-checkout.php');
 $chooser = $source('views/client-cac-pathway.php');
 $wizard = $source('views/client-cac-filing.php');
@@ -68,6 +69,12 @@ $profile = $source('views/client-profile.php');
 foreach(['iwWebsitePackageRequest','website_package','iw-website-launch-grid','Request a project quote','iwSpecialistQuoteForm'] as $part) {
     launch_check(str_contains($detail,$part),'Self-service website/custom quote flow missing: '.$part);
 }
+launch_check(str_contains($detail,'iwCacPublicChoicesTitle')
+    && str_contains($detail,'Choose your registration type')
+    && str_contains($detail,"'tier'=>'growth'"),
+    'Public company registration must present all four customer choices.');
+launch_check(str_contains($intent, "'tier' =>") && str_contains($intent, "['tier' => 'growth']"),
+    'Growth-capital selection must survive portal sign-in.');
 launch_check(str_contains($router,'$validPackages')
     && str_contains($router,'array_key_exists($leadPackage'),
     'Package values need strict server-side allowlist validation.');
