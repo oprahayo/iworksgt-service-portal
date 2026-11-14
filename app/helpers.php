@@ -419,7 +419,7 @@ function iworks_official_favicon_url(string $filename = 'iworks-favicon.svg'): s
     $url = request_host() === configured_host(portal_base_url())
         ? portal_absolute_url($asset)
         : public_absolute_url($asset);
-    return $url . '?v=20261114-iworks-icon1';
+    return $url . '?v=20261114-iworks-icon2';
 }
 
 function favicon_path(): string
