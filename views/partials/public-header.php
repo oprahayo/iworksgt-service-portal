@@ -129,7 +129,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="dns-prefetch" href="//images.unsplash.com">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
-  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>?v=20261114-refine1">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>?v=20261114-hero-logos1">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-polish.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/reviews.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/ux-finish.css')) ?>?v=20261112b">
