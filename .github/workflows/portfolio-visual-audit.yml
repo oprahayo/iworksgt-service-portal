@@ -18,19 +18,28 @@ jobs:
       - run: |
           python -m pip install playwright
           python -m playwright install chromium --with-deps
-      - name: Capture reference and current site with real browser
+      - name: Render database-free preview
+        run: |
+          php tests/fixtures/render_portfolio_preview.php work > portfolio-preview.html
+          php tests/fixtures/render_portfolio_preview.php detail > portfolio-detail-preview.html
+          python -m http.server 8765 --bind 127.0.0.1 > /tmp/iworks-portfolio-http.log 2>&1 &
+          sleep 2
+      - name: Capture reference, current site, and new desktop/mobile previews
         run: |
           mkdir -p portfolio-reference
           python - <<'PY'
           from playwright.sync_api import sync_playwright
           sites = {
-            "reference-ckdigital-work": "https://ckdigital.com/work",
-            "current-iworks-case-studies": "https://iworksgt.com/case-studies",
+            "reference-ckdigital-work": ("https://ckdigital.com/work", 1440, 900),
+            "current-iworks-case-studies": ("https://iworksgt.com/case-studies", 1440, 900),
+            "preview-iworks-work-desktop": ("http://127.0.0.1:8765/portfolio-preview.html", 1440, 900),
+            "preview-iworks-work-mobile": ("http://127.0.0.1:8765/portfolio-preview.html", 390, 844),
+            "preview-iworks-detail-desktop": ("http://127.0.0.1:8765/portfolio-detail-preview.html", 1440, 900),
           }
           with sync_playwright() as p:
               browser = p.chromium.launch(headless=True,args=['--no-sandbox'])
-              for name, url in sites.items():
-                  page = browser.new_page(viewport={"width": 1440, "height": 900},device_scale_factor=1)
+              for name, (url, width, height) in sites.items():
+                  page = browser.new_page(viewport={"width": width, "height": height},device_scale_factor=1)
                   try:
                       result=page.goto(url, wait_until="domcontentloaded",timeout=35000)
                       page.wait_for_timeout(1400)
