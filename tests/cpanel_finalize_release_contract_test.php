@@ -26,6 +26,8 @@ $assert($backup !== false && $restore !== false && $migration !== false
     && $backup < $restore && $restore < $migration
     && $migration < $mail && $mail < $gate && $gate < $publish,
     'Restore and all mandatory gates must precede live source publication.');
+$assert(str_contains($operator, 'DB_PREFIX="${DB_NAME%%_*}"'),
+    'Staging database must use the actual configured cPanel database prefix.');
 $assert(str_contains($operator, 'uapi --output=json Mysql create_database')
     && str_contains($operator, 'uapi --output=json Mysql set_privileges_on_database')
     && str_contains($operator, 'uapi --output=json Mysql delete_database')

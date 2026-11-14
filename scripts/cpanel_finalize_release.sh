@@ -139,9 +139,11 @@ echo '== Rehearsing complete SQL restore in isolated database =='
 # cPanel-managed create/grant/delete operations preserve host database mapping.
 # Do not use raw CREATE/DROP DATABASE under a cPanel-owned database account.
 command -v uapi >/dev/null || { echo 'BLOCK cPanel UAPI unavailable for isolated restore rehearsal.' >&2; exit 3; }
-CP_USER="$(basename "$HOME")"
-[[ "$CP_USER" =~ ^[a-zA-Z0-9]{1,20}$ ]] || { echo 'BLOCK unexpected cPanel account name.' >&2; exit 3; }
-RESTORE_DB="$CP_USER"_iwverify"$(date -u +%H%M%S)"_$RANDOM
+# Use the prefix already present on the configured production DB: hosts
+# may force an 8-character prefix even when the cPanel login is longer.
+DB_PREFIX="${DB_NAME%%_*}"
+[[ "$DB_PREFIX" =~ ^[a-zA-Z0-9]{1,24}$ ]] || { echo 'BLOCK unexpected cPanel database prefix.' >&2; exit 3; }
+RESTORE_DB="$DB_PREFIX"_iwverify"$(date -u +%H%M%S)"_$RANDOM
 [[ "$RESTORE_DB" =~ ^[a-zA-Z0-9_]{1,64}$ && "$RESTORE_DB" != "$DB_NAME" ]] \
   || { echo 'BLOCK unsafe rehearsal database identifier.' >&2; exit 3; }
 existing="$(mysql --defaults-extra-file="$OPTS" -N -B \
