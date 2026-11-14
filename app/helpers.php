@@ -543,6 +543,16 @@ function portal_country_options(): array
         'IN' => 'India',
         'DE' => 'Germany',
         'FR' => 'France',
+        'AU' => 'Australia',
+        'NZ' => 'New Zealand',
+        'ES' => 'Spain',
+        'IT' => 'Italy',
+        'NL' => 'Netherlands',
+        'IE' => 'Ireland',
+        'BE' => 'Belgium',
+        'SE' => 'Sweden',
+        'CH' => 'Switzerland',
+        'PT' => 'Portugal',
     ];
 }
 
