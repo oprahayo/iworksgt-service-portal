@@ -104,6 +104,9 @@ function iworks_customer_registration_variants(array $service): array
     $business = $base;
     $business['slug'] = 'cac-business-name';
     $business['name'] = 'Business Name (Enterprise)';
+    $regional=iworks_launch_registration_options();
+    $business['price']=(float)$regional['business']['price'];
+    $business['currency']=(string)$regional['business']['currency'];
     $business['short_description'] =
         'For sole proprietors and partnerships. Register your trading name without forming a separate limited company.';
     $business['_iworks_registration_type'] = 'business';
@@ -128,7 +131,6 @@ function iworks_customer_registration_variants(array $service): array
         'Share capital and ownership details',
         'Guided CAC filing documentation',
     ];
-    $regional=iworks_launch_registration_options();
     $companyAmount=(float)$regional['company-small']['price'];
     $company['price'] = $companyAmount;
     $company['currency'] = (string)$regional['company-small']['currency'];
