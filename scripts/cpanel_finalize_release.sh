@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # iWORKS GLOBAL: one-command private, backup-gated cPanel publish.
-# bash cpanel_finalize_release.sh --check|--publish PORTAL PUBLIC PINNED_OPERATOR_SHA
+# bash cpanel_finalize_release.sh --check|--publish|--chat-upgrade PORTAL PUBLIC PINNED_OPERATOR_SHA
 set -Eeuo pipefail
 MODE="${1:---check}"
 PORTAL_INPUT="${2:-$HOME/public_html/portal.iworksgt.com}"
 PUBLIC_INPUT="${3:-$HOME/public_html}"
 OPERATOR_SHA="${4:-}"
 RELEASE="a6519d6620de99ded48926ddf221a46284410d40"
-[[ "$MODE" == --check || "$MODE" == --publish ]] || { echo 'Use --check or --publish.' >&2; exit 2; }
+[[ "$MODE" == --check || "$MODE" == --publish || "$MODE" == --chat-upgrade ]] || { echo 'Use --check, --publish, or --chat-upgrade.' >&2; exit 2; }
 [[ "$OPERATOR_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Pin the operator to an immutable 40-character GitHub commit.' >&2; exit 2; }
 for tool in curl php mysql mysqldump gzip openssl sha256sum readlink mktemp awk cmp grep; do
   command -v "$tool" >/dev/null || { echo "Missing server command: $tool" >&2; exit 2; }
@@ -81,7 +81,8 @@ else
   bash "$WORK/prepare_private_migration_stage.sh" --prepare "$PORTAL" "$RELEASE"
 fi
 for f in migrate_legacy_schema.php migrate_auth_attempt_limits.php migrate_notification_email_outbox.php \
-         migrate_gateway_uniqueness.php f01_expire_exposed_tokens.php; do
+         migrate_gateway_uniqueness.php f01_expire_exposed_tokens.php
+         migrate_live_chat_engagement.php; do
   [[ -f "$STAGE/scripts/$f" ]] || { echo "BLOCK missing migration $f" >&2; exit 3; }
 done
 echo '== Detecting duplicate payment identifiers before DDL =='
@@ -191,6 +192,42 @@ php -r '$r=json_decode(file_get_contents($argv[1]),true);exit(($r["result"]["sta
   || { echo 'BLOCK: cPanel did not confirm cleanup of rehearsal database.' >&2; exit 3; }
 RESTORE_CREATED=""
 echo 'PASS backup restored successfully in isolated schema.'
+if [[ "$MODE" == --chat-upgrade ]]; then
+  # The production installation is already running: never repeat first-time
+  # migrations, password reset/OTP revocation or mail activation.
+  echo '== Checking visitor engagement schema (read only) =='
+  if ! php "$STAGE/scripts/migrate_live_chat_engagement.php" --check; then
+    echo 'New optional chat fields are missing; applying only the engagement migration after verified backup.'
+  fi
+  echo '== Applying additive chat engagement schema only =='
+  php "$STAGE/scripts/migrate_live_chat_engagement.php" --apply --backup-confirmed \
+    || { echo "BLOCK chat engagement migration failed; verified encrypted backup retained at $BACKUP." >&2; exit 3; }
+  php "$STAGE/scripts/migrate_live_chat_engagement.php" --check \
+    || { echo 'BLOCK engagement schema verification failed; no source files deployed.' >&2; exit 3; }
+  echo '== Checking unchanged mandatory security and production readiness =='
+  bash "$WORK/deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC" \
+    || { echo 'BLOCK source release safety preflight; no application files deployed.' >&2; exit 3; }
+  echo '== Installing immutable chat and graphical dashboard source =='
+  bash "$WORK/deploy_admin_mobile_refresh.sh" --apply "$PORTAL" "$PUBLIC"
+  echo '== Post-publication read-only acceptance checks =='
+  php "$PORTAL/scripts/migrate_live_chat_engagement.php" --check
+  for page in https://iworksgt.com/ https://iworksgt.com/services https://portal.iworksgt.com/; do
+    status="$(curl --http1.1 -sS --max-time 25 -o /dev/null -w '%{http_code}' "$page")" || status=000
+    case "$status" in
+      200|302|303) echo "PASS HTTP $status: $page" ;;
+      *) echo "POST-PUBLISH HTTP CHECK FAILED ($status): $page" >&2; exit 3 ;;
+    esac
+  done
+  private_probes
+  [[ -f "$PORTAL/assets/js/dashboard-live-visitors.js"
+     && -f "$PORTAL/assets/js/public-assistance.js"
+     && -f "$PORTAL/views/partials/live-visitor-overview.php" ]] \
+    || { echo 'BLOCK new chat dashboard assets missing from deployed source.' >&2; exit 3; }
+  echo "PUBLISHED visitor chat source $RELEASE"
+  echo "ENCRYPTED DATABASE BACKUP: $BACKUP"
+  echo 'NEXT: verify opted-in return chat, live presence, unread staff reply, offline email inbox delivery and queue scheduler.'
+  exit 0
+fi
 echo '== Controlled migration after verified private backup =='
 php "$STAGE/scripts/migrate_legacy_schema.php" --check
 php "$STAGE/scripts/f01_expire_exposed_tokens.php" --check
