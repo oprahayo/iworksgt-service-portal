@@ -107,7 +107,7 @@ $ok(str_contains($server,"$"."action === 'preferences'")
 $ok(str_contains($widget,'data-assist-country')
     && str_contains($client,'Intl.DisplayNames')
     && str_contains($server,"$"."countryCode = iw_chat_country_code(")
-    && str_contains($server,"'country_code'=>$countryCode")
+    && str_contains($server,"'country_code'=>(string)($countryCode ?? '')")
     && str_contains($server,"'country'=>$countryCode")
     && !str_contains($server,'HTTP_X_FORWARDED_FOR')
     && !str_contains($server,'ip-api.com'),
