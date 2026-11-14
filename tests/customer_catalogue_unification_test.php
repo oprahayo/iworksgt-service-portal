@@ -19,6 +19,7 @@ function money(float $v,string $currency):string{return $currency.' '.number_for
 function default_currency():string{return 'NGN';}
 function payment_currency_options():array{return ['NGN','USD'];}
 function csrf_token():string{return 'safe-token';}
+function current_user():array{return ['id'=>7,'role'=>'client','country'=>'Nigeria'];}
 function iworks_client_service_icon(array $service):string{return 'bi-briefcase';}
 require dirname(__DIR__).'/app/customer_service_policy.php';
 
@@ -50,10 +51,10 @@ check_catalogue(!in_array('custom-service-system',$slugs,true),'Internal placeho
 check_catalogue(!in_array('bank-account-opening',$slugs,true),'Banking products must be excluded.');
 $bySlug=array_column($catalogue,null,'slug');
 check_catalogue($bySlug['cac-business-name']['name']==='Business Name (Enterprise)' &&
-    (float)$bySlug['cac-business-name']['price']===26000.0,
+    (float)$bySlug['cac-business-name']['price']===49000.0,
     'Enterprise must show the configured Business Name starting fee.');
 check_catalogue($bySlug['company-registration']['name']==='Private Limited Company (Ltd)' &&
-    (float)$bySlug['company-registration']['price']===45000.0,
+    (float)$bySlug['company-registration']['price']===60000.0,
     'Ltd must show the company base price, not the Enterprise starting fee.');
 check_catalogue((int)$bySlug['cac-business-name']['id']===(int)$bySlug['company-registration']['id'],
     'Both choices must use the same real registration product ID without duplicating database rows.');
@@ -62,7 +63,7 @@ check_catalogue($bySlug['company-registration']['_iworks_checkout_mode']==='cac'
 $secondPass = iworks_customer_published_catalogue($catalogue);
 $againBySlug = array_column($secondPass,null,'slug');
 check_catalogue(($againBySlug['company-registration']['name'] ?? '') === 'Private Limited Company (Ltd)'
-    && (float)($againBySlug['company-registration']['price'] ?? 0) === 45000.0,
+    && (float)($againBySlug['company-registration']['price'] ?? 0) === 60000.0,
     'Client second-pass filters must preserve actual Ltd pricing and name.');
 check_catalogue(($againBySlug['cac-business-name']['name'] ?? '') === 'Business Name (Enterprise)',
     'Client second-pass filters must preserve Business Name choice.');
@@ -71,8 +72,8 @@ check_catalogue($bySlug['trademark']['_iworks_checkout_mode']==='trademark',
 check_catalogue($bySlug['incorporated-trustees']['_iworks_checkout_mode']==='consultation'
     && $bySlug['social-enterprise-ltd-by-guarantee']['_iworks_checkout_mode']==='consultation',
     'Specialist NGO/legal products must not use generic checkout.');
-check_catalogue(iworks_customer_can_standard_checkout($bySlug['website-design-development']),
-    'Website design should retain ordinary invoice checkout.');
+check_catalogue(!iworks_customer_can_standard_checkout($bySlug['website-design-development']),
+    'Websites require written scoping before any payable invoice.');
 foreach(['cac-business-name','company-registration','trademark','incorporated-trustees','social-enterprise-ltd-by-guarantee'] as $slug) {
     check_catalogue(!iworks_customer_can_standard_checkout($bySlug[$slug]),'Unsafe checkout allowed: '.$slug);
 }
@@ -81,11 +82,11 @@ check_catalogue(!iworks_customer_can_standard_checkout($rows[11]),'Private produ
 $zero=$offer('free-but-not-public','Unsupported zero-price item',['price'=>0]);
 check_catalogue(!iworks_customer_can_standard_checkout($zero),'Zero-price standard orders must not become silent invoices.');
 
-$checkoutService=$bySlug['website-design-development'];
+$checkoutService=$offer('graphics-design','Graphics Design',['price'=>70000,'currency'=>'NGN']);
 ob_start();
 require dirname(__DIR__).'/views/client-service-checkout.php';
 $html=(string)ob_get_clean();
-check_catalogue(str_contains($html,'Review your service') && str_contains($html,'Website Design'),
+check_catalogue(str_contains($html,'Review your service') && str_contains($html,'Graphics Design'),
     'Single-product review must display chosen product.');
 check_catalogue(str_contains($html,'name="service_id"') && str_contains($html,'safe-token'),
     'Checkout must post service ID and CSRF token.');
@@ -114,11 +115,12 @@ check_catalogue(str_contains($router,'iworks_customer_can_standard_checkout($req
 check_catalogue(str_contains($router,'unset($payload') &&
     str_contains($router,'$payload[\'title\'] = (string)$requestedService[\'name\']'),
     'POST cannot override prices and product titles.');
-check_catalogue(str_contains($auth,"return url('cac_filing', ['type' => 'company']);"),
-    'Ltd sign-in must preserve the selected company intake route.');
+check_catalogue(str_contains($auth,"return url('cac_filing',['type'=>'company','package'=>")
+    && str_contains($auth,"return url('cac_filing');"),
+    'Selected Ltd tier must survive login; general CTA opens the four-option chooser.');
 check_catalogue(str_contains($client,'iworks_customer_product_price($service)') &&
     str_contains($detail,'iworks_customer_product_price($service)') &&
-    str_contains($detail,'Request a specialist quote') &&
+    str_contains($detail,'Choose a package and request a quote') &&
     str_contains($services,'iworks_customer_product_price($service)'),
     'Public/customer product surfaces must use the same backend pricing and assisted-service policy.');
 check_catalogue(str_contains(file_get_contents($root.'/views/partials/client-header.php'),
