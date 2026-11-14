@@ -114,6 +114,43 @@ body.page-public .public-footer { background:#fafafa; border-top:1px solid #eded
 .iw-clean-home .iw-clean-hero-media img {
   display:block; width:100%; aspect-ratio:1.2; object-fit:cover; object-position:center;
 }
+/* Approved client logos live inside the hero, not in a separate advertising block. */
+.iw-clean-home .iw-clean-hero.has-client-logos .iw-clean-hero-inner { padding-bottom:clamp(1.4rem,2vw,2.3rem); }
+.iw-clean-home .iw-home-brand-ribbon { padding-bottom:clamp(2rem,3.3vw,3rem); overflow:hidden; }
+.iw-clean-home .iw-home-brand-caption {
+  color:#727b83; font-size:.7rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.115em; text-align:center; margin:0 0 1.1rem;
+}
+.iw-clean-home .iw-home-brand-window { overflow:hidden; width:100%; }
+.iw-clean-home .iw-home-brand-track { display:flex; width:max-content; max-width:none; align-items:center; }
+.iw-clean-home .iw-home-brand-sequence {
+  display:flex; flex:0 0 auto; align-items:center; justify-content:center;
+  gap:clamp(1.3rem,3.5vw,3.4rem); padding-right:clamp(1.3rem,3.5vw,3.4rem);
+}
+.iw-clean-home .iw-home-brand-mark {
+  display:grid; place-items:center; flex:0 0 auto;
+  min-width:110px; width:clamp(110px,13vw,150px); height:58px;
+}
+.iw-clean-home .iw-home-brand-mark img {
+  max-width:100%; max-height:52px; width:auto; height:auto;
+  object-fit:contain; filter:grayscale(1); opacity:.62;
+  transition:filter .3s ease,opacity .3s ease;
+}
+.iw-clean-home .iw-home-brand-mark:hover img { filter:grayscale(0); opacity:1; }
+@keyframes iw-client-logo-scroll { to { transform:translateX(-50%); } }
+.iw-clean-home .iw-home-brand-track.is-scrolling {
+  animation:iw-client-logo-scroll 48s linear infinite;
+}
+.iw-clean-home .iw-home-brand-window:hover .iw-home-brand-track.is-scrolling {
+  animation-play-state:paused;
+}
+@media (max-width:767px) {
+  .iw-clean-home .iw-home-brand-mark { min-width:105px; width:105px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .iw-clean-home .iw-home-brand-track.is-scrolling { animation:none; }
+  .iw-clean-home .iw-home-brand-window { overflow-x:auto; }
+}
 .iw-clean-home .iw-clean-section { padding:clamp(3.4rem,6vw,5.4rem) 0; }
 .iw-clean-home .iw-clean-section-head { max-width:690px; margin-bottom:1.8rem; }
 .iw-clean-home .iw-clean-section h2,

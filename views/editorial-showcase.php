@@ -7,7 +7,7 @@ $review=$editReviewRecord??[];
   <div class="iw-admin-page-heading"><div><small>BRAND & CONTENT</small>
     <h1>Stories & customer feedback</h1>
     <p>Publish verified case studies and consented customer reviews, and moderate article comments.</p>
-  </div><a href="<?= e(public_url('case-studies')) ?>" class="btn btn-outline-secondary" target="_blank" rel="noopener">View public stories <i class="bi bi-box-arrow-up-right"></i></a></div>
+  </div><a href="<?= e(public_url('case-studies')) ?>" class="btn btn-outline-secondary">View public stories <i class="bi bi-box-arrow-up-right"></i></a></div>
   <nav class="iw-editorial-tabs" aria-label="Content type">
     <a <?= $tab==='cases'?'aria-current="page"':'' ?> href="<?= e(url('editorial_showcase',['tab'=>'cases'])) ?>"><i class="bi bi-briefcase"></i> Case studies <span><?= count($caseRecords) ?></span></a>
     <a <?= $tab==='feedback'?'aria-current="page"':'' ?> href="<?= e(url('editorial_showcase',['tab'=>'feedback'])) ?>"><i class="bi bi-chat-square-quote"></i> Customer feedback <span><?= count($reviewRecords) ?></span></a>

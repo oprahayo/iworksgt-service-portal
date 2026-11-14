@@ -297,7 +297,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     </nav>
 
     <div class="sidebar-bottom">
-      <a class="sidebar-link iw-ops-site-link" href="<?= e(public_url('home')) ?>" target="_blank" rel="noopener" title="View public website">
+      <a class="sidebar-link iw-ops-site-link" href="<?= e(public_url('home')) ?>" title="View public website in this tab">
         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
         <span class="sidebar-label">View website</span>
       </a>
@@ -327,7 +327,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
       </div>
 
       <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-        <a class="btn btn-sm btn-outline-secondary iw-ops-preview-link" href="<?= e(public_url($publicPreviewPage)) ?>" target="_blank" rel="noopener" title="Open corresponding public website page"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-md-inline">View website</span></a>
+        <a class="btn btn-sm btn-outline-secondary iw-ops-preview-link" href="<?= e(public_url($publicPreviewPage)) ?>" title="Open corresponding public website page in this tab"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-md-inline">View website</span></a>
         <a class="btn btn-sm btn-outline-secondary position-relative" id="topbarNotificationBtn" href="<?= e(url('notifications')) ?>" title="Notifications">
           <i class="bi bi-bell"></i>
           <span

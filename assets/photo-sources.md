@@ -46,3 +46,15 @@ The following images are **real photographs by named photographers**, not AI-gen
 **Deployment:** `scripts/deploy_authentic_photography.sh` retrieves these images from their Pexels CDN identifiers, verifies them before publishing, and changes only five public-facing PHP files plus static images. It runs a read-only production safety preflight, creates private rollback archives, and performs public smoke tests. It does not run migrations or modify CMS-selected uploaded images or any customer data.
 
 **Important:** This photographic rollout does not include or use the previously generated AI graphics pack.
+
+## Support section photograph — 14 November 2026
+
+- **Placement:** homepage “Support that stays with you” photograph.
+- **Source:** Jep Gambardella, authentic stock photo of a Black woman wearing a headset, using a laptop in an office. https://www.pexels.com/photo/shallow-focus-of-a-woman-working-in-the-office-7689752/
+- **Local file:** `/assets/photography/support-agent-black.jpg`, downloaded from `https://images.pexels.com/photos/7689752/pexels-photo-7689752.jpeg?auto=compress&cs=tinysrgb&w=1000` by the release installer.
+- **License:** https://www.pexels.com/license/ — free commercial use subject to licensing and third-party/likeness restrictions.
+- **Disclaimer:** The photograph is illustrative; the subject is not presented as an iWORKS employee or customer. The existing image remains a fallback if the local file has not yet been installed.
+
+### Published client logo strip and case studies
+
+The homepage hero logo strip first reads the existing **Website Editor → Trusted Logos** block (curated by the site administrator), then supplements it from `iworks_case_studies` entries with status `published`, and `iworks_testimonials` entries with status `published` and `consent_confirmed=1`. It displays a brand only when a logo and brand name are present. Images are never converted destructively; grayscale is a CSS filter that returns to the original color on hover. Logos are deliberately non-clickable, and animation stops for reduced-motion preferences. Case study teasers are published CMS records only. Unpublished or absent case studies result in an honest preparation notice, not invented work.

@@ -26,6 +26,18 @@ body.page-public .iw-sitewide-cta-assurances li{
   color:#f2e8e1!important
 }
 body.page-public .iw-sitewide-cta-assurances i{color:#ff8c48!important}
+/* Remove the unwanted separator/blank strip between the final CTA and footer. */
+body.page-public .iw-sitewide-cta {
+  margin-bottom:0!important;
+  border-bottom:0!important;
+}
+body.page-public .iw-sitewide-cta + .public-footer {
+  margin-top:0!important;
+  border-top:0!important;
+}
+body.page-public .iw-sitewide-cta + .public-footer::before {
+  display:none!important;
+}
 /* Keep the floating back-to-top control on the left, away from live chat on
    the right; hide it whenever the chat/dialog is expanded. */
 body.page-public .iw-back-to-top{
