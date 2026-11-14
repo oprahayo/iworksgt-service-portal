@@ -31,15 +31,18 @@ $pricing = iworks_customer_product_price($service);
 $isEnquiry = (bool) $pricing['is_enquiry'];
 $registrationType = (string) ($service['_iworks_registration_type'] ?? '');
 $actionText = $isEnquiry
-    ? 'Request a specialist quote'
+    ? 'Choose a package and request a quote'
     : ($registrationType === 'business'
         ? 'Start Business Name registration'
         : ($registrationType === 'company'
-            ? 'Start Limited Company registration'
+            ? 'Choose a registration package'
             : ($serviceSlug === 'trademark' ? 'Start trademark application' : 'Start this service')));
-$actionUrl = $isEnquiry
-    ? public_url('contact')
-    : portal_url('login', ['service' => $serviceSlug]);
+$actionUrl=portal_url('login', ['service'=>$serviceSlug]);
+$launchCountry=iworks_launch_display_country();
+$launchRegistration=$serviceSlug==='company-registration'
+    ? iworks_launch_registration_options($launchCountry) : [];
+$launchWebsite=$serviceSlug==='website-design-development'
+    ? iworks_launch_website_packages($launchCountry) : [];
 $actionHelp = $isEnquiry;
 $featured = !empty($service['featured_image_id'])
     ? get_media_asset((int) $service['featured_image_id'])
@@ -112,6 +115,31 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
           </figure>
         <?php endif; ?>
 
+        <?php if ($launchRegistration!==[] || $launchWebsite!==[]): ?>
+          <section class="iw-product-section iw-launch-product-choices" aria-label="Choose a service package">
+            <h2>Choose your package</h2>
+            <p class="iw-launch-currency-note">Indicative prices for <?= e($launchCountry==='NG'?'customers in Nigeria':'international customers') ?>. Your account billing country fixes the final NGN/USD currency before checkout.</p>
+            <div class="iw-launch-product-grid">
+              <?php foreach ($launchRegistration!==[]?$launchRegistration:$launchWebsite as $key=>$package): ?>
+                <?php
+                  $isReg=$launchRegistration!==[];
+                  $title=(string)($isReg?$package['title']:$package['name']);
+                  $amount=(float)($isReg?$package['price']:$package['amount']);
+                  $currency=(string)$package['currency'];
+                  $selectedSlug=$isReg&&$key==='ngo'?'incorporated-trustees':$serviceSlug;
+                  $orderUrl=portal_url('login',['service'=>$selectedSlug,'package'=>(string)$key]);
+                ?>
+                <article class="iw-launch-product-card">
+                  <h3><?= e($title) ?></h3>
+                  <p><?= e((string)$package['description']) ?></p>
+                  <strong><?= $amount>0 ? 'From '.e(money($amount,$currency)) : 'Custom quotation' ?></strong>
+                  <a href="<?= e($orderUrl) ?>"><?= ($isReg && $key!=='ngo')?'Start registration':'Request quote' ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                </article>
+              <?php endforeach; ?>
+            </div>
+            <p class="iw-launch-currency-note">Prices include only the stated standard scope. Special filing charges, additional licences and third-party subscriptions are disclosed separately before payment. Larger websites require a written scope and quote.</p>
+          </section>
+        <?php endif; ?>
         <section class="iw-product-section" id="product-overview" aria-labelledby="product-overview-title">
           <h2 id="product-overview-title">Overview</h2>
           <div class="iw-product-description">
