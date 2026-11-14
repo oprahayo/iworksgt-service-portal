@@ -72,7 +72,7 @@ try {
           <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
           <details class="iw-assist-privacy-details">
             <summary>How we use your details</summary>
-            <p>We store your conversation, its time, and a masked network prefix; support may see an approximate country hint. A returning-browser cookie, offline email reminders and live page sharing are optional and unchecked by default. No GPS, precise street address, or full browsing history is collected. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
+            <p>We store your conversation, its time, and a masked network prefix; support may see an approximate country hint. A returning-browser cookie, offline email reminders and live page sharing are optional and unchecked by default. No precise GPS is collected. We do not collect street addresses or full browsing histories. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
           </details>
           <p class="iw-assist-error" id="iwAssistStartError" role="alert" hidden></p>
         </form>
