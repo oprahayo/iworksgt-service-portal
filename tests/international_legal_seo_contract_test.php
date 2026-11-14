@@ -22,7 +22,7 @@ function render_official_page(string $slug,array $services=[]):string {
 }
 foreach(['privacy'=>'Privacy Policy','terms'=>'Terms &amp; Conditions','cookies'=>'Cookie Policy'] as $slug=>$label) {
     $html=render_official_page($slug);
-    international_check(str_contains($html,'class="iw-legal-page"'),$slug.' dedicated flat public view required.');
+    international_check(str_contains($html,'class="public-main iw-legal-page"'),$slug.' dedicated flat public view required.');
     international_check(str_contains($html,'<article class="iw-legal-copy">'),$slug.' semantic content missing.');
     international_check(str_contains($html,'Last updated: 14 November 2026'),$slug.' policy revision date missing.');
     international_check(substr_count($html,'<h1>')===1,$slug.' must have exactly one H1.');
