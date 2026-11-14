@@ -513,10 +513,10 @@ try {
                 redirect(iworks_post_login_destination(current_user()));
             }
 
-            if (!method_is('POST')) {
-                clear_pending_otp();
-                unset($_SESSION['pending_otp_remember']);
-            }
+            // Do not destroy an in-flight verification just because a
+            // different tab or public login link loads the sign-in page.
+            // The next successful password challenge replaces it; the
+            // signed fallback cookie expires automatically.
 
             if (method_is('POST')) {
                 require_csrf();
