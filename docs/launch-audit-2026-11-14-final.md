@@ -52,3 +52,11 @@ The search-indexed public HTML snapshot in a separate retrieval service showed o
 ## Current decision
 
 Public browsing and private-file **smoke tests** look substantially better than earlier snapshots, and the launch-trust fixes are merged and tested in source. **Do not advertise a fully verified commercial launch** while deployment, identity/email, payment/refund, statutory fee and privacy approvals remain unverified. A carefully scoped no-payment preview is a separate risk decision; do not upload real ID documents or collect money until the relevant acceptance gates pass.
+
+## Final deep audit addendum — setup installer exposure (14 November 2026)
+
+The second live GitHub Actions run [#43624276157](https://github.com/oprahayo/iworksgt-service-portal/actions/runs/43624276157) verified **22/22** public SEO route/canonical/H1/viewport checks without errors and **22/24** safe private endpoint probes. Both GET and HEAD requests to `https://portal.iworksgt.com/setup.php` returned HTTP 200, even though the rest of the tested application/config, script, test and Git endpoints were denied. No setup form submission, credential collection, file reading or DB mutation was performed. The on-disk setup lock was not verified.
+
+A fail-closed code remediation adds `app/setup_access.php` with a mandatory environment-only operator opt-in and locked-installation guard. Normal HTTP access now receives a true 404 before bootstrap; simply removing `storage/setup.lock` cannot reactivate setup. First-time recovery requires both deliberate server-side `IWORKS_ENABLE_WEB_SETUP=1` and absence of the lock, and the operator must remove the flag after installation. Do not enable it on an existing production portal. The production installer must publish this coherent app snapshot and the independent deep audit must then show **24/24 private endpoints denied**, while the 36/36 public audit and 22/22 SEO route matrix remain green.
+
+**Updated launch decision: no-go until live setup endpoint is blocked and controlled billing/OTP/mail/role/privacy gates pass.** Prior passes are public HTTP smoke results, not a live payment or security certification.
