@@ -22,7 +22,7 @@ GitHub Actions workflow `capture-case-study-screenshots.yml` opens each HTTPS si
 
 `app/editorial.php` serves the actual local screenshot only when the CMS has no uploaded cover image. An uploaded, approved CMS cover always takes priority. Screenshots are available to public assets after a normal source-only deploy; no external screenshot API is needed at page load.
 
-The previously supplied Cornerstone image should be retained as a user reference. The automatic browser captured Cornerstone where reachable; no inference should be made from an unrelated Cornerstone business.
+All five browser captures completed successfully with HTTP 200 on 14 November 2026. In particular, the Cornerstonetl screenshot was captured from the exact supplied domain, after dismissing a site cookie overlay through the site's own UI in an isolated capture session. Screenshot assets are genuine site renderings, not AI-generated substitutes.
 
 ## Production publication checklist
 
