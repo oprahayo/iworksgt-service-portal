@@ -438,6 +438,14 @@ try {
         return;
     }
 
+    // Auth forms embed session-bound CSRF tokens. After logout, back/forward
+    // navigation must not reuse a cached token from the previous session.
+    if (in_array((string) $page, ['login', 'register', 'otp', 'forgot_password', 'reset_password'], true)) {
+        header('Cache-Control: private, no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
     // The selected public service must survive the portal's authentication
     // lifecycle, including redirecting through Google's separate origin.
     if (in_array($page, ['login', 'register', 'google_start'], true) && !method_is('POST')) {
@@ -519,7 +527,14 @@ try {
             // signed fallback cookie expires automatically.
 
             if (method_is('POST')) {
-                require_csrf();
+                if (!verify_csrf()) {
+                    // A session rotation or restored browser tab may hold an
+                    // obsolete form. Reject the POST and redirect to a fresh
+                    // login page without processing submitted credentials.
+                    flash('error', 'This sign-in form is out of date. Please sign in again.');
+                    header('Location: ' . url('login'), true, 303);
+                    exit;
+                }
                 $email = trim((string) ($_POST['email'] ?? ''));
                 $password = (string) ($_POST['password'] ?? '');
                 $remember30Days = !empty($_POST['remember_30days']);
