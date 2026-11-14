@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/launch_pricing.php';
+
 /**
  * The single public/customer product policy.
  *
