@@ -4837,8 +4837,26 @@ function create_job(array $input, array $trustedOptions = []): int
         ? (float) $input['amount']
         : (float) $service['price'];
 
+    // Enforce the market at the trusted invoice-creation boundary, not only
+    // in a select box. Do not infer a fee tier from IP, a cookie or a
+    // customer-submitted price.
+    $actor = function_exists('current_user') ? current_user() : null;
+    if (is_array($actor) && (string)($actor['role'] ?? '') === 'client'
+        && (int)($actor['id'] ?? 0) === (int)($input['client_id'] ?? 0)) {
+        $currency = iworks_enforce_client_currency($currency, $actor);
+        if (!$hasCustomAmount && $currency === 'USD') {
+            require_once __DIR__ . '/launch_packages.php';
+            $overseasRate = iworks_international_standard_rate((string)($service['slug'] ?? ''));
+            if ($overseasRate === null) {
+                throw new RuntimeException('This service requires an international quotation before payment.');
+            }
+            $subtotalAmount = $overseasRate;
+        }
+    }
+
     if (
         !$hasCustomAmount
+        && !(is_array($actor) && ($actor['role'] ?? '') === 'client' && $currency === 'USD')
         && $currency !== $serviceCurrency
         && in_array($currency, payment_currency_options(), true)
         && in_array($serviceCurrency, payment_currency_options(), true)
@@ -4851,7 +4869,8 @@ function create_job(array $input, array $trustedOptions = []): int
         : normalize_payment_currency(default_currency());
     $payMethod = normalize_pay_method((string) ($input['checkout_pay_method'] ?? $input['pay_method'] ?? 'card'));
     $fxRateUsed = (
-        $currency !== $serviceCurrency
+        !(is_array($actor) && ($actor['role'] ?? '') === 'client' && !$hasCustomAmount && $currency === 'USD')
+        && $currency !== $serviceCurrency
         && in_array($currency, payment_currency_options(), true)
         && in_array($serviceCurrency, payment_currency_options(), true)
     ) ? fx_ngn_per_usd() : null;
