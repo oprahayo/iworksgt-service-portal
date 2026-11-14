@@ -262,7 +262,9 @@ function create_user(array $data): int
 function otp_expiry_minutes(): int
 {
     $minutes = (int) setting('otp_expiry_minutes', '10');
-    return $minutes > 0 ? $minutes : 10;
+    // Delivery can be delayed by external mail relays. A one-minute
+    // administrator setting must not invalidate legitimate email OTPs.
+    return max(10, min(20, $minutes));
 }
 
 function otp_resend_cooldown_seconds(): int
