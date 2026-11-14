@@ -23,6 +23,7 @@ function portal_url(string $page, array $params = []): string
     return '/portal/index.php?' . http_build_query(['page' => $page] + $params);
 }
 function default_currency(): string { return 'NGN'; }
+function csrf_token(): string { return 'fixture-csrf'; }
 function money(float $price, string $currency): string
 {
     return $currency . ' ' . number_format($price, 2);
@@ -69,10 +70,10 @@ $standardHtml = render_product($standard, [
 assert_detail(str_contains($standardHtml, 'Website Design &amp; Development'), 'Real CMS product title must render.');
 assert_detail(str_contains($standardHtml, 'NGN 85,000.00'), 'Pricing must come from the backend service record.');
 assert_detail(str_contains($standardHtml, 'Tax rate: 2.50%'), 'Configured taxes must be explained before checkout.');
-assert_detail(str_contains($standardHtml, '/portal/index.php?page=login&amp;service=website-design-development'),
-    'Primary product action must pass the real service slug into the authenticated order-intent flow.');
-assert_detail(substr_count($standardHtml, 'class="iw-product-cta"') === 1,
-    'Product details must have one clear primary conversion action.');
+assert_detail(str_contains($standardHtml, 'iwWebsitePackageRequest') && str_contains($standardHtml, 'website_package'),
+    'Website CTA must lead to self-service package enquiry, not a generic payable order.');
+assert_detail(str_contains($standardHtml, 'Request a project quote'),
+    'Website detail must offer a single request-a-quote form.');
 assert_detail(str_contains($standardHtml, 'Mobile-ready interface'), 'CMS inclusions must remain visible.');
 assert_detail(str_contains($standardHtml, 'Build and launch your website'), 'Sanitized CMS description must remain visible.');
 assert_detail(str_contains($standardHtml, '/assets/uploads/approved-product.png'), 'Actual uploaded product image must render.');
@@ -134,9 +135,9 @@ $specialist['_iworks_checkout_mode'] = 'consultation';
 $specialist['price'] = 46000;
 $specialistHtml = render_product($specialist);
 assert_detail(str_contains($specialistHtml, 'Specialist quote'), 'Legal specialist fee must be reviewed first.');
-assert_detail(str_contains($specialistHtml, 'Request a specialist quote'), 'Consultation must have explicit enquiry CTA.');
+assert_detail(str_contains($specialistHtml, 'Request a tailored quote'), 'Consultation must have a direct quote CTA.');
 assert_detail(!str_contains($specialistHtml, '/portal/index.php?page=login'), 'Specialist offering must not enter direct checkout.');
-assert_detail(str_contains($specialistHtml, 'data-iw-help-open'), 'Existing support modal integration must remain.');
+assert_detail(str_contains($specialistHtml, 'iwSpecialistQuoteForm'), 'Specialist enquiry must work without a support agent.');
 
 $unpriced = $standard;
 $unpriced['price'] = 0;
