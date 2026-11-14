@@ -942,6 +942,7 @@ try {
 
             require_csrf();
             $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
+            $currency = iworks_enforce_client_currency($currency, current_user());
             set_active_pay_currency($currency);
 
             $redirectTo = trim((string) ($_POST['redirect_to'] ?? ''));
@@ -2111,9 +2112,17 @@ try {
                             // or commission overrides for standard service jobs.
                             unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'],
                                 $payload['tax_percent'], $payload['tax_mode'], $payload['currency']);
-                            if (!empty($payload['pay_currency'])) {
-                                set_active_pay_currency((string) $payload['pay_currency']);
+                            // Never trust a client-supplied payment currency or
+                            // convert a domestic tariff into an overseas tariff.
+                            $lockedCurrency = iworks_client_country_currency(current_user());
+                            if ($lockedCurrency === '') {
+                                throw new RuntimeException('Confirm your country of residence in your profile before checkout.');
                             }
+                            iworks_enforce_client_currency(
+                                (string)($payload['pay_currency'] ?? $lockedCurrency), current_user()
+                            );
+                            $payload['pay_currency'] = $lockedCurrency;
+                            set_active_pay_currency($lockedCurrency);
                         }
 
                         if (has_role(['client'])) {
@@ -2125,7 +2134,7 @@ try {
                             if ($hasMultiServices) {
                                 $bundle = create_client_order_bundle($payload);
                                 $invoice = get_invoice((int) ($bundle['invoice_id'] ?? 0));
-                                notify_roles(['admin', 'finance'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
+                                notify_roles(['admin', 'agent', 'finance'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
                             } else {
                                 if (is_array($selectedServiceIds) && !empty($selectedServiceIds[0])) {
                                     $payload['service_id'] = (int) $selectedServiceIds[0];
@@ -2133,10 +2142,21 @@ try {
                                 $jobId = create_job($payload);
                                 $job = get_job($jobId);
                                 if ($job) {
-                                    notify_roles(['admin', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
+                                    notify_roles(['admin', 'agent', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
                                 }
                                 $invoice = get_invoice_by_job_id($jobId);
                             }
+                            // Send the customer a transaction notification
+                            // through the existing durable email outbox.
+                            $customerOrderId = (int) current_user()['id'];
+                            $newOrderTitle = isset($job) && is_array($job)
+                                ? 'Order received: ' . (string) ($job['job_code'] ?? '')
+                                : 'Your iWORKS order has been received';
+                            create_notification(
+                                $customerOrderId, $newOrderTitle,
+                                'Your service request has been received. Review your invoice and service details in the portal.',
+                                $invoice ? ('invoice.php?id=' . (int)$invoice['id']) : url('applications')
+                            );
 
                             // Only clear a pending order once checkout creates
                             // the invoice, not when a customer signs in.
@@ -2159,7 +2179,7 @@ try {
                         $jobId = create_job($payload);
                         $job = get_job($jobId);
                         if ($job) {
-                            notify_roles(['admin', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
+                            notify_roles(['admin', 'agent', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
                         }
                         flash('success', 'Job created successfully.');
                         redirect(url('job', ['id' => $jobId]));
@@ -3502,6 +3522,7 @@ try {
 
                     if ($action === 'update_pay_currency') {
                         $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
+                        $currency = iworks_enforce_client_currency($currency, current_user());
                         set_active_pay_currency($currency);
                         flash('success', 'Preferred pay currency updated.');
                     }
