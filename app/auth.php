@@ -649,35 +649,178 @@ function create_otp_code(int $userId, string $purpose): string
     return $code;
 }
 
-function send_otp_email(array $user, string $purpose, string $code): void
+function send_otp_email(array $user, string $purpose, string $code): bool
 {
     $payload = otp_email_payload($user, $purpose, $code);
-    send_email((string) $user['email'], (string) $payload['subject'], (string) $payload['message']);
+    return send_email((string) $user['email'], (string) $payload['subject'], (string) $payload['message']);
+}
+
+/**
+ * A short-lived, host-only signed cookie lets an OTP challenge survive a PHP
+ * session storage eviction during slow delivery. It is not an authenticated
+ * session: the password was checked before issue, the one-time DB code must
+ * still verify, and the cookie is bound to the user's current password hash.
+ */
+function otp_recovery_cookie_name(): string
+{
+    return 'iworksgt_pending_otp';
+}
+
+function otp_recovery_ttl_seconds(): int
+{
+    // Retain the resend screen after a code expires; the DB code's lifetime
+    // is separate and never extended by this cookie.
+    return max(1200, min(1800, otp_expiry_minutes() * 60 + 300));
+}
+
+function otp_recovery_cookie_secure(): bool
+{
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\d+$/', '', $host);
+    return !in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+}
+
+function otp_recovery_context_from_cookie(): ?array
+{
+    $raw = (string) ($_COOKIE[otp_recovery_cookie_name()] ?? '');
+    if (strlen($raw) < 50 || strlen($raw) > 600) {
+        return null;
+    }
+    $parts = explode('.', $raw);
+    if (count($parts) !== 2 || !preg_match('/^[a-f0-9]{64}$/D', $parts[1])) {
+        return null;
+    }
+    $payload = base64_decode(strtr($parts[0], '-_', '+/'), true);
+    if (!is_string($payload)) {
+        return null;
+    }
+    $claims = json_decode($payload, true);
+    if (!is_array($claims) || ($claims['v'] ?? null) !== 1
+        || !is_int($claims['u'] ?? null) || $claims['u'] <= 0
+        || !in_array($claims['p'] ?? null, ['login', 'verify_email'], true)
+        || !is_int($claims['t'] ?? null)
+        || !is_string($claims['n'] ?? null)
+        || !preg_match('/^[a-f0-9]{32}$/D', $claims['n'])) {
+        return null;
+    }
+    $now = time();
+    if ($claims['t'] > $now + 60 || $claims['t'] < $now - otp_recovery_ttl_seconds()) {
+        return null;
+    }
+    $user = find_user_by_id($claims['u']);
+    if (!$user || ($user['status'] ?? '') !== 'active'
+        || ($user['account_state'] ?? '') !== 'active'
+        || empty($user['password_hash'])) {
+        return null;
+    }
+    $expected = hash_hmac('sha256', 'iworks-otp-recovery-v1|'.$parts[0], (string) $user['password_hash']);
+    if (!hash_equals($expected, $parts[1])) {
+        return null;
+    }
+    return [
+        'user_id' => $claims['u'],
+        'purpose' => $claims['p'],
+        'created_at' => date('Y-m-d H:i:s', $claims['t']),
+        'recovery_cookie' => $raw,
+        'recovery_key' => (string) $user['password_hash'],
+    ];
+}
+
+function otp_recovery_form_token(): string
+{
+    $pending = otp_recovery_context_from_cookie();
+    if (!$pending) {
+        return '';
+    }
+    return hash_hmac(
+        'sha256',
+        'iworks-otp-form-v1|'.$pending['recovery_cookie'],
+        $pending['recovery_key']
+    );
+}
+
+function otp_submission_csrf_valid(): bool
+{
+    if (verify_csrf()) {
+        return true;
+    }
+    // A lost PHP session no longer causes a legitimate OTP form to fail;
+    // the form token is bound to an unexpired, signed, HttpOnly host cookie.
+    $token = (string) ($_POST['otp_challenge_csrf'] ?? '');
+    $expected = otp_recovery_form_token();
+    return strlen($token) === 64 && $expected !== '' && hash_equals($expected, $token);
 }
 
 function set_pending_otp(int $userId, string $purpose): void
 {
+    if (!in_array($purpose, ['login', 'verify_email'], true)) {
+        throw new InvalidArgumentException('Invalid OTP purpose.');
+    }
+    $user = find_user_by_id($userId);
+    if (!$user || empty($user['password_hash'])) {
+        throw new RuntimeException('Account unavailable.');
+    }
     $_SESSION['pending_otp'] = [
         'user_id' => $userId,
         'purpose' => $purpose,
         'created_at' => now(),
     ];
+    $claims = json_encode([
+        'v' => 1,
+        'u' => $userId,
+        'p' => $purpose,
+        't' => time(),
+        'n' => bin2hex(random_bytes(16)),
+    ], JSON_UNESCAPED_SLASHES);
+    if (!is_string($claims)) {
+        throw new RuntimeException('Unable to create login verification state.');
+    }
+    $body = rtrim(strtr(base64_encode($claims), '+/', '-_'), '=');
+    $signature = hash_hmac('sha256', 'iworks-otp-recovery-v1|'.$body, (string) $user['password_hash']);
+    $value = $body.'.'.$signature;
+    setcookie(otp_recovery_cookie_name(), $value, [
+        'expires' => time() + otp_recovery_ttl_seconds(),
+        'path' => '/',
+        'secure' => otp_recovery_cookie_secure(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    // The browser will send the cookie back on the next request.
 }
 
 function pending_otp_context(): ?array
 {
+    // Prefer the signed browser challenge if the server session has been
+    // recycled or the user opened the OTP form in a second tab.
+    $cookie = otp_recovery_context_from_cookie();
+    if ($cookie) {
+        return ['user_id' => $cookie['user_id'],
+            'purpose' => $cookie['purpose'], 'created_at' => $cookie['created_at']];
+    }
+    // Backwards compatibility for browsers that block non-session cookies.
     $pending = $_SESSION['pending_otp'] ?? null;
-
-    if (!is_array($pending) || empty($pending['user_id']) || empty($pending['purpose'])) {
+    if (!is_array($pending) || empty($pending['user_id'])
+        || !in_array($pending['purpose'] ?? null, ['login', 'verify_email'], true)) {
         return null;
     }
-
+    $issued = strtotime((string)($pending['created_at'] ?? ''));
+    if ($issued === false || $issued < time() - otp_recovery_ttl_seconds()) {
+        return null;
+    }
     return $pending;
 }
 
 function clear_pending_otp(): void
 {
     unset($_SESSION['pending_otp']);
+    setcookie(otp_recovery_cookie_name(), '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'secure' => otp_recovery_cookie_secure(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    unset($_COOKIE[otp_recovery_cookie_name()]);
 }
 
 function start_otp_challenge(int $userId, string $purpose): void
@@ -693,12 +836,13 @@ function start_otp_challenge(int $userId, string $purpose): void
     }
 
     $code = create_otp_code($userId, $purpose);
-    $queued = queue_otp_delivery($user, $purpose, $code);
-    if ($queued) {
+    // Try immediate local transport rather than depending on a delayed cron
+    // queue or the PHP shutdown hook. Queue only an actual transport failure.
+    if (!send_otp_email($user, $purpose, $code)) {
+        if (!queue_otp_delivery($user, $purpose, $code)) {
+            throw new RuntimeException('Verification email could not be sent. Please contact support.');
+        }
         otp_queue_dispatch_kick();
-    } else {
-        // Fallback for legacy installs without queue table.
-        send_otp_email($user, $purpose, $code);
     }
     set_pending_otp($userId, $purpose);
 }
