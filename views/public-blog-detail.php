@@ -1,6 +1,7 @@
 <?php
+require_once __DIR__ . '/../app/public-photo-config.php';
 $blogPost=is_array($blogPost??null)?$blogPost:[];
-$cover=trim((string)($blogPost['featured_image']['url']??''));
+$cover=iworks_blog_photo_url($blogPost);
 $title=(string)($blogPost['title']??'Business insight');
 $tag=trim((string)($blogPost['tag']??'Insights'));
 $author=trim((string)($blogPost['author_name']??'iWorks Team'));
@@ -101,7 +102,7 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
       <div class="iw-journal-grid">
         <?php foreach ($related as $index => $post): ?>
           <?php
-            $img = trim((string)($post['featured_image']['url'] ?? ''));
+            $img = iworks_blog_photo_url($post);
             $relatedTitle = (string)($post['title'] ?? 'Business insight');
             $relatedTag = trim((string)($post['tag'] ?? '')) ?: 'Business';
           ?>
