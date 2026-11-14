@@ -2,7 +2,13 @@ name: Portfolio visual reference audit
 on:
   push:
     branches: [ux/ckdigital-inspired-portfolio-20261114]
-    paths: [.github/workflows/portfolio-visual-audit.yml]
+    paths:
+      - .github/workflows/portfolio-visual-audit.yml
+      - tests/fixtures/render_portfolio_preview.php
+      - assets/css/portfolio-work.css
+      - views/public-case-studies-refined.php
+      - views/public-case-study-detail.php
+      - app/editorial.php
   workflow_dispatch:
 permissions:
   contents: read
