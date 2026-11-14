@@ -160,29 +160,29 @@ try { $featuredInsights = list_blog_posts_public(4); } catch (Throwable $e) { $f
 $homeCases = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 5) : [];
 $homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 3) : [];
 
-// A neutral, non-clickable client-logo strip: only actual published case
-// studies and consented customer feedback may supply brands. Never fabricate
-// clients or promote drafts. Duplicate logos are filtered by normalized name.
+// Restore the Website Editor's complete saved hero logo carousel.
+// Curated service-platform / registry logos must NOT be described as clients
+// or endorsements. Published customer-case logos are kept separate by type.
+// De-duplicate on display name; preserve existing uploaded image IDs/paths.
 $homeBrandLogos = [];
-// Preserve the Website Editor's curated logos, but do not imply a government
-// regulator or technology provider is an iWORKS client. Service-provider or
-// accreditation status must never be misrepresented as a client relationship.
-// All other client logos still need documented approval from their owner.
+$hasExternalLogo = false;
 $trustedLogoItems = is_array(($sections['trusted_logos']['items'] ?? null))
     ? $sections['trusted_logos']['items'] : [];
 foreach ($trustedLogoItems as $item) {
     if (!is_array($item)) { continue; }
     $name = trim((string) ($item['title'] ?? ''));
-    // Registry logos and product vendors cannot appear as "clients" merely
-    // because somebody uploaded their image in the CMS.
-    if (preg_match('/^(?:corporate\s+affairs\s+commission(?:\s+\(cac\))?|cac(?:\s+nigeria)?|go\s*daddy(?:\s+inc\.?)?)$/i', $name)) {
-        continue;
+    $type = 'client';
+    if (preg_match('/^(?:corporate\s+affairs\s+commission(?:\s+\(cac\))?|cac(?:\s+nigeria)?)$/i', $name)) {
+        $type = 'registry';
+    } elseif (preg_match('/^go\s*daddy(?:\s+inc\.?)?$/i', $name)) {
+        $type = 'provider';
     }
     $imageId = (int) ($item['imageId'] ?? 0);
     $asset = $imageId > 0 ? get_media_asset($imageId) : null;
     $logo = trim((string) ($asset['url'] ?? ''));
     if ($name !== '' && $logo !== '') {
-        $homeBrandLogos[strtolower($name)] = ['name' => $name, 'logo' => $logo];
+        $homeBrandLogos[strtolower($name)] = ['name' => $name, 'logo' => $logo, 'type' => $type];
+        if ($type !== 'client') { $hasExternalLogo = true; }
     }
 }
 $logoCaseRecords = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 48) : [];
@@ -193,7 +193,7 @@ foreach (array_merge($logoCaseRecords, $logoReviewRecords) as $record) {
     $logo = trim((string) ($record['logo_url'] ?? ''));
     $key = strtolower($name);
     if ($name !== '' && $logo !== '' && !isset($homeBrandLogos[$key])) {
-        $homeBrandLogos[$key] = ['name' => $name, 'logo' => $logo];
+        $homeBrandLogos[$key] = ['name' => $name, 'logo' => $logo, 'type' => 'client'];
     }
 }
 $homeBrandLogos = array_values($homeBrandLogos);
@@ -233,14 +233,14 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       </figure>
     </div>
     <?php if ($homeBrandLogos !== []): ?>
-      <div class="container public-container iw-home-brand-ribbon" aria-label="Client projects">
-        <p class="iw-home-brand-caption">Selected client projects</p>
+      <div class="container public-container iw-home-brand-ribbon" aria-label="<?= $hasExternalLogo ? 'Client projects and independent service platforms' : 'Client projects' ?>">
+        <p class="iw-home-brand-caption"><?= $hasExternalLogo ? 'Client projects &amp; service platforms' : 'Selected client projects' ?></p>
         <div class="iw-home-brand-window">
           <div class="iw-home-brand-track <?= count($homeBrandLogos) >= 4 ? 'is-scrolling' : '' ?>">
             <div class="iw-home-brand-sequence">
               <?php foreach ($homeBrandLogos as $brand): ?>
-                <span class="iw-home-brand-mark" title="<?= e($brand['name']) ?>">
-                  <img src="<?= e($brand['logo']) ?>" alt="<?= e($brand['name']) ?>" loading="lazy" decoding="async">
+                <span class="iw-home-brand-mark" title="<?= e($brand['name'] . (($brand['type'] ?? 'client') === 'registry' ? ' — independent government registry' : (($brand['type'] ?? 'client') === 'provider' ? ' — independent service provider' : ' — client project'))) ?>">
+                  <img src="<?= e($brand['logo']) ?>" alt="<?= e($brand['name'] . (($brand['type'] ?? 'client') === 'registry' ? ', independent government registry' : (($brand['type'] ?? 'client') === 'provider' ? ', independent service provider' : ', client project'))) ?>" loading="lazy" decoding="async">
                 </span>
               <?php endforeach; ?>
             </div>
@@ -255,6 +255,9 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
             <?php endif; ?>
           </div>
         </div>
+        <?php if ($hasExternalLogo): ?>
+          <p class="iw-home-brand-disclaimer">External registry and provider logos identify independent services, not client relationships or endorsements.</p>
+        <?php endif; ?>
       </div>
     <?php endif; ?>
   </section>
