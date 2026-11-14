@@ -12,8 +12,10 @@ function job_review_five_point_score(int $storedRating): int { return max(1, min
 ob_start();
 require dirname(__DIR__) . '/views/partials/public-review-carousel.php';
 $html = ob_get_clean();
-check_review(str_contains($html,'4.8'), 'Verified Google score must be shown once above reviews.');
-check_review(substr_count($html, 'iw-reviews-google-score') === 1, 'Google rating must be one centered element.');
+check_review(!str_contains($html, '4.8') && !str_contains($html, 'iw-reviews-google-score'),
+    'A changing third-party rating must never be hard-coded as a verified score.');
+check_review(str_contains($html,'View our Google listing') && str_contains($html,'rel="noopener noreferrer"'),
+    'A neutral external listing link is allowed without an unverified rating claim.');
 check_review(substr_count($html, 'class="iw-review-slide"') === 3, 'Three consenting reviews should render.');
 check_review(str_contains($html,'Ola A.') && str_contains($html,'Ada M.'), 'Shortened customer names should render.');
 check_review(str_contains($html,'3/5'), 'Historical ratings should map onto five-point scale without hiding mixed reviews.');
