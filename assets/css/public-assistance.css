@@ -203,7 +203,7 @@
 .iw-assist .iw-assist-identity .iw-assist-error { margin:5px 0 0; }
 @media(max-width:580px) {
   .iw-assist .iw-assist-chat {
-    height:100dvh;height:100svh;max-height:none;
+    height:100svh;height:100dvh;max-height:none;
   }
   .iw-assist .iw-assist-identity { padding:clamp(14px,3vh,23px) 19px 14px; }
 }
