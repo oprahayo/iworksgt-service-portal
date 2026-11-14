@@ -38,6 +38,57 @@ body.page-public .iw-sitewide-cta + .public-footer {
 body.page-public .iw-sitewide-cta + .public-footer::before {
   display:none!important;
 }
+/* Home visual alignment (November 2026): retain established typography/layout.
+   Common Questions inherits precisely the warm charcoal from Ready to Launch. */
+body.page-public .iw-clean-home .iw-clean-faq {
+  background:radial-gradient(circle at 14% 22%,rgba(232,103,32,.20),transparent 34%),
+             radial-gradient(circle at 90% 84%,rgba(221,91,21,.13),transparent 35%),
+             linear-gradient(125deg,#171717,#2c231e)!important;
+  color:#f8f9fb!important;
+  border-top:0!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro {
+  background:#211b19!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro::before {
+  background:linear-gradient(145deg,rgba(23,23,23,.86),rgba(44,35,30,.78))!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro h2,
+body.page-public .iw-clean-home .iw-clean-faq-items summary {
+  color:#fff!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro p,
+body.page-public .iw-clean-home .iw-clean-faq-items details p {
+  color:#e7e1dc!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro a {
+  color:#ffb888!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-items {
+  border-top-color:rgba(255,255,255,.24)!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-items details {
+  border-bottom-color:rgba(255,255,255,.24)!important;
+}
+body.page-public .iw-clean-home .iw-clean-faq-items summary i {
+  color:#ffae77!important;
+}
+
+/* These two content sections should sit directly on a clean white canvas. */
+body.page-public .iw-clean-home .iw-clean-support,
+body.page-public .iw-clean-home .iw-clean-services {
+  background:#fff!important;
+}
+
+/* Let the existing orange welcome glow reach further into the hero's top
+   right, while keeping the headline/CTA side white and easy to read. */
+body.page-public .iw-clean-home .iw-clean-hero {
+  background:
+    radial-gradient(ellipse 85% 108% at 98% 2%,rgba(241,109,24,.23) 0%,rgba(255,174,111,.17) 39%,rgba(255,231,209,.12) 64%,transparent 86%),
+    radial-gradient(ellipse 46% 60% at 78% 90%,rgba(255,183,133,.15),transparent 78%),
+    linear-gradient(112deg,#fff 4%,#fffaf6 57%,#fff0e3 100%)!important;
+}
+
 /* Keep the floating back-to-top control on the left, away from live chat on
    the right; hide it whenever the chat/dialog is expanded. */
 body.page-public .iw-back-to-top{
