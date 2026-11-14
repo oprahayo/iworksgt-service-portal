@@ -38,6 +38,9 @@
     var cookieActive = false;
     var lastClosedPoll = 0;
     var startError = document.getElementById('iwAssistStartError');
+    var preferencesForm = document.getElementById('iwAssistPreferencesForm');
+    var preferencesStatus = document.getElementById('iwAssistPreferencesStatus');
+    var preferencesDirty = false;
     var csrf = root.dataset.csrf;
     var storagePrefix = 'iworks-assistance-v1:';
     var session = { name: '', email: '', id: '', token: '', items: [], lastMessageId: 0, status: 'new' };
@@ -90,6 +93,49 @@
     function optedIn(name) {
       var input = startForm.elements.namedItem(name);
       return Boolean(input && input.checked);
+    }
+    // Country is always optional. The list uses region names rather than
+    // asking customers to memorize two-letter country codes.
+    var isoCodes = 'AW AF AO AI AX AL AD AE AR AM AS AQ TF AG AU AT AZ BI BE BJ BQ BF BD BG BH BS BA BL BY BZ BM BO BR BB BN BT BV BW CF CA CC CH CL CN CI CM CD CG CK CO KM CV CR CU CW CX KY CY CZ DE DJ DM DK DO DZ EC EG ER EH ES EE ET FI FJ FK FR FO FM GA GB GE GG GH GI GN GP GM GW GQ GR GD GL GT GF GU GY HK HM HN HR HT HU ID IM IN IO IE IR IQ IS IL IT JM JE JO JP KZ KE KG KH KI KN KR KW LA LB LR LY LC LI LK LS LT LU LV MO MF MA MC MD MG MV MX MH MK ML MT MM ME MN MP MZ MR MS MQ MU MW MY YT NA NC NE NF NG NI NU NL NO NP NR NZ OM PK PA PN PE PH PW PG PL PR KP PT PY PS PF QA RE RO RU RW SA SD SN SG GS SH SJ SB SL SV SM SO PM RS SS ST SR SK SI SE SZ SX SC SY TC TD TG TH TJ TK TM TL TO TT TN TR TV TW TZ UG UA UM UY US UZ VA VC VE VG VI VN VU WF WS YE ZA ZM ZW'.split(' ');
+    var displayRegion = null;
+    try { if (Intl.DisplayNames) displayRegion = new Intl.DisplayNames([document.documentElement.lang || 'en'], {type:'region'}); } catch (ignore) {}
+    var regions = isoCodes.map(function (code) {
+      return {code:code,name:displayRegion ? displayRegion.of(code) : code};
+    }).sort(function (a,b) { return a.name.localeCompare(b.name); });
+    root.querySelectorAll('select[data-assist-country]').forEach(function (field) {
+      regions.forEach(function (item) {
+        var option = document.createElement('option');
+        option.value = item.code;
+        option.textContent = item.name;
+        field.appendChild(option);
+      });
+    });
+    function syncOfflineControl(form) {
+      if (!form) return;
+      var remember = form.elements.namedItem('remember_chat');
+      var offline = form.elements.namedItem('notify_offline');
+      if (!remember || !offline) return;
+      offline.disabled = !remember.checked;
+      if (!remember.checked) offline.checked = false;
+    }
+    syncOfflineControl(startForm);
+    function applyPreferences(value) {
+      if (!preferencesForm || !value || preferencesDirty) return;
+      ['remember_chat','notify_offline','track_page'].forEach(function (key) {
+        var input = preferencesForm.elements.namedItem(key);
+        if (input) input.checked = Boolean(value[key]);
+      });
+      var country = preferencesForm.elements.namedItem('country_code');
+      if (country) {
+        var code = String(value.country_code || '');
+        if (code && !Array.from(country.options).some(function (option) { return option.value === code; })) {
+          var option = document.createElement('option');
+          option.value = code; option.textContent = code;
+          country.appendChild(option);
+        }
+        country.value = code;
+      }
+      syncOfflineControl(preferencesForm);
     }
     function hideNudge(dismiss) {
       nudge.hidden = true;
@@ -297,6 +343,7 @@
           return;
         }
         updateUnread(data.unread);
+        applyPreferences(data.preferences);
       } catch (error) {
         if (!chat.hidden && onlineStatus) { onlineStatus.textContent = 'Connection interrupted. Retrying…'; }
       }
@@ -312,7 +359,10 @@
           session = {name:String(data.name||''),email:String(data.email||''),id:id,
             token:'',items:[],lastMessageId:0,status:'active'};
         }
+        if (data.token && /^[a-f0-9]{64}$/.test(data.token)) session.token = data.token;
         ingestMessages(data.messages);
+        applyPreferences(data.preferences);
+        persist();
         if (!chat.hidden) showChatStage();
         updatePresence(data);
         updateUnread(data.unread);
@@ -386,6 +436,10 @@
       cookieActive = false; updateUnread(0);
       clearStore('chat');
       startForm.reset();
+      syncOfflineControl(startForm);
+      if (preferencesForm) preferencesForm.reset();
+      preferencesDirty = false;
+      if (preferencesStatus) preferencesStatus.hidden = true;
       showChatStage();
       startForm.elements.namedItem('full_name').focus();
     }
@@ -549,6 +603,51 @@
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
     });
+    startForm.addEventListener('change', function (event) {
+      if (event.target.name === 'remember_chat') syncOfflineControl(startForm);
+    });
+    if (preferencesForm) {
+      preferencesForm.addEventListener('change', function (event) {
+        preferencesDirty = true;
+        if (event.target.name === 'remember_chat') syncOfflineControl(preferencesForm);
+        if (preferencesStatus) preferencesStatus.hidden = true;
+      });
+      preferencesForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (busy || session.status !== 'active' || (!session.token && !cookieActive)) return;
+        var offline = preferencesForm.elements.namedItem('notify_offline');
+        var remember = preferencesForm.elements.namedItem('remember_chat');
+        var share = preferencesForm.elements.namedItem('track_page');
+        var country = preferencesForm.elements.namedItem('country_code');
+        if (offline.checked && !remember.checked) {
+          showError(preferencesStatus,'Remember your chat first to receive offline email.');
+          return;
+        }
+        var button = preferencesForm.querySelector('[type=submit]');
+        busy = true;
+        button.disabled = true;
+        try {
+          var result = await liveApi('preferences',{
+            remember_chat:remember.checked?'1':'0',
+            notify_offline:offline.checked?'1':'0',
+            track_page:share.checked?'1':'0',
+            country_code:country ? country.value : '',
+            page_path:window.location.pathname
+          });
+          if (result.token && /^[a-f0-9]{64}$/.test(result.token)) session.token = result.token;
+          cookieActive = Boolean(result.preferences && result.preferences.remember_chat);
+          preferencesDirty = false;
+          applyPreferences(result.preferences);
+          persist();
+          showError(preferencesStatus,'Preferences saved. You can change them at any time.');
+        } catch (error) {
+          showError(preferencesStatus,error.message || 'Could not save preferences.');
+        } finally {
+          busy = false;
+          button.disabled = false;
+        }
+      });
+    }
     startForm.addEventListener('submit', async function (event) {
       event.preventDefault();
       if (!startForm.reportValidity() || busy) return;
@@ -568,12 +667,15 @@
           remember_chat:optedIn('remember_chat')?'1':'0',
           notify_offline:optedIn('notify_offline')?'1':'0',
           track_page:optedIn('track_page')?'1':'0',
+          country_code:startForm.elements.namedItem('country_code')
+            ? startForm.elements.namedItem('country_code').value : '',
           page_path:window.location.pathname});
         cookieActive = Boolean(live.features && live.features.resume &&
           optedIn('remember_chat'));
         session = {name:name,email:email,id:String(live.id),token:String(live.token),
           items:[],lastMessageId:0,status:'active'};
         persist();
+        applyPreferences(live.preferences);
         showChatStage();
         updatePresence(live);
         startLivePoller();
