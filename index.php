@@ -1937,6 +1937,81 @@ try {
             require __DIR__ . '/views/partials/footer.php';
             break;
 
+        case 'quote_request':
+            require_roles(['client']);
+            $quoteUser=current_user();
+            $quoteSlug=iworks_order_slug($_GET['service'] ?? $_POST['service_slug'] ?? '');
+            $quoteService=$quoteSlug!==''?get_service_by_slug($quoteSlug):null;
+            $quoteVisible=is_array($quoteService)?iworks_customer_published_service($quoteService):null;
+            if (!$quoteVisible || ($quoteVisible['_iworks_checkout_mode']??'')!=='consultation') {
+                flash('error','Choose an available custom-project service from the catalogue.');
+                redirect(url('dashboard'));
+            }
+            $quoteService=$quoteVisible;
+            $quoteCountry=iworks_launch_billing_country($quoteUser);
+            $quotePackageSelection=iworks_order_slug($_GET['package']??$_POST['package']??'');
+            $quotePackages=(string)$quoteService['slug']==='website-design-development'
+                ? iworks_launch_website_packages($quoteCountry)
+                : ((string)$quoteService['slug']==='incorporated-trustees'
+                    ? ['ngo'=>iworks_launch_registration_options($quoteCountry)['ngo']]
+                    : ['custom'=>['name'=>'Custom service','amount'=>0,'currency'=>iworks_launch_account_currency($quoteUser)]]);
+            if (!isset($quotePackages[$quotePackageSelection])) {
+                $quotePackageSelection=(string)array_key_first($quotePackages);
+            }
+            if (method_is('POST')) {
+                require_csrf();
+                try {
+                    $requestedPackage=(string)($_POST['package']??'');
+                    if (!array_key_exists($requestedPackage,$quotePackages)) {
+                        throw new RuntimeException('Choose an available project package.');
+                    }
+                    $need=trim((string)($_POST['requirements']??''));
+                    if (strlen($need)<15 || strlen($need)>3000) {
+                        throw new RuntimeException('Describe your project in at least 15 and at most 3,000 characters.');
+                    }
+                    $company=mb_safe_trim(strip_tags((string)($_POST['company']??'')),160);
+                    $time=(string)($_POST['timeline']??'');
+                    if (!in_array($time,['','within-month','one-to-three','flexible'],true)) {
+                        throw new RuntimeException('Invalid project timing.');
+                    }
+                    if ((int)($_SESSION['last_quote_at']??0)>time()-30) {
+                        throw new RuntimeException('A request was just submitted. Check your Support Center before sending another.');
+                    }
+                    $selected=$quotePackages[$requestedPackage];
+                    $message='Service: '.(string)$quoteService['name']."\n";
+                    $message.='Package: '.(string)($selected['name']??$requestedPackage)."\n";
+                    $message.='Billing: '.$quoteCountry.' / '.iworks_launch_account_currency($quoteUser)."\n";
+                    if ((float)($selected['amount']??0)>0) {
+                        $message.='Indicative package: '.money((float)$selected['amount'],(string)$selected['currency'])." (not an invoice)\n";
+                    }
+                    if ($company!=='') $message.='Company/project: '.$company."\n";
+                    if ($time!=='') $message.='Timing: '.$time."\n";
+                    $message.="\nScope requested:\n".$need;
+                    $ticketId=create_support_ticket(
+                        (int)$quoteUser['id'],
+                        'Quotation request: '.(string)$quoteService['name'],
+                        $message,'normal','quotation'
+                    );
+                    $_SESSION['last_quote_at']=time();
+                    create_notification((int)$quoteUser['id'],
+                        'Quotation request received',
+                        'We received your '.(string)$quoteService['name'].' request. The team will review the scope before issuing an invoice.',
+                        url('support',['ticket_id'=>$ticketId])
+                    );
+                    iworks_order_intent_clear();
+                    flash('success','Your project request was recorded. You will receive updates in Support and by email where delivery is configured.');
+                    redirect(url('support',['ticket_id'=>$ticketId]));
+                } catch(Throwable $e) {
+                    flash('error',$e->getMessage());
+                    redirect(url('quote_request',['service'=>$quoteSlug,'package'=>$quotePackageSelection]));
+                }
+            }
+            $title='Request a quotation - '.app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/client-quote-request.php';
+            require __DIR__.'/views/partials/footer.php';
+            break;
+
         case 'jobs':
             require_login();
             // Do not expose the legacy all-active-service cart to clients.
