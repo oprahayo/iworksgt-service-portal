@@ -8,7 +8,7 @@ The iWORKS implementation is an original dark charcoal portfolio section with wa
 
 ## Current project data
 
-**All five approved client stories and WebP homepage screenshots already exist** in the editorial database/source release; no duplicate cards or new CMS table should be created. The public template fetches only `iworks_editorial_cases(true,80)` and renders the records found. It does not invent project outcomes or statistics.
+**All five approved client stories and genuine WebP website screenshots already exist** in the editorial database/source release; no duplicate cards or new CMS table should be created. The public template fetches only `iworks_editorial_cases(true,80)` and renders the records found. It does not invent project outcomes or statistics.
 
 | Client | Reviewed external website | Core project category |
 |---|---|---|
@@ -42,3 +42,7 @@ Screenshot sources are genuine first-viewport browser captures under `assets/bra
 6. If the live DB contains additional published projects, retain them. Do not delete any existing editorial content, client record or media upload in a style release.
 
 **State:** Source implementation prepared for code review; production deployment requires actual operator execution and independent HTTP/browser verification. Do not report it as live until those checks pass.
+
+## Final screenshot evidence
+
+On 14 November 2026, Chromium successfully captured the five original client domains with HTTP 200. The Cornerstonetl capture specifically navigated to `https://cornerstonetlllc.com/services/` (HTTP 200), matching the supplied senior-care services reference more closely than its homepage and avoiding a promotional slider. The source URL and UTC capture time are recorded in `assets/branding/case-studies/capture-manifest.json`. Only real client pages appear inside the gallery browser frames.
