@@ -68,6 +68,7 @@ jobs:
           bash tests/f22_private_migration_stage_fixture_test.sh
           bash -n scripts/audit_public_seo_live.sh
           bash -n scripts/audit_launch_public.sh
+          bash -n scripts/audit_portfolio_live.sh
 
       - name: Run smoke tests
         run: |
