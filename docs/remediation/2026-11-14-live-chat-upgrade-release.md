@@ -4,7 +4,7 @@ Date: 2026-11-14
 
 ## Pinned source
 
-- Implemented feature is merged as PR #102, immutable source \`a6519d6620de99ded48926ddf221a46284410d40\`.
+- Implemented feature is merged as PR #102, immutable source \`47a368ba3c33ecd2c34e1ac717b746a2cfa1abd7\`.
 - This operator branch pins existing release components to that source and adds scoped \`--chat-upgrade\` to \`scripts/cpanel_finalize_release.sh\`.
 - The old \`--publish\` first-time deployment path is **not** suitable for this upgrade: it would repeat legacy migration/incident token rotation. The new mode prevents that.
 
@@ -38,3 +38,9 @@ The encrypted backup path is printed; never copy actual SQL dumps or encryption 
 ## Status
 
 Source code CI validated with PHP 8.2 and 8.3 in PR #102. The separate ops-release PR must pass CI and merge. Production is not confirmed until cPanel Terminal reports success.
+
+## Integrated site snapshot and no-regression rule
+
+The operator release is pinned to `47a368ba3c33ecd2c34e1ac717b746a2cfa1abd7` (merged PR #105), which incorporates the chat features (PR #102), homepage legal/SEO changes (PR #103), and latest two-column mobile footer/compact mobile navigation (PR #105). Using the prior chat-only pin would regress newer public UI. Preserve existing private configuration, storage, uploaded media, published CMS content and customer records.
+
+Use the **merge SHA of this repin PR** as `OPERATOR_MERGE_SHA` for both the script URL and command argument. Never use floating `main` and do not use the first-time `--publish` mode. Merging code does not deploy production; retain the backup-gated verification and manual live email acceptance steps above.
