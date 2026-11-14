@@ -2230,10 +2230,10 @@ function save_website_lead(array $input): int
 
     $leadId = db_last_id();
     $targetUrl = url('frontend', ['slug' => 'contact']);
-    notify_users(
-        admin_user_ids(),
-        'New website enquiry',
-        $fullName . ' submitted a frontend contact enquiry.',
+    notify_roles(
+        ['admin', 'agent'],
+        'New website quote/enquiry',
+        $fullName . ' submitted a new enquiry. Review it in the website leads inbox.',
         $targetUrl
     );
 
