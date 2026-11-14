@@ -222,3 +222,22 @@
 .iw-assist-unread-count[hidden]{display:none!important}
 .iw-assist-bubble.is-staff{align-self:flex-start;background:#fff8f1;border:1px solid #f6cfb1;color:#233247;border-bottom-left-radius:5px}
 @media(max-width:580px){.iw-assist-unread-count{right:14px;bottom:69px}}
+
+/* Live-chat preferences can be updated without restarting a conversation. */
+.iw-assist-identity select[data-assist-country],.iw-assist-preferences select[data-assist-country]{display:block;width:100%;min-height:41px;border:1px solid #d9e0e8;border-radius:8px;background:#fff;color:#233247;font:500 12px/1.35 Inter,sans-serif;padding:8px 10px;margin:5px 0 4px}
+.iw-assist-country-hint{font-size:10.5px!important;color:#687587;margin:0 0 9px!important}
+.iw-assist-option-heading{font-size:11px;line-height:1.3;color:#243346}
+.iw-assist-preferences{margin:9px 0 15px;border:1px solid #e5eaf1;border-radius:10px;background:#fff;overflow:hidden}
+.iw-assist-preferences summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:11px 12px;color:#334157;font-weight:700;font-size:12px}
+.iw-assist-preferences summary::-webkit-details-marker{display:none}
+.iw-assist-preferences summary:after{content:'+';margin-left:auto;font-size:18px;color:#b65b23}
+.iw-assist-preferences[open] summary:after{content:'−'}
+.iw-assist-preferences form{padding:4px 12px 12px}
+.iw-assist-preferences form>p:first-child{font-size:11px;color:#566477;line-height:1.45;margin:0 0 8px}
+.iw-assist-preferences form>label{display:block;font-size:11px;font-weight:650;color:#344458;margin-top:9px}
+.iw-assist-consent-options input:disabled{opacity:.55}
+.iw-assist-preferences-save{min-height:38px;margin-top:9px;padding:8px 13px;background:#df621c;border:0;border-radius:8px;font-size:12px;font-weight:750;color:white}
+.iw-assist-preferences-save:disabled{opacity:.6}
+.iw-assist-preferences-status{font-size:11px;line-height:1.4;margin-top:8px!important;color:#365772}
+.iw-assist-preferences-status[hidden]{display:none!important}
+.iw-assist-preferences summary:focus-visible,.iw-assist-preferences-save:focus-visible{outline:2px solid #d45c15;outline-offset:2px}
