@@ -4,6 +4,7 @@ $checkoutService = is_array($checkoutService ?? null) ? $checkoutService : [];
 $checkoutId = (int)($checkoutService['id'] ?? 0);
 $checkoutName = trim((string)($checkoutService['name'] ?? 'Service'));
 $checkoutSummary = trim((string)preg_replace('/\s+/', ' ', strip_tags((string)($checkoutService['short_description'] ?? $checkoutService['description'] ?? ''))));
+$checkoutCurrency = iworks_client_country_currency(current_user()) ?: strtoupper((string)($checkoutService['currency'] ?? default_currency()));
 $checkoutPrice = (float)($checkoutService['price'] ?? 0);
 $nativeCurrency = strtoupper((string)($checkoutService['currency'] ?? default_currency()));
 if ($checkoutCurrency !== $nativeCurrency) {
@@ -11,7 +12,6 @@ if ($checkoutCurrency !== $nativeCurrency) {
     // the same numeric amount as interchangeable NGN and USD.
     $checkoutPrice = convert_amount($checkoutPrice, $nativeCurrency, $checkoutCurrency);
 }
-$checkoutCurrency = iworks_client_country_currency(current_user()) ?: strtoupper((string)($checkoutService['currency'] ?? default_currency()));
 $checkoutTaxPercent = max(0.0, min(100.0, (float)($checkoutService['tax_percent'] ?? 0)));
 $checkoutTax = round($checkoutPrice * $checkoutTaxPercent / 100, 2);
 $checkoutTotal = round($checkoutPrice + $checkoutTax, 2);
