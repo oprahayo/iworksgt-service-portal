@@ -149,7 +149,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   if (is_file($iwAssistCssPath) && is_readable($iwAssistCssPath)): ?>
     <style id="iw-assist-critical-css"><?= (string) file_get_contents($iwAssistCssPath) ?></style>
   <?php else: ?>
-    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261113c">
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261114-launcher1">
   <?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-navigation-cta.css')) ?>?v=20261113a">
   <script>
