@@ -22,7 +22,7 @@ function testScenario({ exists = true, reduced = false } = {}) {
     addEventListener(name, callback) { listeners[name] = callback; }
   };
   const window = {
-    location: { href: 'https://portal.iworksgt.com/index.php?page=dashboard', hostname: 'portal.iworksgt.com' },
+    location: { href: 'https://portal.iworksgt.com/index.php?page=dashboard', hostname: 'portal.iworksgt.com', pathname: '/index.php', search: '?page=dashboard', hash: '' },
     matchMedia() { return { matches: reduced }; },
     addEventListener(name, callback) { winListeners[name] = callback; },
     setTimeout(callback, ms) { const id = nextId++; timers.set(id, { callback, ms }); return id; },
