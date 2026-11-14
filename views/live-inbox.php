@@ -18,9 +18,16 @@
       Then refresh this page. No messages can be received until the tables exist.</div>
   <?php else: ?>
     <div class="iw-live-summary" aria-live="polite">
-      <div><span class="iw-live-summary-dot"></span><strong id="iwLiveOnline">0</strong><small>Visitors online</small></div>
+      <div><span class="iw-live-summary-dot"></span><strong id="iwLiveOnline">0</strong><small>Visitors active</small></div>
       <div><i class="bi bi-inboxes"></i><strong id="iwLiveOpen">0</strong><small>Open conversations</small></div>
-      <div><i class="bi bi-people"></i><strong id="iwLiveAgents">0</strong><small>Support operators active</small></div>
+      <div><i class="bi bi-reply-all"></i><strong id="iwLiveAwaiting">0</strong><small>Awaiting staff reply</small></div>
+      <div><i class="bi bi-calendar2-check"></i><strong id="iwLiveToday">0</strong><small>New chats today</small></div>
+      <div><i class="bi bi-people"></i><strong id="iwLiveAgents">0</strong><small>Staff available</small></div>
+    </div>
+    <div class="iw-live-activity-band">
+      <div><strong>Message activity</strong><small>Last seven days</small></div>
+      <div class="iw-live-activity-bars" id="iwLiveActivityBars" role="img" aria-label="Messages sent over the last seven days"></div>
+      <a href="<?= e(url('dashboard')) ?>">View overview <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
     </div>
     <div class="iw-live-layout">
       <aside class="iw-live-thread-panel" aria-label="Visitor conversations">
@@ -45,9 +52,9 @@
         <p class="iw-live-status" id="iwLiveStatus" role="status">Connecting…</p>
       </section>
     </div>
-    <p class="iw-live-privacy-note"><i class="bi bi-shield-lock"></i> Visitor location is an approximate country hint where available. Network IP is masked; no precise GPS location is collected. Online status requires a recent heartbeat. Sound alerts work while this inbox is open, after you enable them.</p>
+    <p class="iw-live-privacy-note"><i class="bi bi-shield-lock"></i> This dashboard includes people who opened a website chat. Current page information is available only when they choose to share it; location is an approximate country hint, never an exact street address. Network prefixes are masked. Offline emails are sent only to visitors who opted in. Online status requires a recent heartbeat.</p>
   <?php endif; ?>
 </section>
 <?php if ($liveChatInstalled): ?>
-<script defer src="assets/js/live-inbox.js?v=20261113-live1"></script>
+<script defer src="assets/js/live-inbox.js?v=20261114-visit1"></script>
 <?php endif; ?>
