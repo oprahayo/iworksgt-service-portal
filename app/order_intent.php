@@ -29,7 +29,9 @@ function iworks_order_intent_capture(array $query): void
         iworks_order_intent_clear();
         return;
     }
-    $_SESSION['iworks_pending_order'] = ['service' => $slug, 'at' => time()];
+    $package=iworks_order_slug($query['package']??'');
+    if (!in_array($package,['business','company-small','company-large','ngo','starter','store','custom'],true)) $package='';
+    $_SESSION['iworks_pending_order'] = ['service'=>$slug,'package'=>$package,'at'=>time()];
 }
 
 function iworks_order_intent_peek(): string
@@ -45,6 +47,16 @@ function iworks_order_intent_peek(): string
     return $slug;
 }
 
+function iworks_order_intent_package(): string
+{
+    $slug=iworks_order_intent_peek();
+    if ($slug==='') return '';
+    $pending=$_SESSION['iworks_pending_order']??[];
+    $package=iworks_order_slug($pending['package']??'');
+    return in_array($package,['business','company-small','company-large','ngo','starter','store','custom'],true)
+        ? $package : '';
+}
+
 function iworks_order_intent_clear(): void
 {
     unset($_SESSION['iworks_pending_order']);
@@ -54,6 +66,7 @@ function iworks_order_intent_clear(): void
 function iworks_post_login_destination(?array $user): string
 {
     $slug = iworks_order_intent_peek();
+    $package=iworks_order_intent_package();
     if ($slug === 'trademark' && (string) ($user['role'] ?? '') === 'client') {
         return url('trademark');
     }
@@ -62,9 +75,18 @@ function iworks_post_login_destination(?array $user): string
             return url('cac_filing', ['type' => 'business']);
         }
         if ($slug === 'company-registration') {
-            // Preserve the selected Limited Company pathway after password,
-            // OTP, registration or Google login; never return to the chooser.
-            return url('cac_filing', ['type' => 'company']);
+            if ($package==='business') return url('cac_filing',['type'=>'business']);
+            if (in_array($package,['company-small','company-large'],true)) {
+                return url('cac_filing',['type'=>'company','package'=>$package]);
+            }
+            return url('cac_filing'); // Let customers choose all four types.
+        }
+        if ($slug!=='') {
+            $selected=get_service_by_slug($slug);
+            $offer=$selected?iworks_customer_published_service($selected):null;
+            if ($offer && ($offer['_iworks_checkout_mode']??'')==='consultation') {
+                return url('quote_request',['service'=>$slug,'package'=>$package]);
+            }
         }
     }
     if ($slug !== '' && (string) ($user['role'] ?? '') === 'client') {
