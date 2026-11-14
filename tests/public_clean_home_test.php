@@ -82,7 +82,8 @@ check_home(str_contains($html, 'name="form_action" value="public_track"'), 'Home
 check_home(str_contains($html, 'name="job_code"') && str_contains($html, 'name="identifier"'), 'Tracking fields must match the handler.');
 check_home(str_contains($html, 'name="csrf_token"'), 'Track form requires CSRF protection.');
 check_home(str_contains($html, 'data-iw-help-open'), 'Human support dialog entry missing.');
-check_home(str_contains($html, 'On Google'), 'Centered Google rating link is missing.');
+check_home(str_contains($html, 'View our Google listing') && !str_contains($html, '4.8 <span'),
+    'Customer proof must link to Google without inventing an unverified star rating.');
 check_home(str_contains($html, 'Customer reviews'), 'Order-linked customer reviews area missing.');
 check_home(!str_contains($html, '120 reviews'), 'Old unverified review count must not appear.');
 check_home(str_contains($html, '/track'), 'Existing portal tracking link must work.');
