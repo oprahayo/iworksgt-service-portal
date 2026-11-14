@@ -3541,6 +3541,13 @@ try {
                             throw new RuntimeException('Provide full name or both first and last name.');
                         }
 
+                        $submittedCountry=trim((string)($_POST['country']??''));
+                        $originalCountry=(string)($user['country']??'');
+                        if ((string)($user['role']??'')==='client' &&
+                            iworks_launch_country_code($originalCountry)!==null &&
+                            iworks_launch_country_code($submittedCountry)!==iworks_launch_country_code($originalCountry)) {
+                            throw new RuntimeException('Billing country changes require a support review.');
+                        }
                         db_execute(
                             'UPDATE users
                              SET full_name = :full_name,
@@ -3562,7 +3569,9 @@ try {
                                 'phone' => trim($_POST['phone'] ?? ''),
                                 'gender' => trim((string) ($_POST['gender'] ?? '')) ?: null,
                                 'date_of_birth' => trim((string) ($_POST['date_of_birth'] ?? '')) ?: null,
-                                'country' => trim((string) ($_POST['country'] ?? '')) ?: null,
+                                'country' => ((string)($user['role']??'')==='client' &&
+                                  iworks_launch_country_code($originalCountry)!==null)
+                                  ? $originalCountry : ($submittedCountry?:null),
                                 'state_region' => trim((string) ($_POST['state_region'] ?? '')) ?: null,
                                 'city' => trim((string) ($_POST['city'] ?? '')) ?: null,
                                 'address_line' => trim((string) ($_POST['address_line'] ?? '')) ?: null,
@@ -3601,6 +3610,9 @@ try {
                     }
 
                     if ($action === 'update_pay_currency') {
+                        if ((string)($user['role']??'')==='client') {
+                            throw new RuntimeException('Currency is set by your billing country and cannot be changed here.');
+                        }
                         $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
                         set_active_pay_currency($currency);
                         flash('success', 'Preferred pay currency updated.');
