@@ -64,6 +64,11 @@ $chooser = $source('views/client-cac-pathway.php');
 $wizard = $source('views/client-cac-filing.php');
 $region = $source('app/cac_filing.php');
 $domain = $source('app/domain.php');
+$deployer = $source('scripts/deploy_launch_products.sh');
+launch_check(str_contains($deployer, 'scripts/activate_launch_prices.php')
+    && str_contains($deployer, 'check_remediation_release.php')
+    && str_contains($deployer, 'rollback()'),
+    'Deployment must include the separate controlled pricing activator without mutating database.');
 $router = $source('index.php');
 $profile = $source('views/client-profile.php');
 foreach(['iwWebsitePackageRequest','website_package','iw-website-launch-grid','Request a project quote','iwSpecialistQuoteForm'] as $part) {

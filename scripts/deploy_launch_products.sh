@@ -24,6 +24,7 @@ app/domain.php
 app/customer_service_policy.php
 app/cac_filing.php
 app/launch_packages.php
+scripts/activate_launch_prices.php
 views/client-service-checkout.php
 views/client-profile.php
 views/client-cac-pathway.php
