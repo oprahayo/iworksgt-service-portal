@@ -24,10 +24,12 @@ $check(str_contains($installer, 'support-agent-black.jpg|7689752|1000'),
 $check(str_contains($faqCss, 'background:#191d23') && str_contains($faqCss, 'color:#f8fafc')
     && str_contains($faqCss, '.iw-clean-faq-intro::before'),
     'FAQ must use an accessible dark/bright treatment with dark photo overlay.');
-$check(str_contains($home, 'iworks_editorial_cases(true, 48)')
+$check(str_contains($home, "sections['trusted_logos']")
+    && str_contains($home, 'get_media_asset($imageId)')
+    && str_contains($home, 'iworks_editorial_cases(true, 48)')
     && str_contains($home, 'iworks_editorial_reviews(true, 48)')
     && str_contains($home, 'iw-home-brand-ribbon'),
-    'Hero ribbon must draw only from approved published CMS records.');
+    'Hero ribbon must draw original Trusted Logos plus approved published CMS records.');
 $check(str_contains($home, 'count($homeBrandLogos) >= 4')
     && str_contains($home, 'aria-hidden="true"')
     && str_contains($brandCss, 'filter:grayscale(1)')
