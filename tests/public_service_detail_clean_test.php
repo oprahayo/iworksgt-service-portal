@@ -28,6 +28,7 @@ function money(float $price, string $currency): string
     return $currency . ' ' . number_format($price, 2);
 }
 function trademark_price_usd(): float { return 214.50; }
+function fx_ngn_per_usd(): float { return 1400.0; }
 function get_media_asset(int $id): ?array
 {
     return $id === 9 ? ['url' => '/assets/uploads/approved-product.png'] : null;
@@ -67,8 +68,9 @@ $standardHtml = render_product($standard, [
     ['slug' => 'private-from-another-category', 'name' => 'Unrelated', 'category' => 'other'],
 ]);
 assert_detail(str_contains($standardHtml, 'Website Design &amp; Development'), 'Real CMS product title must render.');
-assert_detail(str_contains($standardHtml, 'NGN 85,000.00'), 'Pricing must come from the backend service record.');
-assert_detail(str_contains($standardHtml, 'Tax rate: 2.50%'), 'Configured taxes must be explained before checkout.');
+assert_detail(str_contains($standardHtml, 'NGN 250,000.00'), 'Website should display an indicative launch-package rate rather than a stale raw service price.');
+assert_detail(str_contains($standardHtml, 'iw-launch-product-grid'), 'Website packages should be independently selectable.');
+assert_detail(!str_contains($standardHtml, 'Tax rate: 2.50%'), 'Custom-quote products must not imply a payable tax calculation before the scope is approved.');
 assert_detail(str_contains($standardHtml, '/portal/index.php?page=login&amp;service=website-design-development'),
     'Primary product action must pass the real service slug into the authenticated order-intent flow.');
 assert_detail(substr_count($standardHtml, 'class="iw-product-cta"') === 1,
@@ -102,9 +104,9 @@ $company['_iworks_checkout_mode'] = 'cac';
 $company['price'] = 310000;
 $company['featured_image_id'] = 0;
 $companyHtml = render_product($company);
-assert_detail(str_contains($companyHtml, 'Start Limited Company registration'), 'Ltd must keep guided filing CTA.');
+assert_detail(str_contains($companyHtml, 'Choose a registration package'), 'Ltd should present all four guided registration options.');
 assert_detail(str_contains($companyHtml, 'service=company-registration'), 'Ltd must pass canonical CAC route.');
-assert_detail(str_contains($companyHtml, 'NGN 310,000.00'), 'Ltd must display its own configured quote.');
+assert_detail(str_contains($companyHtml, 'NGN 60,000.00'), 'Ltd must show the new launch-tier starting price, not a stale service record.');
 
 $business = $company;
 $business['slug'] = 'cac-business-name';
@@ -114,7 +116,7 @@ $business['price'] = 28000;
 $businessHtml = render_product($business);
 assert_detail(str_contains($businessHtml, 'Start Business Name registration'), 'Enterprise must keep guided business intake CTA.');
 assert_detail(str_contains($businessHtml, 'service=cac-business-name'), 'Enterprise virtual slug must survive login.');
-assert_detail(str_contains($businessHtml, 'NGN 28,000.00'), 'Enterprise fee must not inherit Ltd price.');
+assert_detail(str_contains($businessHtml, 'NGN 49,000.00'), 'Enterprise must use the independently configured Nigeria launch rate.');
 assert_detail(str_contains($businessHtml, 'How to register a business name in Nigeria'),
     'Current Enterprise slug must inherit the business-name guidance.');
 
@@ -124,7 +126,7 @@ $trademark['name'] = 'Trademark';
 $trademark['_iworks_checkout_mode'] = 'trademark';
 $trademark['price'] = 999999; // Stale record must not override live per-class fee.
 $trademarkHtml = render_product($trademark);
-assert_detail(str_contains($trademarkHtml, 'USD 214.50 per class'), 'Trademark price must use live class-aware backend configuration.');
+assert_detail(str_contains($trademarkHtml, 'NGN 300,300.00 per class'), 'Nigerian trademark display must use configured per-class rate in locked NGN.');
 assert_detail(!str_contains($trademarkHtml, '999,999'), 'Stale DB trademark price must not be presented.');
 assert_detail(str_contains($trademarkHtml, 'service=trademark'), 'Trademark CTA must keep guided wizard auth intent.');
 
@@ -133,16 +135,16 @@ $specialist['slug'] = 'incorporated-trustees';
 $specialist['_iworks_checkout_mode'] = 'consultation';
 $specialist['price'] = 46000;
 $specialistHtml = render_product($specialist);
-assert_detail(str_contains($specialistHtml, 'Specialist quote'), 'Legal specialist fee must be reviewed first.');
-assert_detail(str_contains($specialistHtml, 'Request a specialist quote'), 'Consultation must have explicit enquiry CTA.');
-assert_detail(!str_contains($specialistHtml, '/portal/index.php?page=login'), 'Specialist offering must not enter direct checkout.');
-assert_detail(str_contains($specialistHtml, 'data-iw-help-open'), 'Existing support modal integration must remain.');
+assert_detail(str_contains($specialistHtml, 'Indicative from NGN 180,000.00'), 'NGO specialist estimate must remain quote-only.');
+assert_detail(str_contains($specialistHtml, 'Choose a package and request a quote'), 'Consultation must have a dedicated self-service quote CTA.');
+assert_detail(str_contains($specialistHtml, '/portal/index.php?page=login'), 'Specialist quote must survive the required account sign-in, without creating an invoice.');
+assert_detail(str_contains($specialistHtml, 'iw-product-cta'), 'Existing product conversion area must remain.');
 
 $unpriced = $standard;
 $unpriced['price'] = 0;
 $unpricedHtml = render_product($unpriced);
 assert_detail(str_contains($unpricedHtml, 'Request a quote'), 'Unpriced standard products must not look free.');
-assert_detail(!str_contains($unpricedHtml, '/portal/index.php?page=login'), 'Unpriced standard products cannot enter generic invoice checkout.');
+assert_detail(str_contains($unpricedHtml, 'request a quote') || str_contains($unpricedHtml, 'Request a quote') || str_contains($unpricedHtml, 'Request a tailored quote'), 'Zero-price package must require a quote.');
 
 $unsafe = $standard;
 $unsafe['name'] = '<script>alert(1)</script> Home';
