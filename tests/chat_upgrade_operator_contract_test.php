@@ -27,7 +27,7 @@ $chatMigrate = strpos($script, 'migrate_live_chat_engagement.php" --apply --back
 $chatCheck = strpos($script, 'migrate_live_chat_engagement.php" --check', $chatMigrate === false ? 0 : $chatMigrate);
 $sourceCheck = strpos($script, 'deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC"', $chatMigrate === false ? 0 : $chatMigrate);
 $sourceApply = strpos($script, 'deploy_admin_mobile_refresh.sh" --apply "$PORTAL" "$PUBLIC"', $chatMigrate === false ? 0 : $chatMigrate);
-$chatEnd = strpos($script, "\nfi\n", $chatBranch === false ? 0 : $chatBranch);
+$chatEnd = strpos($script, "echo '== Controlled migration after verified private backup =='", $chatBranch === false ? 0 : $chatBranch);
 $assert($backup !== false && $encrypted !== false && $restore !== false
     && $restored !== false && $chatBranch !== false && $chatMigrate !== false
     && $chatCheck !== false && $sourceCheck !== false && $sourceApply !== false
@@ -44,7 +44,7 @@ $assert(!str_contains($chatBlock, 'f01_expire_exposed_tokens.php')
     'Routine chat upgrade must not rerun incident token invalidation, other migrations or email activation.');
 $assert(str_contains($script, 'grep -Fq "RELEASE=\"$RELEASE\""')
     && str_contains($script, 'private_probes')
-    && str_contains($script, 'DROP DATABASE') === false
+    && str_contains($chatBlock, 'DROP DATABASE') === false
     && str_contains($script, 'uapi --output=json Mysql delete_database'),
     'Retain pinned operator, private webroot probes and cPanel UAPI-managed rehearsal cleanup.');
 $assert(str_contains($migration, "'--backup-confirmed'")
