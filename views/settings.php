@@ -89,14 +89,26 @@
             </form>
           </div>
           <div class="col-md-6">
-            <?php if (favicon_path() !== ''): ?><div class="mb-2"><img src="<?= e(favicon_path()) ?>" alt="Favicon" style="width:32px;height:32px;border-radius:6px;border:1px solid #e2e8f0;padding:4px;"></div><?php endif; ?>
+            <?php if (favicon_path() !== ''): ?>
+              <div class="mb-2 d-flex align-items-center gap-2">
+                <img src="<?= e(favicon_path()) ?>" alt="Current iWORKS favicon" style="width:48px;height:48px;border-radius:8px;border:1px solid #e2e8f0;padding:4px;object-fit:contain;">
+                <span class="small text-muted"><?= iworks_official_favicon_active() ? 'Official orange iWORKS vector (SVG) active' : 'Custom uploaded favicon active' ?></span>
+              </div>
+            <?php endif; ?>
             <form method="post" action="<?= e(url('settings')) ?>" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
               <input type="hidden" name="form_action" value="upload_favicon">
-              <label class="form-label">Upload favicon</label>
-              <input class="form-control" type="file" name="favicon_file" required>
-              <button class="btn btn-outline-primary mt-2" type="submit">Upload favicon</button>
+              <label class="form-label">Upload a custom favicon</label>
+              <input class="form-control" type="file" name="favicon_file" accept="image/png,image/jpeg,image/webp,image/gif" required>
+              <button class="btn btn-outline-primary mt-2" type="submit">Use uploaded favicon</button>
             </form>
+            <?php if (!iworks_official_favicon_active()): ?>
+              <form method="post" action="<?= e(url('settings')) ?>" class="mt-2">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="form_action" value="use_official_favicon">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Restore official iWORKS favicon</button>
+              </form>
+            <?php endif; ?>
           </div>
         </div>
       </div>
