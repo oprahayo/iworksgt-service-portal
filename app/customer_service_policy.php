@@ -66,6 +66,15 @@ function iworks_customer_published_service(array $service): ?array
         return $service;
     }
 
+    // Website builds are priced by an accepted brief, not an unbounded
+    // generic invoice. The package examples appear on the service page;
+    // approved scope is invoiced only after a human review.
+    if ($slug === 'website-design-development') {
+        $service['_iworks_checkout_mode'] = 'consultation';
+        $service['short_description'] = 'Choose a landing page, business website, online store or bespoke platform. Submit your project brief and receive a fixed written quotation before payment.';
+        return $service;
+    }
+
     // Incorporated trustees and Ltd by Guarantee need their own legal
     // intake/review; never mis-sell them as a standard self-serve Ltd.
     $specialist = in_array($slug, [
