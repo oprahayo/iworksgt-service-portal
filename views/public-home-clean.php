@@ -160,6 +160,23 @@ try { $featuredInsights = list_blog_posts_public(4); } catch (Throwable $e) { $f
 $homeCases = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 5) : [];
 $homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 3) : [];
 
+// A neutral, non-clickable client-logo strip: only actual published case
+// studies and consented customer feedback may supply brands. Never fabricate
+// clients or promote drafts. Duplicate logos are filtered by normalized name.
+$homeBrandLogos = [];
+$logoCaseRecords = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 48) : [];
+$logoReviewRecords = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 48) : [];
+foreach (array_merge($logoCaseRecords, $logoReviewRecords) as $record) {
+    if (!is_array($record)) { continue; }
+    $name = trim((string) ($record['client_name'] ?? $record['company'] ?? ''));
+    $logo = trim((string) ($record['logo_url'] ?? ''));
+    $key = strtolower($name);
+    if ($name !== '' && $logo !== '' && !isset($homeBrandLogos[$key])) {
+        $homeBrandLogos[$key] = ['name' => $name, 'logo' => $logo];
+    }
+}
+$homeBrandLogos = array_values($homeBrandLogos);
+
 $bannerTitle = trim((string) ($banner['headline'] ?? ''));
 if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right support stack.') {
     $bannerTitle = 'Ready to get started?';
@@ -192,6 +209,31 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </picture>
       </figure>
     </div>
+    <?php if ($homeBrandLogos !== []): ?>
+      <div class="container public-container iw-home-brand-ribbon" aria-label="Brands we have worked with">
+        <p class="iw-home-brand-caption">Selected brands we've worked with</p>
+        <div class="iw-home-brand-window">
+          <div class="iw-home-brand-track <?= count($homeBrandLogos) >= 4 ? 'is-scrolling' : '' ?>">
+            <div class="iw-home-brand-sequence">
+              <?php foreach ($homeBrandLogos as $brand): ?>
+                <span class="iw-home-brand-mark" title="<?= e($brand['name']) ?>">
+                  <img src="<?= e($brand['logo']) ?>" alt="<?= e($brand['name']) ?>" loading="lazy" decoding="async">
+                </span>
+              <?php endforeach; ?>
+            </div>
+            <?php if (count($homeBrandLogos) >= 4): ?>
+              <div class="iw-home-brand-sequence" aria-hidden="true">
+                <?php foreach ($homeBrandLogos as $brand): ?>
+                  <span class="iw-home-brand-mark">
+                    <img src="<?= e($brand['logo']) ?>" alt="" loading="lazy" decoding="async">
+                  </span>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+    <?php endif; ?>
   </section>
 
   <section class="iw-clean-section iw-clean-services" aria-labelledby="iw-clean-services-title">
@@ -243,10 +285,49 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     </div>
   </section>
 
+
+  <section class="iw-home-case-stories" aria-labelledby="iw-home-cases-title">
+    <div class="container public-container">
+      <div class="iw-home-case-head">
+        <span>SELECTED WORK</span>
+        <h2 id="iw-home-cases-title">Real projects. Real progress.</h2>
+        <p>Explore how we support businesses with registration, digital products, brand protection and ongoing services.</p>
+      </div>
+      <?php if ($homeCases !== []): ?>
+        <div class="iw-home-case-grid">
+          <?php foreach (array_slice($homeCases, 0, 3) as $story): ?>
+            <article class="iw-home-case-card">
+              <a href="<?= e(public_url('case_study', ['slug' => (string) $story['slug']])) ?>">
+                <div class="iw-home-case-cover">
+                  <?php if (trim((string) ($story['image_url'] ?? '')) !== ''): ?>
+                    <img src="<?= e((string) $story['image_url']) ?>" alt="" loading="lazy" decoding="async" width="540" height="330">
+                  <?php elseif (trim((string) ($story['logo_url'] ?? '')) !== ''): ?>
+                    <img class="iw-home-case-logo-only" src="<?= e((string) $story['logo_url']) ?>" alt="" loading="lazy" decoding="async" width="540" height="330">
+                  <?php else: ?>
+                    <div class="iw-home-case-no-image" aria-hidden="true"><i class="bi bi-briefcase"></i></div>
+                  <?php endif; ?>
+                </div>
+                <div class="iw-home-case-card-copy">
+                  <small><?= e((string) (($story['category'] ?? '') ?: 'CLIENT PROJECT')) ?></small>
+                  <h3><?= e((string) $story['title']) ?></h3>
+                  <p><?= e((string) ($story['summary'] ?? '')) ?></p>
+                  <span>Read case study <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+                </div>
+              </a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <p class="iw-home-case-pending">We are preparing documented client projects for publication. Only approved case studies will appear here.</p>
+      <?php endif; ?>
+      <a class="iw-home-case-all" href="<?= e(public_url('case-studies')) ?>">Explore case studies <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </div>
+  </section>
+
   <section class="iw-clean-section iw-clean-support" aria-labelledby="iw-clean-support-title">
     <div class="container public-container iw-clean-support-inner">
       <div class="iw-clean-support-photo">
-        <img src="<?= e(iworks_stock_photo_url('strategy', 1000)) ?>" alt="Business professionals discussing documents" loading="lazy" decoding="async" width="560" height="420">
+        <img src="<?= e(iworks_authentic_photo_url('support-agent') ?: iworks_stock_photo_url('strategy', 1000)) ?>" alt="Black customer support professional wearing a headset while working on a laptop" loading="lazy" decoding="async" width="560" height="420">
       </div>
       <div class="iw-clean-support-copy">
         <span class="iw-clean-overline">WHY iWORKS</span>
@@ -416,42 +497,6 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     </div></section>
   <?php endif; ?>
 
-  <?php if($homeCases): ?>
-    <section class="iw-home-case-stories" aria-labelledby="iw-home-cases-title"><div class="container public-container">
-      <div class="iw-home-case-head"><span>CASE STUDIES</span><h2 id="iw-home-cases-title">Stories of real progress.</h2></div>
-      <div class="iw-home-case-carousel" id="iwHomeCases">
-      <?php foreach($homeCases as $idx=>$story): ?>
-        <article class="iw-home-case-slide" <?= $idx>0?'hidden':'' ?>>
-          <div class="iw-home-case-copy"><span><?= e((string)$story['category']) ?></span>
-            <h3><?= e((string)$story['title']) ?></h3>
-            <p><?= e((string)$story['summary']) ?></p>
-            <a href="<?= e(public_url('case_study',['slug'=>(string)$story['slug']])) ?>">Read case study <i class="bi bi-arrow-up-right"></i></a>
-          </div>
-          <div class="iw-home-case-visual">
-            <?php if(!empty($story['logo_url'])): ?><img src="<?= e((string)$story['logo_url']) ?>" alt="<?= e((string)$story['client_name']) ?>" loading="lazy">
-            <?php else: ?><i class="bi bi-building-check" aria-hidden="true"></i><?php endif; ?>
-            <small><?= e((string)$story['client_name']) ?></small>
-            <?php if(!empty($story['outcome'])): ?><strong><?= e((string)$story['outcome']) ?></strong><?php endif; ?>
-          </div>
-        </article>
-      <?php endforeach; ?>
-      </div>
-      <div class="iw-home-case-actions"><a href="<?= e(public_url('case-studies')) ?>">All case studies <i class="bi bi-arrow-right"></i></a>
-        <div><button type="button" data-iw-case-prev aria-label="Previous case study"><i class="bi bi-arrow-left"></i></button>
-          <button type="button" data-iw-case-next aria-label="Next case study"><i class="bi bi-arrow-right"></i></button></div></div>
-    </div></section>
-    <script>
-    (function(){
-      var slides=Array.from(document.querySelectorAll('#iwHomeCases .iw-home-case-slide'));
-      if(!slides.length)return;var at=0;
-      function show(next){at=(next+slides.length)%slides.length;slides.forEach(function(slide,i){slide.hidden=i!==at;});}
-      var prev=document.querySelector('[data-iw-case-prev]');
-      var next=document.querySelector('[data-iw-case-next]');
-      if(prev)prev.addEventListener('click',function(){show(at-1)});
-      if(next)next.addEventListener('click',function(){show(at+1)});
-    })();
-    </script>
-  <?php endif; ?>
 
   <section class="iw-clean-last" aria-labelledby="iw-clean-last-title">
     <div class="container public-container iw-clean-last-inner">
