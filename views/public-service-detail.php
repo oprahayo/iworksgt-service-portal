@@ -41,6 +41,18 @@ $actionUrl = $isEnquiry
     ? public_url('contact')
     : portal_url('login', ['service' => $serviceSlug]);
 $actionHelp = $isEnquiry;
+$isWebsiteBuild = $serviceSlug === 'website-design-development';
+if ($isWebsiteBuild) {
+    require_once __DIR__ . '/../app/launch_packages.php';
+    // A public network hint only affects which price examples appear.
+    // Actual paid invoices use the signed-in customer's country.
+    $countryHint = strtoupper(trim((string) ($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
+    $customer = function_exists('current_user') ? current_user() : null;
+    $hintCurrency = $customer && is_array($customer)
+        ? (iworks_client_country_currency($customer) ?: 'NGN')
+        : ($countryHint !== '' && $countryHint !== 'NG' && $countryHint !== 'XX' ? 'USD' : 'NGN');
+    $websitePackages = iworks_website_package_options($hintCurrency);
+}
 $featured = !empty($service['featured_image_id'])
     ? get_media_asset((int) $service['featured_image_id'])
     : null;
@@ -77,6 +89,38 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
         <p class="iw-product-lead"><?= e($shortDescription) ?></p>
       <?php endif; ?>
     </header>
+
+    <?php if ($isWebsiteBuild): ?>
+      <section class="iw-website-launch-packages" aria-labelledby="iwWebsitePackagesTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwWebsitePackagesTitle">Choose the website you need</h2>
+          <p>Start with an indicative package, tell us your requirements and receive a written scope and final price before payment. These are <?= e($hintCurrency) ?> examples, not an instant charge.</p>
+        </div>
+        <div class="iw-website-launch-grid">
+          <?php foreach ($websitePackages as $webPackage): ?>
+            <label class="iw-website-launch-choice">
+              <input type="radio" form="iwWebsitePackageRequest" name="website_package" value="<?= e($webPackage['key']) ?>" <?= $webPackage['key']==='business'?'checked':'' ?>>
+              <strong><?= e($webPackage['title']) ?></strong>
+              <span class="iw-website-launch-price"><?= e($webPackage['display']) ?></span>
+              <small><?= e($webPackage['scope']) ?></small>
+            </label>
+          <?php endforeach; ?>
+        </div>
+        <form id="iwWebsitePackageRequest" method="post" action="<?= e(public_url('contact')) ?>" class="iw-website-launch-form">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="form_action" value="website_lead">
+          <input type="hidden" name="company_name" value="Website package enquiry">
+          <div class="iw-website-launch-fields">
+            <label>Full name <input required autocomplete="name" name="full_name" maxlength="150"></label>
+            <label>Email address <input required type="email" autocomplete="email" name="email" maxlength="254"></label>
+            <label>Phone (optional) <input type="tel" autocomplete="tel" name="phone" maxlength="40"></label>
+          </div>
+          <label class="iw-website-launch-brief">Tell us what you want to build <textarea name="message" required minlength="10" maxlength="4000" rows="3" placeholder="Business type, features, target launch date, example websites…"></textarea></label>
+          <p class="iw-website-launch-notice">Submitting requests a quote, not a payment. The final amount depends on the project scope, delivery requirements and your billing country. See our <a href="<?= e(public_url('terms')) ?>">Terms</a> and <a href="<?= e(public_url('privacy')) ?>">Privacy Policy</a>.</p>
+          <button class="iw-product-cta" type="submit">Request a project quote <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </form>
+      </section>
+    <?php endif; ?>
 
     <div class="iw-product-layout">
       <aside class="iw-product-side" aria-label="Service pricing and next step">
