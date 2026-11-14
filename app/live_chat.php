@@ -170,15 +170,25 @@ function iw_chat_dashboard_summary(): array
     $counts = db_one("SELECT
         SUM(CASE WHEN status='open' AND visitor_last_seen_at>=DATE_SUB(NOW(),INTERVAL 70 SECOND) THEN 1 ELSE 0 END) AS online,
         SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) AS open,
-        SUM(CASE WHEN status='open' AND (last_staff_read_at IS NULL OR
-          last_message_at>last_staff_read_at) THEN 1 ELSE 0 END) AS unanswered,
+        SUM(CASE WHEN status='open' AND EXISTS (
+            SELECT 1 FROM iw_live_messages visitor_reply
+            WHERE visitor_reply.thread_id=iw_live_threads.id
+              AND visitor_reply.sender='visitor'
+              AND visitor_reply.id > COALESCE((
+                SELECT MAX(staff_reply.id) FROM iw_live_messages staff_reply
+                WHERE staff_reply.thread_id=iw_live_threads.id AND staff_reply.sender='staff'
+              ),0)
+        ) THEN 1 ELSE 0 END) AS unanswered,
         SUM(CASE WHEN created_at>=CURDATE() THEN 1 ELSE 0 END) AS new_today
         FROM iw_live_threads") ?: [];
     $activity = db_all("SELECT DATE(created_at) AS day,COUNT(*) AS total
         FROM iw_live_messages
         WHERE created_at>=DATE_SUB(CURDATE(),INTERVAL 6 DAY)
         GROUP BY DATE(created_at) ORDER BY day ASC");
-    $recent = db_all("SELECT id,name,landing_page,status,visitor_last_seen_at,
+    $pageField = iw_chat_engagement_ready()
+        ? 'CASE WHEN track_page=1 AND current_page IS NOT NULL THEN current_page ELSE landing_page END AS page'
+        : 'landing_page AS page';
+    $recent = db_all("SELECT id,name,{$pageField},status,visitor_last_seen_at,
              country_code,last_message_at
         FROM iw_live_threads ORDER BY updated_at DESC LIMIT 5");
     return [
@@ -191,7 +201,7 @@ function iw_chat_dashboard_summary(): array
         'activity'=>array_map(static fn($row)=>['day'=>(string)$row['day'],'total'=>(int)$row['total']],$activity),
         'recent'=>array_map(static fn($row)=>[
             'id'=>(int)$row['id'],'name'=>(string)$row['name'],
-            'page'=>(string)($row['landing_page']??'/'),
+            'page'=>(string)($row['page']??'/'),
             'status'=>(string)$row['status'],
             'country'=>(string)($row['country_code']??''),
             'online'=>(string)$row['status']==='open'
@@ -315,7 +325,10 @@ function iw_chat_public_request(): void
                 : '/';
             $engagement = iw_chat_engagement_ready();
             $remember = $engagement && (string)($_POST['remember_chat'] ?? '') === '1';
-            $notify = $engagement && (string)($_POST['notify_offline'] ?? '') === '1';
+            if ($engagement && (string)($_POST['notify_offline'] ?? '') === '1' && !$remember) {
+                throw new InvalidArgumentException('Enable remembering your chat on this browser to receive offline reply emails.');
+            }
+            $notify = $engagement && $remember && (string)($_POST['notify_offline'] ?? '') === '1';
             $pageTracking = $engagement && (string)($_POST['track_page'] ?? '') === '1';
             $currentPage = $pageTracking ? iw_chat_safe_page((string)($_POST['page_path'] ?? '')) : null;
             if ($engagement) {
