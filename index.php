@@ -2172,11 +2172,28 @@ try {
                             $newOrderTitle = isset($job) && is_array($job)
                                 ? 'Order received: ' . (string) ($job['job_code'] ?? '')
                                 : 'Your iWORKS order has been received';
-                            create_notification(
-                                $customerOrderId, $newOrderTitle,
-                                'Your service request has been received. Review your invoice and service details in the portal.',
-                                $invoice ? ('invoice.php?id=' . (int)$invoice['id']) : url('applications')
-                            );
+                            $orderSummary = isset($job) && is_array($job)
+                                ? ('Service: ' . (string)($job['title'] ?? '') . "\n"
+                                    . 'Reference: ' . (string)($job['job_code'] ?? '') . "\n")
+                                : 'Your selected service bundle was received.' . "\n";
+                            if ($invoice) {
+                                $orderSummary .= 'Invoice: ' . (string)($invoice['invoice_number'] ?? '') . "\n"
+                                    . 'Amount: ' . money((float)($invoice['amount'] ?? 0),
+                                        (string)($invoice['currency'] ?? default_currency())) . "\n"
+                                    . 'Payment status: Awaiting payment.' . "\n";
+                            }
+                            $orderSummary .= 'Review your invoice and service details in the secure portal.';
+                            try {
+                                create_notification(
+                                    $customerOrderId, $newOrderTitle, $orderSummary,
+                                    $invoice ? ('invoice.php?id=' . (int)$invoice['id']) : url('applications')
+                                );
+                            } catch (Throwable $notifyError) {
+                                // A failed queue cannot roll back or duplicate a
+                                // successfully committed order. Operations see
+                                // the sanitized error and can retry delivery.
+                                error_log('iWORKS order receipt queue failed; inspect notification outbox.');
+                            }
 
                             // Only clear a pending order once checkout creates
                             // the invoice, not when a customer signs in.
