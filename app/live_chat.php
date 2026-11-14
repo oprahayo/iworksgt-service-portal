@@ -459,6 +459,10 @@ function iw_chat_staff_request(): void
                     VALUES (:id,NOW()) ON DUPLICATE KEY UPDATE last_seen_at=NOW()',
                     ['id'=>$userId]);
         $action = trim((string)($_POST['action'] ?? 'poll'));
+        if ($action === 'summary') {
+            iw_chat_send_json(['ok'=>true,'summary'=>iw_chat_dashboard_summary()]);
+            return;
+        }
         $threadId = max(0,(int)($_POST['thread_id'] ?? 0));
         if ($action === 'send' || $action === 'close') {
             $thread = db_one('SELECT id,status FROM iw_live_threads WHERE id=:id LIMIT 1',['id'=>$threadId]);
@@ -478,17 +482,34 @@ function iw_chat_staff_request(): void
                 db_execute("INSERT INTO iw_live_messages (thread_id,sender,staff_user_id,body,created_at)
                             VALUES (:id,'staff',:user,:body,NOW())",
                     ['id'=>$threadId,'user'=>$userId,'body'=>$body]);
+                $messageId = db_last_id();
                 db_execute('UPDATE iw_live_threads SET last_message_at=NOW(),updated_at=NOW(),
                             assigned_user_id=COALESCE(assigned_user_id,:user) WHERE id=:id',
                     ['id'=>$threadId,'user'=>$userId]);
+                if (iw_chat_engagement_ready()) {
+                    try {
+                        $fullThread = db_one('SELECT * FROM iw_live_threads WHERE id=:id',
+                            ['id'=>$threadId]);
+                        if ($fullThread) iw_chat_enqueue_offline_reply($fullThread,$messageId);
+                        // Best effort immediate submission; the scheduled queue
+                        // worker retains failed transport attempts for retry.
+                        iw_chat_process_email_outbox(3);
+                    } catch (Throwable $emailFailure) {
+                        error_log('[iWORKS offline chat email] '.get_class($emailFailure));
+                    }
+                }
             }
         }
         if ($threadId > 0 && in_array($action,['poll','send','close'],true)) {
             db_execute('UPDATE iw_live_threads SET last_staff_read_at=NOW() WHERE id=:id',
                 ['id'=>$threadId]);
         }
+        $extra = iw_chat_engagement_ready()
+            ? 't.current_page,t.track_page,t.notify_offline,'
+            : 'NULL AS current_page,0 AS track_page,0 AS notify_offline,';
         $threads = db_all(
             "SELECT t.id,t.name,t.email,t.ip_prefix,t.country_code,t.status,t.rating,t.landing_page,
+                    {$extra}
                     t.created_at,t.last_message_at,t.assigned_user_id,
                     IF(t.visitor_last_seen_at>=DATE_SUB(NOW(),INTERVAL 70 SECOND),1,0) AS visitor_online,
                     (SELECT MAX(m.id) FROM iw_live_messages m
