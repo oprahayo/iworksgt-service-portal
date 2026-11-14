@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../app/public-photo-config.php';
 /**
  * iWorks Journal public archive. All article data comes from published CMS
  * records; no template-authored sample posts or pretend cover photographs.
@@ -31,7 +32,7 @@ $dateLabel = static function ($value): string {
     <div class="container public-container iw-journal-container">
       <?php if ($featured): ?>
         <?php
-          $heroImage = trim((string)($featured['featured_image']['url'] ?? ''));
+          $heroImage = iworks_blog_photo_url($featured);
           $heroTag = trim((string)($featured['tag'] ?? '')) ?: 'Business';
           $heroTitle = (string)($featured['title'] ?? 'Business insight');
           $heroLink = public_url('blog_post', ['slug' => (string)($featured['slug'] ?? '')]);
@@ -78,7 +79,7 @@ $dateLabel = static function ($value): string {
         <div class="iw-journal-grid">
           <?php foreach ($articles as $index => $post): ?>
             <?php
-              $cover = trim((string)($post['featured_image']['url'] ?? ''));
+              $cover = iworks_blog_photo_url($post);
               $tag = trim((string)($post['tag'] ?? '')) ?: 'Business';
               $title = (string)($post['title'] ?? 'Business insight');
               $date = substr((string)($post['published_at'] ?? ''), 0, 10);
