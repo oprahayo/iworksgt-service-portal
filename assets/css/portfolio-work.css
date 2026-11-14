@@ -308,7 +308,7 @@ body.page-public .iw-home-case-card-copy h3{
   margin:7px 0 9px;font:750 clamp(17px,1.5vw,20px)/1.32 Inter,system-ui,sans-serif;
   letter-spacing:-.025em;color:#252b31!important
 }
-body.page-public .iw-home-case-card-copy h3 a{color:inherit;text-decoration:none}
+body.page-public .iw-home-case-card-copy h3 a{color:inherit;text-decoration:none;display:inline;height:auto!important}
 body.page-public .iw-home-case-card-copy p{
   font-size:12.5px;line-height:1.65;color:#626c75!important;
   min-height:61px;display:-webkit-box;-webkit-box-orient:vertical;
