@@ -25,8 +25,10 @@ $clientLogo = logo_path();
     <link rel="stylesheet" href="assets/css/customer-focused-checkout.css?v=20261113-catalog2">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
+  <?php require __DIR__ . '/portal-transition-head.php'; ?>
 </head>
 <body class="portal-authenticated iw-client-page <?= e($pageBodyClass ?? '') ?>">
+<?php require __DIR__ . '/portal-transition-overlay.php'; ?>
 <div class="portal-layout iw-client-layout">
   <aside class="portal-sidebar iw-client-sidebar" id="portalSidebar">
     <div class="iw-client-side-brand">
