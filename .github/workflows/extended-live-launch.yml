@@ -1,0 +1,27 @@
+name: Extended production SEO and security (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/extended-live-launch.yml"
+      - "scripts/audit_private_endpoints_live.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  seo-and-private-endpoints:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Audit public service SEO, canonicals, routes and page headings
+        shell: bash
+        run: bash scripts/audit_public_seo_live.sh https://iworksgt.com
+      - name: Audit installer and private endpoints without downloading content
+        if: always()
+        shell: bash
+        run: bash scripts/audit_private_endpoints_live.sh
