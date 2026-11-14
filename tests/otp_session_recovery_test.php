@@ -17,9 +17,10 @@ function db_one(string $sql, array $params = []): ?array
     }
     return null;
 }
+$GLOBALS['otp_test_expiry'] = '10';
 function setting(string $key, string $default = ''): string
 {
-    return $key === 'otp_expiry_minutes' ? '10' : $default;
+    return $key === 'otp_expiry_minutes' ? $GLOBALS['otp_test_expiry'] : $default;
 }
 function verify_csrf(): bool
 {
@@ -32,6 +33,11 @@ function assert_recovery(bool $condition, string $message): void
     if (!$condition) throw new RuntimeException($message);
 }
 $_SERVER['HTTP_HOST'] = 'portal.iworksgt.com';
+$GLOBALS['otp_test_expiry'] = '1';
+assert_recovery(otp_expiry_minutes() === 10, 'Admin must not configure one-minute OTPs.');
+$GLOBALS['otp_test_expiry'] = '40';
+assert_recovery(otp_expiry_minutes() === 20, 'Long-lived OTPs must be bounded.');
+$GLOBALS['otp_test_expiry'] = '10';
 session_start();
 set_pending_otp(7, 'login');
 assert_recovery(pending_otp_context()['user_id'] === 7, 'Normal session must retain pending OTP.');
