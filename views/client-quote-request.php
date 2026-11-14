@@ -39,7 +39,7 @@ $quotePackages=$quoteService['slug']==='website-design-development'
               <label class="border rounded-3 p-3 h-100 d-flex gap-2 align-items-start" style="cursor:pointer">
                 <input type="radio" name="package" value="<?= e($key) ?>" required
                   <?= $key===($quotePackageSelection?:array_key_first($quotePackages))?'checked':'' ?>>
-                <span><strong><?= e((string)$package['name']) ?></strong>
+                <span><strong><?= e((string)($package['name']??$package['title']??'Custom service')) ?></strong>
                   <small class="d-block text-muted"><?= e((string)$package['description']) ?></small>
                   <small class="d-block mt-2 fw-semibold"><?= (float)$package['amount']>0
                       ? 'Indicative from '.e(money((float)$package['amount'],(string)$package['currency']))
