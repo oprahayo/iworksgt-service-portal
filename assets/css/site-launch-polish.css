@@ -236,3 +236,108 @@ body.page-public .public-footer-contact-col p {
     overflow-wrap: anywhere;
   }
 }
+
+
+/* Real-photo editorial accents. Decorative CSS only: never substitutes
+   authentic photos, changes image files, or invents business statistics. */
+body.page-public .iw-clean-home .iw-photo-feature-hero {
+  position:relative;isolation:isolate;overflow:visible!important;
+  background:transparent!important;border-radius:0!important;
+}
+body.page-public .iw-clean-home .iw-photo-feature-hero picture {
+  display:block;position:relative;z-index:1;overflow:hidden;
+  border-radius:15px;box-shadow:0 18px 36px rgba(76,56,42,.12);
+}
+body.page-public .iw-photo-feature-hero::before {
+  content:"";position:absolute;z-index:-1;
+  inset:-26px -25px 15% 14%;pointer-events:none;
+  border-radius:45% 55% 58% 42% / 44% 36% 64% 56%;
+  transform:rotate(-11deg);
+  background:linear-gradient(145deg,rgba(249,181,131,.66),rgba(255,217,194,.83));
+}
+body.page-public .iw-photo-feature-hero::after {
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  width:110px;height:100px;right:-24px;top:-29px;opacity:.37;
+  background-image:radial-gradient(#b86d44 1.25px,transparent 1.25px);
+  background-size:16px 16px;
+}
+body.page-public .iw-photo-chip {
+  position:absolute;z-index:2;display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.97);border:1px solid rgba(226,200,181,.8);
+  border-radius:11px;padding:11px 13px;max-width:calc(100% - 32px);
+  box-shadow:0 11px 28px rgba(46,43,40,.13);
+  color:#28333a;font-size:12px;font-weight:700;
+  letter-spacing:-.01em;line-height:1.3;pointer-events:none;
+}
+body.page-public .iw-photo-chip i {font-size:17px;color:#e86720}
+body.page-public .iw-photo-chip-hero-top {top:-14px;left:-14px}
+body.page-public .iw-photo-chip-hero-bottom {right:-13px;bottom:17px}
+body.page-public .iw-clean-home .iw-photo-feature-support {
+  position:relative;isolation:isolate;overflow:visible!important;
+  background:transparent!important;border-radius:0!important;
+}
+body.page-public .iw-photo-feature-support img {
+  position:relative;z-index:1;border-radius:12px;
+  box-shadow:0 15px 30px rgba(55,45,36,.09);
+}
+body.page-public .iw-photo-feature-support::before {
+  content:"";position:absolute;pointer-events:none;z-index:-1;
+  inset:15% -20px -21px 12%;border-radius:50% 17% 42% 27%;
+  background:linear-gradient(128deg,#ffe3cd,#ffcbaa);
+}
+body.page-public .iw-photo-feature-support::after {
+  content:"";position:absolute;pointer-events:none;z-index:2;
+  top:12px;right:12px;width:65px;height:65px;border-radius:50%;
+  border:10px solid rgba(255,222,196,.63);
+}
+body.page-public .iw-photo-chip-support {bottom:-12px;left:-12px}
+/* The About photograph has its own existing genuine founder/company
+   text. Keep that content and add only a subtle warm backdrop and dots. */
+body.page-public .iw-about-team-photo.iw-photo-feature-about {isolation:isolate;overflow:visible}
+body.page-public .iw-photo-feature-about::before {
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  inset:-18px 6% 14% -18px;border-radius:38% 10% 34% 12%;
+  background:linear-gradient(145deg,#ffdfc5,#f8bd9e);transform:rotate(-5deg);
+}
+body.page-public .iw-photo-feature-about::after {
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  width:80px;height:76px;right:-20px;top:-20px;opacity:.32;
+  background-image:radial-gradient(#a65c35 1.1px,transparent 1.1px);
+  background-size:16px 16px;
+}
+body.page-public .iw-photo-feature-about img {position:relative;z-index:1}
+body.page-public .iw-photo-feature-about .iw-about-photo-label,
+body.page-public .iw-photo-feature-about figcaption {position:relative;z-index:2}
+/* Smaller editorial photos: a soft brand corner, never fabricated results. */
+body.page-public .iw-photo-feature-product,
+body.page-public .iw-photo-feature-article {
+  position:relative;isolation:isolate;
+}
+body.page-public .iw-photo-feature-product::after,
+body.page-public .iw-photo-feature-article::after {
+  content:"";position:absolute;z-index:1;pointer-events:none;
+  top:0;right:0;width:min(26%,148px);aspect-ratio:1;
+  border-radius:0 0 0 100%;
+  background:linear-gradient(135deg,rgba(252,192,154,.29),rgba(249,137,79,.12));
+}
+body.page-public .iw-home-insight-media:not(.iw-home-journal-no-cover)::after,
+body.page-public .iw-home-case-cover:has(img)::after {
+  content:"";position:absolute;pointer-events:none;
+  right:0;top:0;width:62px;height:62px;border-radius:0 0 0 100%;
+  background:rgba(255,222,199,.26);
+}
+body.page-public .iw-home-case-cover {position:relative}
+@media(max-width:767px) {
+  body.page-public .iw-photo-feature-hero::before {inset:-16px -12px 17% 13%}
+  body.page-public .iw-photo-feature-hero::after {width:75px;height:70px;right:-8px}
+  body.page-public .iw-photo-chip {font-size:11px;padding:8px 10px;gap:6px}
+  body.page-public .iw-photo-chip i {font-size:15px}
+  body.page-public .iw-photo-chip-hero-top {left:-5px;top:-10px}
+  body.page-public .iw-photo-chip-hero-bottom {right:-5px;bottom:9px}
+  body.page-public .iw-photo-chip-support {left:7px;bottom:-9px}
+  body.page-public .iw-photo-feature-support::before {right:-10px;bottom:-12px}
+}
+@media(prefers-reduced-motion:reduce) {
+  body.page-public .iw-photo-feature-hero picture,
+  body.page-public .iw-photo-feature-support img {transition:none!important}
+}
