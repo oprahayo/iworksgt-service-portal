@@ -99,6 +99,49 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
       <?php endif; ?>
     </header>
 
+    <?php if (in_array($registrationType, ['business', 'company'], true)): ?>
+      <?php
+        $domesticBusiness = function_exists('cac_money_setting')
+            ? cac_money_setting('cac_business_base_ngn', 35000) : 35000;
+        $domesticBasic = (float)((get_service_by_slug('company-registration')['price'] ?? 75000));
+        $domesticGrowth = max($domesticBasic, function_exists('cac_money_setting')
+            ? cac_money_setting('cac_company_growth_ngn', 150000) : 150000);
+        $cacChoices = [
+            ['key'=>'business','label'=>'Business Name','detail'=>'Sole proprietor or partnership, without a separate limited company.','ngn'=>$domesticBusiness,'href'=>portal_url('login',['service'=>'cac-business-name'])],
+            ['key'=>'basic','label'=>'Limited Company · up to ₦1m capital','detail'=>'Private company limited by shares, with guided directors and ownership details.','ngn'=>$domesticBasic,'href'=>portal_url('login',['service'=>'company-registration'])],
+            ['key'=>'growth','label'=>'Limited Company · ₦2m–₦5m capital','detail'=>'Higher-capital company registration with guided CAC documentation.','ngn'=>$domesticGrowth,'href'=>portal_url('login',['service'=>'company-registration','tier'=>'growth'])],
+            ['key'=>'ngo','label'=>'NGO / Incorporated Trustees','detail'=>'Nonprofits and associations need tailored document and eligibility review.','ngn'=>180000,'href'=>public_url('service',['slug'=>'incorporated-trustees'])],
+        ];
+        $market = function_exists('iworks_catalogue_market_currency') ? iworks_catalogue_market_currency() : 'NGN';
+        $fx = function_exists('fx_ngn_per_usd') ? max(1.0,fx_ngn_per_usd()) : 1600.0;
+        $premium = function_exists('setting') ? max(1.0,(float)setting('diaspora_cac_service_multiplier','1.6')) : 1.6;
+      ?>
+      <section class="iw-website-launch-packages iw-cac-public-choices" aria-labelledby="iwCacPublicChoicesTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwCacPublicChoicesTitle">Choose your registration type</h2>
+          <p>All four options are available to explore before signing in. Final fees depend on your registered country, company structure, selected add-ons and official filing charges.</p>
+        </div>
+        <div class="iw-website-launch-grid">
+          <?php foreach ($cacChoices as $option): ?>
+            <article class="iw-website-launch-choice">
+              <strong><?= e($option['label']) ?></strong>
+              <?php if ($option['key']==='ngo'): ?>
+                <span class="iw-website-launch-price">Request a specialist quote</span>
+              <?php else: ?>
+                <?php $example = $market==='USD'
+                    ? round((float)$option['ngn']*$premium/$fx,2)
+                    : (float)$option['ngn']; ?>
+                <span class="iw-website-launch-price">From <?= e(money($example,$market)) ?></span>
+              <?php endif; ?>
+              <small><?= e($option['detail']) ?></small>
+              <a href="<?= e($option['href']) ?>" class="iw-cac-public-choose">Choose this option <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+        <p class="iw-website-launch-notice">These are iWORKS service-fee estimates, not a guarantee of CAC approval or inclusion of all statutory fees, stamp duties or specialist charges. Review the full quote before payment.</p>
+      </section>
+    <?php endif; ?>
+
     <?php if ($isEnquiry && !$isWebsiteBuild): ?>
       <section class="iw-website-launch-packages" aria-labelledby="iwSpecialistTitle">
         <div class="iw-website-launch-heading">
