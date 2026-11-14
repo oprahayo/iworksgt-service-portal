@@ -385,6 +385,22 @@ function cac_filing_checkout(int $clientId,int $id): int {
              'ngn'=>$quote['ngn'],'currency'=>$quote['currency'],'total'=>$quote['total'],
              'updated'=>now(),'id'=>$id,'client'=>$clientId]);
         db()->commit();
+        // Notifications are created only after the application and invoice
+        // commit. A mail failure must not duplicate the paid-order record.
+        try {
+            create_notification(
+                $clientId, 'CAC registration order received',
+                'Your CAC application was received. Your invoice and next steps are available in the portal.',
+                'invoice.php?id=' . (int)$invoice['id']
+            );
+            notify_roles(
+                ['admin','agent','finance'], 'New CAC registration order',
+                'A new CAC application and invoice are ready for staff review.',
+                url('cac_review', ['id' => $id])
+            );
+        } catch (Throwable $notificationError) {
+            error_log('iWORKS CAC order notification queue failed; review the outbox.');
+        }
         return (int)$invoice['id'];
     } catch(Throwable $e) {
         if(db()->inTransaction())db()->rollBack();
