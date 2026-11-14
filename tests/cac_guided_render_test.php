@@ -11,13 +11,16 @@ function cac_registration_natures():array{return ['Information technology','Agri
 function cac_id_type_options():array{return ['NIN','International passport'];}
 function cac_name_review(string $name,string $kind):array{return ['errors'=>[],'warnings'=>[],'suggestions'=>[]];}
 function check_render(bool $ok,string $msg):void{if(!$ok)throw new RuntimeException($msg);}
+require dirname(__DIR__).'/app/launch_pricing.php';
+require dirname(__DIR__).'/app/order_intent.php';
 
 $render=static function(string $kind):string{
     $cacDraft=null;
     $filingKind=$kind;
     $cacQuote=null;
     $cacErrors=[];
-    $client=['email'=>'customer@example.test','phone'=>'08001234567'];
+    $client=['email'=>'customer@example.test','phone'=>'08001234567',
+        'role'=>'client','country'=>'Nigeria'];
     ob_start();
     require dirname(__DIR__).'/views/client-cac-filing.php';
     return (string)ob_get_clean();
