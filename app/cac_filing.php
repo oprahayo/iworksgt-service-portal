@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/launch_pricing.php';
+
 /**
  * iWorks pre-payment CAC filing intake. This prepares a client file for iWorks;
  * it does NOT submit anything directly to the government CAC platform.
