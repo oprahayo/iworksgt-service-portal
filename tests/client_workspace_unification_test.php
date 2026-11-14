@@ -83,6 +83,9 @@ check_client(str_contains($job, 'Older trademark intake record'), 'Legacy intake
 check_client(str_contains($domain, 'skip_duplicate_intake'), 'New trademark wizard orders must not create duplicate intake.');
 check_client(str_contains($trademark, "['skip_duplicate_intake' => true]"), 'Only trusted wizard checkout should skip duplicate intake.');
 check_client(str_contains($invoice, 'iw-invoice-main-grid') && str_contains($invoice, 'iworks_client_safe_payment_error'), 'Invoice must have new checkout and safe errors.');
-check_client(str_contains($profile, 'update_profile') && str_contains($profile, 'update_password') && str_contains($profile, 'update_pay_currency'), 'Client profile must preserve all write actions.');
+check_client(str_contains($profile, 'update_profile') && str_contains($profile, 'update_password')
+    && str_contains($profile, 'Request a billing-country review')
+    && !str_contains($profile, 'name="form_action" value="update_pay_currency"'),
+    'Client profile must retain essential edits but forbid self-service currency and billing country switches.');
 
 echo "client_workspace_unification_test passed\n";
