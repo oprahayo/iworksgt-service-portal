@@ -256,10 +256,18 @@ function iw_chat_serialise_messages(array $rows): array
 
 function iw_chat_messages(int $threadId, int $afterId = 0): array
 {
+    // Reopening a long conversation should show the latest 120 entries,
+    // rather than only its first messages from months ago.
+    if ($afterId <= 0) {
+        $rows = db_all('SELECT id,sender,body,created_at FROM iw_live_messages
+            WHERE thread_id=:thread ORDER BY id DESC LIMIT 120',
+            ['thread'=>$threadId]);
+        return iw_chat_serialise_messages(array_reverse($rows));
+    }
     return iw_chat_serialise_messages(db_all(
         'SELECT id,sender,body,created_at FROM iw_live_messages
          WHERE thread_id=:thread AND id>:after ORDER BY id ASC LIMIT 120',
-        ['thread' => $threadId, 'after' => max(0, $afterId)]
+        ['thread'=>$threadId,'after'=>max(0,$afterId)]
     ));
 }
 
