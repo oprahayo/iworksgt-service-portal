@@ -12,11 +12,11 @@ preg_match_all('~<path\b[^>]+/>~', $favicon, $faviconPaths);
 ensure_favicon(count($approvedPaths[0]) === 4
     && $approvedPaths[0] === $faviconPaths[0],
     'Favicon SVG must preserve the four original, approved iWORKS vector paths.');
-ensure_favicon(str_contains($favicon, 'viewBox="19 -74 310 310"')
+ensure_favicon(str_contains($favicon, 'viewBox="40 -54 270 270"')
     && str_contains($favicon, '<title>iWORKS GLOBAL</title>')
     && !str_contains($favicon, '<rect')
     && substr_count($favicon,'fill="#FF6600"') === 4,
-    'Favicon SVG must remain a transparent, scalable orange mark.');
+    'Favicon SVG must tightly frame the four unmodified orange paths on a transparent square canvas.');
 foreach ([32, 180] as $size) {
     $path = $root.'/assets/branding/iworks-favicon-'.$size.'.png';
     $info = @getimagesize($path);
@@ -51,4 +51,6 @@ foreach (['public-header.php','header.php','client-header.php'] as $file) {
 $installer = (string)file_get_contents($root.'/scripts/deploy_admin_mobile_refresh.sh');
 ensure_favicon(str_contains($installer,'assets/branding/*'),
     'Source installer must mirror brand favicon assets to both document roots.');
-echo "iworks_original_favicon_contract_test passed\n";
+ensure_favicon(str_contains($helpers, '?v=20261114-iworks-icon2'),
+    'Favicon links must rotate their cache version after crop updates.');
+echo "iworks_original_favicon_contract_test passed\\n";
