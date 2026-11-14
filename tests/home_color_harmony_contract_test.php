@@ -28,7 +28,7 @@ color_contract(str_contains($css, '.iw-clean-faq-intro h2,')
     && str_contains($css, '.iw-clean-faq-items summary')
     && str_contains($css, 'color:#fff!important;'),
     'FAQ headings and accordion controls must remain readable on dark surface.');
-color_contract(str_contains($header, '20261114-color2'),
+color_contract(str_contains($header, '20261114-photo2'),
     'Fallback CSS link must cache-bust the new color revision.');
 color_contract(str_contains($installer, 'check_remediation_release.php')
     && str_contains($installer, 'home-color-')
