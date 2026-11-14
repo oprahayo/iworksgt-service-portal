@@ -74,6 +74,14 @@ function iworks_customer_published_service(array $service): ?array
     ], true) || str_contains($normalized, 'incorporated trustee')
         || str_contains($normalized, 'limited by guarantee')
         || str_contains($normalized, 'ltd by guarantee');
+    // Websites, integrations and large infrastructure jobs need written scope
+    // and agreed pricing before a customer receives a payable invoice.
+    if (in_array($slug,['website-design-development','vehicles-assets-tracking',
+        'form-your-u-s-llc-in-minutes'],true)) $specialist=true;
+    if (function_exists('iworks_launch_service_rate')) {
+        $rate=iworks_launch_service_rate($service,iworks_launch_display_country());
+        if (is_array($rate) && $rate['mode']==='quote') $specialist=true;
+    }
     $service['_iworks_checkout_mode'] = $specialist ? 'consultation' : 'standard';
     return $service;
 }
@@ -118,13 +126,10 @@ function iworks_customer_registration_variants(array $service): array
         'Share capital and ownership details',
         'Guided CAC filing documentation',
     ];
-    $companyAmount = max(0, (float)($service['price'] ?? 0));
-    if (function_exists('cac_company_quote')) {
-        try { $companyAmount = cac_company_quote(1); }
-        catch (Throwable $error) { $companyAmount = 0; }
-    }
+    $regional=iworks_launch_registration_options();
+    $companyAmount=(float)$regional['company-small']['price'];
     $company['price'] = $companyAmount;
-    $company['currency'] = 'NGN';
+    $company['currency'] = (string)$regional['company-small']['currency'];
     if ($companyAmount <= 0) {
         // A missing price must never crash the public site or show a
         // misleading free-company offer.
@@ -161,8 +166,12 @@ function iworks_customer_published_catalogue(array $services): array
 function iworks_customer_can_standard_checkout(array $service): bool
 {
     $visible = iworks_customer_published_service($service);
-    return $visible !== null && ($visible['_iworks_checkout_mode'] ?? '') === 'standard'
-        && (float)($service['price'] ?? 0) > 0;
+    if ($visible === null || ($visible['_iworks_checkout_mode'] ?? '') !== 'standard') return false;
+    if (function_exists('iworks_launch_service_rate')) {
+        $rate=iworks_launch_service_rate($service,iworks_launch_display_country());
+        if ($rate !== null) return $rate['mode']==='fixed' && $rate['amount']>0;
+    }
+    return (float)($service['price'] ?? 0) > 0;
 }
 
 
@@ -183,11 +192,28 @@ function iworks_customer_product_price(array $service): array
         $currency = default_currency();
     }
     $amount = max(0.0, (float) ($service['price'] ?? 0));
+    $country=iworks_launch_display_country();
+    $regional=iworks_launch_registration_options($country);
+    if ($slug==='cac-business-name') {
+        $amount=(float)$regional['business']['price'];
+        $currency=(string)$regional['business']['currency'];
+    } elseif ($slug==='company-registration') {
+        $amount=(float)$regional['company-small']['price'];
+        $currency=(string)$regional['company-small']['currency'];
+    } elseif (function_exists('iworks_launch_service_rate')) {
+        $rate=iworks_launch_service_rate($service,$country);
+        if ($rate !== null) {
+            $amount=(float)$rate['amount'];
+            $currency=(string)$rate['currency'];
+            if ($rate['mode']==='quote') $mode='consultation';
+        }
+    }
 
     if ($slug === 'trademark' && function_exists('trademark_price_usd')) {
         try {
             $amount = max(0.0, (float) trademark_price_usd());
-            $currency = 'USD';
+            $currency = iworks_launch_currency_for_country($country);
+            if ($currency==='NGN') $amount=round($amount*fx_ngn_per_usd(),2);
         } catch (Throwable $error) {
             // Do not invent a filing fee if current configuration fails.
             $amount = 0.0;
@@ -198,11 +224,11 @@ function iworks_customer_product_price(array $service): array
     // An unconfigured CAC/trademark price must also never look "free".
     $isEnquiry = $mode === 'consultation' || $amount <= 0.0;
     $display = $mode === 'consultation'
-        ? 'Specialist quote'
+        ? ($amount>0 ? 'Indicative from '.money($amount,$currency).' · Request a quote' : 'Request a tailored quote')
         : ($isEnquiry
             ? 'Request a quote'
             : ($slug === 'trademark'
-                ? 'USD ' . number_format($amount, 2) . ' per class'
+                ? money($amount,$currency) . ' per class'
                 : money($amount, $currency)));
 
     $tax = max(0.0, (float) ($service['tax_percent'] ?? 0));
