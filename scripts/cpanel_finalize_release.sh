@@ -81,7 +81,7 @@ else
   bash "$WORK/prepare_private_migration_stage.sh" --prepare "$PORTAL" "$RELEASE"
 fi
 for f in migrate_legacy_schema.php migrate_auth_attempt_limits.php migrate_notification_email_outbox.php \
-         migrate_gateway_uniqueness.php f01_expire_exposed_tokens.php
+         migrate_gateway_uniqueness.php f01_expire_exposed_tokens.php \
          migrate_live_chat_engagement.php; do
   [[ -f "$STAGE/scripts/$f" ]] || { echo "BLOCK missing migration $f" >&2; exit 3; }
 done
