@@ -23,6 +23,9 @@ function old_input(string $field, string $default = ''): string {
 function public_url(string $slug): string { return 'https://iworksgt.com/'.$slug; }
 function url(string $slug): string { return 'index.php?page='.$slug; }
 function csrf_token(): string { return 'synthetic_csrf'; }
+function selected_if(string $value, string $selected): string {
+    return $value === $selected ? ' selected' : '';
+}
 function google_auth_ready(): bool { return false; }
 $_SERVER['HTTP_CF_IPCOUNTRY'] = 'ES';
 ob_start();
