@@ -44,6 +44,7 @@ if (!function_exists('iworks_authentic_photo_asset')) {
             'trademark' => 'trademark-branding.jpg',
             'operations' => 'operations-team.jpg',
             'digital' => 'digital-designer.jpg',
+            'support-agent' => 'support-agent-black.jpg',
         ];
         return isset($files[$key])
             ? '/assets/photography/' . $files[$key] . '?v=20261114'
