@@ -20,6 +20,12 @@ $ok(str_contains($index,"case 'system_health':") && str_contains($index,"'SELECT
 $ok(str_contains($adminHeader,'system_health') && str_contains($adminHeader,'iw-ops-site-link'),'Admin layout needs maintenance and public links.');
 $ok(str_contains($adminHeader,'admin-workspace-refresh.css'),'Admin refresh styles must load.');
 $ok(str_contains($publicHeader,'iw-mobile-menu-group') && str_contains($publicHeader,'iw-mobile-menu-book'),'Mobile grouped navigation and booking button required.');
+$ok(substr_count($publicHeader, 'data-iw-guest-cta') === 2, 'Desktop and mobile Get started menu actions must be guest-only.');
+$ok(str_contains($publicHeader, "strcasecmp(\$ctaLabel, 'Get started') === 0"), 'A customized non-onboarding header CTA must remain available.');
+$ok(str_contains($index, "case 'public_auth_status':") && str_contains($publicFooter, "if(!data||!data.authenticated)return;"), 'Only a verified portal account may hide guest-only menu actions.');
+$ok(str_contains($publicFooter, "document.querySelectorAll('[data-iw-guest-cta]')") && str_contains($publicFooter, 'cta.hidden=true;'), 'Signed-in users must not see the desktop/mobile Get started menu buttons.');
+$ok(str_contains($src('assets/css/public-navigation-cta.css'), '[data-iw-guest-cta][hidden]{display:none!important}'), 'Responsive CSS must not override hidden guest onboarding buttons.');
+$ok(str_contains($publicFooter, '<span>Dashboard</span>') && str_contains($publicFooter, "link.classList.add('iw-public-account-active');"), 'Dashboard account menu must remain available after authentication.');
 $ok(str_contains($assist,"booking && !root.contains(booking)"),'External mobile booking control must open consultation drawer.');
 $ok(!str_contains($publicHeader,'data-iw-theme-toggle'),'Dark mode control must be removed.');
 $ok(str_contains($publicHeader,"dataset.iwTheme='light'"),'Old dark theme setting must be ignored.');

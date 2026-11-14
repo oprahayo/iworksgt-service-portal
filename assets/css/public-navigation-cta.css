@@ -1,6 +1,8 @@
 /* iWorks public navigation and CTA — light-only, mobile-first overrides. */
 html[data-iw-theme="light"]{color-scheme:light}
 body.page-public .iw-mobile-menu{display:none}
+/* Avoid responsive display rules reviving the hidden onboarding CTA. */
+body.page-public [data-iw-guest-cta][hidden]{display:none!important}
 body.page-public .iw-sitewide-cta{background:linear-gradient(130deg,#0d1630 0%,#121e44 100%);color:#fff;padding:clamp(70px,8vw,112px) 20px;position:relative;overflow:hidden}
 body.page-public .iw-sitewide-cta-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;z-index:1}
 body.page-public .iw-sitewide-cta h2{font-family:Inter,system-ui,sans-serif;font-size:clamp(30px,4.7vw,58px);font-weight:800;letter-spacing:-.045em;line-height:1.12;max-width:850px;color:#fff;margin:0 auto 23px}

@@ -80,6 +80,7 @@ if (strcasecmp($ctaLabel, 'Talk to our experts') === 0) {
     $ctaLabel = 'Get started';
     $ctaHref = public_url('services');
 }
+$isGuestOnboardingCta = strcasecmp($ctaLabel, 'Get started') === 0;
 $currentPublicSlug = trim((string) ($publicPageSlug ?? ($page ?? 'home')));
 $isAboutActive = $currentPublicSlug === 'about';
 $isManagementActive = $currentPublicSlug === 'management';
@@ -271,7 +272,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <div class="iw-mobile-menu-bottom">
               <a class="iw-mobile-menu-signin iw-public-auth-status" data-iw-auth="login" data-iw-auth-status href="<?= e(portal_url('login')) ?>">Sign in</a>
               <button type="button" class="iw-mobile-menu-book" data-assist-book-open><i class="bi bi-calendar3" aria-hidden="true"></i> Request a consultation</button>
-              <a class="iw-mobile-menu-start" href="<?= e(public_url('services')) ?>">Get started <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+              <a class="iw-mobile-menu-start" data-iw-guest-cta href="<?= e(public_url('services')) ?>">Get started <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             </div>
           </div>
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
@@ -283,7 +284,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
           </ul>
           <div class="public-header-cta-group">
             <a class="public-signin-link iw-public-auth-status" href="<?= e(portal_url('login')) ?>" data-iw-auth="login" data-iw-auth-status title="Sign in" aria-label="Sign in to your iWorks account"><span><?= e($signInLabel?:'Sign In') ?></span></a>
-            <a class="btn btn-primary btn-sm public-header-main-cta" href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
+            <a class="btn btn-primary btn-sm public-header-main-cta"<?= $isGuestOnboardingCta ? ' data-iw-guest-cta' : '' ?> href="<?= e($ctaHref) ?>"><?= e($ctaLabel) ?></a>
           </div>
         </div>
       </nav>

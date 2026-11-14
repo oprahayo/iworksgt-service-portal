@@ -457,6 +457,12 @@ $socialIcons = [
           link.innerHTML='<i class="bi bi-person-circle" aria-hidden="true"></i><span>Dashboard</span>';
           link.classList.add('iw-public-account-active');
         });
+        // The portal auth-status endpoint is the authority across the split
+        // public/portal domains. Hide only menu onboarding actions for users
+        // with an active session; keep the Dashboard link visible.
+        document.querySelectorAll('[data-iw-guest-cta]').forEach(function(cta){
+          cta.hidden=true;
+        });
       }).catch(function(){});
   }
   var top=document.querySelector('[data-iw-to-top]');
