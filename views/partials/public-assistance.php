@@ -37,16 +37,23 @@ $iwAssistEndpoint = public_url('home');
     </header>
     <div class="iw-assist-chat-main">
       <div class="iw-assist-identity" id="iwAssistIdentity">
-        <div class="iw-assist-hello" aria-hidden="true"><i class="bi bi-chat-heart" aria-hidden="true"></i></div>
-        <h3>Welcome to iWorks</h3>
-        <p>Tell us who you are to start a conversation.</p>
+        <div class="iw-assist-welcome">
+          <div class="iw-assist-hello" aria-hidden="true"><i class="bi bi-chat-heart" aria-hidden="true"></i></div>
+          <div class="iw-assist-welcome-copy">
+            <h3>How can we help?</h3>
+            <p>Share your details and send us a message.</p>
+          </div>
+        </div>
         <form id="iwAssistStartForm">
           <label for="iwAssistName">Full name</label>
           <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
-          <p class="iw-assist-chat-privacy">To handle your enquiry, we record the conversation, its time and a masked network address. Approximate country may be shown to staff when available. No precise GPS is collected.</p>
           <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          <details class="iw-assist-privacy-details">
+            <summary>How we use your details</summary>
+            <p>To handle your enquiry, we record the conversation, its time and a masked network address. Approximate country may be shown to staff when available. No precise GPS is collected. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
+          </details>
           <p class="iw-assist-error" id="iwAssistStartError" role="alert" hidden></p>
         </form>
       </div>
