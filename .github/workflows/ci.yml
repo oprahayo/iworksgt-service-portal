@@ -37,6 +37,7 @@ jobs:
           bash -n scripts/deploy_business_photos.sh
           bash -n scripts/deploy_authentic_photography.sh
           bash -n scripts/deploy_home_brand_polish.sh
+          bash -n scripts/deploy_hero_logo_carousel_restore.sh
           bash -n scripts/deploy_home_color_finish.sh
           bash -n scripts/deploy_chat_launcher_bubble.sh
           bash -n scripts/deploy_chat_photo_polish.sh
