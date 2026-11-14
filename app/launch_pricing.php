@@ -83,7 +83,7 @@ function iworks_launch_registration_options(?string $country=null): array
         'business'=>[
             'key'=>'business','title'=>'Business Name','subtitle'=>'Sole proprietor or partnership',
             'description'=>'A trading name for small businesses and self-employed founders; not a limited company.',
-            'price'=>iworks_launch_amount($international?'launch_bn_usd':'cac_business_base_ngn',$international?95:49000),
+            'price'=>iworks_launch_amount($international?'launch_bn_usd':'launch_bn_ngn',$international?95:49000),
             'currency'=>$currency,'mode'=>'cac','type'=>'business','package'=>'business','badge'=>'Popular',
         ],
         'company-small'=>[
