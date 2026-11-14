@@ -73,11 +73,27 @@ function cac_filing_quote(string $kind, array $data): array {
     $directors = count(array_filter($people, static fn(array $person): bool =>
         str_contains(strtolower((string)($person['role']??'Director and shareholder')), 'director')
     ));
-    $ngn = $kind === 'business'
-        ? cac_business_quote((string)($data['structure'] ?? 'sole'), count($people))
-        : cac_company_quote($directors);
-
+    $capital = (float)($data['share_capital'] ?? 1000000);
+    if ($kind === 'company' && ($capital < 100000 || $capital > 5000000)) {
+        throw new RuntimeException('Private Ltd packages cover ₦100,000 to ₦5,000,000 issued share capital. Request a custom quote for other capital levels.');
+    }
+    $currency = strtoupper((string)($data['currency'] ?? 'NGN'));
+    if (!in_array($currency,['NGN','USD'],true)) {
+        throw new RuntimeException('Invalid billing currency in application.');
+    }
+    $country = $currency === 'NGN' ? 'NG' : 'GB'; // The currency was locked to account country when saved.
+    $options=iworks_launch_registration_options($country);
+    $tier = $kind === 'business' ? 'business' : ($capital<=1000000?'company-small':'company-large');
+    $baseline=(float)$options[$tier]['price'];
+    if ($baseline<=0) throw new RuntimeException('The registration package is not available.');
     $extras = ['registered_office'=>0.0,'privacy_advisory'=>0.0];
+    // The fixed regional package price includes the base registration scope.
+    // Additional proprietors/directors and selectable options are itemised.
+    $extraNgn = $kind==='business'
+        ? (max(1,count($people))-1)*cac_money_setting('cac_business_partner_extra_ngn',15000)
+        : (max(1,$directors)-1)*cac_money_setting('cac_company_extra_director_ngn',0);
+    $fx = max(1,fx_ngn_per_usd());
+
     $addressChoice = (string)($data['address_mode'] ?? 'own');
     if ($addressChoice === 'virtual') {
         if (!cac_virtual_address_eligible()) {
@@ -91,12 +107,12 @@ function cac_filing_quote(string $kind, array $data): array {
         if ($kind !== 'company') throw new RuntimeException('Director privacy advisory is offered for companies only.');
         $extras['privacy_advisory'] = $directors * cac_money_setting('cac_privacy_advisory_per_director_ngn', 50000);
     }
-    $baseNgn = $ngn;
-    $subtotalNgn = round($baseNgn + array_sum($extras), 2);
-    $currency = strtoupper((string) ($data['currency'] ?? 'NGN'));
-    if (!in_array($currency, ['NGN','USD'], true)) $currency = 'NGN';
-    $fx = max(1, fx_ngn_per_usd());
-    $subtotal = $currency === 'NGN' ? $subtotalNgn : round($subtotalNgn / $fx, 2);
+    $baseNgn = $currency==='NGN' ? $baseline : round($baseline*$fx,2);
+    $subtotalNgn = round($baseNgn + $extraNgn + array_sum($extras), 2);
+    // USD is a separately published international rate. Only add-ons use FX.
+    $subtotal = $currency==='NGN'
+        ? $subtotalNgn
+        : round($baseline+($extraNgn+array_sum($extras))/$fx,2);
     $taxPercent = cac_filing_tax_percent();
     $taxAmount = round($subtotal * $taxPercent / 100, 2);
     $total = round($subtotal + $taxAmount, 2);
@@ -104,7 +120,8 @@ function cac_filing_quote(string $kind, array $data): array {
         'ngn'=>round($subtotalNgn * (1 + $taxPercent / 100),2),
         'currency'=>$currency, 'subtotal'=>$subtotal, 'total'=>$total,
         'tax_percent'=>$taxPercent, 'tax_amount'=>$taxAmount,
-        'base_ngn'=>$baseNgn, 'extras_ngn'=>$extras,
+        'base_ngn'=>$baseNgn, 'base_price'=>$baseline, 'package'=>$tier,
+        'extras_ngn'=>$extras, 'additional_people_ngn'=>$extraNgn,
         'subtotal_ngn'=>$subtotalNgn, 'fx'=>$fx,
     ];
 }
@@ -158,6 +175,11 @@ function cac_filing_save(int $clientId, int $id, string $kind, array $input): in
     if (!in_array($kind,['business','company'],true)) throw new RuntimeException('Invalid CAC service selected.');
     cac_filing_schema();
     $data = cac_clean_data($input,$kind);
+    $owner=find_user_by_id($clientId);
+    if (!is_array($owner) || (string)($owner['role']??'')!=='client') {
+        throw new RuntimeException('Your customer account could not be verified.');
+    }
+    $data['currency']=iworks_launch_account_currency($owner);
     $json=json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     if ($id>0) {
         $row=cac_filing_load($id,$clientId);
@@ -322,6 +344,10 @@ function cac_filing_checkout(int $clientId,int $id): int {
         $raw=db_one('SELECT * FROM cac_filing_applications WHERE id=:id AND client_id=:client FOR UPDATE',['id'=>$id,'client'=>$clientId]);
         if(!$raw || $raw['status']!=='draft')throw new RuntimeException('Application already submitted or not found.');
         $row=cac_filing_decode($raw);
+        $account=find_user_by_id($clientId);
+        if (!is_array($account) || (string)($row['data']['currency']??'')!==iworks_launch_account_currency($account)) {
+            throw new RuntimeException('Billing country changed or is missing. Edit and save your draft to refresh its permitted currency.');
+        }
         $errors=cac_filing_missing($row);
         if($errors)throw new RuntimeException($errors[0]);
         $quote=cac_filing_quote((string)$row['kind'],$row['data']);
