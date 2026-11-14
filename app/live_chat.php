@@ -34,7 +34,10 @@ function iw_chat_resume_cookie_token(): string
 function iw_chat_remember_cookie(string $token, bool $remember): void
 {
     if (PHP_SAPI === 'cli') return;
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $local = in_array(preg_replace('/:\d+$/', '', $host),
+        ['localhost','127.0.0.1','::1'], true);
+    $https = !$local || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
     $options = [
         'expires' => $remember ? time() + 30 * 86400 : time() - 3600,
@@ -186,8 +189,8 @@ function iw_chat_dashboard_summary(): array
         WHERE created_at>=DATE_SUB(CURDATE(),INTERVAL 6 DAY)
         GROUP BY DATE(created_at) ORDER BY day ASC");
     $pageField = iw_chat_engagement_ready()
-        ? 'CASE WHEN track_page=1 AND current_page IS NOT NULL THEN current_page ELSE landing_page END AS page'
-        : 'landing_page AS page';
+        ? "CASE WHEN track_page=1 AND current_page IS NOT NULL THEN current_page ELSE 'Page not shared' END AS page"
+        : "'Page not shared' AS page";
     $recent = db_all("SELECT id,name,{$pageField},status,visitor_last_seen_at,
              country_code,last_message_at
         FROM iw_live_threads ORDER BY updated_at DESC LIMIT 5");
