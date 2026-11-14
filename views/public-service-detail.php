@@ -43,6 +43,11 @@ $actionUrl = $isEnquiry
 $actionHelp = $isEnquiry;
 $isWebsiteBuild = $serviceSlug === 'website-design-development';
 if ($isWebsiteBuild) {
+    $actionText = 'Choose a website package';
+    $actionUrl = '#iwWebsitePackagesTitle';
+    $actionHelp = false;
+}
+if ($isWebsiteBuild) {
     require_once __DIR__ . '/../app/launch_packages.php';
     // A public network hint only affects which price examples appear.
     // Actual paid invoices use the signed-in customer's country.
