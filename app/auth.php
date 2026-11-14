@@ -351,6 +351,27 @@ function otp_resend_cooldown_remaining(int $userId, string $purpose): int
     return max(0, $remaining);
 }
 
+function supersede_pending_otp_deliveries(int $userId, string $purpose): void
+{
+    if (!otp_queue_table_available()) {
+        return;
+    }
+    db_execute(
+        "UPDATE otp_dispatch_queue
+         SET status = 'superseded', otp_code = '', message = '',
+             updated_at = :updated_at, last_error = :last_error
+         WHERE user_id = :user_id
+           AND purpose = :purpose
+           AND status IN ('queued', 'processing', 'retrying')",
+        [
+            'updated_at' => now(),
+            'last_error' => 'Superseded by a newer OTP request.',
+            'user_id' => $userId,
+            'purpose' => $purpose,
+        ]
+    );
+}
+
 function queue_otp_delivery(array $user, string $purpose, string $code): bool
 {
     if (!otp_queue_table_available()) {
@@ -364,19 +385,7 @@ function queue_otp_delivery(array $user, string $purpose, string $code): bool
 
     $payload = otp_email_payload($user, $purpose, $code);
 
-    db_execute(
-        "UPDATE otp_dispatch_queue
-         SET status = 'superseded', updated_at = :updated_at, last_error = :last_error
-         WHERE user_id = :user_id
-           AND purpose = :purpose
-           AND status IN ('queued', 'processing', 'retrying')",
-        [
-            'updated_at' => now(),
-            'last_error' => 'Superseded by a newer OTP request.',
-            'user_id' => (int) $user['id'],
-            'purpose' => $purpose,
-        ]
-    );
+    supersede_pending_otp_deliveries((int) $user['id'], $purpose);
 
     db_execute(
         'INSERT INTO otp_dispatch_queue (
@@ -847,6 +856,7 @@ function start_otp_challenge(int $userId, string $purpose): void
     }
 
     $code = create_otp_code($userId, $purpose);
+    supersede_pending_otp_deliveries($userId, $purpose);
     // Try immediate local transport rather than depending on a delayed cron
     // queue or the PHP shutdown hook. Queue only an actual transport failure.
     if (!send_otp_email($user, $purpose, $code)) {
