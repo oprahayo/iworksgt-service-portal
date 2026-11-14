@@ -751,6 +751,23 @@ function otp_submission_csrf_valid(): bool
     return strlen($token) === 64 && $expected !== '' && hash_equals($expected, $token);
 }
 
+function otp_recovery_build_cookie(int $userId, string $purpose, array $user, ?int $issuedAt = null): string
+{
+    $claims = json_encode([
+        'v' => 1,
+        'u' => $userId,
+        'p' => $purpose,
+        't' => $issuedAt ?? time(),
+        'n' => bin2hex(random_bytes(16)),
+    ], JSON_UNESCAPED_SLASHES);
+    if (!is_string($claims) || empty($user['password_hash'])) {
+        throw new RuntimeException('Unable to create login verification state.');
+    }
+    $body = rtrim(strtr(base64_encode($claims), '+/', '-_'), '=');
+    $signature = hash_hmac('sha256', 'iworks-otp-recovery-v1|'.$body, (string) $user['password_hash']);
+    return $body.'.'.$signature;
+}
+
 function set_pending_otp(int $userId, string $purpose): void
 {
     if (!in_array($purpose, ['login', 'verify_email'], true)) {
@@ -765,19 +782,7 @@ function set_pending_otp(int $userId, string $purpose): void
         'purpose' => $purpose,
         'created_at' => now(),
     ];
-    $claims = json_encode([
-        'v' => 1,
-        'u' => $userId,
-        'p' => $purpose,
-        't' => time(),
-        'n' => bin2hex(random_bytes(16)),
-    ], JSON_UNESCAPED_SLASHES);
-    if (!is_string($claims)) {
-        throw new RuntimeException('Unable to create login verification state.');
-    }
-    $body = rtrim(strtr(base64_encode($claims), '+/', '-_'), '=');
-    $signature = hash_hmac('sha256', 'iworks-otp-recovery-v1|'.$body, (string) $user['password_hash']);
-    $value = $body.'.'.$signature;
+    $value = otp_recovery_build_cookie($userId, $purpose, $user);
     setcookie(otp_recovery_cookie_name(), $value, [
         'expires' => time() + otp_recovery_ttl_seconds(),
         'path' => '/',
