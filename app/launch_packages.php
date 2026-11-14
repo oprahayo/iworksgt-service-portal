@@ -42,3 +42,19 @@ function iworks_website_package_options(string $currency): array
         ],
     ];
 }
+
+
+/**
+ * Paid ordinary product prices for non-Nigerian residents, independent from
+ * the NGN exchange rate. Admin/cms domestic prices remain authoritative.
+ * Unknown overseas services require a custom quote; never silently convert a
+ * discounted Nigeria-only tariff into USD at market FX.
+ */
+function iworks_international_standard_rate(string $slug): ?float
+{
+    $rates = [
+        'seo-smm-digital-marketing' => 450.00,
+        'domain-web-hosting' => 180.00,
+    ];
+    return $rates[$slug] ?? null;
+}
