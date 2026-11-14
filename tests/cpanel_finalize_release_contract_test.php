@@ -19,7 +19,7 @@ $backup = strpos($operator, 'mysqldump --defaults-extra-file=');
 $restore = strpos($operator, 'Rehearsing complete SQL restore');
 $migration = strpos($operator, 'php "$STAGE/scripts/$script" --apply --backup-confirmed');
 $mail = strpos($operator, 'mail-probe');
-$gate = strpos($operator, 'deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC"');
+$gate = strrpos($operator, 'deploy_admin_mobile_refresh.sh" --check "$PORTAL" "$PUBLIC"');
 $publish = strpos($operator, 'deploy_admin_mobile_refresh.sh" --apply "$PORTAL" "$PUBLIC"');
 $assert($backup !== false && $restore !== false && $migration !== false
     && $mail !== false && $gate !== false && $publish !== false
