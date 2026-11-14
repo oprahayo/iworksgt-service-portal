@@ -668,7 +668,7 @@
     function offerNudgeWhenReady() {
       if (nudgeTimer !== null) { window.clearTimeout(nudgeTimer); nudgeTimer = null; }
       if (getStore('nudge-dismissed') === 'yes') return;
-      var remaining = Math.max(0, 45000 - (Date.now() - firstSeen));
+      var remaining = Math.max(0, 120000 - (Date.now() - firstSeen));
       if (remaining > 0) {
         nudgeTimer = window.setTimeout(offerNudgeWhenReady, remaining);
         return;
