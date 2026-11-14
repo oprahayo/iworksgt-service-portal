@@ -37,7 +37,7 @@ $related=array_slice(array_values($relatedBlogPosts??[]),0,3);
     </header>
     <div class="container public-container iw-reading-width iw-reading-content">
       <?php if($cover!==''): ?>
-        <figure class="iw-article-cover iw-reading-cover">
+        <figure class="iw-article-cover iw-reading-cover iw-photo-feature iw-photo-feature-article">
           <img src="<?= e($cover) ?>" alt="" loading="lazy" decoding="async" width="960" height="480">
         </figure>
       <?php endif; ?>
