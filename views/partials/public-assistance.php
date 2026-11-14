@@ -52,14 +52,16 @@ $iwAssistEndpoint = public_url('home');
           <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+          <?php if (iw_chat_engagement_ready()): ?>
           <div class="iw-assist-consent-options" role="group" aria-label="Support preferences">
             <label><input type="checkbox" name="remember_chat" value="1">
               Remember this conversation on this browser for 30 days</label>
             <label><input type="checkbox" name="notify_offline" value="1">
-              Email me when support replies while I am offline</label>
+              Email me when support replies while I am offline (requires remembering my chat)</label>
             <label><input type="checkbox" name="track_page" value="1">
               Share my current website page with support while this chat is active</label>
           </div>
+          <?php endif; ?>
           <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
           <details class="iw-assist-privacy-details">
             <summary>How we use your details</summary>
