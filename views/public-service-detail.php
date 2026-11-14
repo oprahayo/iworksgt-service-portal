@@ -41,6 +41,27 @@ $actionUrl = $isEnquiry
     ? public_url('contact')
     : portal_url('login', ['service' => $serviceSlug]);
 $actionHelp = $isEnquiry;
+$isWebsiteBuild = $serviceSlug === 'website-design-development';
+if ($isWebsiteBuild) {
+    $actionText = 'Choose a website package';
+    $actionUrl = '#iwWebsitePackagesTitle';
+    $actionHelp = false;
+} elseif ($isEnquiry) {
+    $actionText = 'Request a tailored quote';
+    $actionUrl = '#iwSpecialistQuoteForm';
+    $actionHelp = false;
+}
+if ($isWebsiteBuild) {
+    require_once __DIR__ . '/../app/launch_packages.php';
+    // A public network hint only affects which price examples appear.
+    // Actual paid invoices use the signed-in customer's country.
+    $countryHint = strtoupper(trim((string) ($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
+    $customer = function_exists('current_user') ? current_user() : null;
+    $hintCurrency = $customer && is_array($customer)
+        ? (iworks_client_country_currency($customer) ?: 'NGN')
+        : ($countryHint !== '' && $countryHint !== 'NG' && $countryHint !== 'XX' ? 'USD' : 'NGN');
+    $websitePackages = iworks_website_package_options($hintCurrency);
+}
 $featured = !empty($service['featured_image_id'])
     ? get_media_asset((int) $service['featured_image_id'])
     : null;
@@ -77,6 +98,105 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
         <p class="iw-product-lead"><?= e($shortDescription) ?></p>
       <?php endif; ?>
     </header>
+
+    <?php if (in_array($registrationType, ['business', 'company'], true)): ?>
+      <?php
+        $domesticBusiness = function_exists('cac_money_setting')
+            ? cac_money_setting('cac_business_base_ngn', 35000) : 35000;
+        $companyRecord = function_exists('get_service_by_slug')
+            ? get_service_by_slug('company-registration') : null;
+        $domesticBasic = (float)(($companyRecord['price'] ?? null) ?? 75000);
+        $domesticGrowth = max($domesticBasic, function_exists('cac_money_setting')
+            ? cac_money_setting('cac_company_growth_ngn', 150000) : 150000);
+        $cacChoices = [
+            ['key'=>'business','label'=>'Business Name','detail'=>'Sole proprietor or partnership, without a separate limited company.','ngn'=>$domesticBusiness,'href'=>portal_url('login',['service'=>'cac-business-name'])],
+            ['key'=>'basic','label'=>'Limited Company · up to ₦1m capital','detail'=>'Private company limited by shares, with guided directors and ownership details.','ngn'=>$domesticBasic,'href'=>portal_url('login',['service'=>'company-registration'])],
+            ['key'=>'growth','label'=>'Limited Company · ₦2m–₦5m capital','detail'=>'Higher-capital company registration with guided CAC documentation.','ngn'=>$domesticGrowth,'href'=>portal_url('login',['service'=>'company-registration','tier'=>'growth'])],
+            ['key'=>'ngo','label'=>'NGO / Incorporated Trustees','detail'=>'Nonprofits and associations need tailored document and eligibility review.','ngn'=>180000,'href'=>public_url('service',['slug'=>'incorporated-trustees'])],
+        ];
+        $market = function_exists('iworks_catalogue_market_currency') ? iworks_catalogue_market_currency() : 'NGN';
+        $fx = function_exists('fx_ngn_per_usd') ? max(1.0,fx_ngn_per_usd()) : 1600.0;
+        $premium = function_exists('setting') ? max(1.0,(float)setting('diaspora_cac_service_multiplier','1.6')) : 1.6;
+      ?>
+      <section class="iw-website-launch-packages iw-cac-public-choices" aria-labelledby="iwCacPublicChoicesTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwCacPublicChoicesTitle">Choose your registration type</h2>
+          <p>All four options are available to explore before signing in. Final fees depend on your registered country, company structure, selected add-ons and official filing charges.</p>
+        </div>
+        <div class="iw-website-launch-grid">
+          <?php foreach ($cacChoices as $option): ?>
+            <article class="iw-website-launch-choice">
+              <strong><?= e($option['label']) ?></strong>
+              <?php if ($option['key']==='ngo'): ?>
+                <span class="iw-website-launch-price">Request a specialist quote</span>
+              <?php else: ?>
+                <?php $example = $market==='USD'
+                    ? round((float)$option['ngn']*$premium/$fx,2)
+                    : (float)$option['ngn']; ?>
+                <span class="iw-website-launch-price">From <?= e(money($example,$market)) ?></span>
+              <?php endif; ?>
+              <small><?= e($option['detail']) ?></small>
+              <a href="<?= e($option['href']) ?>" class="iw-cac-public-choose">Choose this option <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+        <p class="iw-website-launch-notice">These are iWORKS service-fee estimates, not a guarantee of CAC approval or inclusion of all statutory fees, stamp duties or specialist charges. Review the full quote before payment.</p>
+      </section>
+    <?php endif; ?>
+
+    <?php if ($isEnquiry && !$isWebsiteBuild): ?>
+      <section class="iw-website-launch-packages" aria-labelledby="iwSpecialistTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwSpecialistTitle">Request a tailored quote</h2>
+          <p>Submit your requirements in one step. An iWORKS specialist will review the scope and provide a written quotation before any payment is requested.</p>
+        </div>
+        <form id="iwSpecialistQuoteForm" method="post" action="<?= e(public_url('contact')) ?>" class="iw-website-launch-form">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="form_action" value="website_lead">
+          <input type="hidden" name="company_name" value="<?= e('Service enquiry: '.$serviceName) ?>">
+          <div class="iw-website-launch-fields">
+            <label>Full name <input required autocomplete="name" name="full_name" maxlength="150"></label>
+            <label>Email address <input required type="email" autocomplete="email" name="email" maxlength="254"></label>
+            <label>Phone (optional) <input autocomplete="tel" type="tel" name="phone" maxlength="40"></label>
+          </div>
+          <label class="iw-website-launch-brief">What do you need? <textarea name="message" required minlength="10" maxlength="4000" rows="3" placeholder="Describe your request, deadlines and relevant requirements…"></textarea></label>
+          <p class="iw-website-launch-notice">This requests a quotation and creates no paid order. We will confirm fees and any official charges before proceeding. See <a href="<?= e(public_url('terms')) ?>">Terms</a> and <a href="<?= e(public_url('privacy')) ?>">Privacy</a>.</p>
+          <button type="submit" class="iw-product-cta">Send quote request <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </form>
+      </section>
+    <?php endif; ?>
+
+    <?php if ($isWebsiteBuild): ?>
+      <section class="iw-website-launch-packages" aria-labelledby="iwWebsitePackagesTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwWebsitePackagesTitle">Choose the website you need</h2>
+          <p>Start with an indicative package, tell us your requirements and receive a written scope and final price before payment. These are <?= e($hintCurrency) ?> examples, not an instant charge.</p>
+        </div>
+        <div class="iw-website-launch-grid">
+          <?php foreach ($websitePackages as $webPackage): ?>
+            <label class="iw-website-launch-choice">
+              <input type="radio" form="iwWebsitePackageRequest" name="website_package" value="<?= e($webPackage['key']) ?>" <?= $webPackage['key']==='business'?'checked':'' ?>>
+              <strong><?= e($webPackage['title']) ?></strong>
+              <span class="iw-website-launch-price"><?= e($webPackage['display']) ?></span>
+              <small><?= e($webPackage['scope']) ?></small>
+            </label>
+          <?php endforeach; ?>
+        </div>
+        <form id="iwWebsitePackageRequest" method="post" action="<?= e(public_url('contact')) ?>" class="iw-website-launch-form">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="form_action" value="website_lead">
+          <input type="hidden" name="company_name" value="Website package enquiry">
+          <div class="iw-website-launch-fields">
+            <label>Full name <input required autocomplete="name" name="full_name" maxlength="150"></label>
+            <label>Email address <input required type="email" autocomplete="email" name="email" maxlength="254"></label>
+            <label>Phone (optional) <input type="tel" autocomplete="tel" name="phone" maxlength="40"></label>
+          </div>
+          <label class="iw-website-launch-brief">Tell us what you want to build <textarea name="message" required minlength="10" maxlength="4000" rows="3" placeholder="Business type, features, target launch date, example websites…"></textarea></label>
+          <p class="iw-website-launch-notice">Submitting requests a quote, not a payment. The final amount depends on the project scope, delivery requirements and your billing country. See our <a href="<?= e(public_url('terms')) ?>">Terms</a> and <a href="<?= e(public_url('privacy')) ?>">Privacy Policy</a>.</p>
+          <button class="iw-product-cta" type="submit">Request a project quote <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </form>
+      </section>
+    <?php endif; ?>
 
     <div class="iw-product-layout">
       <aside class="iw-product-side" aria-label="Service pricing and next step">

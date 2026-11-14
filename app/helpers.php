@@ -543,6 +543,16 @@ function portal_country_options(): array
         'IN' => 'India',
         'DE' => 'Germany',
         'FR' => 'France',
+        'AU' => 'Australia',
+        'NZ' => 'New Zealand',
+        'ES' => 'Spain',
+        'IT' => 'Italy',
+        'NL' => 'Netherlands',
+        'IE' => 'Ireland',
+        'BE' => 'Belgium',
+        'SE' => 'Sweden',
+        'CH' => 'Switzerland',
+        'PT' => 'Portugal',
     ];
 }
 
@@ -658,8 +668,44 @@ function normalize_payment_currency(string $currency): string
     return $currency;
 }
 
+/**
+ * Single billing currency for a customer based on their declared country of
+ * residence in their authenticated account. Country must be validated again
+ * with billing/identity evidence before a paid international launch.
+ *
+ * An unrecognised or missing country is not guessed from IP or browser
+ * language; onboarding must obtain it before checkout.
+ */
+function iworks_client_country_currency(?array $user): string
+{
+    if (!$user || (string) ($user['role'] ?? '') !== 'client') return '';
+    $country = strtolower(trim((string) ($user['country'] ?? '')));
+    if ($country === '') return '';
+    return in_array($country, ['nigeria', 'ng'], true) ? 'NGN' : 'USD';
+}
+
+function iworks_enforce_client_currency(string $requested, ?array $user): string
+{
+    $required = iworks_client_country_currency($user);
+    if ($required === '') {
+        if ($user && (string)($user['role'] ?? '') === 'client') {
+            throw new RuntimeException('Confirm your country of residence in your profile before ordering.');
+        }
+        return normalize_payment_currency($requested);
+    }
+    if (strtoupper(trim($requested)) !== $required) {
+        throw new RuntimeException('Orders for your registered country must use ' . $required . '. Contact support if your residence has changed.');
+    }
+    return $required;
+}
+
 function active_pay_currency(): string
 {
+    // The country of the authenticated client overrides a stale preference
+    // cookie, previous session or manually forged currency parameter.
+    $user = function_exists('current_user') ? current_user() : null;
+    $locked = iworks_client_country_currency(is_array($user) ? $user : null);
+    if ($locked !== '') return $locked;
     $sessionCurrency = $_SESSION['pay_currency'] ?? '';
     if (is_string($sessionCurrency) && $sessionCurrency !== '') {
         return normalize_payment_currency($sessionCurrency);
@@ -677,7 +723,8 @@ function active_pay_currency(): string
 
 function set_active_pay_currency(string $currency): string
 {
-    $normalized = normalize_payment_currency($currency);
+    $user = function_exists('current_user') ? current_user() : null;
+    $normalized = iworks_enforce_client_currency($currency, is_array($user) ? $user : null);
     $_SESSION['pay_currency'] = $normalized;
 
     if (!headers_sent()) {

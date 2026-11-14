@@ -410,12 +410,22 @@ try {
             $isAsyncLead = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
             try {
                 require_csrf();
+                $leadMessage = trim((string) ($_POST['message'] ?? ''));
+                $leadPackage = trim((string) ($_POST['website_package'] ?? ''));
+                if ($leadPackage !== '') {
+                    require_once __DIR__ . '/app/launch_packages.php';
+                    $validPackages = array_column(iworks_website_package_options('NGN'), 'title', 'key');
+                    if (!array_key_exists($leadPackage, $validPackages)) {
+                        throw new RuntimeException('Select a valid website package.');
+                    }
+                    $leadMessage = 'Website package: ' . $validPackages[$leadPackage] . "\n" . $leadMessage;
+                }
                 save_website_lead([
                     'full_name' => (string) ($_POST['full_name'] ?? ''),
                     'email' => (string) ($_POST['email'] ?? ''),
                     'phone' => (string) ($_POST['phone'] ?? ''),
                     'company_name' => (string) ($_POST['company_name'] ?? ''),
-                    'message' => (string) ($_POST['message'] ?? ''),
+                    'message' => $leadMessage,
                     'page_slug' => $publicSlug,
                 ]);
                 $message = 'Your enquiry has been sent. Our team will respond as soon as possible.';
@@ -942,6 +952,7 @@ try {
 
             require_csrf();
             $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
+            $currency = iworks_enforce_client_currency($currency, current_user());
             set_active_pay_currency($currency);
 
             $redirectTo = trim((string) ($_POST['redirect_to'] ?? ''));
@@ -1798,7 +1809,8 @@ try {
                         foreach ([
                             'cac_business_base_ngn' => 26000,
                             'cac_business_partner_extra_ngn' => 15000,
-                            'cac_company_base_ngn' => 120000,
+                            'cac_company_base_ngn' => 75000,
+                            'cac_company_growth_ngn' => 150000,
                             'cac_company_extra_director_ngn' => 0,
                             'cac_virtual_address_ngn' => 0,
                             'cac_privacy_advisory_per_director_ngn' => 50000,
@@ -1812,6 +1824,14 @@ try {
                         }
                         if ($amounts['cac_business_base_ngn'] <= 0 || $amounts['cac_company_base_ngn'] <= 0) {
                             throw new RuntimeException('Business Name and Limited Company base prices must be greater than zero.');
+                        }
+                        if ($amounts['cac_company_growth_ngn'] < $amounts['cac_company_base_ngn']) {
+                            throw new RuntimeException('Growth-company pricing cannot be lower than the basic company fee.');
+                        }
+                        $diasporaMultiplier = filter_var($_POST['diaspora_cac_service_multiplier'] ?? '1.6', FILTER_VALIDATE_FLOAT);
+                        if ($diasporaMultiplier === false || !is_finite((float)$diasporaMultiplier)
+                            || $diasporaMultiplier < 1.0 || $diasporaMultiplier > 4.0) {
+                            throw new RuntimeException('Set an overseas support multiplier between 1.0 and 4.0.');
                         }
                         $virtualEnabled = isset($_POST['cac_virtual_address_enabled']);
                         $office = trim((string)($_POST['cac_virtual_address_details'] ?? ''));
@@ -1827,6 +1847,7 @@ try {
                                 if ($key === 'cac_company_base_ngn') continue;
                                 set_setting($key, number_format($value,2,'.',''));
                             }
+                            set_setting('diaspora_cac_service_multiplier', number_format((float)$diasporaMultiplier,2,'.',''));
                             set_setting('cac_virtual_address_enabled', $virtualEnabled ? '1' : '0');
                             set_setting('cac_virtual_address_details', $virtualEnabled ? $office : '');
                             db_execute("UPDATE services SET price=:price, currency='NGN' WHERE id=:id",
@@ -2111,9 +2132,17 @@ try {
                             // or commission overrides for standard service jobs.
                             unset($payload['agent_id'], $payload['amount'], $payload['commission_percent'],
                                 $payload['tax_percent'], $payload['tax_mode'], $payload['currency']);
-                            if (!empty($payload['pay_currency'])) {
-                                set_active_pay_currency((string) $payload['pay_currency']);
+                            // Never trust a client-supplied payment currency or
+                            // convert a domestic tariff into an overseas tariff.
+                            $lockedCurrency = iworks_client_country_currency(current_user());
+                            if ($lockedCurrency === '') {
+                                throw new RuntimeException('Confirm your country of residence in your profile before checkout.');
                             }
+                            iworks_enforce_client_currency(
+                                (string)($payload['pay_currency'] ?? $lockedCurrency), current_user()
+                            );
+                            $payload['pay_currency'] = $lockedCurrency;
+                            set_active_pay_currency($lockedCurrency);
                         }
 
                         if (has_role(['client'])) {
@@ -2125,7 +2154,7 @@ try {
                             if ($hasMultiServices) {
                                 $bundle = create_client_order_bundle($payload);
                                 $invoice = get_invoice((int) ($bundle['invoice_id'] ?? 0));
-                                notify_roles(['admin', 'finance'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
+                                notify_roles(['admin', 'agent', 'finance'], 'New service bundle order', 'A new multi-service order was created.', 'invoice.php?id=' . (int) ($bundle['invoice_id'] ?? 0));
                             } else {
                                 if (is_array($selectedServiceIds) && !empty($selectedServiceIds[0])) {
                                     $payload['service_id'] = (int) $selectedServiceIds[0];
@@ -2133,9 +2162,37 @@ try {
                                 $jobId = create_job($payload);
                                 $job = get_job($jobId);
                                 if ($job) {
-                                    notify_roles(['admin', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
+                                    notify_roles(['admin', 'agent', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
                                 }
                                 $invoice = get_invoice_by_job_id($jobId);
+                            }
+                            // Send the customer a transaction notification
+                            // through the existing durable email outbox.
+                            $customerOrderId = (int) current_user()['id'];
+                            $newOrderTitle = isset($job) && is_array($job)
+                                ? 'Order received: ' . (string) ($job['job_code'] ?? '')
+                                : 'Your iWORKS order has been received';
+                            $orderSummary = isset($job) && is_array($job)
+                                ? ('Service: ' . (string)($job['title'] ?? '') . "\n"
+                                    . 'Reference: ' . (string)($job['job_code'] ?? '') . "\n")
+                                : 'Your selected service bundle was received.' . "\n";
+                            if ($invoice) {
+                                $orderSummary .= 'Invoice: ' . (string)($invoice['invoice_number'] ?? '') . "\n"
+                                    . 'Amount: ' . money((float)($invoice['amount'] ?? 0),
+                                        (string)($invoice['currency'] ?? default_currency())) . "\n"
+                                    . 'Payment status: Awaiting payment.' . "\n";
+                            }
+                            $orderSummary .= 'Review your invoice and service details in the secure portal.';
+                            try {
+                                create_notification(
+                                    $customerOrderId, $newOrderTitle, $orderSummary,
+                                    $invoice ? ('invoice.php?id=' . (int)$invoice['id']) : url('applications')
+                                );
+                            } catch (Throwable $notifyError) {
+                                // A failed queue cannot roll back or duplicate a
+                                // successfully committed order. Operations see
+                                // the sanitized error and can retry delivery.
+                                error_log('iWORKS order receipt queue failed; inspect notification outbox.');
                             }
 
                             // Only clear a pending order once checkout creates
@@ -2159,7 +2216,7 @@ try {
                         $jobId = create_job($payload);
                         $job = get_job($jobId);
                         if ($job) {
-                            notify_roles(['admin', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
+                            notify_roles(['admin', 'agent', 'finance'], 'New service order', 'A new order was created: ' . $job['job_code'] . '.', url('job', ['id' => $jobId]));
                         }
                         flash('success', 'Job created successfully.');
                         redirect(url('job', ['id' => $jobId]));
@@ -3440,6 +3497,13 @@ try {
                         if ($fullName === '' && ($firstName === '' || $lastName === '')) {
                             throw new RuntimeException('Provide full name or both first and last name.');
                         }
+                        if (($user['role'] ?? '') === 'client') {
+                            $requestedCountry = trim((string)($_POST['country'] ?? ''));
+                            $currentCountry = trim((string)($user['country'] ?? ''));
+                            if (strcasecmp($requestedCountry, $currentCountry) !== 0) {
+                                throw new RuntimeException('For billing security, changing your country of residence requires support verification. You can still edit your other profile details.');
+                            }
+                        }
 
                         db_execute(
                             'UPDATE users
@@ -3502,6 +3566,7 @@ try {
 
                     if ($action === 'update_pay_currency') {
                         $currency = normalize_payment_currency((string) ($_POST['pay_currency'] ?? ''));
+                        $currency = iworks_enforce_client_currency($currency, current_user());
                         set_active_pay_currency($currency);
                         flash('success', 'Preferred pay currency updated.');
                     }

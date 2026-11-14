@@ -9,6 +9,22 @@ declare(strict_types=1);
  * Admin and agent service management must continue to read the unmodified
  * list_services()/get_service() records.
  */
+/**
+ * Pricing market for listings is only a hint for anonymous visitors. A signed
+ * in client's country is authoritative at invoice creation; IP headers never
+ * authorize a lower rate or a payment currency.
+ */
+function iworks_catalogue_market_currency(): string
+{
+    $user = function_exists('current_user') ? current_user() : null;
+    if (is_array($user) && ($user['role'] ?? '') === 'client'
+        && function_exists('iworks_client_country_currency')) {
+        return iworks_client_country_currency($user) ?: 'NGN';
+    }
+    $hint = strtoupper(trim((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
+    return $hint !== '' && !in_array($hint, ['NG','XX','T1'], true) ? 'USD' : 'NGN';
+}
+
 function iworks_customer_published_service(array $service): ?array
 {
     $slug = strtolower(trim((string)($service['slug'] ?? '')));
@@ -66,6 +82,15 @@ function iworks_customer_published_service(array $service): ?array
         return $service;
     }
 
+    // Website builds are priced by an accepted brief, not an unbounded
+    // generic invoice. The package examples appear on the service page;
+    // approved scope is invoiced only after a human review.
+    if ($slug === 'website-design-development') {
+        $service['_iworks_checkout_mode'] = 'consultation';
+        $service['short_description'] = 'Choose a landing page, business website, online store or bespoke platform. Submit your project brief and receive a fixed written quotation before payment.';
+        return $service;
+    }
+
     // Incorporated trustees and Ltd by Guarantee need their own legal
     // intake/review; never mis-sell them as a standard self-serve Ltd.
     $specialist = in_array($slug, [
@@ -75,6 +100,18 @@ function iworks_customer_published_service(array $service): ?array
         || str_contains($normalized, 'limited by guarantee')
         || str_contains($normalized, 'ltd by guarantee');
     $service['_iworks_checkout_mode'] = $specialist ? 'consultation' : 'standard';
+    if (!$specialist && iworks_catalogue_market_currency() === 'USD') {
+        require_once __DIR__ . '/launch_packages.php';
+        $rate = iworks_international_standard_rate($slug);
+        if ($rate !== null) {
+            $service['price'] = $rate;
+            $service['currency'] = 'USD';
+        } else {
+            // The overseas market cannot pay a Nigeria-only service price
+            // converted at FX where no international offer exists.
+            $service['_iworks_checkout_mode'] = 'consultation';
+        }
+    }
     return $service;
 }
 
@@ -183,6 +220,16 @@ function iworks_customer_product_price(array $service): array
         $currency = default_currency();
     }
     $amount = max(0.0, (float) ($service['price'] ?? 0));
+    if (in_array($slug, ['company-registration','cac-business-name'], true)
+        && iworks_catalogue_market_currency() === 'USD') {
+        // This display matches the default one-director / sole-proprietor
+        // iWORKS-only guided quote; official filing fees remain separate.
+        $marketPremium = max(1.0, min(4.0,(float)(function_exists('setting')
+            ? setting('diaspora_cac_service_multiplier','1.6') : '1.6')));
+        $rate = function_exists('fx_ngn_per_usd') ? max(1.0,fx_ngn_per_usd()) : 1600.0;
+        $amount = round($amount * $marketPremium / $rate,2);
+        $currency = 'USD';
+    }
 
     if ($slug === 'trademark' && function_exists('trademark_price_usd')) {
         try {

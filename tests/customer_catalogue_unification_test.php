@@ -32,6 +32,7 @@ $rows=[
     $offer('launch-a-company-package','Launch a Company Package'),
     $offer('trademark','Trademark'),
     $offer('website-design-development','Website Design & Development'),
+    $offer('seo-smm-digital-marketing','SEO & Digital Marketing'),
     $offer('social-enterprise-ltd-by-guarantee','Social Enterprise (Ltd by Guarantee)'),
     $offer('incorporated-trustees','Incorporated Trustees'),
     $offer('custom-service-system','Custom Service',['price'=>0]),
@@ -41,7 +42,7 @@ $rows=[
 ];
 $catalogue=iworks_customer_published_catalogue($rows);
 $slugs=array_column($catalogue,'slug');
-check_catalogue(count($catalogue)===6,'Two registration choices and four additional current products should be visible.');
+check_catalogue(count($catalogue)===7,'Two registration choices and five additional current products should be visible.');
 check_catalogue(count(array_unique($slugs))===count($slugs),'Catalogue slugs must be unique.');
 check_catalogue(in_array('company-registration',$slugs,true),'One canonical CAC product must remain.');
 check_catalogue(!in_array('launch-a-company-package',$slugs,true),'Legacy company bundle must never be a new customer purchase.');
@@ -71,21 +72,21 @@ check_catalogue($bySlug['trademark']['_iworks_checkout_mode']==='trademark',
 check_catalogue($bySlug['incorporated-trustees']['_iworks_checkout_mode']==='consultation'
     && $bySlug['social-enterprise-ltd-by-guarantee']['_iworks_checkout_mode']==='consultation',
     'Specialist NGO/legal products must not use generic checkout.');
-check_catalogue(iworks_customer_can_standard_checkout($bySlug['website-design-development']),
-    'Website design should retain ordinary invoice checkout.');
+check_catalogue(!iworks_customer_can_standard_checkout($bySlug['website-design-development']),
+    'Website projects must request an approved scope before a payable invoice.');
 foreach(['cac-business-name','company-registration','trademark','incorporated-trustees','social-enterprise-ltd-by-guarantee'] as $slug) {
     check_catalogue(!iworks_customer_can_standard_checkout($bySlug[$slug]),'Unsafe checkout allowed: '.$slug);
 }
-check_catalogue(!iworks_customer_can_standard_checkout($rows[10]),'Inactive products must not be purchased.');
-check_catalogue(!iworks_customer_can_standard_checkout($rows[11]),'Private products must not be purchased.');
+check_catalogue(!iworks_customer_can_standard_checkout($rows[11]),'Inactive products must not be purchased.');
+check_catalogue(!iworks_customer_can_standard_checkout($rows[12]),'Private products must not be purchased.');
 $zero=$offer('free-but-not-public','Unsupported zero-price item',['price'=>0]);
 check_catalogue(!iworks_customer_can_standard_checkout($zero),'Zero-price standard orders must not become silent invoices.');
 
-$checkoutService=$bySlug['website-design-development'];
+$checkoutService=$bySlug['seo-smm-digital-marketing'];
 ob_start();
 require dirname(__DIR__).'/views/client-service-checkout.php';
 $html=(string)ob_get_clean();
-check_catalogue(str_contains($html,'Review your service') && str_contains($html,'Website Design'),
+check_catalogue(str_contains($html,'Review your service') && str_contains($html,'SEO &amp; Digital Marketing'),
     'Single-product review must display chosen product.');
 check_catalogue(str_contains($html,'name="service_id"') && str_contains($html,'safe-token'),
     'Checkout must post service ID and CSRF token.');
@@ -114,8 +115,9 @@ check_catalogue(str_contains($router,'iworks_customer_can_standard_checkout($req
 check_catalogue(str_contains($router,'unset($payload') &&
     str_contains($router,'$payload[\'title\'] = (string)$requestedService[\'name\']'),
     'POST cannot override prices and product titles.');
-check_catalogue(str_contains($auth,"return url('cac_filing', ['type' => 'company']);"),
-    'Ltd sign-in must preserve the selected company intake route.');
+check_catalogue(str_contains($auth,"return url('cac_filing', ['type' => 'company'] +")
+    && str_contains($auth,"['tier' => 'growth']"),
+    'Ltd sign-in must preserve standard and higher-capital intake selections.');
 check_catalogue(str_contains($client,'iworks_customer_product_price($service)') &&
     str_contains($detail,'iworks_customer_product_price($service)') &&
     str_contains($detail,'Request a specialist quote') &&

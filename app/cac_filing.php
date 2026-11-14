@@ -58,14 +58,22 @@ function cac_business_quote(string $structure, int $peopleCount): float {
     if ($peopleCount > 20) throw new RuntimeException('Contact support to register more than 20 partners.');
     return $base + ($peopleCount - 1) * $extra;
 }
-function cac_company_quote(int $directorCount): float {
+function cac_company_quote(int $directorCount, float $shareCapital = 1000000): float {
     if ($directorCount < 1 || $directorCount > 20) throw new RuntimeException('Add between 1 and 20 directors.');
+    if ($shareCapital <= 0 || $shareCapital > 5000000) {
+        throw new RuntimeException('Share capital above NGN 5 million, or an invalid amount, requires a specialist quote.');
+    }
     $company = get_service_by_slug('company-registration');
     if (!$company) throw new RuntimeException('Company registration is not currently available.');
     $amount = (float)($company['price'] ?? 0);
     $currency = strtoupper((string)($company['currency'] ?? 'NGN'));
     $base = $currency === 'NGN' ? $amount : convert_amount($amount, $currency, 'NGN');
     if ($base <= 0) throw new RuntimeException('Ask iWorks to configure a company registration price.');
+    // The higher-capital filing pathway uses a separately published rate;
+    // no customer-entered unit price is ever accepted.
+    if ($shareCapital > 1000000) {
+        $base = max($base, cac_money_setting('cac_company_growth_ngn', 150000));
+    }
     return round($base + ($directorCount - 1) * cac_money_setting('cac_company_extra_director_ngn', 0), 2);
 }
 function cac_filing_quote(string $kind, array $data): array {
@@ -75,7 +83,8 @@ function cac_filing_quote(string $kind, array $data): array {
     ));
     $ngn = $kind === 'business'
         ? cac_business_quote((string)($data['structure'] ?? 'sole'), count($people))
-        : cac_company_quote($directors);
+        : cac_company_quote($directors, is_numeric($data['share_capital'] ?? null)
+            ? (float)$data['share_capital'] : 1000000);
 
     $extras = ['registered_office'=>0.0,'privacy_advisory'=>0.0];
     $addressChoice = (string)($data['address_mode'] ?? 'own');
@@ -95,6 +104,21 @@ function cac_filing_quote(string $kind, array $data): array {
     $subtotalNgn = round($baseNgn + array_sum($extras), 2);
     $currency = strtoupper((string) ($data['currency'] ?? 'NGN'));
     if (!in_array($currency, ['NGN','USD'], true)) $currency = 'NGN';
+    // The customer's registered country determines the checkout market,
+    // not the manually supplied currency on a draft/application.
+    $actor = function_exists('current_user') ? current_user() : null;
+    $required = function_exists('iworks_client_country_currency')
+        && is_array($actor) ? iworks_client_country_currency($actor) : '';
+    if ($required !== '') $currency = $required;
+    if ($required === 'USD') {
+        $premium = (float)setting('diaspora_cac_service_multiplier', '1.6');
+        if (!is_finite($premium) || $premium < 1.0 || $premium > 4.0) {
+            throw new RuntimeException('International CAC pricing is not configured.');
+        }
+        // iWORKS support fee only; government and adviser fees must be
+        // separately disclosed, never incorrectly marked up as tax.
+        $subtotalNgn = round($subtotalNgn * $premium, 2);
+    }
     $fx = max(1, fx_ngn_per_usd());
     $subtotal = $currency === 'NGN' ? $subtotalNgn : round($subtotalNgn / $fx, 2);
     $taxPercent = cac_filing_tax_percent();
@@ -150,6 +174,11 @@ function cac_clean_data(array $input, string $kind): array {
         $out['business_address'] = cac_registered_office('virtual', '');
     }
     $out['currency'] = in_array(strtoupper($out['currency']),['NGN','USD'],true) ? strtoupper($out['currency']) : 'NGN';
+    $actor = function_exists('current_user') ? current_user() : null;
+    if (is_array($actor) && function_exists('iworks_client_country_currency')) {
+        $required = iworks_client_country_currency($actor);
+        if ($required !== '') $out['currency'] = $required;
+    }
     $people=is_array($input['people'] ?? null) ? array_values($input['people']) : [];
     $out['people']=array_map('cac_clean_person', array_filter(array_slice($people,0,20),'is_array'));
     return $out;
@@ -356,6 +385,22 @@ function cac_filing_checkout(int $clientId,int $id): int {
              'ngn'=>$quote['ngn'],'currency'=>$quote['currency'],'total'=>$quote['total'],
              'updated'=>now(),'id'=>$id,'client'=>$clientId]);
         db()->commit();
+        // Notifications are created only after the application and invoice
+        // commit. A mail failure must not duplicate the paid-order record.
+        try {
+            create_notification(
+                $clientId, 'CAC registration order received',
+                'Your CAC application was received. Your invoice and next steps are available in the portal.',
+                'invoice.php?id=' . (int)$invoice['id']
+            );
+            notify_roles(
+                ['admin','agent','finance'], 'New CAC registration order',
+                'A new CAC application and invoice are ready for staff review.',
+                url('cac_review', ['id' => $id])
+            );
+        } catch (Throwable $notificationError) {
+            error_log('iWORKS CAC order notification queue failed; review the outbox.');
+        }
         return (int)$invoice['id'];
     } catch(Throwable $e) {
         if(db()->inTransaction())db()->rollBack();

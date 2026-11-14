@@ -65,16 +65,8 @@ $activePayCurrency = active_pay_currency();
   <aside class="iw-client-profile-side">
     <section class="iw-tm-panel">
       <div class="iw-client-detail-panel-title"><h2>Payment preference</h2></div>
-      <p class="iw-client-small-muted">Select the currency you prefer when starting an order. Invoices already issued keep their original currency.</p>
-      <form method="post" action="<?= e(url('profile')) ?>">
-        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="form_action" value="update_pay_currency">
-        <div class="iw-tm-field"><label for="cpCurrency">Preferred currency</label><select name="pay_currency" id="cpCurrency">
-          <?php foreach (payment_currency_options() as $currencyCode): ?>
-            <option value="<?= e($currencyCode) ?>" <?= selected_if($currencyCode, $activePayCurrency) ?>><?= e($currencyCode) ?></option>
-          <?php endforeach; ?></select></div>
-        <button class="iw-client-button iw-client-button-soft" type="submit">Save preference</button>
-      </form>
+      <p class="iw-client-small-muted">Your order currency is automatically determined by your country of residence. Nigerian customers pay in NGN; customers residing abroad are billed in USD. Currency is not manually switchable. Existing invoices remain unchanged.</p>
+      <p class="iw-client-small-muted"><strong>Billing currency: <?= e($activePayCurrency) ?></strong>. If your country has changed, update your contact details and provide proof of residence when requested.</p>
       <a href="<?= e(url('card_vault')) ?>" class="iw-client-account-link"><i class="bi bi-credit-card"></i> Manage payment methods <i class="bi bi-arrow-right"></i></a>
     </section>
     <section class="iw-tm-panel">
