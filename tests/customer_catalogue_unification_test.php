@@ -86,7 +86,7 @@ $checkoutService=$bySlug['seo-smm-digital-marketing'];
 ob_start();
 require dirname(__DIR__).'/views/client-service-checkout.php';
 $html=(string)ob_get_clean();
-check_catalogue(str_contains($html,'Review your service') && str_contains($html,'SEO & Digital Marketing'),
+check_catalogue(str_contains($html,'Review your service') && str_contains($html,'SEO &amp; Digital Marketing'),
     'Single-product review must display chosen product.');
 check_catalogue(str_contains($html,'name="service_id"') && str_contains($html,'safe-token'),
     'Checkout must post service ID and CSRF token.');
