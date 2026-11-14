@@ -16,7 +16,14 @@ $iwAssistEndpoint = public_url('home');
     </div>
   </div>
   <button type="button" class="iw-assist-launcher" data-assist-chat-open aria-label="Open iWorks support" aria-expanded="false" aria-controls="iwAssistChat">
-    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+    <!-- Original iWORKS chat mark based on approved reference: no outer round badge.
+         Tail points down-right; three white dots sit inside the orange bubble. -->
+    <svg class="iw-assist-launcher-icon" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <path d="M43 10C66 10 86 25 86 45c0 10-5 19-13 26l5 17-24-10c-4 1-7 1-11 1C20 79 3 64 3 45S20 10 43 10Z" fill="currentColor"/>
+      <circle cx="27" cy="45" r="5.3" fill="#fff"/>
+      <circle cx="44" cy="45" r="5.3" fill="#fff"/>
+      <circle cx="61" cy="45" r="5.3" fill="#fff"/>
+    </svg>
   </button>
 
   <section class="iw-assist-chat" id="iwAssistChat" role="dialog" aria-labelledby="iwAssistChatTitle" aria-modal="false" hidden>
