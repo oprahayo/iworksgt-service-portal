@@ -214,6 +214,19 @@ $isLaunchHome = $currentPublicSlug === 'home';
       <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/product-detail.css')) ?>?v=20261113-product1">
     <?php endif; ?>
   <?php endif; ?>
+  <?php if (in_array($currentPublicSlug, ['home','case-studies','case_study'], true)): ?>
+    <?php
+    // Dedicated portfolio styles render from the PHP root even when cPanel's
+    // public apex has no direct /assets/ mapping. They are loaded after all
+    // generic editorial styles and never affect unrelated portal pages.
+    $iwWorkCss = __DIR__.'/../../assets/css/portfolio-work.css';
+    ?>
+    <?php if (is_file($iwWorkCss) && is_readable($iwWorkCss)): ?>
+      <style id="iw-portfolio-work-css"><?= (string)file_get_contents($iwWorkCss) ?></style>
+    <?php else: ?>
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261114-work1">
+    <?php endif; ?>
+  <?php endif; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
