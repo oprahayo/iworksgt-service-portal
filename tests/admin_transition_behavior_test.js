@@ -4,7 +4,9 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const src = fs.readFileSync(require('node:path').join(__dirname,'../assets/js/admin-transition.js'),'utf8');
 
-function testScenario({ exists = true, reduced = false } = {}) {
+function testScenario({ exists = true, reduced = false,
+  pageUrl = 'https://portal.iworksgt.com/index.php?page=dashboard' } = {}) {
+  const parsed = new URL(pageUrl);
   const classes = new Set(['iw-admin-transition-enter']);
   const listeners = {};
   const winListeners = {};
@@ -22,7 +24,8 @@ function testScenario({ exists = true, reduced = false } = {}) {
     addEventListener(name, callback) { listeners[name] = callback; }
   };
   const window = {
-    location: { href: 'https://portal.iworksgt.com/index.php?page=dashboard', hostname: 'portal.iworksgt.com', pathname: '/index.php', search: '?page=dashboard', hash: '' },
+    location: { href: parsed.href, hostname: parsed.hostname, pathname: parsed.pathname,
+      search: parsed.search, hash: parsed.hash },
     matchMedia() { return { matches: reduced }; },
     addEventListener(name, callback) { winListeners[name] = callback; },
     setTimeout(callback, ms) { const id = nextId++; timers.set(id, { callback, ms }); return id; },
@@ -82,6 +85,20 @@ assert.equal(a.classes.has('iw-admin-transition-leave'), false, 'canceled action
 const reduced = testScenario({ reduced: true });
 reduced.listeners.DOMContentLoaded();
 assert.deepEqual(reduced.flush(), [0], 'reduced-motion immediate reveal');
+const client = testScenario({ pageUrl:'https://portal.iworksgt.com/index.php?page=applications' });
+client.listeners.DOMContentLoaded();
+client.flush();
+client.click('https://portal.iworksgt.com/index.php?page=invoices');
+assert.equal(client.classes.has('iw-admin-transition-leave'), true,
+  'customer -> billing must use the same transition as staff');
+client.winListeners.pageshow({persisted:true});
+assert.equal(client.classes.has('iw-admin-transition-leave'), false,
+  'customer browser-back restores without an overlay');
+client.click('https://iworksgt.com/');
+assert.equal(client.classes.has('iw-admin-transition-leave'), true,
+  'customer -> main website should animate only on departure');
+client.winListeners.pagehide();
+assert.equal(client.classes.has('iw-admin-transition-leave'), false);
 const absent = testScenario({ exists: false });
 assert.deepEqual(Object.keys(absent.listeners), [], 'pages without loader must not attach handlers');
 console.log('admin_transition_behavior_test passed');

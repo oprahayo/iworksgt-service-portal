@@ -1,4 +1,5 @@
-/* Backend operational pages only. No client/public splash or network calls. */
+/* Authenticated portal navigation only (including client workspace).
+   No public/auth splash, network calls or navigation interception. */
 (function () {
   'use strict';
   var overlay = document.getElementById('iwAdminTransition');

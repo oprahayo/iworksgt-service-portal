@@ -1,5 +1,5 @@
-/* iWORKS operational backend-only route transition.
-   Never shown on public, auth or client workspace pages. */
+/* iWORKS authenticated portal route transition (staff and clients).
+   Never shown on public marketing, sign-in, or recovery pages. */
 .iw-admin-transition {
   position: fixed;
   inset: 0;

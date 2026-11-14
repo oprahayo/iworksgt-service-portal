@@ -244,19 +244,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
-  <?php if ($user): ?>
-    <link rel="stylesheet" href="assets/css/admin-transition.css?v=20261114-pulse1">
-    <script>
-      // Start the short backend-only transition before first paint. Safety
-      // fallback always clears it, including if the footer script is blocked.
-      (function () {
-        document.documentElement.classList.add('iw-admin-transition-enter');
-        window.setTimeout(function () {
-          document.documentElement.classList.remove('iw-admin-transition-enter');
-        }, 900);
-      })();
-    </script>
-  <?php endif; ?>
+  <?php require __DIR__ . '/portal-transition-head.php'; ?>
   <style>
     :root {
       --brand-primary: <?= e(brand_primary_color()) ?>;
@@ -267,15 +255,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   </style>
 </head>
 <body class="<?= e($bodyClass) ?>">
-<?php if ($user): ?>
-  <div id="iwAdminTransition" class="iw-admin-transition" aria-hidden="true">
-    <div class="iw-admin-transition-lockup">
-      <img src="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261114-pulse1"
-           class="iw-admin-transition-mark" width="132" height="68" alt="" decoding="async">
-      <span class="iw-admin-transition-name">iWORKS</span>
-    </div>
-  </div>
-<?php endif; ?>
+<?php require __DIR__ . '/portal-transition-overlay.php'; ?>
 <?php if ($user): ?>
 <div class="portal-layout">
   <aside class="portal-sidebar" id="portalSidebar">
