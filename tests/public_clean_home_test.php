@@ -11,7 +11,16 @@ function public_url(string $page, array $params = []): string
     return '/' . $page . ($params === [] ? '' : '?' . http_build_query($params));
 }
 function normalize_public_href(string $href, string $fallback): string { return trim($href) ?: $fallback; }
-function get_media_asset(int $id): ?array { return $id === 55 ? ['url' => '/uploads/real-client-hero.webp'] : null; }
+function get_media_asset(int $id): ?array {
+    $assets = [
+        55 => '/uploads/real-client-hero.webp',
+        21 => '/uploads/cac-registry.svg',
+        22 => '/uploads/godaddy-provider.webp',
+        23 => '/uploads/amandla-client.webp',
+        24 => '/uploads/sojay-client.webp',
+    ];
+    return isset($assets[$id]) ? ['url' => $assets[$id]] : null;
+}
 function flash(string $type): ?string { return null; }
 function csrf_token(): string { return 'testcsrf'; }
 function portal_url(string $page): string { return '/portal/' . $page; }
@@ -26,6 +35,15 @@ $layout = [
         'subheadline' => 'CAC registration, trademark filing, NAFDAC-related support, branding, growth services, and structured business operations handled in one portal.',
         'imageId' => 55,
         'primaryCta' => ['label' => 'Explore our services', 'href' => '/services'],
+    ]],
+    ['type' => 'trusted_logos', 'data' => [
+        'title' => 'Existing Editor hero logos',
+        'items' => [
+            ['title' => 'CAC Nigeria', 'imageId' => 21],
+            ['title' => 'GoDaddy', 'imageId' => 22],
+            ['title' => 'Amandla Institute', 'imageId' => 23],
+            ['title' => 'SojayFarms', 'imageId' => 24],
+        ],
     ]],
     ['type' => 'featured_services', 'data' => [
         'title' => 'Services entrepreneurs use most',
@@ -62,6 +80,21 @@ $html = (string) ob_get_clean();
 check_home(str_contains($html, 'Business registration and website design in Nigeria.'), 'Homepage H1 must describe Nigerian business services.');
 check_home(!str_contains($html, 'NAFDAC-related support, branding, growth services'), 'Legacy default intro should not clutter the hero.');
 check_home(str_contains($html, '/uploads/real-client-hero.webp'), 'CMS-selected hero image must take precedence.');
+// Regression: previous legal/hosting platform name filter suppressed saved
+// logos; just two clients remained, so the hero carousel stopped scrolling.
+foreach (['cac-registry.svg','godaddy-provider.webp','amandla-client.webp','sojay-client.webp'] as $logo) {
+    check_home(str_contains($html, $logo), 'Original approved homepage logo should be restored: '.$logo);
+}
+check_home(str_contains($html, 'iw-home-brand-track is-scrolling'),
+    'Four curated logos should reactivate the horizontal hero carousel.');
+check_home(str_contains($html, 'Client projects &amp; service platforms'),
+    'External platforms must not be misrepresented as customer projects.');
+check_home(str_contains($html, 'independent government registry')
+    && str_contains($html, 'independent service provider')
+    && str_contains($html, 'not client relationships or endorsements'),
+    'CAC and GoDaddy logos need accurate independence context.');
+check_home(substr_count($html, '/uploads/cac-registry.svg') === 2,
+    'The seamless marquee must repeat its source logos once, without inventing additional brands.');
 check_home(str_contains($html, 'What do you need help with?'), 'Default services heading should be short.');
 check_home(str_contains($html, '/services/business-name'), 'CAC category should route to a published service.');
 check_home(str_contains($html, '/services/trademark'), 'Trademark should route to a published service.');
