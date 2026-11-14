@@ -87,11 +87,14 @@ check_cac(str_contains($index,'function list_public_services_catalog') && str_co
 check_cac(str_contains((string)file_get_contents($root.'/app/cac_filing.php'),"$"."slug='company-registration'"),
     'All new CAC purchases must reference the canonical service ID.');
 foreach(['views/partials/header.php','views/partials/public-header.php','views/partials/client-header.php'] as $header) {
-    check_cac(str_contains((string)file_get_contents($root.'/'.$header),'favicon_mime_type('),
-        'Favicon missing from '.$header);
+    check_cac(str_contains((string)file_get_contents($root.'/'.$header),"require __DIR__ . '/favicon-head.php'"),
+        'Shared favicon markup missing from '.$header);
 }
-check_cac(str_contains((string)file_get_contents($root.'/app/helpers.php'),'data:image/svg+xml'),
-    'Fallback first-party icon must be available even if no asset uploaded.');
+$faviconHead=(string)file_get_contents($root.'/views/partials/favicon-head.php');
+check_cac(str_contains($faviconHead,'favicon_mime_type(')
+    && str_contains($faviconHead,'rel="icon" type="image/svg+xml"')
+    && is_file($root.'/assets/branding/iworks-favicon.svg'),
+    'Approved first-party vector favicon and safe uploaded-icon fallback must remain available.');
 check_cac(str_contains($router,"if ($"."page === 'brand_icon')") &&
     str_contains($router,"'image/webp'") &&
     str_contains($router,"str_starts_with($"."file,$"."brandRoot.DIRECTORY_SEPARATOR)"),

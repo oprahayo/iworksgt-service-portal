@@ -118,10 +118,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <meta name="twitter:description" content="<?= e($metaDescription) ?>">
   <?php if ($seoJsonLd !== ''): ?><script type="application/ld+json"><?= $seoJsonLd ?></script><?php endif; ?>
   <?php if ($seoBreadcrumb !== ''): ?><script type="application/ld+json"><?= $seoBreadcrumb ?></script><?php endif; ?>
-  <?php if ($favicon !== ''): ?>
-    <link rel="icon" type="<?= e(favicon_mime_type($favicon)) ?>" href="<?= e($favicon) ?>" sizes="any">
-    <?php if (favicon_mime_type($favicon) !== 'image/svg+xml'): ?><link rel="apple-touch-icon" href="<?= e($favicon) ?>"><?php endif; ?>
-  <?php endif; ?>
+  <?php require __DIR__ . '/favicon-head.php'; ?>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

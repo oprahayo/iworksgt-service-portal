@@ -3217,8 +3217,13 @@ try {
                         if (!empty($_FILES['favicon_file'])) {
                             $faviconPath = save_uploaded_image($_FILES['favicon_file'], 'branding');
                             set_setting('favicon_path', $faviconPath);
-                            flash('success', 'Favicon updated successfully.');
+                            set_setting('favicon_source_mode', 'uploaded');
+                            flash('success', 'Custom favicon activated successfully.');
                         }
+                    }
+                    if ($action === 'use_official_favicon') {
+                        set_setting('favicon_source_mode', 'official');
+                        flash('success', 'Official orange iWORKS favicon activated.');
                     }
 
                     if ($action === 'upload_partner_logos') {

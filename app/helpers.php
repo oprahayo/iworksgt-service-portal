@@ -399,25 +399,42 @@ function logo_path(): string
     return normalize_public_asset_path(setting('logo_path', ''));
 }
 
+/**
+ * The original approved orange iWORKS vector mark is the site-wide favicon.
+ * Existing uploaded favicon files are preserved but only override the brand
+ * icon when an admin explicitly selects a new upload after this release.
+ */
+function iworks_official_favicon_active(): bool
+{
+    return setting('favicon_source_mode', 'official') !== 'uploaded';
+}
+
+function iworks_official_favicon_url(string $filename = 'iworks-favicon.svg'): string
+{
+    $allowed = ['iworks-favicon.svg','iworks-favicon-32.png','iworks-favicon-180.png'];
+    if (!in_array($filename, $allowed, true)) {
+        throw new InvalidArgumentException('Unsupported brand favicon file.');
+    }
+    $asset = 'assets/branding/' . $filename;
+    $url = request_host() === configured_host(portal_base_url())
+        ? portal_absolute_url($asset)
+        : public_absolute_url($asset);
+    return $url . '?v=20261114-iworks-icon1';
+}
+
 function favicon_path(): string
 {
+    if (iworks_official_favicon_active()) {
+        return iworks_official_favicon_url();
+    }
     $setting = trim(setting('favicon_path', ''));
-    // Uploaded branding files live in the portal document root, while the
-    // apex website can have a separate root. Serve only the selected favicon
-    // through an allowlisted endpoint instead of exposing the uploads folder.
-    if (preg_match('~^assets/uploads/branding/[A-Za-z0-9_.-]+\.(?:png|jpe?g|gif|webp)$~i', $setting)) {
+    // Preserve the existing safe uploaded-image route for future manual
+    // overrides without exposing private portal uploads on the public host.
+    if (preg_match('~^assets/uploads/branding/[A-Za-z0-9_.-]+\\.(?:png|jpe?g|gif|webp)$~i', $setting)) {
         return public_url('home', ['page'=>'brand_icon','v'=>substr(sha1($setting),0,12)]);
     }
-    $configured = normalize_public_asset_path($setting);
-    if ($configured !== '') return $configured;
-    // Reliable no-request fallback on every public, portal and client page.
-    // This uses a lightweight first-party orange/charcoal icon when no custom
-    // uploaded brand favicon has been configured in Settings.
-    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-        . '<rect width="64" height="64" rx="15" fill="#191919"/>'
-        . '<path d="M16 13h10v38H16zM33 20h10v16l8-10h10L49 40l12 11H49L43 44v7H33z" fill="#ff6600"/>'
-        . '</svg>';
-    return 'data:image/svg+xml,' . rawurlencode($svg);
+    // Invalid/missing uploaded icon: always fall back to the official mark.
+    return iworks_official_favicon_url();
 }
 
 function favicon_mime_type(string $favicon): string
