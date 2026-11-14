@@ -97,9 +97,12 @@ international_check(str_contains($seo,'$pages[] = [\'slug\' => $sitePage]'),
 international_check(str_contains($footer,"'Cookie Policy'") &&
     str_contains($footer,"public_url('cookies')"),
     'Cookie Policy must be discoverable from footer.');
-international_check(str_contains($home,"public_url('register-company-nigeria-from-abroad')") &&
-    str_contains($home,"public_url('us-llc-formation-from-nigeria')"),
-    'Homepage needs meaningful internal links to both overseas guides.');
+international_check(!str_contains($home,'iw-home-international-links')
+    && !str_contains($home,'Building across borders?'),
+    'Cross-border SEO links must not render as an unwanted homepage paragraph.');
+international_check(str_contains($router,"'register-company-nigeria-from-abroad'")
+    && str_contains($router,"'us-llc-formation-from-nigeria'"),
+    'Both cross-border guides must remain routable and indexable.');
 international_check(str_contains($header,'public-legal-international.css'),
     'Shared header must load legal and guide styling.');
 international_check(str_contains($css,'background:none!important;border:0!important;box-shadow:none!important'),

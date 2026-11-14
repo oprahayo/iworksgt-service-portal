@@ -103,11 +103,6 @@ body.page-public .iw-international-next h2 {
 body.page-public .iw-international-next p {
   font-size:14px;color:#66727b;line-height:1.7;margin:0 0 15px;
 }
-body.page-public .iw-home-international-links {
-  color:#69747c;text-align:center;line-height:1.7;font-size:13px;
-  margin:22px auto 0;max-width:780px;
-}
-body.page-public .iw-home-international-links a {color:#bd5619;font-weight:650;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:767px) {
   body.page-public .iw-legal-page, body.page-public .iw-international-page {padding-top:25px;padding-bottom:55px}
   body.page-public .iw-legal-copy,body.page-public .iw-international-copy {font-size:14px;line-height:1.8}
