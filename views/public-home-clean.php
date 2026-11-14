@@ -164,6 +164,20 @@ $homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_r
 // studies and consented customer feedback may supply brands. Never fabricate
 // clients or promote drafts. Duplicate logos are filtered by normalized name.
 $homeBrandLogos = [];
+// Restore the original Website Editor > Trusted Logos content to the active
+// homepage. Admin-curated logos are displayed before derived case/review logos.
+$trustedLogoItems = is_array(($sections['trusted_logos']['items'] ?? null))
+    ? $sections['trusted_logos']['items'] : [];
+foreach ($trustedLogoItems as $item) {
+    if (!is_array($item)) { continue; }
+    $name = trim((string) ($item['title'] ?? ''));
+    $imageId = (int) ($item['imageId'] ?? 0);
+    $asset = $imageId > 0 ? get_media_asset($imageId) : null;
+    $logo = trim((string) ($asset['url'] ?? ''));
+    if ($name !== '' && $logo !== '') {
+        $homeBrandLogos[strtolower($name)] = ['name' => $name, 'logo' => $logo];
+    }
+}
 $logoCaseRecords = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 48) : [];
 $logoReviewRecords = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 48) : [];
 foreach (array_merge($logoCaseRecords, $logoReviewRecords) as $record) {
