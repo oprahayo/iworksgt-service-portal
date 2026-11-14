@@ -47,7 +47,7 @@ assert_recovery(otp_submission_csrf_valid(), 'Valid signed OTP form must survive
 $_POST['otp_challenge_csrf'] = str_repeat('0',64);
 assert_recovery(!otp_submission_csrf_valid(), 'Forged challenge CSRF must be blocked.');
 $_POST['otp_challenge_csrf'] = $formToken;
-$_COOKIE[$name] = substr_replace($token, '0', -1, 1);
+$_COOKIE[$name] = substr_replace($token, substr($token, -1) === '0' ? '1' : '0', -1, 1);
 assert_recovery(!otp_submission_csrf_valid(), 'Tampered cookie must not authorize OTP.');
 assert_recovery(pending_otp_context() === null, 'Tampered cookie with lost session must not recover.');
 $_COOKIE[$name] = otp_recovery_build_cookie(7, 'login', $GLOBALS['otp_test_user'], time()-3600);
@@ -70,6 +70,13 @@ assert_recovery(pending_otp_context()['purpose'] === 'verify_email',
 $_SESSION['csrf_token'] = 'legacy-form-token';
 $_POST = ['csrf_token'=>'legacy-form-token'];
 assert_recovery(otp_submission_csrf_valid(), 'Existing session CSRF must remain accepted.');
+// The production handler tries the local mail transport before queuing retry.
+$source = (string)file_get_contents(__DIR__.'/../app/auth.php');
+$challengeStart = strstr($source, 'function start_otp_challenge');
+assert_recovery($challengeStart !== false
+    && strpos($challengeStart, 'send_otp_email($user, $purpose, $code)')
+       < strpos($challengeStart, 'queue_otp_delivery($user, $purpose, $code)'),
+    'OTP issuance must attempt immediate transport before deferred retry.');
 clear_pending_otp();
 assert_recovery(pending_otp_context() === null, 'Completed login must remove pending challenge.');
 session_write_close();
