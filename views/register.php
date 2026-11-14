@@ -1,7 +1,10 @@
 <?php
 $countryOptions = portal_country_options();
 $stateMap = portal_state_options_map();
-$oldCountryValue = (string) old_input('country', 'Nigeria');
+// Geolocation is a form preselection hint, not billing verification.
+$countryHintIso = strtoupper(trim((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
+$countryHintName = $countryOptions[$countryHintIso] ?? 'Nigeria';
+$oldCountryValue = (string) old_input('country', $countryHintName);
 $oldStateValue = (string) old_input('state_region');
 ?>
 <section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
