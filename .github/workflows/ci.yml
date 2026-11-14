@@ -110,6 +110,7 @@ jobs:
           php tests/cac_launch_preparation_test.php
           php tests/cac_unified_product_contract_test.php
           php tests/editorial_launch_contract_test.php
+          php tests/five_client_case_studies_publish_test.php
           php tests/cornerstone_editorial_publish_test.php
           php tests/blog_journal_render_test.php
           php tests/responsive_brand_logo_contract_test.php
