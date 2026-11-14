@@ -8,8 +8,9 @@ $iwAssistEndpoint = public_url('home');
 <div class="iw-assist" id="iwAssist" data-endpoint="<?= e($iwAssistEndpoint) ?>" data-live-endpoint="<?= e(public_url('home',['page'=>'live_chat'])) ?>" data-csrf="<?= e(csrf_token()) ?>">
   <div class="iw-assist-nudge" id="iwAssistNudge" hidden>
     <button type="button" class="iw-assist-nudge-dismiss" data-assist-nudge-dismiss aria-label="Dismiss consultation suggestion"><i class="bi bi-x" aria-hidden="true"></i></button>
-    <strong>Have a question about our services?</strong>
-    <p>We can help you find the right solution.</p>
+    <small class="iw-assist-auto-label">AUTOMATED SUGGESTION</small>
+    <strong id="iwAssistNudgeTitle">Have a question about our services?</strong>
+    <p id="iwAssistNudgeText">We can help you find the right solution.</p>
     <div class="iw-assist-nudge-actions">
       <button type="button" data-assist-book-open>Request a call <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
       <button type="button" data-assist-chat-open>Send a message</button>
@@ -25,6 +26,8 @@ $iwAssistEndpoint = public_url('home');
       <circle cx="61" cy="45" r="5.3" fill="#fff"/>
     </svg>
   </button>
+  <span class="iw-assist-unread-count" id="iwAssistUnread" role="status"
+      aria-label="Unread support replies" hidden></span>
 
   <section class="iw-assist-chat" id="iwAssistChat" role="dialog" aria-labelledby="iwAssistChatTitle" aria-modal="false" hidden>
     <header class="iw-assist-chat-head">
@@ -49,16 +52,24 @@ $iwAssistEndpoint = public_url('home');
           <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+          <div class="iw-assist-consent-options" role="group" aria-label="Support preferences">
+            <label><input type="checkbox" name="remember_chat" value="1">
+              Remember this conversation on this browser for 30 days</label>
+            <label><input type="checkbox" name="notify_offline" value="1">
+              Email me when support replies while I am offline</label>
+            <label><input type="checkbox" name="track_page" value="1">
+              Share my current website page with support while this chat is active</label>
+          </div>
           <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
           <details class="iw-assist-privacy-details">
             <summary>How we use your details</summary>
-            <p>To handle your enquiry, we record the conversation, its time and a masked network address. Approximate country may be shown to staff when available. No precise GPS is collected. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
+            <p>We store your conversation, its time, and a masked network prefix; support may see an approximate country hint. A returning-browser cookie, offline email reminders and live page sharing are optional and unchecked by default. No GPS, precise street address, or full browsing history is collected. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
           </details>
           <p class="iw-assist-error" id="iwAssistStartError" role="alert" hidden></p>
         </form>
       </div>
       <div class="iw-assist-conversation" id="iwAssistConversation" hidden>
-        <p class="iw-assist-chat-intro">How can we help you today? Our team can reply here when online. If support is offline, you can still leave your message.</p>
+        <p class="iw-assist-chat-intro">Welcome back. Messages are kept in this conversation. Our team can reply here whenever available.</p>
         <div class="iw-assist-messages" id="iwAssistMessages" role="log" aria-live="polite" aria-label="Support conversation"></div>
       </div>
       <div class="iw-assist-ended" id="iwAssistEnded" hidden>
