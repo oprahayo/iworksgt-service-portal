@@ -5,6 +5,12 @@ declare(strict_types=1);
  * Calls pure privacy helpers to verify real data minimization and safe tokens.
  */
 require dirname(__DIR__).'/app/live_chat.php';
+$GLOBALS['iw_test_sql_ops'] = [];
+function schema_table_exists(string $table): bool { return true; }
+function db_execute(string $sql, array $params = []): bool {
+    $GLOBALS['iw_test_sql_ops'][] = ['sql'=>$sql,'params'=>$params];
+    return true;
+}
 $root=dirname(__DIR__);
 $read=static fn(string $p):string=>(string)file_get_contents($root.'/'.$p);
 $ok=static function(bool $value,string $why):void {
@@ -30,6 +36,20 @@ $ok(iw_chat_resume_cookie_token()===str_repeat('a',64),
 $_COOKIE[iw_chat_resume_cookie_name()]='malicious-cookie';
 $ok(iw_chat_resume_cookie_token()==='',
     'Invalid or short-lived-tampered cookie must be rejected.');
+$recentVisitor = [
+    'id'=>17,'notify_offline'=>1,'email'=>'visitor@example.com',
+    'visitor_last_seen_at'=>date('Y-m-d H:i:s'),
+];
+iw_chat_enqueue_offline_reply($recentVisitor,42);
+$ok(count($GLOBALS['iw_test_sql_ops'])===1
+    && str_contains($GLOBALS['iw_test_sql_ops'][0]['sql'],'INSERT IGNORE INTO iw_live_email_outbox')
+    && strtotime((string)$GLOBALS['iw_test_sql_ops'][0]['params']['next']) >= time()+70,
+    'An opted-in visitor who just left must not miss a delayed offline email queue.');
+$recentVisitor['notify_offline']=0;
+iw_chat_enqueue_offline_reply($recentVisitor,43);
+$ok(count($GLOBALS['iw_test_sql_ops'])===1,
+    'Opted-out visitors must never be queued for offline email.');
+
 
 $server=$read('app/live_chat.php');
 $migration=$read('scripts/migrate_live_chat_engagement.php');
@@ -68,7 +88,9 @@ $ok(str_contains($server,"$"."engagement && $"."remember &&")
     && str_contains($server,'iw_chat_enqueue_offline_reply(')
     && str_contains($server,'INSERT IGNORE INTO iw_live_email_outbox')
     && str_contains($worker,'iw_chat_process_email_outbox(15)')
-    && str_contains($server,'New reply from iWORKS Support'),
+    && str_contains($server,'New reply from iWORKS Support')
+    && str_contains($server,"status='skipped'")
+    && str_contains($server,'INTERVAL 15 MINUTE'),
     'Only opted-in returning visitors should receive durable, idempotent offline email notices.');
 $ok(!str_contains($server,'HTTP_X_FORWARDED_FOR')
     && str_contains($server,'iw_chat_safe_page(')
