@@ -23,3 +23,9 @@ Acceptance: live GET with HTTP 200 and `image/svg+xml` for `assets/branding/iwor
 
 ## Live status
 GitHub code reviewed and tested; cPanel source release to be published by authorized terminal operator. Do not claim the favicon is already live without deployment output and HTTP checks.
+
+## Approved tighter crop — follow-up
+
+The owner approved a larger, closer crop to improve favicon legibility. PR #94, immutable source `df2423e279077a4eea3f06cd5c8a9af02594c3c4`, updates the SVG square viewport from `19 -74 310 310` to `40 -54 270 270`, retaining all four original vector path definitions and orange `#FF6600`. The mark now occupies approximately 92% of the favicon canvas width versus approximately 80% previously, with a small safety margin and the original proportions preserved. Both 32px browser PNG and 180px Apple PNG were regenerated with matching transparency. HTML uses a fresh `?v=20261114-iworks-icon2` cache key. GitHub CI on PHP 8.2 and 8.3 passed.
+
+Source-only cPanel deployment should be performed using the *new* pinned installer from the following ops release PR. It must run `--check` then `--apply`, preserving private configuration, uploads, storage and the production database. Afterwards, verify the updated SVG and PNG on **both** apex and portal hostnames and check the browser tab after reopening it. A GitHub merge is not proof that production assets have been updated.
