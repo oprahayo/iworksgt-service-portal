@@ -90,6 +90,14 @@ def main() -> None:
                                     )
                                     print(f"CORNERSTONETL TRY {candidate} HTTP {nav.status if nav else 'none'} gallery={heading_ok}")
                                     if nav and nav.status < 400 and heading_ok:
+                                        # Photograph the actual services cards, not
+                                        # the introductory hero: this matches the
+                                        # customer's supplied What We Provide view.
+                                        heading = page.get_by_text("What We Provide", exact=False).first
+                                        if heading.count():
+                                            heading.scroll_into_view_if_needed(timeout=6000)
+                                            page.evaluate("window.scrollBy(0, -110)")
+                                            print("CORNERSTONETL: viewport centered on What We Provide")
                                         page.wait_for_timeout(450)
                                         break
                                 else:
