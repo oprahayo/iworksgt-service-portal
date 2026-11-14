@@ -190,7 +190,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     <div class="container public-container pt-3"><div class="alert alert-danger"><?= e($message) ?></div></div>
   <?php endif; ?>
 
-  <section class="iw-clean-hero" aria-labelledby="iw-clean-title">
+  <section class="iw-clean-hero<?= $homeBrandLogos !== [] ? ' has-client-logos' : '' ?>" aria-labelledby="iw-clean-title">
     <div class="container public-container iw-clean-hero-inner">
       <div class="iw-clean-hero-copy">
         <span class="iw-clean-overline">iWORKS GLOBAL</span>
