@@ -288,10 +288,22 @@
       launcher.setAttribute('aria-expanded', 'true');
       showChatStage();
       startLivePoller();
+      // Focus should not scroll the first-screen CTA out of view, and should
+      // not automatically summon the keyboard on narrow touchscreens.
       window.requestAnimationFrame(function () {
-        if (session.status === 'active') messageInput.focus();
-        else if (session.status === 'ended') root.querySelector('[data-assist-restart]').focus();
-        else startForm.elements.namedItem('full_name').focus();
+        if (session.status === 'active') {
+          messageInput.focus({preventScroll:true});
+        } else if (session.status === 'ended') {
+          root.querySelector('[data-assist-restart]').focus({preventScroll:true});
+        } else {
+          chat.querySelector('.iw-assist-chat-main').scrollTop = 0;
+          if (window.matchMedia('(min-width:581px)').matches) {
+            startForm.elements.namedItem('full_name').focus({preventScroll:true});
+          } else {
+            chat.querySelector('.iw-assist-chat-head h2').setAttribute('tabindex', '-1');
+            chat.querySelector('.iw-assist-chat-head h2').focus({preventScroll:true});
+          }
+        }
       });
     }
     function closeChat() {

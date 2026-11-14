@@ -31,7 +31,7 @@ chat_bubble_check(str_contains($css, '.iw-assist-launcher:hover{background:trans
 chat_bubble_check(str_contains($css, 'prefers-reduced-motion:reduce')
     && str_contains($css, 'outline:3px solid #f8ba8c'),
     'Retain reduced-motion behavior and keyboard focus ring.');
-chat_bubble_check(str_contains($header, '20261114-launcher1'),
+chat_bubble_check(str_contains($header, '20261114-compact2'),
     'Fallback CSS must have fresh cache revision.');
 chat_bubble_check(str_contains($js, 'launcher.hidden = true')
     && str_contains($js, 'launcher.hidden = false')

@@ -485,7 +485,7 @@ $socialIcons = [
   if (is_file($iwAssistJsPath) && is_readable($iwAssistJsPath)): ?>
   <script id="iw-assist-controller"><?= str_ireplace('</script', '<\\/script', (string) file_get_contents($iwAssistJsPath)) ?></script>
 <?php else: ?>
-  <script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261113c"></script>
+  <script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261114-compact2"></script>
 <?php endif; ?>
 </body>
 </html>

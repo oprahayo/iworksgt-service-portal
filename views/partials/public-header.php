@@ -149,7 +149,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   if (is_file($iwAssistCssPath) && is_readable($iwAssistCssPath)): ?>
     <style id="iw-assist-critical-css"><?= (string) file_get_contents($iwAssistCssPath) ?></style>
   <?php else: ?>
-    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261114-launcher1">
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-assistance.css')) ?>?v=20261114-compact2">
   <?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-navigation-cta.css')) ?>?v=20261113a">
   <script>
@@ -165,7 +165,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php if (is_file($iwLaunchPolishCss) && is_readable($iwLaunchPolishCss)): ?>
     <style id="iw-site-launch-polish"><?= (string)file_get_contents($iwLaunchPolishCss) ?></style>
   <?php else: ?>
-    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-color2">
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-photo2">
   <?php endif; ?>
   <?php if (in_array($currentPublicSlug, ['blog', 'blog_post'], true)): ?>
     <?php

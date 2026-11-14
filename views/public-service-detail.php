@@ -107,7 +107,7 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
 
       <article class="iw-product-content">
         <?php if ($imageUrl !== ''): ?>
-          <figure class="iw-product-media">
+          <figure class="iw-product-media iw-photo-feature iw-photo-feature-product">
             <img src="<?= e($imageUrl) ?>" alt="<?= e(str_starts_with($imageUrl, '/assets/photography/') ? 'Illustrative photograph for ' . $serviceName : $serviceName) ?>" width="960" height="540" loading="eager" decoding="async">
           </figure>
         <?php endif; ?>

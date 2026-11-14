@@ -216,11 +216,13 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </div>
         <p class="iw-clean-detail">Order online <span aria-hidden="true">·</span> Submit documents <span aria-hidden="true">·</span> Track your request</p>
       </div>
-      <figure class="iw-clean-hero-media">
+      <figure class="iw-clean-hero-media iw-photo-feature iw-photo-feature-hero">
         <picture>
           <?php if ($heroMobileImage !== ''): ?><source media="(max-width: 767px)" srcset="<?= e($heroMobileImage) ?>"><?php endif; ?>
           <img src="<?= e($heroImage) ?>" alt="<?= e($heroMobileImage !== '' ? 'Black business professional working on a laptop in an office' : 'Professionals reviewing business documents') ?>" width="640" height="510" fetchpriority="high" decoding="async">
         </picture>
+        <span class="iw-photo-chip iw-photo-chip-hero-top" aria-hidden="true"><i class="bi bi-check2-circle"></i> Business services</span>
+        <span class="iw-photo-chip iw-photo-chip-hero-bottom" aria-hidden="true"><i class="bi bi-laptop"></i> Web &amp; digital</span>
       </figure>
     </div>
     <?php if ($homeBrandLogos !== []): ?>
@@ -340,8 +342,9 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
 
   <section class="iw-clean-section iw-clean-support" aria-labelledby="iw-clean-support-title">
     <div class="container public-container iw-clean-support-inner">
-      <div class="iw-clean-support-photo">
+      <div class="iw-clean-support-photo iw-photo-feature iw-photo-feature-support">
         <img src="<?= e(iworks_authentic_photo_url('support-agent') ?: iworks_stock_photo_url('strategy', 1000)) ?>" alt="Black customer support professional wearing a headset while working on a laptop" loading="lazy" decoding="async" width="560" height="420">
+        <span class="iw-photo-chip iw-photo-chip-support" aria-hidden="true"><i class="bi bi-chat-check"></i> Track your requests</span>
       </div>
       <div class="iw-clean-support-copy">
         <span class="iw-clean-overline">WHY iWORKS</span>
