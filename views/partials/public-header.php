@@ -165,7 +165,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php if (is_file($iwLaunchPolishCss) && is_readable($iwLaunchPolishCss)): ?>
     <style id="iw-site-launch-polish"><?= (string)file_get_contents($iwLaunchPolishCss) ?></style>
   <?php else: ?>
-    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-refine1">
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-color2">
   <?php endif; ?>
   <?php if (in_array($currentPublicSlug, ['blog', 'blog_post'], true)): ?>
     <?php
