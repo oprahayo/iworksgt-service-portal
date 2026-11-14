@@ -4851,7 +4851,8 @@ function create_job(array $input, array $trustedOptions = []): int
         : normalize_payment_currency(default_currency());
     $payMethod = normalize_pay_method((string) ($input['checkout_pay_method'] ?? $input['pay_method'] ?? 'card'));
     $fxRateUsed = (
-        $currency !== $serviceCurrency
+        !$hasCustomAmount
+        && $currency !== $serviceCurrency
         && in_array($currency, payment_currency_options(), true)
         && in_array($serviceCurrency, payment_currency_options(), true)
     ) ? fx_ngn_per_usd() : null;
