@@ -164,13 +164,20 @@ $homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_r
 // studies and consented customer feedback may supply brands. Never fabricate
 // clients or promote drafts. Duplicate logos are filtered by normalized name.
 $homeBrandLogos = [];
-// Restore the original Website Editor > Trusted Logos content to the active
-// homepage. Admin-curated logos are displayed before derived case/review logos.
+// Preserve the Website Editor's curated logos, but do not imply a government
+// regulator or technology provider is an iWORKS client. Service-provider or
+// accreditation status must never be misrepresented as a client relationship.
+// All other client logos still need documented approval from their owner.
 $trustedLogoItems = is_array(($sections['trusted_logos']['items'] ?? null))
     ? $sections['trusted_logos']['items'] : [];
 foreach ($trustedLogoItems as $item) {
     if (!is_array($item)) { continue; }
     $name = trim((string) ($item['title'] ?? ''));
+    // Registry logos and product vendors cannot appear as "clients" merely
+    // because somebody uploaded their image in the CMS.
+    if (preg_match('/^(?:corporate\s+affairs\s+commission(?:\s+\(cac\))?|cac(?:\s+nigeria)?|go\s*daddy(?:\s+inc\.?)?)$/i', $name)) {
+        continue;
+    }
     $imageId = (int) ($item['imageId'] ?? 0);
     $asset = $imageId > 0 ? get_media_asset($imageId) : null;
     $logo = trim((string) ($asset['url'] ?? ''));
@@ -226,8 +233,8 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
       </figure>
     </div>
     <?php if ($homeBrandLogos !== []): ?>
-      <div class="container public-container iw-home-brand-ribbon" aria-label="Brands we have worked with">
-        <p class="iw-home-brand-caption">Selected brands we've worked with</p>
+      <div class="container public-container iw-home-brand-ribbon" aria-label="Client projects">
+        <p class="iw-home-brand-caption">Selected client projects</p>
         <div class="iw-home-brand-window">
           <div class="iw-home-brand-track <?= count($homeBrandLogos) >= 4 ? 'is-scrolling' : '' ?>">
             <div class="iw-home-brand-sequence">

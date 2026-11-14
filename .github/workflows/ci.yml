@@ -92,6 +92,7 @@ jobs:
           php tests/mobile_header_footer_restore_contract_test.php
           php tests/launch_product_order_contract_test.php
           php tests/site_launch_blockers_contract_test.php
+          php tests/launch_trust_registration_contract_test.php
           php tests/job_review_workflow_test.php
           php tests/public_review_carousel_test.php
           php tests/public_layout_finish_test.php

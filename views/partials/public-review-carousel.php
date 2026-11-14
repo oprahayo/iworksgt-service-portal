@@ -10,9 +10,11 @@ $iwGoogleMaps = 'https://www.google.com/maps/search/?api=1&query=iWorks%20Global
 <section class="iw-reviews" aria-labelledby="iwReviewsTitle">
   <div class="container public-container">
     <div class="iw-reviews-intro">
-      <a class="iw-reviews-google" href="<?= e($iwGoogleMaps) ?>" target="_blank" rel="noopener noreferrer" aria-label="See the verified iWorks Global Google business listing">
-        <span class="iw-reviews-google-score">4.8 <span>/ 5</span></span>
-        <span class="iw-reviews-google-caption"><i class="bi bi-star-fill" aria-hidden="true"></i> On Google <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+      <!-- The Google Business score is intentionally not hard-coded:
+           live ratings change and must not be represented as verified without
+           a current, approved source. Keep the independently linked listing. -->
+      <a class="iw-reviews-google" href="<?= e($iwGoogleMaps) ?>" target="_blank" rel="noopener noreferrer" aria-label="View the iWorks Google business listing">
+        <span class="iw-reviews-google-caption"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View our Google listing</span>
       </a>
       <h2 id="iwReviewsTitle">Customer reviews</h2>
       <p>Feedback from customers after their orders are completed.</p>
