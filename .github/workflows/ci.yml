@@ -127,6 +127,7 @@ jobs:
           php tests/f13_cac_quote_consistency_test.php
           php tests/remediation_release_gate_test.php
           php tests/cpanel_finalize_release_contract_test.php
+          php tests/chat_upgrade_operator_contract_test.php
           php tests/f22_controlled_schema_migrations_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
           php tests/visitor_engagement_contract_test.php
