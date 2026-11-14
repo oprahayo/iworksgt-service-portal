@@ -550,7 +550,11 @@ function iw_chat_public_request(): void
             $fresh = db_one('SELECT * FROM iw_live_threads WHERE id=:id',['id'=>$threadId]) ?: $thread;
             iw_chat_send_json(['ok'=>true,'status'=>'open','staff_online'=>iw_chat_staff_online(),
                 'messages'=>iw_chat_messages($threadId,$after),
-                'unread'=>iw_chat_unread_for_visitor($fresh)]);
+                'unread'=>iw_chat_unread_for_visitor($fresh),
+                'preferences'=>iw_chat_engagement_ready()
+                    ? iw_chat_preferences($fresh,
+                        iw_chat_resume_cookie_token() === $token)
+                    : null]);
             return;
         }
         if ($action === 'end') {
