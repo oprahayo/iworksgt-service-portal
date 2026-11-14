@@ -537,6 +537,7 @@ function iw_chat_staff_request(): void
         );
         $messages = $threadId ? iw_chat_messages($threadId,min(2147483647,max(0,(int)($_POST['after_id'] ?? 0)))) : [];
         iw_chat_send_json(['ok'=>true,'threads'=>$threads,'messages'=>$messages,
+            'summary'=>iw_chat_dashboard_summary(),
             'online_agents'=>(int)(db_one("SELECT COUNT(*) AS n FROM iw_live_staff_presence
                     WHERE last_seen_at>=DATE_SUB(NOW(),INTERVAL 70 SECOND)")['n'] ?? 0)]);
     } catch (InvalidArgumentException $e) {
