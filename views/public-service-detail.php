@@ -37,7 +37,8 @@ $actionText = $isEnquiry
         : ($registrationType === 'company'
             ? 'Choose a registration package'
             : ($serviceSlug === 'trademark' ? 'Start trademark application' : 'Start this service')));
-$actionUrl=portal_url('login', ['service'=>$serviceSlug]);
+$actionUrl=($isEnquiry && ($priceDetails['checkout_mode']??'')!=='consultation')
+    ? public_url('contact') : portal_url('login',['service'=>$serviceSlug]);
 $launchCountry=iworks_launch_display_country();
 $launchRegistration=$serviceSlug==='company-registration'
     ? iworks_launch_registration_options($launchCountry) : [];
