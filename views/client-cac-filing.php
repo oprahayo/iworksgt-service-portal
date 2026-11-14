@@ -9,6 +9,8 @@ $virtualOfficePrice = cac_money_setting('cac_virtual_address_ngn',0);
 $privacyPerDirector = cac_money_setting('cac_privacy_advisory_per_director_ngn',50000);
 $nameScreen = cac_name_review((string)($filing['first_choice'] ?? ''),$filingKind);
 $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
+$clientCurrency = iworks_client_country_currency(current_user()) ?: 'NGN';
+$startShareCapital = (string) (($cacDraft === null && ($_GET['tier'] ?? '') === 'growth') ? '2000000' : '1000000');
 ?>
 <div class="iw-client-heading iw-client-heading-row">
   <div>
@@ -64,7 +66,7 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
               <?php endif; ?>
               <p class="iw-cac-explain">This guided application is for private companies limited by shares. Limited by Guarantee requires specialist review. <a href="<?= e(url('support')) ?>">Request help</a>.</p>
             </div>
-            <div class="iw-tm-field"><label for="cacShareCapital">Issued share capital (NGN)</label><input id="cacShareCapital" type="number" min="1" step="1" name="filing[share_capital]" value="<?= e($first('share_capital')) ?>" placeholder="e.g. 1000000"></div>
+            <div class="iw-tm-field"><label for="cacShareCapital">Issued share capital (NGN)</label><input id="cacShareCapital" type="number" min="1" step="1" name="filing[share_capital]" value="<?= e($first('share_capital') !== '' ? $first('share_capital') : $startShareCapital) ?>" placeholder="e.g. 1000000"></div>
           </div>
           <div class="iw-tm-field iw-tm-field-full">
             <label for="cacOwnership">Ownership arrangement</label>
@@ -143,11 +145,9 @@ $first = static fn(string $key): string => (string) ($filing[$key] ?? '');
             </div>
             <?php endif; ?>
             <div class="iw-tm-field"><label for="cacAv">CAC name reservation / AV code (if available)</label><input id="cacAv" name="filing[av_code]" value="<?= e($first('av_code')) ?>"></div>
-            <div class="iw-tm-field"><label for="cacCurrency">Pay in</label>
-              <select name="filing[currency]" id="cacCurrency">
-                <option value="NGN" <?= $first('currency')!=='USD'?'selected':'' ?>>Nigerian naira (NGN)</option>
-                <option value="USD" <?= $first('currency')==='USD'?'selected':'' ?>>US dollar (USD)</option>
-              </select>
+            <div class="iw-tm-field"><label>Billing currency</label>
+              <input name="filing[currency]" type="hidden" value="<?= e($clientCurrency) ?>">
+              <p class="iw-cac-explain"><strong><?= e($clientCurrency) ?></strong> · determined by your country of residence. Government filing and stamp-duty fees, where applicable, are separate from the quoted iWORKS service fee.</p>
             </div>
           </div>
         </section>
