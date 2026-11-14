@@ -60,3 +60,32 @@ The second live GitHub Actions run [#43624276157](https://github.com/oprahayo/iw
 A fail-closed code remediation adds `app/setup_access.php` with a mandatory environment-only operator opt-in and locked-installation guard. Normal HTTP access now receives a true 404 before bootstrap; simply removing `storage/setup.lock` cannot reactivate setup. First-time recovery requires both deliberate server-side `IWORKS_ENABLE_WEB_SETUP=1` and absence of the lock, and the operator must remove the flag after installation. Do not enable it on an existing production portal. The production installer must publish this coherent app snapshot and the independent deep audit must then show **24/24 private endpoints denied**, while the 36/36 public audit and 22/22 SEO route matrix remain green.
 
 **Updated launch decision: no-go until live setup endpoint is blocked and controlled billing/OTP/mail/role/privacy gates pass.** Prior passes are public HTTP smoke results, not a live payment or security certification.
+
+## Verified production release milestone — 14 November 2026, 18:33 UTC
+
+**This section supersedes the earlier pre-deployment no-go findings solely for source deployment, public routes and tested private HTTP endpoints.** The remaining commercial-operations gates below are still open.
+
+The operator supplied the actual cPanel Terminal output for the immutable source-only release `ce4ca7e1bde8dccd0f235530e7091db408663017`, invoked through the pinned installer at repository commit `0a39e2a9f4f5cf749451040a0e4e9aa42b549c74`:
+
+- `--check`: **READINESS PASSED** for essential schema, mail settings (configuration only), sender validity and public/portal private-file controls.
+- `--apply`: **SUCCESS**, **8 portal file changes**, **0 public static asset changes**, and **no database migrations**. The publisher created a source-file backup and manifest at a private home-directory path. This is **not** evidence of a database backup or isolated restore test.
+- Local on-server `audit_launch_public.sh`: **36/36 PASS** across public and portal routes, consent/country/client-trust markers, branded assets and 12 protected SQL/mail/lock GET/HEAD requests.
+- Local on-server `audit_public_seo_live.sh`: **22 routes, 0 errors**, including service pages, canonical tags, headings, mobile viewport, robots and sitemap.
+- Local on-server `audit_private_endpoints_live.sh`: **24/24 PASS**, including **HTTP 404** for `/setup.php` on both public and portal domains and HTTP 403 for private app/config/scripts/tests/Git paths.
+- The independent GitHub Actions deep-audit job [#43624276157](https://github.com/oprahayo/iworksgt-service-portal/actions/runs/43624276157) was rerun *after this deployment* (third attempt) and independently finished **success**, reconfirming the 22-route SEO audit and 24 protected-endpoint checks. Its first two attempts had correctly failed on the formerly exposed portal installer.
+
+The messages `Could not ensure ea-php-cli cache directory!` occurred during deployment, but the installer continued and explicitly reported success. They should be reviewed if they recur in a PHP CLI operation; there is no evidence from the log alone of an incomplete source deployment.
+
+### Launch acceptance still outstanding
+
+- [ ] Confirm private encrypted **database** backup and a successful isolated restore rehearsal, not merely the publisher's source-file backup.
+- [ ] Run read-only `php scripts/repair_public_content_schema.php --check`; apply non-destructive repair only after a separate verified SQL backup, and only if the check reports a real gap.
+- [ ] Run `bash scripts/install_scheduled_jobs.sh --check PORTAL_PATH PHP_BIN` to inspect OTP/notification outbox and rates scheduler installation; verify actual queue processing and inbox receipt without creating duplicate schedulers.
+- [ ] Test new customer registration with explicit Nigeria and overseas billing residence, OTP delivery, login/logout/reset, role navigation, customer authorization and public-to-portal order continuation.
+- [ ] Verify actual receipt of customer order emails and admin/agent/finance notifications plus consented offline support replies. Enabled flags and valid sender address do not prove SMTP delivery.
+- [ ] Verify configured Paystack/Stripe test accounts, authenticated callbacks, payment failures, replay protection, invoice totals, receipt and reconciliation; ensure live keys and enabled methods are intentionally controlled.
+- [ ] Obtain commercial approval for the published CAC fees and NGN/USD service price book, statutory fees, and refund policy. Preserve historical invoices and never apply arbitrary production price migrations.
+- [ ] Review live mobile navigation, iWORKS loading pulse across account roles, document permissions, support inbox and a complete start-to-finish test order on real devices.
+- [ ] Obtain final operational/privacy/legal sign-off.
+
+**Decision after this milestone:** The source publication, sampled public HTTP routes, SEO and specified HTTP security checks are verified and green. Unrestricted **paid** launch remains **conditional**, because no production inbox, payment callback, DB restore, representative account or legal sign-off evidence was provided. A controlled preview without real payments or ID upload is a separate limited launch option.
