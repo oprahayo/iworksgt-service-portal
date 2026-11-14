@@ -4,8 +4,11 @@
 .iw-assist button,.iw-assist input,.iw-assist textarea{font:inherit}
 .iw-assist button{cursor:pointer}
 .iw-assist button:focus-visible,.iw-assist input:focus-visible,.iw-assist textarea:focus-visible,.iw-assist a:focus-visible{outline:3px solid #f6b787;outline-offset:2px}
-.iw-assist-launcher{position:fixed;right:clamp(16px,2.8vw,34px);bottom:clamp(18px,3vw,34px);z-index:1305;width:58px;height:58px;border:0;border-radius:50%;display:grid;place-items:center;background:var(--iw-assist-accent);color:#fff;font-size:26px;box-shadow:0 9px 28px #14284645;transition:transform .2s,box-shadow .2s}
-.iw-assist-launcher:hover{transform:translateY(-3px);box-shadow:0 12px 35px #14284658}
+.iw-assist-launcher{position:fixed;right:clamp(16px,2.8vw,34px);bottom:clamp(18px,3vw,34px);z-index:1305;width:76px;height:76px;padding:0;border:0;border-radius:0;display:grid;place-items:center;background:transparent!important;color:var(--iw-assist-accent);box-shadow:none;transition:transform .2s,color .2s}
+.iw-assist-launcher-icon{display:block;width:74px;height:74px;overflow:visible;filter:drop-shadow(0 7px 8px rgba(40,37,30,.24));transition:filter .2s}
+.iw-assist-launcher .iw-assist-launcher-icon circle{fill:#fff}
+.iw-assist-launcher:hover{transform:translateY(-3px);color:var(--iw-assist-accent-strong);box-shadow:none}
+.iw-assist-launcher:hover .iw-assist-launcher-icon{filter:drop-shadow(0 9px 10px rgba(40,37,30,.3))}
 .iw-assist-nudge{position:fixed;right:clamp(16px,2.8vw,34px);bottom:104px;z-index:1305;width:min(345px,calc(100vw - 32px));padding:21px 20px 18px;background:#fff;border:1px solid #e4e8f0;border-radius:18px;box-shadow:0 15px 48px #14284623;color:var(--iw-assist-text);animation:iw-assist-rise .3s ease both}
 .iw-assist-nudge strong{display:block;padding-right:22px;font-size:15px;line-height:1.45}
 .iw-assist-nudge p{font-size:13px;color:var(--iw-assist-muted);margin:5px 0 14px}
@@ -102,13 +105,14 @@
 @keyframes iw-assist-sheet{from{opacity:.7;transform:translateY(80%)}to{opacity:1;transform:translateY(0)}}
 @keyframes iw-assist-from-right{from{transform:translateX(100%)}to{transform:translateX(0)}}
 @keyframes iw-assist-fade{from{opacity:0}to{opacity:1}}
-@media(max-width:580px){.iw-assist-launcher{right:16px;bottom:18px;width:54px;height:54px}.iw-assist-chat{right:0;bottom:0;width:100vw;max-width:none;height:100dvh;border-radius:0;border:0}.iw-assist-book-head{padding:18px}.iw-assist-book-content{padding:20px 18px}.iw-assist-nudge{right:14px;bottom:84px}.iw-assist-book-grid{grid-template-columns:1fr}}
+@media(max-width:580px){.iw-assist-launcher{right:12px;bottom:14px;width:72px;height:72px}.iw-assist-launcher-icon{width:70px;height:70px}.iw-assist-chat{right:0;bottom:0;width:100vw;max-width:none;height:100dvh;border-radius:0;border:0}.iw-assist-book-head{padding:18px}.iw-assist-book-content{padding:20px 18px}.iw-assist-nudge{right:14px;bottom:84px}.iw-assist-book-grid{grid-template-columns:1fr}}
 @media(max-width:360px){.iw-assist-chat-head{padding:14px 10px}.iw-assist-book-head h2{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.iw-assist-launcher,.iw-assist-chat,.iw-assist-nudge,.iw-assist-book,.iw-assist-book-backdrop,.iw-assist-end-sheet{animation:none;transition:none}}
 
 /* Brand-consistent high-contrast focus and action states; never vendor blue. */
 .iw-assist .iw-assist-primary:focus-visible,.iw-assist .iw-assist-launcher:focus-visible{outline:3px solid #f8ba8c;outline-offset:3px}
-.iw-assist .iw-assist-primary:hover,.iw-assist .iw-assist-chat-compose button:hover,.iw-assist .iw-assist-launcher:hover{background:var(--iw-assist-accent-strong)}
+.iw-assist .iw-assist-primary:hover,.iw-assist .iw-assist-chat-compose button:hover{background:var(--iw-assist-accent-strong)}
+.iw-assist .iw-assist-launcher:hover{background:transparent!important;color:var(--iw-assist-accent-strong)}
 .iw-assist-nudge-actions button:first-child:hover{background:var(--iw-assist-accent-strong)}
 .iw-assist .iw-assist-end-sheet{max-height:85%;overflow:auto}
 
