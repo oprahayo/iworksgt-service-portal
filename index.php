@@ -3470,6 +3470,13 @@ try {
                         if ($fullName === '' && ($firstName === '' || $lastName === '')) {
                             throw new RuntimeException('Provide full name or both first and last name.');
                         }
+                        if (($user['role'] ?? '') === 'client') {
+                            $requestedCountry = trim((string)($_POST['country'] ?? ''));
+                            $currentCountry = trim((string)($user['country'] ?? ''));
+                            if (strcasecmp($requestedCountry, $currentCountry) !== 0) {
+                                throw new RuntimeException('For billing security, changing your country of residence requires support verification. You can still edit your other profile details.');
+                            }
+                        }
 
                         db_execute(
                             'UPDATE users
