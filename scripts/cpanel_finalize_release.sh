@@ -29,7 +29,8 @@ RESTORE_CREATED=""
 OPTS=""
 cleanup() {
   if [[ -n "$RESTORE_CREATED" && -n "$OPTS" && -f "$OPTS" ]]; then
-    mysql --defaults-extra-file="$OPTS" -e "DROP DATABASE IF EXISTS $RESTORE_CREATED" >/dev/null 2>&1 \
+    # Use cPanel UAPI, not raw DROP DATABASE, so cPanel mappings remain valid.
+    uapi --output=json Mysql delete_database "name=$RESTORE_CREATED" >"$WORK/uapi-cleanup.log" 2>&1 \
       || echo 'WARNING: isolated rehearsal database cleanup needs attention.' >&2
   fi
   rm -rf "$WORK"
@@ -135,19 +136,41 @@ rm -f "$BACKUP/database.sql.gz"
 chmod 0600 "$BACKUP"/*
 echo "PASS encrypted SQL backup at $BACKUP (key stored separately in $KEYDIR)"
 echo '== Rehearsing complete SQL restore in isolated database =='
-RESTORE_DB="${DB_NAME:0:30}_iwrestore_$(date -u +%H%M%S)_$RANDOM"
+# cPanel-managed create/grant/delete operations preserve host database mapping.
+# Do not use raw CREATE/DROP DATABASE under a cPanel-owned database account.
+command -v uapi >/dev/null || { echo 'BLOCK cPanel UAPI unavailable for isolated restore rehearsal.' >&2; exit 3; }
+CP_USER="$(basename "$HOME")"
+[[ "$CP_USER" =~ ^[a-zA-Z0-9]{1,20}$ ]] || { echo 'BLOCK unexpected cPanel account name.' >&2; exit 3; }
+RESTORE_DB="$CP_USER"_iwverify"$(date -u +%H%M%S)"_$RANDOM
 [[ "$RESTORE_DB" =~ ^[a-zA-Z0-9_]{1,64}$ && "$RESTORE_DB" != "$DB_NAME" ]] \
   || { echo 'BLOCK unsafe rehearsal database identifier.' >&2; exit 3; }
 existing="$(mysql --defaults-extra-file="$OPTS" -N -B \
   -e "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='$RESTORE_DB'" 2>/dev/null)" \
   || { echo 'BLOCK cannot inspect rehearsal database name.' >&2; exit 3; }
 [[ "$existing" == 0 ]] || { echo 'BLOCK rehearsal database already exists.' >&2; exit 3; }
-if ! mysql --defaults-extra-file="$OPTS" -e "CREATE DATABASE $RESTORE_DB CHARACTER SET utf8mb4" \
-  2>"$BACKUP/restore-errors.log"; then
-  echo 'BLOCK: cPanel MySQL user cannot create isolated restore database. Backup safe; production unchanged.' >&2
+SQL_USER="$(mysql --defaults-extra-file="$OPTS" -N -B -e "SELECT SUBSTRING_INDEX(CURRENT_USER(),'@',1)")"
+[[ "$SQL_USER" =~ ^[a-zA-Z0-9_]{1,64}$ ]] \
+  || { echo 'BLOCK unexpected MySQL account identity.' >&2; exit 3; }
+if ! uapi --output=json Mysql create_database "name=$RESTORE_DB" >"$BACKUP/uapi-create.log" 2>&1; then
+  echo 'BLOCK: cPanel UAPI could not create an isolated rehearsal database. Production unchanged.' >&2
   exit 3
 fi
 RESTORE_CREATED="$RESTORE_DB"
+if ! php -r '$r=json_decode(file_get_contents($argv[1]),true);exit(($r["result"]["status"]??0)==1?0:1);' \
+  "$BACKUP/uapi-create.log"; then
+  echo 'BLOCK: cPanel UAPI did not confirm rehearsal database creation.' >&2
+  exit 3
+fi
+if ! uapi --output=json Mysql set_privileges_on_database "user=$SQL_USER" \
+  "database=$RESTORE_DB" 'privileges=ALL%20PRIVILEGES' >"$BACKUP/uapi-grant.log" 2>&1; then
+  echo 'BLOCK: cPanel UAPI could not grant isolated rehearsal privileges.' >&2
+  exit 3
+fi
+if ! php -r '$r=json_decode(file_get_contents($argv[1]),true);exit(($r["result"]["status"]??0)==1?0:1);' \
+  "$BACKUP/uapi-grant.log"; then
+  echo 'BLOCK: rehearsal database privileges were not confirmed.' >&2
+  exit 3
+fi
 if ! openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass "file:$KEY" \
   -in "$BACKUP/database.sql.gz.enc" | gzip -dc \
   | mysql --defaults-extra-file="$OPTS" "$RESTORE_DB" \
@@ -161,7 +184,9 @@ for table in users jobs invoices job_payments; do
   [[ "$live" == "$restored" ]] || { echo "BLOCK restored row-count mismatch: $table" >&2; exit 3; }
   echo "PASS restored $table ($restored rows)"
 done
-mysql --defaults-extra-file="$OPTS" -e "DROP DATABASE $RESTORE_DB"
+uapi --output=json Mysql delete_database "name=$RESTORE_DB" >"$BACKUP/uapi-delete.log" 2>&1
+php -r '$r=json_decode(file_get_contents($argv[1]),true);exit(($r["result"]["status"]??0)==1?0:1);' "$BACKUP/uapi-delete.log" \
+  || { echo 'BLOCK: cPanel did not confirm cleanup of rehearsal database.' >&2; exit 3; }
 RESTORE_CREATED=""
 echo 'PASS backup restored successfully in isolated schema.'
 echo '== Controlled migration after verified private backup =='
