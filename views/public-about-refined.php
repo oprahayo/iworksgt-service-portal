@@ -40,7 +40,7 @@ if ($bannerTitle === '' || str_contains(strtolower($bannerTitle), 'launch faster
           <p><?= e($description) ?></p>
           <a href="<?= e(public_url('services')) ?>" class="iw-inner-primary">Explore services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
         </div>
-        <figure class="iw-about-team-photo">
+        <figure class="iw-about-team-photo iw-photo-feature iw-photo-feature-about">
           <img src="<?= e($heroImageUrl) ?>" width="560" height="420" alt="Business professionals collaborating around a meeting table" fetchpriority="high" decoding="async">
           <span class="iw-about-photo-label">Supporting founders since 2016</span>
           <?php if (empty($heroImage['url'])): ?><figcaption>Illustrative business photography</figcaption><?php endif; ?>
