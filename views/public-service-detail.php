@@ -37,14 +37,14 @@ $actionText = $isEnquiry
         : ($registrationType === 'company'
             ? 'Choose a registration package'
             : ($serviceSlug === 'trademark' ? 'Start trademark application' : 'Start this service')));
-$actionUrl=($isEnquiry && ($priceDetails['checkout_mode']??'')!=='consultation')
+$actionUrl=($isEnquiry && ($pricing['checkout_mode']??'')!=='consultation')
     ? public_url('contact') : portal_url('login',['service'=>$serviceSlug]);
 $launchCountry=iworks_launch_display_country();
 $launchRegistration=$serviceSlug==='company-registration'
     ? iworks_launch_registration_options($launchCountry) : [];
 $launchWebsite=$serviceSlug==='website-design-development'
     ? iworks_launch_website_packages($launchCountry) : [];
-$actionHelp = $isEnquiry;
+$actionHelp = $isEnquiry && ($pricing['checkout_mode']??'')!=='consultation';
 $featured = !empty($service['featured_image_id'])
     ? get_media_asset((int) $service['featured_image_id'])
     : null;
