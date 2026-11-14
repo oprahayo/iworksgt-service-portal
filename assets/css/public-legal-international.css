@@ -1,0 +1,117 @@
+/* Flat policy documents and substantive cross-border guides.
+   Deliberately unboxed: no shadow cards, white panels or inset containers.
+   The existing public-container only supplies the site-wide content width. */
+body.page-public .iw-legal-page, body.page-public .iw-international-page {
+  background:transparent;color:#28313b;
+  padding:clamp(28px,4vw,56px) 0 clamp(58px,7vw,95px);
+}
+body.page-public .iw-legal-width,
+body.page-public .iw-international-width {
+  max-width:var(--public-container-width,1180px);
+  margin-inline:auto;
+}
+body.page-public .iw-legal-breadcrumb {
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+  color:#74808b;font-size:12px;margin:0 0 clamp(28px,3.8vw,46px);
+}
+body.page-public .iw-legal-breadcrumb a {
+  color:#4d5964;text-decoration:none;border-bottom:1px solid transparent;
+}
+body.page-public .iw-legal-breadcrumb a:hover {border-color:#e86720;color:#a84d17}
+body.page-public .iw-legal-eyebrow {
+  color:#b75216;font-size:11px;letter-spacing:.115em;font-weight:760;
+  text-transform:uppercase;
+}
+body.page-public .iw-legal-intro,
+body.page-public .iw-international-hero {
+  padding:0 0 clamp(26px,4vw,48px);
+  margin:0 0 clamp(27px,4vw,48px);
+  border-bottom:1px solid #e9ddd3;
+}
+body.page-public .iw-legal-intro h1,
+body.page-public .iw-international-hero h1 {
+  font-size:clamp(34px,5vw,55px);font-weight:790;
+  line-height:1.1;letter-spacing:-.05em;color:#222930;
+  max-width:980px;margin:10px 0 15px;
+}
+body.page-public .iw-legal-intro p {
+  font-size:13px;color:#79838c;margin:0;
+}
+body.page-public .iw-legal-copy,
+body.page-public .iw-international-copy {
+  max-width:990px;margin:0;padding:0;
+  background:none!important;border:0!important;box-shadow:none!important;
+  font-size:15px;line-height:1.83;color:#4e5963;
+}
+body.page-public .iw-legal-copy>*,body.page-public .iw-international-copy>* {
+  max-width:950px;
+}
+body.page-public .iw-legal-copy p,
+body.page-public .iw-international-copy p {margin:0 0 18px}
+body.page-public .iw-legal-copy .iw-legal-lead,
+body.page-public .iw-international-hero>p {
+  font-size:clamp(16px,1.65vw,19px);line-height:1.75;
+  max-width:800px;color:#4e5760;
+}
+body.page-public .iw-legal-copy h2,
+body.page-public .iw-international-copy h2 {
+  margin:34px 0 11px;font-size:clamp(19px,2vw,25px);
+  line-height:1.35;font-weight:740;letter-spacing:-.025em;color:#26323c;
+}
+body.page-public .iw-international-copy h3 {
+  margin:27px 0 7px;color:#26323c;font-size:17px;font-weight:730;
+}
+body.page-public .iw-legal-copy a,
+body.page-public .iw-international-copy a,
+body.page-public .iw-legal-related a,
+body.page-public .iw-international-next a {
+  color:#bf571c;text-decoration:underline;text-underline-offset:3px;
+}
+body.page-public .iw-legal-copy a:hover,
+body.page-public .iw-international-copy a:hover {color:#8b3d11}
+body.page-public .iw-legal-copy code {
+  color:#6c391c;background:#fff1e6;border-radius:3px;padding:1px 4px;
+}
+body.page-public .iw-legal-related {
+  max-width:950px;margin-top:42px;border-top:1px solid #eee2d9;
+  padding-top:23px;display:flex;align-items:center;
+  flex-wrap:wrap;gap:10px 19px;font-size:13px;
+}
+body.page-public .iw-legal-related span {color:#646f79;font-weight:600}
+body.page-public .iw-international-hero>p {margin:0 0 22px}
+body.page-public .iw-international-actions {display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+body.page-public .iw-international-actions>a,
+body.page-public .iw-international-next>a {
+  color:#ba551b;font-size:13px;font-weight:750;
+  text-decoration:none;display:inline-flex;gap:9px;align-items:center;
+  min-height:44px;
+}
+body.page-public .iw-international-actions .iw-international-primary {
+  background:#e86720;color:#fff;border-radius:8px;padding:13px 20px;
+}
+body.page-public .iw-international-actions .iw-international-primary:hover {background:#c84f13}
+body.page-public .iw-international-copy ol {padding-left:1.45rem;margin:0 0 24px}
+body.page-public .iw-international-copy li {padding-left:5px;margin:0 0 13px}
+body.page-public .iw-international-copy strong {color:#303a44}
+body.page-public .iw-international-next {
+  max-width:900px;border-top:1px solid #e9ddd3;margin-top:40px;padding-top:26px;
+  background:transparent!important;box-shadow:none!important;
+}
+body.page-public .iw-international-next h2 {
+  color:#25313a;margin:0 0 12px;font-size:clamp(23px,3vw,32px);
+}
+body.page-public .iw-international-next p {
+  font-size:14px;color:#66727b;line-height:1.7;margin:0 0 15px;
+}
+body.page-public .iw-home-international-links {
+  color:#69747c;text-align:center;line-height:1.7;font-size:13px;
+  margin:22px auto 0;max-width:780px;
+}
+body.page-public .iw-home-international-links a {color:#bd5619;font-weight:650;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:767px) {
+  body.page-public .iw-legal-page, body.page-public .iw-international-page {padding-top:25px;padding-bottom:55px}
+  body.page-public .iw-legal-copy,body.page-public .iw-international-copy {font-size:14px;line-height:1.8}
+  body.page-public .iw-legal-copy h2,body.page-public .iw-international-copy h2 {margin-top:27px}
+  body.page-public .iw-international-actions {align-items:stretch;flex-direction:column;gap:9px}
+  body.page-public .iw-international-actions>a {width:max-content;max-width:100%}
+}
