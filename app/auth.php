@@ -483,7 +483,8 @@ function process_otp_dispatch_queue(int $limit = 5): array
         if ($sent) {
             db_execute(
                 "UPDATE otp_dispatch_queue
-                 SET status = 'sent', sent_at = :sent_at, last_error = NULL, updated_at = :updated_at
+                 SET status = 'sent', sent_at = :sent_at, last_error = NULL,
+                     otp_code = '', message = '', updated_at = :updated_at
                  WHERE id = :id",
                 [
                     'sent_at' => now(),
@@ -597,10 +598,13 @@ function send_latest_otp_via_fallback(int $userId, string $purpose): bool
          SET status = :status,
              sent_at = :sent_at,
              last_error = :last_error,
+             otp_code = CASE WHEN :sent_now = 1 THEN \'\' ELSE otp_code END,
+             message = CASE WHEN :sent_now = 1 THEN \'\' ELSE message END,
              updated_at = :updated_at
          WHERE id = :id',
         [
             'status' => $sent ? 'sent_fallback' : 'failed',
+            'sent_now' => $sent ? 1 : 0,
             'sent_at' => $sent ? now() : null,
             'last_error' => $sent ? null : 'Fallback delivery failed.',
             'updated_at' => now(),
