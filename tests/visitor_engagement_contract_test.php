@@ -77,7 +77,7 @@ $ok(!str_contains($server,'HTTP_X_FORWARDED_FOR')
     'Do not collect raw proxy IP or unconsented browsing paths.');
 $ok(str_contains($client,"pageSuggestion()") && str_contains($widget,'AUTOMATED SUGGESTION')
     && str_contains($client,'nudge-dismissed')
-    && str_contains($client,'45000 -'),
+    && str_contains($client,'120000 -'),
     'Context-aware prompts must be disclosed, dismissible and not overly frequent.');
 $ok(str_contains($dashboard,'live-visitor-overview.php')
     && str_contains($dashboard,'has_role([')
