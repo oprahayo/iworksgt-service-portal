@@ -166,6 +166,35 @@ body.page-public .iw-clean-home .iw-clean-faq-items {
   align-self:center;
 }
 
+/* Dark FAQ: high-contrast questions, readable answers, dark photo treatment. */
+body.page-public .iw-clean-home .iw-clean-faq {
+  background:#191d23;
+  color:#f8fafc;
+  border-top:0;
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro { background:#222831; }
+body.page-public .iw-clean-home .iw-clean-faq-intro::before {
+  background:linear-gradient(135deg,rgba(15,19,25,.89),rgba(15,19,25,.72));
+}
+body.page-public .iw-clean-home .iw-clean-faq-intro h2 { color:#fff; }
+body.page-public .iw-clean-home .iw-clean-faq-intro p,
+body.page-public .iw-clean-home .iw-clean-faq-inner>div:first-child p { color:#e6eaf0; }
+body.page-public .iw-clean-home .iw-clean-faq-intro a,
+body.page-public .iw-clean-home .iw-clean-faq-inner>div:first-child p a { color:#ffb17e; }
+body.page-public .iw-clean-home .iw-clean-faq-items {
+  border-top:1px solid rgba(255,255,255,.19);
+}
+body.page-public .iw-clean-home .iw-clean-faq-items details {
+  border-bottom:1px solid rgba(255,255,255,.19);
+}
+body.page-public .iw-clean-home .iw-clean-faq-items summary { color:#f8fafc; }
+body.page-public .iw-clean-home .iw-clean-faq-items summary i { color:#ffa16c; }
+body.page-public .iw-clean-home .iw-clean-faq-items details p { color:#d9dfe7; }
+body.page-public .iw-clean-home .iw-clean-faq-items summary:focus-visible,
+body.page-public .iw-clean-home .iw-clean-faq-intro a:focus-visible {
+  outline:3px solid #ffab72; outline-offset:3px;
+}
+
 /* Photo on the left, founder narrative on the right. */
 body.page-public .iw-about-min-founder-grid.has-founder-photo {
   grid-template-columns:minmax(200px,.65fr) minmax(0,1.35fr);
