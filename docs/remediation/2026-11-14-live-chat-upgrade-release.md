@@ -4,7 +4,7 @@ Date: 2026-11-14
 
 ## Pinned source
 
-- Implemented feature is merged as PR #102, immutable source \`ce4ca7e1bde8dccd0f235530e7091db408663017\`.
+- Implemented feature is merged as PR #102, immutable source \`b96d90794d8373aab64377b82c33631908bc3305\`.
 - This operator branch pins existing release components to that source and adds scoped \`--chat-upgrade\` to \`scripts/cpanel_finalize_release.sh\`.
 - The old \`--publish\` first-time deployment path is **not** suitable for this upgrade: it would repeat legacy migration/incident token rotation. The new mode prevents that.
 
@@ -41,24 +41,28 @@ Source code CI validated with PHP 8.2 and 8.3 in PR #102. The separate ops-relea
 
 ## Integrated site snapshot and no-regression rule
 
-The operator release is pinned to `ce4ca7e1bde8dccd0f235530e7091db408663017` (merged PR #105), which incorporates the chat features (PR #102), homepage legal/SEO changes (PR #103), and latest two-column mobile footer/compact mobile navigation (PR #105). Using the prior chat-only pin would regress newer public UI. Preserve existing private configuration, storage, uploaded media, published CMS content and customer records.
+The operator release is pinned to `b96d90794d8373aab64377b82c33631908bc3305` (merged PR #105), which incorporates the chat features (PR #102), homepage legal/SEO changes (PR #103), and latest two-column mobile footer/compact mobile navigation (PR #105). Using the prior chat-only pin would regress newer public UI. Preserve existing private configuration, storage, uploaded media, published CMS content and customer records.
 
 Use the **merge SHA of this repin PR** as `OPERATOR_MERGE_SHA` for both the script URL and command argument. Never use floating `main` and do not use the first-time `--publish` mode. Merging code does not deploy production; retain the backup-gated verification and manual live email acceptance steps above.
 
 ## 2026-11-14 editable visitor preferences release
 
-Application snapshot `ce4ca7e1bde8dccd0f235530e7091db408663017` includes merged PR #108: existing visitors can update opt-in remembered-chat, offline email, public-page sharing, and optional country in the same thread. Preserves current site UX from #105 and previous fixes. Do not interpret country as exact geolocation or enable offline mail without the visitor's explicit opt-in.
+Application snapshot `b96d90794d8373aab64377b82c33631908bc3305` includes merged PR #108: existing visitors can update opt-in remembered-chat, offline email, public-page sharing, and optional country in the same thread. Preserves current site UX from #105 and previous fixes. Do not interpret country as exact geolocation or enable offline mail without the visitor's explicit opt-in.
 
 Use the **merge commit of this operator repin PR** as the immutable operator SHA in the installer URL and fourth command argument (not `main`). The `--chat-upgrade` path still requires private HTTP checks, encrypted SQL backup, isolated restore rehearsal, additive migration, release preflight, source backup and HTTP checks. No first-time `--publish` migrations or token invalidation. Source merge does not activate production or prove actual inbox delivery.
 
 ## Shared all-account loader deployment pin
 
-Source snapshot `ce4ca7e1bde8dccd0f235530e7091db408663017` includes the merged all-authenticated-account flash screen PR #112, along with the previously merged visitor-consent fixes and launch pricing work. The source-only installer now deploys the same lightweight pulsing iWORKS screen on admin, finance, agent, author and customer portal pages. Public and logged-out authentication pages are excluded. Use this complete integrated snapshot, not the earlier partial chat release, to avoid reverting newer site features. The source-only `deploy_admin_mobile_refresh.sh --check` then `--apply` path does not apply migrations; it must still pass all mandatory production gates. Production verification remains required.
+Source snapshot `b96d90794d8373aab64377b82c33631908bc3305` includes the merged all-authenticated-account flash screen PR #112, along with the previously merged visitor-consent fixes and launch pricing work. The source-only installer now deploys the same lightweight pulsing iWORKS screen on admin, finance, agent, author and customer portal pages. Public and logged-out authentication pages are excluded. Use this complete integrated snapshot, not the earlier partial chat release, to avoid reverting newer site features. The source-only `deploy_admin_mobile_refresh.sh --check` then `--apply` path does not apply migrations; it must still pass all mandatory production gates. Production verification remains required.
 
-## 14 November — Launch trust/source snapshot `ce4ca7e1bde8dccd0f235530e7091db408663017`
+## 14 November — Launch trust/source snapshot `b96d90794d8373aab64377b82c33631908bc3305`
 
 This source includes merged PR #114 and prior #112: explicit registration country, a truthful Google listing link without a hard-coded rating, exclusion of CAC/GoDaddy from the client-logo ribbon, registration Terms/Privacy notice, extended read-only launch smoke tests and the all-account iWORKS loading flash. Production HTTP audit found the previous registration screen and unverified logo/rating unchanged, although legal routes, chat consent and 12/12 private SQL/mail/lock denial checks passed. **Run the source-only installer, not first-time migration/OTP invalidation.** A successful website copy does **not** approve taking payment; complete live mailbox, verified billing, gateway/refund, consent and legal checks.
 
 ## Public installer lockdown release
 
-The verified prelaunch source `ce4ca7e1bde8dccd0f235530e7091db408663017` includes production security PR #117. The previously exposed `/setup.php` route must now fail closed with HTTP 404 on GET and HEAD; normal production must not define `IWORKS_ENABLE_WEB_SETUP=1`. Safe release is a migration-free source update with backup and mandatory preflight. The independent 24-endpoint live audit must turn from 22/24 to 24/24 before full launch; root private-file checks, the 36 public and 22 SEO checks must remain green. Do not enable first-time setup to complete a normal update.
+The verified prelaunch source `b96d90794d8373aab64377b82c33631908bc3305` includes production security PR #117. The previously exposed `/setup.php` route must now fail closed with HTTP 404 on GET and HEAD; normal production must not define `IWORKS_ENABLE_WEB_SETUP=1`. Safe release is a migration-free source update with backup and mandatory preflight. The independent 24-endpoint live audit must turn from 22/24 to 24/24 before full launch; root private-file checks, the 36 public and 22 SEO checks must remain green. Do not enable first-time setup to complete a normal update.
+
+## Five-client editorial release (14 November 2026)
+
+Immutable application source `b96d90794d8373aab64377b82c33631908bc3305` includes all five professionally authored client case-study stories, a safe CLI publisher and **five genuine Chromium website screenshots**. The source deployer remains migration-free and preserving existing config, uploads and customer records. **It does not publish case studies into the database.** Following backup verification, perform CLI-only `scripts/publish_all_launch_case_studies.php --check PORTAL_ROOT`, then `--publish PORTAL_ROOT --backup-confirmed`, and verify the public case-study page and five detail routes. Project scope: Amandla Institute, Triply Travels, Restoration LLC, Karis Health Services and Cornerstonetl LLC. Client logo/media rights must be respected; avoid invented testimonials and metrics.
