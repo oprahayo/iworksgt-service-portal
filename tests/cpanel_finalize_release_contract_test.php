@@ -8,7 +8,7 @@ $installer = (string)file_get_contents($root.'/scripts/deploy_admin_mobile_refre
 $assert = static function (bool $ok, string $why): void {
     if (!$ok) throw new RuntimeException($why);
 };
-$release = '59a79f1b94144321a8555ce4094d5d1b7615e35a';
+$release = '4a30d61bc2a5fbdd9cd91028c665a48c4939b9d5';
 $assert(str_contains($operator, 'RELEASE="'.$release.'"')
     && str_contains($installer, 'RELEASE="'.$release.'"'), 'Pinned application release must match.');
 $assert(str_contains($operator, '[[ "$OPERATOR_SHA" =~ ^[a-f0-9]{40}$ ]]'),
