@@ -47,4 +47,8 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'assets(portfolio): add real browser captures of client websites'
+          # Other launch changes may have reached the feature branch while
+          # Chromium was running; rebase binary capture commit, never force-push.
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
