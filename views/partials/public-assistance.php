@@ -50,32 +50,37 @@ try {
         <div class="iw-assist-welcome">
           <div class="iw-assist-hello" aria-hidden="true"><i class="bi bi-chat-heart" aria-hidden="true"></i></div>
           <div class="iw-assist-welcome-copy">
-            <h3>How can we help?</h3>
-            <p>Share your details and send us a message.</p>
+            <h3>Message our team</h3>
+            <p>Tell us what you need. We'll reply here.</p>
           </div>
         </div>
         <form id="iwAssistStartForm">
-          <label for="iwAssistName">Full name</label>
-          <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
-          <label for="iwAssistEmail">Email address</label>
-          <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
-          <?php if ($iwChatEngagementEnabled): ?>
-          <label for="iwAssistCountry">Country <small>(optional)</small></label>
-          <select id="iwAssistCountry" name="country_code" data-assist-country aria-describedby="iwAssistCountryHint">
-            <option value="">Use an available approximate country hint</option>
-          </select>
-          <p class="iw-assist-country-hint" id="iwAssistCountryHint">No precise location is collected. Leave blank if you prefer.</p>
-          <div class="iw-assist-consent-options" role="group" aria-label="Support preferences">
-            <strong class="iw-assist-option-heading">Choose how support can follow up</strong>
-            <label><input type="checkbox" name="remember_chat" value="1">
-              Remember this conversation on this browser for 30 days</label>
-            <label><input type="checkbox" name="notify_offline" value="1">
-              Email me when support replies while I am offline (requires remembering my chat)</label>
-            <label><input type="checkbox" name="track_page" value="1">
-              Share my current website page with support while this chat is active</label>
+          <label for="iwAssistFirstMessage">Your message</label>
+          <textarea id="iwAssistFirstMessage" name="initial_message" rows="3" maxlength="2000" placeholder="How can we help?" required></textarea>
+          <div class="iw-assist-contact-fields">
+            <div>
+              <label for="iwAssistName">Name</label>
+              <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
+            </div>
+            <div>
+              <label for="iwAssistEmail">Email</label>
+              <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+            </div>
           </div>
+          <?php if ($iwChatEngagementEnabled): ?>
+          <details class="iw-assist-start-options" id="iwAssistStartOptions">
+            <summary>More options <span>(optional)</span></summary>
+            <div class="iw-assist-consent-options" role="group" aria-label="Optional support preferences">
+              <label><input type="checkbox" name="remember_chat" value="1">
+                Remember this chat on this browser for 30 days</label>
+              <label><input type="checkbox" name="notify_offline" value="1">
+                Email me about replies when I'm offline</label>
+              <label><input type="checkbox" name="track_page" value="1">
+                Share my current website page with support</label>
+            </div>
+          </details>
           <?php endif; ?>
-          <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          <button type="submit" class="iw-assist-primary">Send message <i class="bi bi-send" aria-hidden="true"></i></button>
           <details class="iw-assist-privacy-details">
             <summary>How we use your details</summary>
             <p>We store your conversation, its time, and a masked network prefix; support may see an approximate country hint. A returning-browser cookie, offline email reminders and live page sharing are optional and unchecked by default. No precise GPS is collected. We do not collect street addresses or full browsing histories. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
