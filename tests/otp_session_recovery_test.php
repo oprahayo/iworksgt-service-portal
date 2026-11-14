@@ -22,6 +22,10 @@ function setting(string $key, string $default = ''): string
 {
     return $key === 'otp_expiry_minutes' ? $GLOBALS['otp_test_expiry'] : $default;
 }
+function now(): string
+{
+    return date('Y-m-d H:i:s');
+}
 function verify_csrf(): bool
 {
     return isset($_SESSION['csrf_token'], $_POST['csrf_token'])
