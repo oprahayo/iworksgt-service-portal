@@ -59,6 +59,10 @@ if (($user['role'] ?? '') === 'super_admin') {
   <p class="mb-0 text-white-50"><?= e($heroMessage) ?></p>
 </div>
 
+<?php if (has_role(['admin','agent'])): ?>
+  <?php require __DIR__ . '/partials/live-visitor-overview.php'; ?>
+<?php endif; ?>
+
 <?php if (in_array((string)($user['role'] ?? ''), ['admin','agent','finance'], true)): ?>
   <nav class="iw-ops-dashboard-links" aria-label="Common workspace actions">
     <a href="<?= e(url('jobs')) ?>"><i class="bi bi-briefcase" aria-hidden="true"></i> Service delivery</a>

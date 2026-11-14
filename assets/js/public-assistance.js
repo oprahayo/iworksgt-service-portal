@@ -32,6 +32,11 @@
     var endpoint = root.dataset.endpoint;
     var liveEndpoint = root.dataset.liveEndpoint || '';
     var onlineStatus = document.getElementById('iwAssistLiveStatus');
+    var unreadBadge = document.getElementById('iwAssistUnread');
+    var nudgeTitle = document.getElementById('iwAssistNudgeTitle');
+    var nudgeText = document.getElementById('iwAssistNudgeText');
+    var cookieActive = false;
+    var lastClosedPoll = 0;
     var startError = document.getElementById('iwAssistStartError');
     var csrf = root.dataset.csrf;
     var storagePrefix = 'iworks-assistance-v1:';
@@ -56,6 +61,35 @@
     function persist() {
       if (session.status === 'active') setStore('chat', JSON.stringify(session));
       else clearStore('chat');
+    }
+    function updateUnread(n) {
+      var count = Math.max(0, Math.min(99, Number(n) || 0));
+      if (!unreadBadge) return;
+      unreadBadge.hidden = !chat.hidden || count === 0;
+      unreadBadge.textContent = count > 9 ? '9+' : String(count);
+      unreadBadge.setAttribute('aria-label', count + ' unread support replies');
+      launcher.setAttribute('aria-label',count ? 'Open support. ' + count + ' unread replies' : 'Open iWorks support');
+    }
+    function pageSuggestion() {
+      var path = window.location.pathname.toLowerCase();
+      var config = {title:'Need a hand with iWORKS?',text:'Our team can help you explore services and next steps.'};
+      if (/^\/(?:services|service)(?:\/|$)/.test(path)) {
+        config = {title:'Exploring a service?',text:'Ask us about requirements, pricing and how to get started.'};
+      } else if (/^\/pricing(?:\/|$)/.test(path)) {
+        config = {title:'Comparing options?',text:'We can explain pricing and what each service includes.'};
+      } else if (/^\/track(?:\/|$)/.test(path)) {
+        config = {title:'Checking your order?',text:'Our team can help you understand tracking and delivery updates.'};
+      } else if (/^\/blog(?:\/|$)/.test(path)) {
+        config = {title:'Have a question about this topic?',text:'Ask us for practical guidance or a relevant service.'};
+      } else if (/^\/contact(?:\/|$)/.test(path)) {
+        config = {title:'Would you like to speak with us?',text:'Send a question and we will respond here.'};
+      }
+      if (nudgeTitle) nudgeTitle.textContent = config.title;
+      if (nudgeText) nudgeText.textContent = config.text;
+    }
+    function optedIn(name) {
+      var input = startForm.elements.namedItem(name);
+      return Boolean(input && input.checked);
     }
     function hideNudge(dismiss) {
       nudge.hidden = true;
@@ -230,7 +264,7 @@
       (Array.isArray(items) ? items : []).forEach(function (m) {
         var id = Number(m.id || 0);
         if (!id || session.items.some(function (x) { return Number(x.id) === id; })) return;
-        var item = { id:id, kind:m.sender === 'staff' ? 'staff' : 'user',
+        var item = { id:id, kind:m.sender === 'staff' ? 'staff' : m.sender === 'system' ? 'system' : 'user',
           text:String(m.body || ''), when:String(m.created_at || '').slice(11,16) };
         session.items.push(item);
         if (session.items.length > 80) session.items.shift();
@@ -247,15 +281,44 @@
       onlineStatus.classList.toggle('is-online',online);
     }
     async function pollLive() {
-      if (session.status !== 'active' || !session.token ||
-          document.visibilityState === 'hidden' || chat.hidden) return;
+      if (session.status !== 'active' || (!session.token && !cookieActive) ||
+          document.visibilityState === 'hidden') return;
+      var nowTime = Date.now();
+      if (chat.hidden && nowTime - lastClosedPoll < 18000) return;
+      if (chat.hidden) lastClosedPoll = nowTime;
       try {
-        var data = await liveApi('poll',{after_id:session.lastMessageId || 0});
+        var data = await liveApi('poll',{after_id:session.lastMessageId || 0,
+          page_path:window.location.pathname,chat_open:chat.hidden?'0':'1'});
         ingestMessages(data.messages);
         updatePresence(data);
-        if (data.status === 'ended') { session.status='ended'; persist(); showChatStage(); }
+        if (data.status === 'ended') {
+          session.status='ended'; cookieActive=false;
+          persist(); updateUnread(0); if (!chat.hidden) showChatStage();
+          return;
+        }
+        updateUnread(data.unread);
       } catch (error) {
-        if (onlineStatus) { onlineStatus.textContent = 'Connection interrupted. Retrying…'; }
+        if (!chat.hidden && onlineStatus) { onlineStatus.textContent = 'Connection interrupted. Retrying…'; }
+      }
+    }
+    async function resumeConversation() {
+      if (!liveEndpoint) return;
+      try {
+        var data = await liveApi('resume',{page_path:window.location.pathname,chat_open:'0'});
+        if (!data.active) return;
+        cookieActive = true;
+        var id = String(data.id || '');
+        if (session.status !== 'active' || session.id !== id) {
+          session = {name:String(data.name||''),email:String(data.email||''),id:id,
+            token:'',items:[],lastMessageId:0,status:'active'};
+        }
+        ingestMessages(data.messages);
+        if (!chat.hidden) showChatStage();
+        updatePresence(data);
+        updateUnread(data.unread);
+        startLivePoller();
+      } catch (ignore) {
+        // A failed restore must not erase an existing, still-valid tab chat.
       }
     }
     function startLivePoller() {
@@ -287,6 +350,7 @@
       launcher.hidden = true;
       launcher.setAttribute('aria-expanded', 'true');
       showChatStage();
+      updateUnread(0);
       startLivePoller();
       // Focus should not scroll the first-screen CTA out of view, and should
       // not automatically summon the keyboard on narrow touchscreens.
@@ -312,10 +376,14 @@
       document.body.classList.remove('iw-assist-chat-open');
       launcher.hidden = false;
       launcher.setAttribute('aria-expanded', 'false');
+      // A hidden widget continues a low-frequency heartbeat so the staff
+      // dashboard knows the visitor is present on the website.
+      pollLive();
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
     }
     function restartChat() {
       session = {name: '', email: '', id: '', token: '', items: [], lastMessageId: 0, status: 'new'};
+      cookieActive = false; updateUnread(0);
       clearStore('chat');
       startForm.reset();
       showChatStage();
@@ -323,12 +391,13 @@
     }
     async function finishChat(rating) {
       try {
-        if (session.token) await liveApi('end', rating ? {rating:rating} : {});
+        if (session.status === 'active') await liveApi('end', rating ? {rating:rating} : {});
       } catch (error) {
         showError(errorBox, error.message || 'Unable to end chat. Retry.');
         return;
       }
       session.status = 'ended';
+      cookieActive = false; updateUnread(0);
       session.items = [];
       session.token = '';
       clearStore('chat');
@@ -486,12 +555,22 @@
       var name = startForm.elements.namedItem('full_name').value.trim();
       var email = startForm.elements.namedItem('email').value.trim();
       if (!name || !email) return;
+      if (optedIn('notify_offline') && !optedIn('remember_chat')) {
+        showError(startError,'To receive offline reply emails, also choose to remember this conversation on this browser.');
+        return;
+      }
       busy=true;
       var submit=startForm.querySelector('[type=submit]');
       submit.disabled=true;
       hideError(startError);
       try {
-        var live=await liveApi('start',{name:name,email:email});
+        var live=await liveApi('start',{name:name,email:email,
+          remember_chat:optedIn('remember_chat')?'1':'0',
+          notify_offline:optedIn('notify_offline')?'1':'0',
+          track_page:optedIn('track_page')?'1':'0',
+          page_path:window.location.pathname});
+        cookieActive = Boolean(live.features && live.features.resume &&
+          optedIn('remember_chat'));
         session = {name:name,email:email,id:String(live.id),token:String(live.token),
           items:[],lastMessageId:0,status:'active'};
         persist();
@@ -506,13 +585,14 @@
     messageForm.addEventListener('submit', async function (event) {
       event.preventDefault();
       var text = messageInput.value.trim();
-      if (!text || !session.token || busy) return;
+      if (!text || session.status !== 'active' || (!session.token && !cookieActive) || busy) return;
       busy = true;
       hideError(errorBox);
       var button = messageForm.querySelector('button[type=submit]');
       button.disabled = true;
       try {
-        var result=await liveApi('send',{message:text,after_id:session.lastMessageId || 0});
+        var result=await liveApi('send',{message:text,after_id:session.lastMessageId || 0,
+          page_path:window.location.pathname,chat_open:'1'});
         ingestMessages(result.messages);
         updatePresence(result);
         messageInput.value='';
@@ -574,7 +654,9 @@
       }
     });
 
+    pageSuggestion();
     showChatStage();
+    resumeConversation();
     if (session.status === 'active') startLivePoller();
     document.addEventListener('visibilitychange',function () {
       if (document.visibilityState === 'visible') pollLive();
@@ -592,7 +674,8 @@
         return;
       }
       if (document.visibilityState === 'hidden') return;
-      if (!chat.hidden || !book.hidden) return;
+      if (!chat.hidden || !book.hidden || session.status === 'active') return;
+      pageSuggestion();
       nudge.hidden = false;
     }
     document.addEventListener('visibilitychange', function () {

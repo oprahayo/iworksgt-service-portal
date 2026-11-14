@@ -129,11 +129,13 @@ jobs:
           php tests/cpanel_finalize_release_contract_test.php
           php tests/f22_controlled_schema_migrations_test.php
           php tests/live_chat_emoji_editorial_contract_test.php
+          php tests/visitor_engagement_contract_test.php
 
       - name: Validate public interaction JavaScript
         run: |
           node --check assets/js/public-ux.js
           node --check assets/js/public-assistance.js
           node --check assets/js/live-inbox.js
+          node --check assets/js/dashboard-live-visitors.js
           node --check assets/js/admin-transition.js
           node tests/admin_transition_behavior_test.js
