@@ -43,8 +43,6 @@ $assert(str_contains($helper, "file_exists(")
     'DB credentials must remain private and CLI-only.');
 $assert(!str_contains($operator, 'IWORKS_BYPASS') && !str_contains($operator, 'SKIP_BACKUP'),
     'Unsafe bypass modes must not exist.');
-$assert(str_contains($installer, 'app/config.php|storage/*|assets/uploads/*')
-    && str_contains($installer, 'release safety preflight') === false
-        ? true : str_contains($installer, 'app/config.php|storage/*|assets/uploads/*'),
+$assert(str_contains($installer, 'app/config.php|storage/*|assets/uploads/*'),
     'Existing private config and uploaded content must remain excluded from publication.');
 echo "cpanel_finalize_release_contract_test passed\n";
