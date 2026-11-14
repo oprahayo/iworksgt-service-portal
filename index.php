@@ -1061,7 +1061,12 @@ try {
             }
 
             if (method_is('POST')) {
-                require_csrf();
+                // The signed OTP form token permits recovery after a short
+                // PHP session eviction, without disabling CSRF validation.
+                if (!otp_submission_csrf_valid()) {
+                    http_response_code(419);
+                    exit('Verification form expired. Refresh the OTP page and retry.');
+                }
                 $action = $_POST['form_action'] ?? '';
 
                 try {
@@ -1104,7 +1109,7 @@ try {
                         }
 
                         if (!verify_otp_code((int) $otpUser['id'], (string) $pendingOtp['purpose'], $otpCode)) {
-                            throw new RuntimeException('Invalid or expired OTP code.');
+                            throw new RuntimeException('Invalid or expired OTP code. Use the latest code received or request a new one.');
                         }
 
                         if ((string) $pendingOtp['purpose'] === 'verify_email' && !is_email_verified($otpUser)) {
