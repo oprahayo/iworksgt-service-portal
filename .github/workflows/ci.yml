@@ -43,6 +43,7 @@ jobs:
           bash -n scripts/deploy_international_legal_seo.sh
           bash -n scripts/deploy_hide_home_seo_links.sh
           bash -n scripts/deploy_mobile_header_footer_restore.sh
+          bash -n scripts/deploy_launch_products.sh
           php -l scripts/activate_launch_prices.php
           bash -n scripts/deploy_businesshub_home.sh
           bash -n scripts/deploy_clean_home.sh
