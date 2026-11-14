@@ -27,13 +27,13 @@ function check_quote(bool $pass,string $message):void {
 $sole = cac_filing_quote('business', [
     'structure'=>'sole','people'=>[['role'=>'proprietor']],'currency'=>'NGN',
 ]);
-check_quote($sole['total']===26000.0 && $sole['tax_percent']===0.0,
-    'Existing 0% business-name checkout baseline must remain stable.');
+check_quote($sole['total']===49000.0 && $sole['tax_percent']===0.0,
+    'New Business Name orders use launch pricing and preserved configured tax policy.');
 $partner=cac_filing_quote('business', [
     'structure'=>'partnership','people'=>[['role'=>'partner'],['role'=>'partner']],'currency'=>'NGN',
 ]);
-check_quote($partner['subtotal']===41000.0 && $partner['total']===41000.0,
-    'Second proprietor must use the configured partner fee.');
+check_quote($partner['subtotal']===64000.0 && $partner['total']===64000.0,
+    'Second proprietor adds the configured NGN surcharge to the new launch base.');
 $service = get_service_by_slug('company-registration');
 $display = iworks_customer_product_price($service);
 check_quote($display['tax_note']==='', 'Unrelated generic 7.5% CAC service tax must not be advertised.');
@@ -50,18 +50,19 @@ $companyData=[
     'currency'=>'NGN',
 ];
 $company=cac_filing_quote('company',$companyData);
-check_quote($company['base_ngn']===46000.0
+check_quote($company['base_ngn']===60000.0
+    && $company['additional_people_ngn']===1000.0
     && $company['extras_ngn']['registered_office']===10000.0
     && $company['extras_ngn']['privacy_advisory']===100000.0
-    && $company['subtotal']===156000.0
-    && $company['tax_amount']===11700.0
-    && $company['total']===167700.0,
+    && $company['subtotal']===171000.0
+    && $company['tax_amount']===12825.0
+    && $company['total']===183825.0,
     'Configured tax and add-ons must produce one total.');
 $companyData['currency']='USD';
 $usd=cac_filing_quote('company',$companyData);
-check_quote($usd['subtotal']===156.0
-    && $usd['tax_amount']===11.7
-    && $usd['total']===167.7,
+check_quote($usd['subtotal']===286.0
+    && $usd['tax_amount']===21.45
+    && $usd['total']===307.45,
     'USD amount and tax must use the same invoice-currency rounding.');
 $display=iworks_customer_product_price($service);
 check_quote(str_contains($display['tax_note'],'7.50%'),
