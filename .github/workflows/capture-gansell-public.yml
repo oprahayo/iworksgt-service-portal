@@ -18,6 +18,7 @@ jobs:
       - name: Checkout source branch
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           persist-credentials: true
       - uses: actions/setup-node@v4
         with:
@@ -35,4 +36,6 @@ jobs:
           git add assets/branding/solutions/*.png
           git diff --cached --quiet && exit 0
           git commit -m "assets(gansell): capture real public home and vendor screenshots"
+          git fetch origin "$GITHUB_HEAD_REF"
+          git rebase FETCH_HEAD
           git push origin HEAD:"$GITHUB_HEAD_REF"
