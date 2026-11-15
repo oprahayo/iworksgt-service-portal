@@ -24,7 +24,7 @@ $check(str_contains($header, 'aria-label="Request a consultation"'),
     'Short consultation button needs an accessible full name.');
 $check(str_contains($header, '<details class="iw-mobile-menu-group">')
     && str_contains($header, '<summary>What we do')
-    && str_contains($header, '<summary>Our Solutions')
+    && !str_contains($header, '<summary>Our Solutions')
     && str_contains($header, '<summary>Resources')
     && str_contains($header, '<summary>About'),
     'Preserve functional native mobile accordion groups.');
