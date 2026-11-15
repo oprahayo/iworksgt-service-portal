@@ -383,14 +383,9 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
                       <?php endif; ?>
                     </span>
                   </a>
-                  <div class="iw-home-case-overlay">
-                    <div class="iw-home-case-overlay-actions">
-                      <a href="<?= e($caseLink) ?>">View case study</a>
-                      <?php if ($clientWebsite !== ''): ?>
-                        <a href="<?= e($clientWebsite) ?>" target="_blank" rel="noopener noreferrer" aria-label="Visit <?= e($clientName) ?> website (opens in a new tab)">Visit website</a>
-                      <?php endif; ?>
-                    </div>
-                  </div>
+                  <!-- The whole preview opens the detailed case study.
+                       Keep website actions on that page, never over the screenshot. -->
+                  <span class="iw-home-case-overlay" aria-hidden="true"></span>
                 </div>
                 <div class="iw-home-case-card-copy">
                   <small><?= e((string)(($story['category'] ?? '') ?: 'Client project')) ?></small>
