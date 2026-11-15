@@ -284,7 +284,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <details class="iw-mobile-menu-group">
               <summary>Our Solutions <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
-                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>All solutions</a>
+                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Explore all solutions</a>
                 <a href="<?= e(public_url('solutions')) ?>#gansell">Gansell marketplace</a>
               </div>
             </details>
