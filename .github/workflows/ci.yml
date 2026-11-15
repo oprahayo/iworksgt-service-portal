@@ -99,6 +99,7 @@ jobs:
           php tests/mobile_header_footer_restore_contract_test.php
           php tests/home_transparent_sticky_header_contract_test.php
           php tests/solutions_visual_refinement_contract_test.php
+          php tests/public_solutions_media_contract_test.php
           php tests/launch_product_order_contract_test.php
           php tests/site_launch_blockers_contract_test.php
           php tests/setup_http_disabled_test.php
