@@ -47,6 +47,7 @@ jobs:
             "preview-iworks-home-carousel-desktop": ("http://127.0.0.1:8765/home-case-preview.html", 1440, 900),
             "preview-iworks-home-carousel-mobile": ("http://127.0.0.1:8765/home-case-preview.html", 390, 844),
           }
+          failures = []
           with sync_playwright() as p:
               browser = p.chromium.launch(headless=True,args=['--no-sandbox'])
               for name, (url, width, height) in sites.items():
@@ -104,6 +105,8 @@ jobs:
                               # Native overflow provides touch-swiping without
                               # affecting vertical document scrolling.
                               move=rail.evaluate("""el => {
+                                el.style.scrollBehavior='auto';
+                                el.style.scrollSnapType='none';
                                 el.scrollLeft=240;
                                 return el.scrollLeft;
                               }""")
@@ -140,10 +143,13 @@ jobs:
                       page.screenshot(path=f"portfolio-reference/{name}.png",full_page=True,animations="disabled")
                       print(f"{name}: HTTP {result.status if result else 'n/a'}, TITLE {page.title()}")
                   except Exception as e:
-                      print(f"{name}: screenshot failed: {str(e)[:160]}")
+                      failures.append(f"{name}: {e}")
+                      print(f"{name}: screenshot failed: {str(e)[:240]}")
                   finally:
                       page.close()
               browser.close()
+          if failures:
+              raise RuntimeError("Visual QA failed: " + "; ".join(failures))
           PY
       - uses: actions/upload-artifact@v4
         with:
