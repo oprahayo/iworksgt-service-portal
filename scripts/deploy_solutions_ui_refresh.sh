@@ -36,6 +36,7 @@ index.php
 app/helpers.php
 app/public_marketing.php
 app/public_seo.php
+app/public_solutions_media.php
 views/partials/public-header.php
 views/partials/public-footer.php
 views/public-home-clean.php
@@ -50,15 +51,12 @@ assets/css/solutions.css
 assets/branding/orangeserver-logo.svg
 assets/branding/rilahost-logo.svg
 assets/branding/case-studies/gansell-website-project.webp
+assets/branding/solutions/gansell-home-desktop.png
+assets/branding/solutions/gansell-home-mobile.png
+assets/branding/solutions/ab-african-store-desktop.png
+assets/branding/solutions/ab-african-store-mobile.png
 ASSETS
-# Real public screenshots are optional until the guarded Chromium capture
-# finishes. Never install a placeholder image as a real vendor screenshot.
-for image in gansell-home-desktop.png gansell-home-mobile.png ab-african-store-desktop.png ab-african-store-mobile.png; do
-  candidate="assets/branding/solutions/$image"
-  if [[ -s "$SOURCE/$candidate" ]]; then
-    echo "$candidate" >> "$WORK/asset-files"
-  fi
-done
+# All four actual screenshots are mandatory, never silently omitted.
 cat "$WORK/php-files" "$WORK/asset-files" > "$WORK/portal-files"
 
 while IFS= read -r path; do
@@ -77,6 +75,7 @@ grep -Fq 'id="iw-solutions"' "$SOURCE/views/public-solutions.php" || {
 }
 while IFS= read -r path; do php -l "$SOURCE/$path" >/dev/null; done < "$WORK/php-files"
 php "$SOURCE/tests/solutions_visual_refinement_contract_test.php"
+php "$SOURCE/tests/public_solutions_media_contract_test.php"
 php "$SOURCE/tests/gansell_hero_partner_contract_test.php"
 php "$SOURCE/tests/home_case_showcase_contract_test.php"
 php "$SOURCE/tests/centered_case_study_carousel_contract_test.php"
@@ -176,6 +175,27 @@ for url in 'https://iworksgt.com/' \
     }
   fi
   echo "PASS HTTP 200: $url"
+done
+
+# Do not accept a release where one of the four actual screenshots returns
+# HTML, 404, an incorrect PNG, or a stale version from the wrong web root.
+for image in gansell-home-desktop.png gansell-home-mobile.png ab-african-store-desktop.png ab-african-store-mobile.png; do
+  url="https://iworksgt.com/solutions/media/$image?v=${RELEASE:0:12}"
+  headers="$WORK/media-headers"
+  body="$WORK/media-body"
+  curl --http1.1 --fail-with-body -fsS --retry 2 --max-time 35 \
+    -H 'Accept: image/png' -H 'Cache-Control: no-cache' \
+    -D "$headers" -o "$body" "$url" || {
+      echo "Image URL unavailable: $image (no publishing accepted)." >&2
+      false
+    }
+  if ! grep -Eiq '^content-type:[[:space:]]*image/png' "$headers"; then
+    echo "Image did not return PNG content: $image" >&2; false
+  fi
+  if ! cmp -s "$SOURCE/assets/branding/solutions/$image" "$body"; then
+    echo "Image URL is stale, corrupt, or from the wrong public root: $image" >&2; false
+  fi
+  echo "PASS real screenshot: $image"
 done
 STARTED=0
 trap - ERR
