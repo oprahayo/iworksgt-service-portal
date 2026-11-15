@@ -29,7 +29,7 @@ $main=(string) file_get_contents(__DIR__.'/../scripts/run_scheduled_operations.p
 $fallback=(string) file_get_contents(__DIR__.'/../scripts/cron_support_chat.php');
 // The primary worker builds the filename dynamically from task='queue';
 // the fallback uses the equivalent literal filename.
-if (!str_contains($main, "'/cron-' . $task . '.lock'")) {
+if (!str_contains($main, "'/cron-' . " . '$task' . " . '.lock'")) {
     throw new RuntimeException('Main scheduler must retain the queue-specific private lock.');
 }
 if (!str_contains($fallback,'/cron-queue.lock')) {
