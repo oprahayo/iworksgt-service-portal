@@ -385,22 +385,35 @@ function iw_chat_close_and_queue_receipt(array $thread, string $state): bool
 {
     $id = (int)($thread['id'] ?? 0);
     if ($id <= 0 || !in_array($state,['ended','closed'],true)) return false;
-    $changed = db_query(
-        "UPDATE iw_live_threads SET status=:state,updated_at=NOW()
-         WHERE id=:id AND status='open'",['state'=>$state,'id'=>$id]
-    )->rowCount();
-    if ($changed !== 1) return false;
-    $body='Chat receipt: Case #'.$id.' closed on '.date('Y-m-d H:i').' ('.($state==='closed'?'support closed':'visitor ended').')';
-    $eventId=iw_chat_system_event($id,$body);
-    if (iw_chat_engagement_ready() && filter_var((string)($thread['email']??''),FILTER_VALIDATE_EMAIL)) {
-        db_execute("INSERT IGNORE INTO iw_live_email_outbox
-            (thread_id,message_id,recipient_email,status,attempt_count,
-             next_attempt_at,created_at,updated_at)
-            VALUES (:thread,:message,:recipient,'pending',0,NOW(),NOW(),NOW())",
-            ['thread'=>$id,'message'=>$eventId,'recipient'=>(string)$thread['email']]
-        );
+    $pdo=db();
+    if ($pdo->inTransaction()) throw new RuntimeException('Unexpected chat transaction nesting.');
+    $pdo->beginTransaction();
+    try {
+        $changed = db_query(
+            "UPDATE iw_live_threads SET status=:state,updated_at=NOW()
+             WHERE id=:id AND status='open'",['state'=>$state,'id'=>$id]
+        )->rowCount();
+        if ($changed !== 1) {
+            $pdo->rollBack();
+            return false;
+        }
+        $body='Chat receipt: Case #'.$id.' closed on '.date('Y-m-d H:i').' ('.($state==='closed'?'support closed':'visitor ended').')';
+        $eventId=iw_chat_system_event($id,$body);
+        if (iw_chat_engagement_ready()
+            && filter_var((string)($thread['email']??''),FILTER_VALIDATE_EMAIL)) {
+            db_execute("INSERT IGNORE INTO iw_live_email_outbox
+                (thread_id,message_id,recipient_email,status,attempt_count,
+                 next_attempt_at,created_at,updated_at)
+                VALUES (:thread,:message,:recipient,'pending',0,NOW(),NOW(),NOW())",
+                ['thread'=>$id,'message'=>$eventId,'recipient'=>(string)$thread['email']]
+            );
+        }
+        $pdo->commit();
+        return true;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
     }
-    return true;
 }
 
 function iw_chat_public_request(): void
@@ -415,6 +428,10 @@ function iw_chat_public_request(): void
     }
     if (!iw_chat_ready()) {
         iw_chat_send_json(['ok'=>false, 'message'=>'Live chat is being configured. Please use our Contact page.'],503);
+        return;
+    }
+    if (!iw_chat_engagement_ready()) {
+        iw_chat_send_json(['ok'=>false,'message'=>'Support follow-up is temporarily unavailable. Please use Contact.'],503);
         return;
     }
 
@@ -593,7 +610,8 @@ function iw_chat_public_request(): void
                 if ($latest && $latest['sender']==='system'
                     && (str_starts_with((string)$latest['body'],'New conversation started')
                         || str_starts_with((string)$latest['body'],'Conversation started'))) {
-                    $topic=preg_replace('/\\s+/u',' ',mb_substr($body,0,90));
+                    $topic=preg_replace('/\\s+/u',' ',function_exists('mb_substr')
+                        ? mb_substr($body,0,90) : substr($body,0,90));
                     iw_chat_system_event($threadId,'Topic: '.($topic?:'Support enquiry'));
                 }
                 $recent=db_one("SELECT COUNT(*) AS n FROM iw_live_messages
