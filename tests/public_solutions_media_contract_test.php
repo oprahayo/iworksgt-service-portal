@@ -21,6 +21,12 @@ foreach ($expected as $name) {
         && ($size[0] ?? 0) >= 390 && ($size[1] ?? 0) >= 800,
         'Invalid desktop/mobile PNG: '.$name);
     $assert(filesize($path) > 10000, 'Unexpected empty image: '.$name);
+    $embedded = iworks_solutions_embedded_image($name, $root);
+    $assert(str_starts_with($embedded, 'data:image/png;base64,'),
+        'Real screenshot must be embedded independently of public asset routes: '.$name);
+    $decoded = base64_decode(substr($embedded, strlen('data:image/png;base64,')), true);
+    $assert($decoded !== false && hash('sha256', $decoded) === hash_file('sha256', $path),
+        'Embedded screenshot is not byte-identical to the genuine PNG: '.$name);
 }
 foreach (['../app/config.php','../../storage/data.png','unknown.png','gansell-home-desktop.jpg',
     'gansell-home-desktop.png/evil','/etc/passwd',''] as $bad) {
@@ -33,19 +39,20 @@ $deployer = (string)file_get_contents($root.'/scripts/deploy_solutions_ui_refres
 $assert(str_contains($router,"solutions/media/([a-z0-9-]+") &&
     str_contains($router,"iworks_serve_solutions_media("),
     'Image URL must work through the shared public PHP entry point.');
-$assert(str_contains($landing,"public_absolute_url('solutions/media/'") &&
-    str_contains($landing,'iw-gansell-checklist') &&
-    substr_count($landing,"$".'gansellImage(') === 4 &&
-    !str_contains($landing,'is_file(__DIR__'),
-    'Page must use four reliable image routes, not filesystem-dependent public links.');
+$assert(str_contains($landing,'iworks_solutions_embedded_image(') &&
+    str_contains($landing,'iw-gansell-feature-list') &&
+    str_contains($landing,'iw-gansell-free-sticker') &&
+    substr_count($landing,'<img src="<?= e($gansellScreens[') === 4 &&
+    !str_contains($landing,"public_absolute_url('solutions/media/'"),
+    'Page must render four authentic embedded images and a graphic FREE sticker.');
 foreach ($expected as $name) {
     $assert(str_contains($deployer, "assets/branding/solutions/".$name),
         'Deployment must require screenshot '.$name);
 }
-$assert(str_contains($deployer,"PASS real screenshot: ") &&
-    str_contains($deployer,"cmp -s ") &&
-    str_contains($deployer,"^content-type:") &&
+$assert(str_contains($deployer,'src="data:image/png;base64,') &&
+    str_contains($deployer,'PASS 4 genuine screenshots embedded in public Gansell HTML') &&
+    str_contains($deployer,'iw_release=') &&
     str_contains($deployer,'rollback()') &&
     str_contains($deployer,'check_remediation_release.php'),
-    'Deployment must verify live PNG content with safety checks and rollback.');
+    'Deployment must verify all four authentic embedded PNGs in the public page and roll back on failure.');
 echo "public_solutions_media_contract_test passed\n";
