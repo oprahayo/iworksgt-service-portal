@@ -55,7 +55,7 @@ $check(str_contains($css, '.iw-mobile-menu-cta-row')
 $check(str_contains($css, '@media (max-width: 1199.98px)')
     && str_contains($css, '@media (max-width: 640px)'),
     'Desktop layout must not inherit the mobile-only refinements.');
-$check(str_contains($header, '20261114-mobile-footer2'),
+$check(str_contains($header, '20261115-visual-finish1'),
     'Bump fallback CSS cache version to show the restored footer.');
 $check(str_contains($navCss, '[data-iw-guest-cta][hidden]{display:none!important}'),
     'Guest-only CTA must still disappear when user is logged in.');
