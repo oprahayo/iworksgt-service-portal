@@ -495,7 +495,7 @@ $socialIcons = [
   if (is_file($iwAssistJsPath) && is_readable($iwAssistJsPath)): ?>
   <script id="iw-assist-controller"><?= str_ireplace('</script', '<\\/script', (string) file_get_contents($iwAssistJsPath)) ?></script>
 <?php else: ?>
-  <script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261114-compact2"></script>
+  <script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261115-quickchat1"></script>
 <?php endif; ?>
 <?php if (in_array(($currentPublicSlug ?? ''), ['home','case-studies','case_study'], true)): ?>
   <?php $iwWorkJs = __DIR__.'/../../assets/js/portfolio-work.js'; ?>
