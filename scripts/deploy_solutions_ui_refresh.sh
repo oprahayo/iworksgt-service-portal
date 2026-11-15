@@ -45,6 +45,8 @@ assets/css/public-clean.css
 assets/css/portfolio-work.css
 assets/css/site-launch-polish.css
 assets/css/solutions.css
+assets/branding/orangeserver-logo.svg
+assets/branding/rilahost-logo.svg
 assets/branding/case-studies/gansell-website-project.webp
 ASSETS
 cat "$WORK/php-files" "$WORK/asset-files" > "$WORK/portal-files"

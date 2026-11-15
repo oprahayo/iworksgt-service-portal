@@ -83,6 +83,13 @@ $assert(str_contains($routes,"'solutions/gansell'") &&
         str_contains($seo,"public_url('solutions')") &&
         str_contains($seo,"public_url('gansell')"),
         'Both routes must resolve, have search meta and be exposed in the sitemap.');
+$assert(str_contains($header,'20261115-brand-grayscale1')
+    && str_contains($header,'20261115-portfolio-orange1')
+    && str_contains($header,'20261115-visual-finish1'),
+    'Public CSS URLs must invalidate old client cache after this release.');
+$assert(str_contains($deployer,'assets/branding/orangeserver-logo.svg')
+    && str_contains($deployer,'assets/branding/rilahost-logo.svg'),
+    'Deploy both hosting logo assets if missing from the public docroot.');
 $assert(str_contains($landing,'id="iw-solutions"') &&
         str_contains($landing,'https://gansell.com/') &&
         str_contains($landing,'Get started on Gansell') &&
