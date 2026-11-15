@@ -19,7 +19,7 @@ function iw_chat_engagement_ready(): bool
     return iw_chat_ready() && schema_table_exists('iw_live_email_outbox');
 }
 
-/** Host-only, HttpOnly cookie is set only after visitors choose to remember chat. */
+/** Necessary, host-only HttpOnly 30-day support continuity cookie. */
 function iw_chat_resume_cookie_name(): string
 {
     return 'iw_chat_resume';
@@ -104,7 +104,7 @@ function iw_chat_enqueue_offline_reply(array $thread, int $messageId): void
         || !filter_var((string)($thread['email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
         return;
     }
-    // Queue every opted-in staff reply with a short grace period. Otherwise
+    // Queue transactional staff replies with a short grace period. Otherwise
     // a visitor who left 2 seconds ago would miss email entirely, because the
     // 70-second online window still classifies their stale heartbeat as active.
     $last = strtotime((string)($thread['visitor_last_seen_at'] ?? '')) ?: 0;
@@ -174,7 +174,7 @@ function iw_chat_process_email_outbox(int $limit = 12): array
         $message = "iWORKS Support has replied to your website conversation.\n\n"
             ."Open https://iworksgt.com/ in the same browser and select the support chat "
             ."to read the new reply. This email does not include private chat content.\n\n"
-            ."You received this notification because you enabled offline reply emails.\n";
+            ."This is a service message about the support conversation you started.\n";
         $ok = send_email((string)$entry['recipient_email'],
             'New reply from iWORKS Support', $message);
         $attempt = max(1,(int)$entry['attempt_count']);
@@ -259,14 +259,13 @@ function iw_chat_ip_prefix(): string
 }
 
 /**
- * Country-only hint. Prefer an optional visitor-selected country, then
- * server-populated GeoIP metadata, then a locally installed GeoIP extension.
+ * Country-only hint, from server-provided GeoIP metadata or a local
+ * GeoIP extension. Never trust a customer-edited country for support display.
  * No external address-lookup requests, raw-IP persistence or fake precision.
  */
 function iw_chat_country_code(string $selected = ''): ?string
 {
     $candidates = [
-        $selected,
         (string)($_SERVER['GEOIP_COUNTRY_CODE'] ?? ''),
         (string)($_SERVER['MM_COUNTRY_CODE'] ?? ''),
         (string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? ''),
@@ -395,15 +394,15 @@ function iw_chat_public_request(): void
             $ref = is_array($refParts)
                 ? substr((string)($refParts['path'] ?? '/'),0,250)
                 : '/';
+            // This starts only after the visitor submits their support
+            // details. Necessary continuation, support-page context and
+            // transactional follow-ups are the default, not opt-in trackers.
             $engagement = iw_chat_engagement_ready();
-            $remember = $engagement && (string)($_POST['remember_chat'] ?? '') === '1';
-            if ($engagement && (string)($_POST['notify_offline'] ?? '') === '1' && !$remember) {
-                throw new InvalidArgumentException('Enable remembering your chat on this browser to receive offline reply emails.');
-            }
-            $notify = $engagement && $remember && (string)($_POST['notify_offline'] ?? '') === '1';
-            $pageTracking = $engagement && (string)($_POST['track_page'] ?? '') === '1';
+            $remember = $engagement;
+            $notify = $engagement;
+            $pageTracking = $engagement;
             $currentPage = $pageTracking ? iw_chat_safe_page((string)($_POST['page_path'] ?? '')) : null;
-            $countryCode = iw_chat_country_code((string)($_POST['country_code'] ?? ''));
+            $countryCode = iw_chat_country_code();
             if ($engagement) {
                 db_execute(
                     "INSERT INTO iw_live_threads
@@ -416,7 +415,7 @@ function iw_chat_public_request(): void
                      'current_page'=>$currentPage,'track_page'=>(int)$pageTracking,
                      'notify_offline'=>(int)$notify]
                 );
-                iw_chat_remember_cookie($token,$remember);
+                iw_chat_remember_cookie($token,true);
             } else {
                 db_execute(
                     "INSERT INTO iw_live_threads
@@ -427,9 +426,13 @@ function iw_chat_public_request(): void
                 );
             }
             $createdId = db_last_id();
+            db_execute("INSERT INTO iw_live_messages (thread_id,sender,body,created_at)
+                        VALUES (:id,'system',:body,NOW())", [
+                'id'=>$createdId,'body'=>'Conversation started on '.date('Y-m-d H:i').' (website support)'
+            ]);
             try {
-                notify_users(admin_user_ids(), 'Visitor waiting in live chat',
-                    $name . ' opened a website support conversation.',url('live_inbox'));
+                notify_roles(['admin','agent'], 'New website support conversation',
+                    $name . ' started a conversation. Open the staff live-chat inbox.', url('live_inbox'));
             } catch (Throwable $notificationFailure) {
                 error_log('[iWorks live chat notification] '.$notificationFailure->getMessage());
             }
@@ -478,46 +481,9 @@ function iw_chat_public_request(): void
         }
         $threadId = (int)$thread['id'];
         if ($action === 'preferences') {
-            if (!iw_chat_engagement_ready()) {
-                iw_chat_send_json(['ok'=>false,'message'=>'Chat preferences are temporarily unavailable.'],503);
-                return;
-            }
-            if ((string)$thread['status'] !== 'open') {
-                iw_chat_send_json(['ok'=>false,'message'=>'This conversation has ended.'],409);
-                return;
-            }
-            $remember = (string)($_POST['remember_chat'] ?? '') === '1';
-            $notify = (string)($_POST['notify_offline'] ?? '') === '1';
-            if ($notify && !$remember) {
-                throw new InvalidArgumentException('Remember this conversation first to enable offline email.');
-            }
-            $sharePage = (string)($_POST['track_page'] ?? '') === '1';
-            $currentPage = $sharePage
-                ? iw_chat_safe_page((string)($_POST['page_path'] ?? '')) : null;
-            // An omitted country keeps the previously known hint. Visitors can
-            // select a country, but the server never infers a street address.
-            $chosenCountry = strtoupper(trim((string)($_POST['country_code'] ?? '')));
-            if ($chosenCountry !== '' && (!preg_match('/^[A-Z]{2}$/D',$chosenCountry)
-                || in_array($chosenCountry,['XX','ZZ','T1','EU'],true))) {
-                throw new InvalidArgumentException('Choose a valid country or leave it blank.');
-            }
-            $country = $chosenCountry !== '' ? $chosenCountry
-                : ((string)($thread['country_code'] ?? '') ?: iw_chat_country_code());
-            db_execute("UPDATE iw_live_threads
-                SET track_page=:track_page,current_page=:current_page,
-                    notify_offline=:notify_offline,country_code=:country,
-                    updated_at=NOW() WHERE id=:id",
-                ['track_page'=>(int)$sharePage,'current_page'=>$currentPage,
-                 'notify_offline'=>(int)$notify,'country'=>$country,'id'=>$threadId]);
-            if (!$notify) {
-                db_execute("UPDATE iw_live_email_outbox
-                    SET status='skipped',updated_at=NOW()
-                    WHERE thread_id=:id AND status IN ('pending','retry')", ['id'=>$threadId]);
-            }
-            iw_chat_remember_cookie($token,$remember);
-            iw_chat_send_json(['ok'=>true,'token'=>$token,
-                'preferences'=>['remember_chat'=>$remember,'notify_offline'=>$notify,
-                    'track_page'=>$sharePage,'country_code'=>(string)($country ?? '')]]);
+            // Compatibility for an older cached widget: no private opt-out
+            // controls may disable the standard support-follow-up workflow.
+            iw_chat_send_json(['ok'=>true,'preferences'=>iw_chat_preferences($thread,true)]);
             return;
         }
         if ($action === 'poll' || $action === 'send') {
