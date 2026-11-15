@@ -84,7 +84,7 @@ $isGuestOnboardingCta = strcasecmp($ctaLabel, 'Get started') === 0;
 $currentPublicSlug = trim((string) ($publicPageSlug ?? ($page ?? 'home')));
 $isAboutActive = $currentPublicSlug === 'about';
 $isManagementActive = $currentPublicSlug === 'management';
-$isUseCasesActive = $currentPublicSlug === 'case-studies';
+$isUseCasesActive = in_array($currentPublicSlug, ['case-studies', 'case_study'], true);
 $isServicesActive = in_array($currentPublicSlug, ['services', 'service'], true);
 $isBlogActive = in_array($currentPublicSlug, ['blog', 'blog_post'], true);
 $isContactActive = $currentPublicSlug === 'contact';
@@ -282,10 +282,10 @@ $isLaunchHome = $currentPublicSlug === 'home';
               <summary>About <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
                 <a href="<?= e(public_url('about')) ?>">Our company</a>
-                <a href="<?= e(public_url('case-studies')) ?>">Case studies</a>
                 <a href="<?= e(public_url('contact')) ?>">Contact</a>
               </div>
             </details>
+            <a class="iw-mobile-menu-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a>
             <a class="iw-mobile-menu-link" href="<?= e(public_url('services')) ?>">Pricing &amp; services</a>
             <div class="iw-mobile-menu-bottom">
               <a class="iw-mobile-menu-signin iw-public-auth-status" data-iw-auth="login" data-iw-auth-status href="<?= e(portal_url('login')) ?>">Sign in</a>
@@ -297,6 +297,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
           </div>
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
+            <li class="nav-item"><a class="nav-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a></li>
             <?php if ($aboutLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>><?= e($aboutLabel) ?></a></li><?php endif; ?>
             <li class="nav-item"><a class="nav-link<?= $isTrackActive ? ' active' : '' ?>" href="<?= e(public_url('track')) ?>"<?= $isTrackActive ? ' aria-current="page"' : '' ?>>Track order</a></li>
             <li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e(public_url('blog')) ?>"<?= $isBlogActive ? ' aria-current="page"' : '' ?>>Insights</a></li>
