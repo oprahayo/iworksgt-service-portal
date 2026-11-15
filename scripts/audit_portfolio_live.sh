@@ -28,7 +28,9 @@ check() {
     fail=$((fail+1))
   fi
 }
-check 'Our Work gallery and filters' "$BASE/case-studies" 'data-iw-work-filters'
+check 'Case studies page and filters' "$BASE/case-studies" 'data-iw-work-filters'
+check 'Native case-studies heading' "$BASE/case-studies" '>Case studies</h1>'
+check 'Approved iWORKS warm-white style' "$BASE/case-studies" '--iw-cases-paper:#fffaf6'
 check 'Separate project and site links' "$BASE/case-studies" 'Visit website'
 for slug in \
   amandla-institute-formation-hosting \
@@ -36,9 +38,25 @@ for slug in \
   restoration-llc-healthcare-website-design-hosting-management \
   karis-health-services-digital-healthcare-presence \
   cornerstonetl-senior-care-website-design-hosting; do
-    check "Case detail /$slug" "$BASE/case-studies/$slug" 'Visit client website'
+    check "Case detail /$slug" "$BASE/case-studies/$slug" 'iw-work-client-website'
     check "Genuine screenshot /$slug" "$BASE/assets/branding/case-studies/$slug.webp"
 done
-check 'Homepage Selected Work' "$BASE/" 'iw-home-case-actions'
+check 'Homepage Case studies' "$BASE/" 'iw-home-case-actions'
+# The rejected work-gallery presentation and headings must not return.
+check_absent() {
+  local title="$1" url="$2" unwanted="$3" output="$TMP/response"
+  local status
+  status="$(curl --http1.1 -sSL --connect-timeout 8 --max-time 32 -o "$output" -w '%{http_code}' "$url")" || status="000"
+  if [[ "$status" == "200" ]] && ! grep -Fq -- "$unwanted" "$output"; then
+    echo "PASS $title: unwanted element absent"
+    pass=$((pass+1))
+  else
+    echo "FAIL $title: old UI still present or HTTP $status" >&2
+    fail=$((fail+1))
+  fi
+}
+check_absent 'No rejected Selected Work heading' "$BASE/" 'Real projects. Real progress.'
+check_absent 'No dark mock browser frames' "$BASE/case-studies" 'iw-work-browser'
+check_absent 'No decorative up-arrow buttons' "$BASE/case-studies" 'bi-arrow-up-right'
 echo "Portfolio acceptance: $pass PASS / $fail FAIL"
 [[ "$fail" -eq 0 ]] || exit 1
