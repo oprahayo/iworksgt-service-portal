@@ -107,7 +107,7 @@ $vendorMobile = $solutionImg('ab-african-store-mobile.png');
   <section class="iw-gansell-proof" id="gansell-demo" aria-labelledby="iw-gansell-demo-title">
     <div class="container public-container iw-gansell-proof-layout">
       <div class="iw-gansell-proof-copy">
-        <span class="iw-solutions-eyebrow">SEE A REAL G A N S E L L STORE</span>
+        <span class="iw-solutions-eyebrow">SEE A REAL GANSELL STORE</span>
         <h2 id="iw-gansell-demo-title">Not just a listing. A shop customers can actually use.</h2>
         <p>Meet <strong>AB ÁFRICAN FOOD AND MALL</strong>, a live Gansell vendor. Its own shareable shop link brings customers straight to a catalogue with categories, product details, cart actions and checkout.</p>
         <div class="iw-gansell-proof-link">
