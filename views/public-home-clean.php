@@ -332,7 +332,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
               ?>
               <article class="iw-home-case-card" data-iw-showcase-slide>
                 <div class="iw-home-case-visual">
-                  <a class="iw-home-case-cover" href="<?= e($caseLink) ?>" aria-label="Read <?= e($clientName) ?> case study">
+                  <a class="iw-home-case-cover" draggable="false" href="<?= e($caseLink) ?>" aria-label="Read <?= e($clientName) ?> case study">
                     <span class="iw-home-case-window">
                       <span class="iw-home-case-window-bar" aria-hidden="true">
                         <span class="iw-home-case-window-dots"><i></i><i></i><i></i></span>
