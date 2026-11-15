@@ -928,3 +928,44 @@ body.page-public .iw-case-project-notes .iw-article-body h2 {margin-top:22px}
   body.page-public .iw-home-case-overlay-actions a,
   body.page-public .iw-case-project-notes summary i {transition:none!important}
 }
+
+/* Mobile screenshot rendering: WebKit can collapse intrinsic images inside
+ * nested flex containers and defer lazy images inside horizontal overflow.
+ * The packaged previews now load eagerly; reserve explicit image geometry
+ * at narrow widths so they are visible before and after swipe. */
+@media(max-width:760px) {
+  body.page-public .iw-home-case-grid {
+    min-height:0;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+  }
+  body.page-public .iw-home-case-card,
+  body.page-public .iw-home-case-visual,
+  body.page-public .iw-home-case-card .iw-home-case-cover {
+    min-width:0;
+    min-height:0;
+  }
+  body.page-public .iw-home-case-card .iw-home-case-cover .iw-home-case-window {
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    width:100%;
+    height:100%;
+    min-height:0;
+    visibility:visible;
+    opacity:1;
+  }
+  body.page-public .iw-home-case-card .iw-home-case-cover .iw-home-case-window img {
+    display:block!important;
+    width:100%!important;
+    height:calc(100% - 29px)!important;
+    min-height:1px!important;
+    max-height:none!important;
+    flex:0 0 calc(100% - 29px);
+    object-fit:cover!important;
+    object-position:center top;
+    opacity:1!important;
+    visibility:visible!important;
+    content-visibility:visible;
+  }
+}
