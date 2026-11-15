@@ -11,6 +11,9 @@ function public_url(string $page = 'home', array $params = []): string {
     if ($page === 'blog_post') {
         return $base . 'blog/' . rawurlencode((string) ($params['slug'] ?? ''));
     }
+    if ($page === 'gansell') {
+        return $base . 'solutions/gansell';
+    }
     return $base . ($page === 'home' ? '' : $page) . ($params !== [] ? '?' . http_build_query($params) : '');
 }
 function public_absolute_url(string $path): string { return 'https://iworksgt.com/' . ltrim($path, '/'); }
@@ -40,7 +43,8 @@ $xml = iworks_seo_sitemap_xml(
   [['slug'=>'how-to-register','published_at'=>'2026-11-01']]
 );
 check(str_contains($xml, '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'), 'Valid XML namespace missing.');
-check(substr_count($xml, '<loc>https://iworksgt.com/') === 6, 'Expected home, services, about, 2 services and 1 article only.');
+check(substr_count($xml, '<loc>https://iworksgt.com/') === 8, 'Expected home, services, solutions, Gansell, about, 2 services and 1 article.');
+check(str_contains($xml, 'https://iworksgt.com/solutions</loc>') && str_contains($xml, 'https://iworksgt.com/solutions/gansell</loc>'), 'Solutions pages missing from XML sitemap.');
 check(str_contains($xml, '/services/incorporated-trustees</loc>'), 'Service omitted from sitemap.');
 check(str_contains($xml, '/blog/how-to-register</loc>'), 'Published article omitted from sitemap.');
 check(!str_contains($xml, 'https://iworksgt.com/track'), 'Private job lookup must not be indexed.');
