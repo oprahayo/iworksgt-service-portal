@@ -281,13 +281,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
                 <a href="<?= e(public_url('services', ['category' => 'growth'])) ?>">Websites, hosting &amp; digital growth</a>
               </div>
             </details>
-            <details class="iw-mobile-menu-group">
-              <summary>Our Solutions <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
-              <div class="iw-mobile-menu-sub">
-                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Gansell</a>
-              </div>
-            </details>
-            <details class="iw-mobile-menu-group">
+<details class="iw-mobile-menu-group">
               <summary>Resources <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
                 <a href="<?= e(public_url('track')) ?>">Track an order</a>
@@ -312,14 +306,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
           </div>
           <ul class="navbar-nav ms-xl-auto me-xl-3 align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
-            <li class="nav-item dropdown iw-public-solutions-dropdown">
-              <button type="button" class="nav-link dropdown-toggle<?= $isSolutionsActive ? ' active' : '' ?>"
-                      data-bs-toggle="dropdown" aria-expanded="false" aria-label="Our Solutions menu">Our Solutions <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i></button>
-              <ul class="dropdown-menu iw-public-solutions-menu">
-                <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? ' active' : '' ?>" href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Gansell</a></li>
-              </ul>
-            </li>
-            <li class="nav-item dropdown iw-public-resources-dropdown">
+<li class="nav-item dropdown iw-public-resources-dropdown">
               <button type="button" class="nav-link dropdown-toggle<?= $isResourcesActive ? ' active' : '' ?>"
                       data-bs-toggle="dropdown" aria-expanded="false" aria-label="Resources menu">Resources <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i></button>
               <ul class="dropdown-menu iw-public-resources-menu">
