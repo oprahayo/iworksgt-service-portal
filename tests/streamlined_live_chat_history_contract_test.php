@@ -39,12 +39,12 @@ $check(str_contains($visitor,"liveApi('restart'")
     && str_contains($visitor,'conversation.hidden = !(active || done);')
     && str_contains($visitor,"session.status = 'ended'"),
     'Ended cases must retain history and start new topics without repeating identity.');
-$check(str_contains($server,"$remember = $engagement;")
-    && str_contains($server,"$notify = $engagement;")
-    && str_contains($server,"$pageTracking = $engagement;"),
+$check(str_contains($server,'$remember = $engagement;')
+    && str_contains($server,'$notify = $engagement;')
+    && str_contains($server,'$pageTracking = $engagement;'),
     'Required support behavior must come from server, not client checkbox values.');
 $check(str_contains($server,'iw_chat_country_code();')
-    && !str_contains($server,"iw_chat_country_code((string)($_POST['country_code']"),
+    && !str_contains($server,'iw_chat_country_code((string)'),
     'No client-forged country is allowed in the visitor start endpoint.');
 $check(str_contains($server,"notify_roles(['admin','agent']")
     && str_contains($server,'New visitor support message')
@@ -55,7 +55,7 @@ $check(str_contains($server,'iw_chat_close_and_queue_receipt')
     && str_contains($server,'iWORKS Support conversation receipt #')
     && str_contains($server,'iw_chat_process_email_outbox'),
     'Each closed support case should enqueue a privacy-safe service email receipt.');
-$check(str_contains($server,"if ($action === 'restart')")
+$check(str_contains($server,'if ($action === \'restart\')')
     && str_contains($server,"'reopen'")
     && str_contains($server,'New conversation started on')
     && str_contains($server,'Topic: '),
