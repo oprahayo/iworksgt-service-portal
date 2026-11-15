@@ -390,8 +390,8 @@
       ended.hidden = !done;
       compose.hidden = !active;
       endTrigger.hidden = !active;
-      if (active) {
-        updatePresence({staff_online:false});
+      if (active || done) {
+        if (active) updatePresence({staff_online:false});
         messages.replaceChildren();
         session.items.forEach(renderMessage);
         conversation.parentElement.scrollTop = conversation.parentElement.scrollHeight;
@@ -466,7 +466,10 @@
     }
     async function finishChat(rating) {
       try {
-        if (session.status === 'active') await liveApi('end', rating ? {rating:rating} : {});
+        if (session.status === 'active') {
+          var endedResult = await liveApi('end', rating ? {rating:rating} : {});
+          ingestMessages(endedResult.messages);
+        }
       } catch (error) {
         showError(errorBox, error.message || 'Unable to end chat. Retry.');
         return;
