@@ -77,7 +77,6 @@ body.page-public .iw-work-filter {
   color:#69737d;
   padding:13px 0 12px;
   cursor:pointer;
-  font:600 12.5px/1.35 inherit;
   font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   font-size:12.5px;
   line-height:1.35;
@@ -175,6 +174,10 @@ body.page-public .iw-home-case-card-copy h3 a {
 }
 body.page-public .iw-work-card-info h2 a:hover,
 body.page-public .iw-home-case-card-copy h3 a:hover {color:#b54b17!important}
+body.page-public .iw-home-case-card-copy h3 a {
+  display:inline!important;
+  height:auto!important;
+}
 body.page-public .iw-work-card-info > p {
   font-size:14px;
   line-height:1.75;
