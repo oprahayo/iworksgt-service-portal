@@ -95,7 +95,7 @@ $ok(!str_contains($widget,'name="notify_offline"')
     'Standard support follow-up is disclosed without three distracting checkbox controls.');
 $ok(str_contains($server,"$"."action === 'preferences'")
     && str_contains($server,'function iw_chat_preferences(')
-    && str_contains($server,'Standard support')
+    && str_contains($server,'standard support-follow-up workflow')
     && !str_contains($widget,'id="iwAssistPreferencesForm"')
     && str_contains($client,"liveApi('restart'"),
     'Legacy preference requests cannot disable required support messages; visitors can start new topics.');
