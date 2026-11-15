@@ -201,7 +201,7 @@ foreach (array_merge($logoCaseRecords, $logoReviewRecords) as $record) {
 // as source-controlled assets so no Website Editor upload ID is required.
 foreach ([
     ['name'=>'OrangeServer','asset'=>'assets/branding/orangeserver-logo.svg','key'=>'orangeserver'],
-    ['name'=>'RilaHost','asset'=>'assets/branding/rilahost-logo.svg','key'=>'rilahost'],
+    ['name'=>'RillaHost','asset'=>'assets/branding/rilahost-logo.svg','key'=>'rilahost'],
 ] as $provider) {
     if (!is_file(__DIR__.'/../'.$provider['asset'])) continue;
     // A saved CMS version of the same logo must not appear twice.
