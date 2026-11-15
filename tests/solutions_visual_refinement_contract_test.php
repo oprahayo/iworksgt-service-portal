@@ -59,30 +59,27 @@ $assert(str_contains($chromeCss,'iw-hero-overlay-header-v2') &&
         str_contains($chromeCss,'background:#fff!important;'),
         'Hero header starts truly transparent and becomes white on scroll.');
 
-$assert(str_contains($header,'iw-public-solutions-dropdown') &&
+$assert(!str_contains($header,'iw-public-solutions-dropdown') &&
+        !str_contains($header,'>Gansell</a>') &&
+        !str_contains($header,'Our Solutions <i') &&
         str_contains($header,'iw-public-resources-dropdown') &&
-        str_contains($header,'Our Solutions <i class="bi bi-chevron-down iw-nav-chevron"') &&
-        str_contains($header,'Resources <i class="bi bi-chevron-down iw-nav-chevron"') &&
-        str_contains($header,'aria-label="Our Solutions menu"') &&
         str_contains($header,'aria-label="Resources menu"') &&
-        str_contains($header,'ms-xl-auto me-xl-3') &&
-        !str_contains($header,'Explore all solutions') &&
-        str_contains($header,'>Gansell</a>') &&
-        str_contains($header,"public_url('solutions')"),
-        'Navigation must be grouped with accessible visible dropdown chevrons.');
+        str_contains($header,'ms-xl-auto me-xl-3'),
+        'Unreleased Gansell must not appear in public navigation.');
+
 $assert(str_contains($chromeCss,'margin-left:auto!important;') &&
         str_contains($chromeCss,'gap:clamp(9px,1.15vw,18px)!important;'),
         'Desktop menu must be compact and right aligned.');
 
-$assert(str_contains($routes,"'solutions/gansell'") &&
-        str_contains($routes,"$".'publicSlug === '."'solutions'") &&
-        !str_contains($routes,"['solutions', 'gansell']") &&
-        str_contains($routes,"'/views/public-solutions.php'") &&
-        str_contains($helpers,"$".'path = '."'solutions#gansell'") &&
-        str_contains($meta,"'solutions' =>") &&
-        str_contains($seo,"public_url('solutions')") &&
-        !str_contains($seo,"$".'add(public_url('."'gansell'".'))'),
-        'Gansell must use the single Our Solutions page; old links redirect to #gansell.');
+$assert(str_contains($routes, 'http_response_code(410)') &&
+        str_contains($routes, 'noindex, nofollow') &&
+        str_contains($routes, "['solutions', 'gansell']") &&
+        !str_contains($routes, 'iworks_serve_solutions_media(') &&
+        !str_contains($seo, "$".'add(public_url('."'solutions'".'))') &&
+        !str_contains($meta, "'solutions' =>") &&
+        !str_contains($meta, "'gansell' =>"),
+        'Unreleased Gansell must not be publicly discoverable.');
+
 $assert(str_contains($header,'20261115-brand-grayscale1')
     && str_contains($header,'20261115-center-focus1')
     && str_contains($header,'20261115-visual-finish1'),
