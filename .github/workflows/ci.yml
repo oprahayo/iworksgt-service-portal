@@ -45,6 +45,7 @@ jobs:
           bash -n scripts/deploy_international_legal_seo.sh
           bash -n scripts/deploy_hide_home_seo_links.sh
           bash -n scripts/deploy_mobile_header_footer_restore.sh
+          bash -n scripts/deploy_home_hero_overlay.sh
           bash -n scripts/deploy_launch_products.sh
           php -l scripts/activate_launch_prices.php
           bash -n scripts/deploy_businesshub_home.sh
@@ -95,6 +96,7 @@ jobs:
           php tests/international_legal_seo_contract_test.php
           php tests/hide_home_seo_links_legal_audit_test.php
           php tests/mobile_header_footer_restore_contract_test.php
+          php tests/home_transparent_sticky_header_contract_test.php
           php tests/launch_product_order_contract_test.php
           php tests/site_launch_blockers_contract_test.php
           php tests/setup_http_disabled_test.php
