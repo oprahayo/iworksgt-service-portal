@@ -140,6 +140,7 @@ body.page-public .iw-gansell-browser-dots i:nth-child(2){background:#ebd09f}
 body.page-public .iw-gansell-browser-dots i:last-child{background:#bfdcc4}
 body.page-public .iw-gansell-browser-shot img{
   width:100%;
+  height:auto;
   aspect-ratio:1440/780;
   object-fit:cover;
   object-position:top left;
@@ -161,6 +162,7 @@ body.page-public .iw-gansell-phone-shot{
 body.page-public .iw-gansell-phone-shot img{
   display:block;
   width:100%;
+  height:auto;
   aspect-ratio:390/844;
   object-fit:cover;
   object-position:top left;
