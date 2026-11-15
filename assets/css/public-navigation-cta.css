@@ -55,3 +55,53 @@ body.page-public .iw-sitewide-cta-assurances i{color:#87d6e7}
   body.page-public .iw-sitewide-cta-primary,
   body.page-public .iw-mobile-menu-group summary i{transition:none!important}
 }
+
+/* Compact desktop navigation: use an About menu to keep Case Studies
+ * discoverable without adding a sixth top-level item. */
+@media(min-width:1200px){
+  body.page-public .iw-public-about-dropdown > .dropdown-toggle {
+    display:flex;
+    align-items:center;
+    gap:5px;
+    border:0;
+    background:transparent;
+    font:inherit;
+    color:inherit;
+    padding:var(--bs-nav-link-padding-y,.5rem) var(--bs-nav-link-padding-x,.5rem);
+    cursor:pointer;
+  }
+  body.page-public .iw-public-about-dropdown > .dropdown-toggle::after {
+    margin-left:2px;
+    font-size:.77em;
+    opacity:.7;
+  }
+  body.page-public .iw-public-about-dropdown .iw-public-about-menu {
+    min-width:192px;
+    padding:7px;
+    margin-top:7px;
+    border:1px solid #e5e7e9;
+    border-radius:9px;
+    background:#fff;
+    box-shadow:0 12px 25px rgba(22,30,40,.12);
+  }
+  body.page-public .iw-public-about-menu .dropdown-item {
+    display:block;
+    padding:10px 12px;
+    color:#303943;
+    background:transparent;
+    border-radius:5px;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+  }
+  body.page-public .iw-public-about-menu .dropdown-item:is(:hover,:focus-visible),
+  body.page-public .iw-public-about-menu .dropdown-item.active {
+    color:#b94d1a;
+    background:#fff3eb;
+  }
+}
+body.page-public .iw-public-about-dropdown > .dropdown-toggle:focus-visible,
+body.page-public .iw-public-about-menu a:focus-visible {
+  outline:2px solid #c4531c;
+  outline-offset:3px;
+}
