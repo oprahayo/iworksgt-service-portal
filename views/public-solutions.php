@@ -85,7 +85,7 @@ foreach (iworks_solutions_media_allowed() as $filename) {
       <div class="iw-gansell-example-gallery" aria-label="Actual AB ÁFRICAN FOOD AND MALL storefront on desktop and mobile">
         <figure class="iw-gansell-example-wide">
           <?php if ($screens['ab-african-store-desktop.png'] !== ''): ?>
-            <img src="<?= e($screens['ab-african-store-desktop.png']) ?>" width="1440" height="1000" loading="lazy" decoding="async" alt="Desktop screenshot of AB ÁFRICAN FOOD AND MALL on Gansell, with real product pictures and prices">
+            <img src="<?= e($screens['ab-african-store-desktop.png']) ?>" width="1440" height="1000" loading="eager" decoding="async" alt="Desktop screenshot of AB ÁFRICAN FOOD AND MALL on Gansell, with real product pictures and prices">
           <?php else: ?>
             <div class="iw-gansell-photo-unavailable">Store screenshot unavailable. <a href="<?= e($vendorStore) ?>">Visit the live store</a></div>
           <?php endif; ?>
@@ -93,7 +93,7 @@ foreach (iworks_solutions_media_allowed() as $filename) {
         </figure>
         <figure class="iw-gansell-example-phone">
           <?php if ($screens['ab-african-store-mobile.png'] !== ''): ?>
-            <img src="<?= e($screens['ab-african-store-mobile.png']) ?>" width="390" height="844" loading="lazy" decoding="async" alt="Mobile screenshot of AB ÁFRICAN FOOD AND MALL on Gansell, showing the vendor's catalogue">
+            <img src="<?= e($screens['ab-african-store-mobile.png']) ?>" width="390" height="844" loading="eager" decoding="async" alt="Mobile screenshot of AB ÁFRICAN FOOD AND MALL on Gansell, showing the vendor's catalogue">
           <?php else: ?>
             <div class="iw-gansell-photo-unavailable">Mobile screenshot unavailable.</div>
           <?php endif; ?>
