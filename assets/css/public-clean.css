@@ -141,6 +141,52 @@ body.page-public .public-footer { background:#fafafa; border-top:1px solid #eded
   transition:filter .3s ease,opacity .3s ease;
 }
 .iw-clean-home .iw-home-brand-mark:hover img { filter:grayscale(0); opacity:1; }
+/* Owner-provided hosting-service identities: faithful brand colors in the
+ * same modest ribbon footprint. RilaHost needs a dark surface because its
+ * supplied logo is transparent white on a transparent background. */
+.iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver {
+  min-width:148px;
+  width:148px;
+}
+.iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver img {
+  display:block;
+  width:148px;
+  max-width:100%;
+  max-height:45px;
+  height:auto;
+  object-fit:contain;
+  filter:none!important;
+  opacity:1!important;
+}
+.iw-clean-home .iw-home-brand-mark.iw-home-brand-rilahost {
+  min-width:136px;
+  width:136px;
+}
+.iw-clean-home .iw-home-brand-mark.iw-home-brand-rilahost img {
+  display:block;
+  width:132px;
+  max-width:100%;
+  max-height:48px;
+  height:auto;
+  padding:12px 12px;
+  object-fit:contain;
+  border-radius:6px;
+  background:#26343f;
+  filter:none!important;
+  opacity:1!important;
+}
+@media(max-width:767px){
+  .iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver {
+    min-width:132px;
+    width:132px;
+  }
+  .iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver img { width:132px; }
+  .iw-clean-home .iw-home-brand-mark.iw-home-brand-rilahost {
+    min-width:122px;
+    width:122px;
+  }
+  .iw-clean-home .iw-home-brand-mark.iw-home-brand-rilahost img { width:122px; }
+}
 @keyframes iw-client-logo-scroll { to { transform:translateX(-50%); } }
 .iw-clean-home .iw-home-brand-track.is-scrolling {
   animation:iw-client-logo-scroll 48s linear infinite;
