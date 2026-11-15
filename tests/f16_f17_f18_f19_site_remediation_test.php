@@ -28,7 +28,7 @@ check_remediation(str_contains($index,"http_response_code(404);") && str_contain
 $footer=file_get_contents(__DIR__.'/../assets/css/site-launch-polish.css');
 check_remediation(str_contains($footer,'.public-footer-contact-col a') && str_contains($footer,'overflow-wrap: anywhere'), 'Footer contact must wrap without overflow clipping.');
 $chat=file_get_contents(__DIR__.'/../views/partials/public-assistance.php');
-check_remediation(str_contains($chat,'Send a message. Our team will reply here when available.'), 'Chat idle state must not claim to check staff availability before session.');
+check_remediation(str_contains($chat,"Ask us anything. We'll reply here or by email."), 'Chat idle state must not claim to check staff availability before session.');
 check_remediation(str_contains($chat,'aria-live="polite"'), 'Support status changes must be announced.');
 $deployer=file_get_contents(__DIR__.'/../scripts/deploy_admin_mobile_refresh.sh');
 check_remediation(str_contains($deployer,'|database.sql) continue'), 'SQL must not be copied to public document root.');
