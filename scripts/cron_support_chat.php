@@ -25,15 +25,26 @@ try {
     echo 'Expired support cases: '.(int)($old['n']??0)."\n";
     echo 'Pending customer emails: '.(int)($queue['n']??0)."\n";
     echo 'SMTP configured: '.(email_enabled()?'yes':'NO')."\n";
+    echo 'OTP dispatch queue ready: '.(otp_queue_table_available()?'yes':'NO')."\n";
     if ($mode === '--check') {
         echo "READ ONLY: no messages sent or deleted.\n";
-        exit(0);
+        exit(email_enabled() && otp_queue_table_available() ? 0 : 3);
     }
+    // Share the main queue worker's lock: two schedules must never compete.
+    $lockFile = dirname(mail_log_path()).'/cron-queue.lock';
+    $lock = @fopen($lockFile,'c');
+    if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+        fwrite(STDERR,"Queue worker already running or private lock unavailable.\n");
+        exit($lock ? 0 : 1);
+    }
+    @chmod($lockFile,0600);
     // Keep retention enforcement independent of mail transport outages.
     // Pending mail remains queued for the next successful worker run.
-    $staff=[]; $customer=[]; $mailFailed=false;
+    $otp=[]; $staff=[]; $customer=[]; $mailFailed=false;
     if (email_enabled()) {
         try {
+            // Standalone fallback must also deliver login verification codes.
+            $otp = process_otp_dispatch_queue(25);
             $staff = function_exists('iworks_process_notification_email_outbox')
                 ? iworks_process_notification_email_outbox(20) : [];
             $customer = iw_chat_process_email_outbox(20);
@@ -48,6 +59,7 @@ try {
     $statement = db_query("DELETE FROM iw_live_threads
          WHERE updated_at < DATE_SUB(NOW(),INTERVAL 30 DAY)
          ORDER BY updated_at ASC LIMIT 150");
+    echo 'OTP deliveries: '.json_encode($otp,JSON_UNESCAPED_SLASHES)."\n";
     echo 'Staff notifications: '.json_encode($staff,JSON_UNESCAPED_SLASHES)."\n";
     echo 'Visitor messages: '.json_encode($customer,JSON_UNESCAPED_SLASHES)."\n";
     echo 'Expired conversations deleted: '.$statement->rowCount()."\n";
