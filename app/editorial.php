@@ -26,8 +26,9 @@ function iworks_editorial_case_site(string $slug): string {
     static $known = null;
     if ($known === null) {
         require_once __DIR__.'/launch_case_study_catalog.php';
+        require_once __DIR__.'/gansell_case_study.php';
         $known = [];
-        foreach (iworks_launch_case_studies() as $case) {
+        foreach (array_merge(iworks_launch_case_studies(), [iworks_gansell_case_study()]) as $case) {
             $candidate = (string)($case['website'] ?? '');
             if (filter_var($candidate, FILTER_VALIDATE_URL)
                 && parse_url($candidate, PHP_URL_SCHEME) === 'https') {
@@ -42,6 +43,7 @@ function iworks_editorial_case_site(string $slug): string {
  * No invented results, customers, or industry labels. */
 function iworks_editorial_case_tags(array $row): array {
     $known = [
+        'gansell-website-project' => ['web'],
         'amandla-institute-formation-hosting' => ['formation','hosting','nonprofit'],
         'triply-travels-company-formation-travel-website-portals' => ['formation','web','travel'],
         'restoration-llc-healthcare-website-design-hosting-management' => ['web','hosting','healthcare'],
@@ -71,17 +73,36 @@ function iworks_editorial_slug(string $title,int $id=0): string {
     }
     return $try;
 }
+/** Source-backed public case. Once the same slug is published in the
+ * editorial CMS, the CMS record takes precedence and no duplicate is shown. */
+function iworks_editorial_gansell_case(): array {
+    require_once __DIR__.'/gansell_case_study.php';
+    $row=iworks_gansell_case_study();
+    $row['id']=0;
+    $row['image_url']=iworks_editorial_case_cover($row);
+    $row['logo_url']='';
+    return $row;
+}
 function iworks_editorial_cases(bool $published=true,int $limit=24):array {
-    if(!iworks_editorial_ready('iworks_case_studies'))return [];
-    $sql='SELECT * FROM iworks_case_studies';
-    if($published)$sql.=" WHERE status='published'";
-    $sql.=' ORDER BY updated_at DESC,id DESC LIMIT '.max(1,min(100,$limit));
-    $rows=db_all($sql);
-    return array_map(static function(array $row):array {
-        $row['image_url']=iworks_editorial_case_cover($row);
-        $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
-        return $row;
-    },$rows);
+    $rows=[];
+    if(iworks_editorial_ready('iworks_case_studies')){
+        $sql='SELECT * FROM iworks_case_studies';
+        if($published)$sql.=" WHERE status='published'";
+        $sql.=' ORDER BY updated_at DESC,id DESC LIMIT '.max(1,min(100,$limit));
+        $rows=array_map(static function(array $row):array {
+            $row['image_url']=iworks_editorial_case_cover($row);
+            $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
+            return $row;
+        },db_all($sql));
+    }
+    if($published){
+        $exists=false;
+        foreach($rows as $row){
+            if((string)($row['slug']??'')==='gansell-website-project'){$exists=true;break;}
+        }
+        if(!$exists)array_unshift($rows,iworks_editorial_gansell_case());
+    }
+    return array_slice($rows,0,max(1,min(100,$limit)));
 }
 function iworks_editorial_case(int $id):?array {
     if($id<1||!iworks_editorial_ready('iworks_case_studies'))return null;
@@ -89,6 +110,17 @@ function iworks_editorial_case(int $id):?array {
     return $row?:null;
 }
 function iworks_editorial_case_slug(string $slug):?array {
+    if($slug==='gansell-website-project'){
+        if(iworks_editorial_ready('iworks_case_studies')){
+            $row=db_one("SELECT * FROM iworks_case_studies WHERE slug=:slug AND status='published' LIMIT 1",['slug'=>$slug]);
+            if($row){
+                $row['image_url']=iworks_editorial_case_cover($row);
+                $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
+                return $row;
+            }
+        }
+        return iworks_editorial_gansell_case();
+    }
     if(!iworks_editorial_ready('iworks_case_studies'))return null;
     $row=db_one("SELECT * FROM iworks_case_studies WHERE slug=:slug AND status='published' LIMIT 1",['slug'=>$slug]);
     if(!$row)return null;
