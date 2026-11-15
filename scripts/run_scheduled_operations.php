@@ -66,7 +66,13 @@ try {
         $metric['chat_email_processed'] = (int)($chatEmail['processed'] ?? 0);
         $metric['otp_processed'] = (int) ($otp['processed'] ?? 0);
         $metric['notification_processed'] = (int) ($email['processed'] ?? 0);
-        $metric['status'] = 'ok';
+        // The worker can still expire chat history when mail is offline,
+        // but never report a healthy email dispatcher in that state.
+        $metric['mail_transport_enabled'] = email_enabled();
+        $metric['status'] = $metric['mail_transport_enabled'] ? 'ok' : 'degraded';
+        if (!$metric['mail_transport_enabled']) {
+            $exitCode = 1;
+        }
     } else {
         $result = refresh_crypto_rates_cache(true);
         $metric['source'] = (string) ($result['source'] ?? 'unavailable');
