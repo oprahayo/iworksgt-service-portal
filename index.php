@@ -414,7 +414,7 @@ try {
             $pageSeo = [
                 'metaTitle' => $title,
                 'metaDescription' => (string)($searchPage['description'] ?? ''),
-                'ogImage' => 'assets/branding/case-studies/gansell-website-project.webp',
+                'ogImage' => 'solutions/media/gansell-home-desktop.png?v=20261115-images3',
             ];
             require __DIR__ . '/views/partials/public-header.php';
             require __DIR__ . '/views/public-solutions.php';
