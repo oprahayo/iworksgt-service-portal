@@ -83,6 +83,13 @@ function iworks_editorial_gansell_case(): array {
     $row['logo_url']='';
     return $row;
 }
+/** Hide unreleased product case studies from public content without deleting CMS drafts. */
+function iworks_editorial_launch_hidden_case(array $row): bool {
+    foreach (['slug', 'title', 'client_name'] as $field) {
+        if (stripos((string)($row[$field] ?? ''), 'gansell') !== false) return true;
+    }
+    return false;
+}
 function iworks_editorial_cases(bool $published=true,int $limit=24):array {
     $rows=[];
     if(iworks_editorial_ready('iworks_case_studies')){
@@ -95,12 +102,9 @@ function iworks_editorial_cases(bool $published=true,int $limit=24):array {
             return $row;
         },db_all($sql));
     }
-    if($published){
-        $exists=false;
-        foreach($rows as $row){
-            if((string)($row['slug']??'')==='gansell-website-project'){$exists=true;break;}
-        }
-        if(!$exists)array_unshift($rows,iworks_editorial_gansell_case());
+    if($published) {
+        $rows = array_values(array_filter($rows,
+            static fn(array $row): bool => !iworks_editorial_launch_hidden_case($row)));
     }
     return array_slice($rows,0,max(1,min(100,$limit)));
 }
@@ -110,20 +114,10 @@ function iworks_editorial_case(int $id):?array {
     return $row?:null;
 }
 function iworks_editorial_case_slug(string $slug):?array {
-    if($slug==='gansell-website-project'){
-        if(iworks_editorial_ready('iworks_case_studies')){
-            $row=db_one("SELECT * FROM iworks_case_studies WHERE slug=:slug AND status='published' LIMIT 1",['slug'=>$slug]);
-            if($row){
-                $row['image_url']=iworks_editorial_case_cover($row);
-                $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
-                return $row;
-            }
-        }
-        return iworks_editorial_gansell_case();
-    }
+    if (stripos($slug, 'gansell') !== false) return null;
     if(!iworks_editorial_ready('iworks_case_studies'))return null;
     $row=db_one("SELECT * FROM iworks_case_studies WHERE slug=:slug AND status='published' LIMIT 1",['slug'=>$slug]);
-    if(!$row)return null;
+    if(!$row || iworks_editorial_launch_hidden_case($row))return null;
     $row['image_url']=iworks_editorial_case_cover($row);
     $row['logo_url']=iworks_editorial_media((int)($row['logo_id']??0));
     return $row;
