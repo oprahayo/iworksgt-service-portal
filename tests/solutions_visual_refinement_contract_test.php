@@ -66,7 +66,8 @@ $assert(str_contains($header,'iw-public-solutions-dropdown') &&
         str_contains($header,'aria-label="Our Solutions menu"') &&
         str_contains($header,'aria-label="Resources menu"') &&
         str_contains($header,'ms-xl-auto me-xl-3') &&
-        str_contains($header,'#gansell') &&
+        !str_contains($header,'Explore all solutions') &&
+        str_contains($header,'>Gansell</a>') &&
         str_contains($header,"public_url('solutions')"),
         'Navigation must be grouped with accessible visible dropdown chevrons.');
 $assert(str_contains($chromeCss,'margin-left:auto!important;') &&
@@ -93,21 +94,25 @@ $assert(str_contains($landing,'id="iw-solutions"') &&
         str_contains($landing,'id="gansell"') &&
         str_contains($landing,'https://gansell.com/') &&
         str_contains($landing,'https://gansell.com/@ab-african') &&
-        str_contains($landing,'Start on Gansell') &&
-        str_contains($landing,'class="iw-gansell-checklist"') &&
-        substr_count($landing,'<li><strong>') === 8 &&
+        str_contains($landing,'<h1 id="iw-gansell-title">Gansell</h1>') &&
+        str_contains($landing,'class="iw-gansell-free-sticker"') &&
+        str_contains($landing,'class="iw-gansell-feature-list"') &&
+        substr_count($landing,'<li>') === 7 &&
         str_contains($landing,'gansell-home-desktop.png') &&
         str_contains($landing,'gansell-home-mobile.png') &&
         str_contains($landing,'ab-african-store-desktop.png') &&
         str_contains($landing,'ab-african-store-mobile.png') &&
-        !str_contains($landing,'Your shop deserves more') &&
-        !str_contains($landing,'Big possibilities') &&
-        !str_contains($landing,'https://gansell.com/register'),
-        'Solutions must present a concise eight-feature list with real desktop and mobile captures.');
-$assert(str_contains($landingCss,'iw-gansell-checklist li::before') &&
-        str_contains($landingCss,'iw-gansell-device-gallery') &&
-        strlen($landingCss) < 14000,
-        'Solutions must use lightweight checklist styling instead of the oversized promotional card layout.');
+        !str_contains($landing,'iw-gansell-steps') &&
+        !str_contains($landing,'iw-solutions-future') &&
+        !str_contains($landing,'Digital tools for business.') &&
+        !str_contains($landing,'Explore all solutions'),
+        'Gansell needs one restrained iWORKS product page with FREE sticker, 7 checks, 4 genuine screenshots and no generic panels.');
+$assert(str_contains($landingCss,'iw-gansell-feature-list li::before') &&
+        str_contains($landingCss,'iw-gansell-free-sticker') &&
+        str_contains($landingCss,'iw-gansell-screenshot-pair') &&
+        str_contains($landingCss,'#f56613') &&
+        strlen($landingCss) < 11000,
+        'Reuse iWORKS typography and orange; no oversized SaaS template styling.');
 $assert(str_contains($header,'iw-solutions-critical-css') &&
         str_contains($landingCss,'@media(max-width:550px)') &&
         str_contains($landingCss,'@media(prefers-reduced-motion:reduce)'),

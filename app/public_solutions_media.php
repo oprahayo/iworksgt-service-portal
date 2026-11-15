@@ -44,6 +44,37 @@ function iworks_solutions_media_path(string $name, string $portalRoot): ?string
     return $magic === "\x89PNG\r\n\x1a\n" ? $path : null;
 }
 
+/**
+ * Data-URI fallback for the four approved, real Gansell screenshots.
+ * This is rendered from the same PHP source as the public page, so the
+ * browser does not depend on an Apache rewrite, a separate asset web root,
+ * a CDN, or a JS error handler to show the photographs.
+ *
+ * Screenshots total ~1.4 MB; this trade-off is intentional for a small
+ * fixed product page that previously shipped with broken media URLs.
+ * Images are real captures, NOT generated mockups.
+ */
+function iworks_solutions_embedded_image(string $name, string $portalRoot): string
+{
+    static $cached = [];
+    if (array_key_exists($name, $cached)) {
+        return $cached[$name];
+    }
+    $path = iworks_solutions_media_path($name, $portalRoot);
+    if ($path === null) {
+        return $cached[$name] = '';
+    }
+    $size = filesize($path);
+    if ($size === false || $size < 10000 || $size > 2000000) {
+        return $cached[$name] = '';
+    }
+    $bytes = file_get_contents($path);
+    if ($bytes === false || strlen($bytes) !== $size) {
+        return $cached[$name] = '';
+    }
+    return $cached[$name] = 'data:image/png;base64,' . base64_encode($bytes);
+}
+
 function iworks_serve_solutions_media(string $name, string $portalRoot): void
 {
     $path = iworks_solutions_media_path($name, $portalRoot);

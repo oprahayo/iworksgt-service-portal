@@ -235,7 +235,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
     if (is_file($iwSolutionsCss) && is_readable($iwSolutionsCss)): ?>
       <style id="iw-solutions-critical-css"><?= (string)file_get_contents($iwSolutionsCss) ?></style>
     <?php else: ?>
-      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/solutions.css')) ?>?v=20261115-gansell-hub2">
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/solutions.css')) ?>?v=20261115-gansell-brand3">
     <?php endif;
   endif; ?>
   <style>
@@ -284,8 +284,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <details class="iw-mobile-menu-group">
               <summary>Our Solutions <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
-                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Explore all solutions</a>
-                <a href="<?= e(public_url('solutions')) ?>#gansell">Gansell marketplace</a>
+                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Gansell</a>
               </div>
             </details>
             <details class="iw-mobile-menu-group">
@@ -317,8 +316,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
               <button type="button" class="nav-link dropdown-toggle<?= $isSolutionsActive ? ' active' : '' ?>"
                       data-bs-toggle="dropdown" aria-expanded="false" aria-label="Our Solutions menu">Our Solutions <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i></button>
               <ul class="dropdown-menu iw-public-solutions-menu">
-                <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? ' active' : '' ?>" href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Explore all solutions</a></li>
-                <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? '' : '' ?>" href="<?= e(public_url('solutions')) ?>#gansell">Gansell marketplace</a></li>
+                <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? ' active' : '' ?>" href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Gansell</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown iw-public-resources-dropdown">
