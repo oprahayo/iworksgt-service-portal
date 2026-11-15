@@ -30,8 +30,11 @@ for(const item of pages){
  await page.waitForTimeout(1800);
  const title=await page.title();
  const text=(await page.locator('body').innerText()).toUpperCase();
- const needle=item.match.toUpperCase();
- if(!text.includes(needle) && !title.toUpperCase().includes(needle))throw new Error('Page not recognizable: '+item.url);
+ const normalize=(value)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const needle=normalize(item.match);
+ if(!normalize(text).includes(needle) && !normalize(title).includes(needle)) {
+   throw new Error('Page not recognizable: '+item.url+' title='+title);
+ }
  if(text.includes('VERIFY YOU ARE HUMAN')||text.includes('CLOUDFLARE CHALLENGE'))throw new Error('Challenge page cannot be used as screenshot');
  await page.screenshot({path:out+'/'+item.name,fullPage:false,animations:'disabled',type:'png'});
  console.log('Saved',out+'/'+item.name,'title:',title);
