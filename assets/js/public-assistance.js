@@ -90,10 +90,9 @@
       if (nudgeTitle) nudgeTitle.textContent = config.title;
       if (nudgeText) nudgeText.textContent = config.text;
     }
-    function optedIn(name) {
-      var input = startForm.elements.namedItem(name);
-      return Boolean(input && input.checked);
-    }
+    // Support continuity, follow-up and the current public-page context
+    // are standard features of an initiated support conversation.
+    // No optional checkbox controls are displayed on first contact.
     // Country is always optional. The list uses region names rather than
     // asking customers to memorize two-letter country codes.
     var isoCodes = 'AW AF AO AI AX AL AD AE AR AM AS AQ TF AG AU AT AZ BI BE BJ BQ BF BD BG BH BS BA BL BY BZ BM BO BR BB BN BT BV BW CF CA CC CH CL CN CI CM CD CG CK CO KM CV CR CU CW CX KY CY CZ DE DJ DM DK DO DZ EC EG ER EH ES EE ET FI FJ FK FR FO FM GA GB GE GG GH GI GN GP GM GW GQ GR GD GL GT GF GU GY HK HM HN HR HT HU ID IM IN IO IE IR IQ IS IL IT JM JE JO JP KZ KE KG KH KI KN KR KW LA LB LR LY LC LI LK LS LT LU LV MO MF MA MC MD MG MV MX MH MK ML MT MM ME MN MP MZ MR MS MQ MU MW MY YT NA NC NE NF NG NI NU NL NO NP NR NZ OM PK PA PN PE PH PW PG PL PR KP PT PY PS PF QA RE RO RU RW SA SD SN SG GS SH SJ SB SL SV SM SO PM RS SS ST SR SK SI SE SZ SX SC SY TC TD TG TH TJ TK TM TL TO TT TN TR TV TW TZ UG UA UM UY US UZ VA VC VE VG VI VN VU WF WS YE ZA ZM ZW'.split(' ');
@@ -102,14 +101,19 @@
     var regions = isoCodes.map(function (code) {
       return {code:code,name:displayRegion ? displayRegion.of(code) : code};
     }).sort(function (a,b) { return a.name.localeCompare(b.name); });
-    root.querySelectorAll('select[data-assist-country]').forEach(function (field) {
-      regions.forEach(function (item) {
-        var option = document.createElement('option');
-        option.value = item.code;
-        option.textContent = item.name;
-        field.appendChild(option);
-      });
-    });
+    var countryLabel = root.querySelector('[data-assist-country-label]');
+    if (countryLabel) {
+      var guessedCountry = String(countryLabel.dataset.country || '').toUpperCase();
+      if (/^[A-Z]{2}$/.test(guessedCountry)) {
+        var countryName = displayRegion ? displayRegion.of(guessedCountry) : guessedCountry;
+        var flag = String.fromCodePoint(
+          guessedCountry.charCodeAt(0) + 127397,
+          guessedCountry.charCodeAt(1) + 127397
+        );
+        countryLabel.textContent = flag + ' ' + countryName;
+        countryLabel.title = 'Approximate network-derived country; no precise location collected';
+      }
+    }
     function syncOfflineControl(form) {
       if (!form) return;
       var remember = form.elements.namedItem('remember_chat');
@@ -311,7 +315,8 @@
         var id = Number(m.id || 0);
         if (!id || session.items.some(function (x) { return Number(x.id) === id; })) return;
         var item = { id:id, kind:m.sender === 'staff' ? 'staff' : m.sender === 'system' ? 'system' : 'user',
-          text:String(m.body || ''), when:String(m.created_at || '').slice(11,16) };
+          text:String(m.body || ''), when:m.sender === 'system'
+            ? String(m.created_at || '').slice(0,16) : String(m.created_at || '').slice(11,16) };
         session.items.push(item);
         if (session.items.length > 80) session.items.shift();
         session.lastMessageId = Math.max(Number(session.lastMessageId || 0), id);
@@ -338,7 +343,7 @@
         ingestMessages(data.messages);
         updatePresence(data);
         if (data.status === 'ended') {
-          session.status='ended'; cookieActive=false;
+          session.status='ended';
           persist(); updateUnread(0); if (!chat.hidden) showChatStage();
           return;
         }
@@ -352,13 +357,14 @@
       if (!liveEndpoint) return;
       try {
         var data = await liveApi('resume',{page_path:window.location.pathname,chat_open:'0'});
-        if (!data.active) return;
+        if (!data.active && data.status !== 'ended' && data.status !== 'closed') return;
         cookieActive = true;
         var id = String(data.id || '');
-        if (session.status !== 'active' || session.id !== id) {
+        if (session.id !== id) {
           session = {name:String(data.name||''),email:String(data.email||''),id:id,
             token:'',items:[],lastMessageId:0,status:'active'};
         }
+        session.status = data.status === 'open' ? 'active' : 'ended';
         if (data.token && /^[a-f0-9]{64}$/.test(data.token)) session.token = data.token;
         ingestMessages(data.messages);
         applyPreferences(data.preferences);
@@ -366,7 +372,7 @@
         if (!chat.hidden) showChatStage();
         updatePresence(data);
         updateUnread(data.unread);
-        startLivePoller();
+        if (session.status === 'active') startLivePoller();
       } catch (ignore) {
         // A failed restore must not erase an existing, still-valid tab chat.
       }
@@ -380,7 +386,7 @@
       var active = session.status === 'active';
       var done = session.status === 'ended';
       identity.hidden = active || done;
-      conversation.hidden = !active;
+      conversation.hidden = !(active || done);
       ended.hidden = !done;
       compose.hidden = !active;
       endTrigger.hidden = !active;
@@ -431,17 +437,32 @@
       pollLive();
       if (focusReturn && typeof focusReturn.focus === 'function') focusReturn.focus();
     }
-    function restartChat() {
-      session = {name: '', email: '', id: '', token: '', items: [], lastMessageId: 0, status: 'new'};
-      cookieActive = false; updateUnread(0);
-      clearStore('chat');
-      startForm.reset();
-      syncOfflineControl(startForm);
-      if (preferencesForm) preferencesForm.reset();
-      preferencesDirty = false;
-      if (preferencesStatus) preferencesStatus.hidden = true;
-      showChatStage();
-      startForm.elements.namedItem('full_name').focus();
+    async function restartChat() {
+      if (busy) return;
+      busy = true;
+      try {
+        var result = await liveApi('restart', {page_path:window.location.pathname});
+        session.status = 'active';
+        session.id = String(result.id || session.id);
+        if (result.token) session.token = String(result.token);
+        cookieActive = true;
+        session.items = [];
+        session.lastMessageId = 0;
+        ingestMessages(result.messages);
+        persist();
+        showChatStage();
+        startLivePoller();
+        messageInput.focus({preventScroll:true});
+      } catch (error) {
+        // If the 30-day window expired, request the visitor's details again.
+        showError(startError, error.message || 'Unable to start a new conversation.');
+        startForm.elements.namedItem('full_name').value = session.name || '';
+        startForm.elements.namedItem('email').value = session.email || '';
+        session.status = 'new';
+        session.token = '';
+        cookieActive = false;
+        showChatStage();
+      } finally { busy = false; }
     }
     async function finishChat(rating) {
       try {
@@ -451,11 +472,10 @@
         return;
       }
       session.status = 'ended';
-      cookieActive = false; updateUnread(0);
-      session.items = [];
-      session.token = '';
-      clearStore('chat');
+      updateUnread(0);
       endSheet.hidden = true;
+      // Preserve this case in the browser for the new-topic button.
+      // Its server-side history is still subject to the 30-day expiry.
       showChatStage();
     }
     function closeBook() {
@@ -654,24 +674,14 @@
       var name = startForm.elements.namedItem('full_name').value.trim();
       var email = startForm.elements.namedItem('email').value.trim();
       if (!name || !email) return;
-      if (optedIn('notify_offline') && !optedIn('remember_chat')) {
-        showError(startError,'To receive offline reply emails, also choose to remember this conversation on this browser.');
-        return;
-      }
-      busy=true;
+       busy=true;
       var submit=startForm.querySelector('[type=submit]');
       submit.disabled=true;
       hideError(startError);
       try {
         var live=await liveApi('start',{name:name,email:email,
-          remember_chat:optedIn('remember_chat')?'1':'0',
-          notify_offline:optedIn('notify_offline')?'1':'0',
-          track_page:optedIn('track_page')?'1':'0',
-          country_code:startForm.elements.namedItem('country_code')
-            ? startForm.elements.namedItem('country_code').value : '',
           page_path:window.location.pathname});
-        cookieActive = Boolean(live.features && live.features.resume &&
-          optedIn('remember_chat'));
+        cookieActive = Boolean(live.preferences && live.preferences.remember_chat);
         session = {name:name,email:email,id:String(live.id),token:String(live.token),
           items:[],lastMessageId:0,status:'active'};
         persist();
