@@ -41,7 +41,15 @@ for slug in \
     check "Case detail /$slug" "$BASE/case-studies/$slug" 'iw-work-client-website'
     check "Genuine screenshot /$slug" "$BASE/assets/branding/case-studies/$slug.webp"
 done
-check 'Homepage Case studies' "$BASE/" 'iw-home-case-actions'
+check 'Homepage graphical carousel' "$BASE/" 'data-iw-showcase-track'
+check 'Homepage window previews' "$BASE/" 'iw-home-case-window'
+check 'Homepage fade actions' "$BASE/" 'iw-home-case-overlay-actions'
+check 'Homepage carousel controls' "$BASE/" 'data-iw-showcase-next'
+check 'Homepage matching How It Works background' "$BASE/" 'background:#fff6ee!important'
+check 'Homepage drag controller' "$BASE/" 'function initShowcase()'
+check 'Top-level Case Studies navigation' "$BASE/" '>Case Studies</a>'
+check 'Structured client case overview' "$BASE/case-studies/triply-travels-company-formation-travel-website-portals" 'iw-case-project-facts'
+check 'Expandable full project details' "$BASE/case-studies/triply-travels-company-formation-travel-website-portals" 'iw-case-project-notes'
 # The rejected work-gallery presentation and headings must not return.
 check_absent() {
   local title="$1" url="$2" unwanted="$3" output="$TMP/response"
