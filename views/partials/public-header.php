@@ -281,7 +281,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
               <summary>About <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
                 <a href="<?= e(public_url('about')) ?>">Our company</a>
-                <a href="<?= e($useCasesHref)"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a>
+                <a href="<?= e($useCasesHref) ?>"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a>
                 <a href="<?= e(public_url('contact')) ?>">Contact</a>
               </div>
             </details>
