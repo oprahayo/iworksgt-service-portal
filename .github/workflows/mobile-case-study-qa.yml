@@ -1,0 +1,45 @@
+name: Mobile Case Studies image and menu QA
+
+on:
+  push:
+    branches:
+      - fix/mobile-case-images-compact-nav-20261115
+    paths:
+      - scripts/qa_mobile_case_images.py
+      - .github/workflows/mobile-case-study-qa.yml
+      - assets/css/portfolio-work.css
+      - views/public-home-clean.php
+      - views/partials/public-header.php
+      - assets/js/portfolio-work.js
+      - tests/fixtures/render_home_case_preview.php
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium and WebKit
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium webkit
+      - name: Serve actual screenshot-backed PHP fixture
+        run: |
+          php tests/fixtures/render_home_case_preview.php > home-case-preview.html
+          python -m http.server 8765 --bind 127.0.0.1 > /tmp/iworks-mobile-qa-server.log 2>&1 &
+          sleep 2
+      - name: Test live mobile website and source preview with Chromium and WebKit
+        run: python scripts/qa_mobile_case_images.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iworks-mobile-case-qa
+          path: case-mobile-qa/
+          retention-days: 7
