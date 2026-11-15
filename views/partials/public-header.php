@@ -273,7 +273,6 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <details class="iw-mobile-menu-group">
               <summary>Explore iWorks <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
-                <a href="<?= e(public_url('services')) ?>">Find a service</a>
                 <a href="<?= e(public_url('track')) ?>">Track an order</a>
                 <a href="<?= e(public_url('blog')) ?>">Insights &amp; guides</a>
               </div>
