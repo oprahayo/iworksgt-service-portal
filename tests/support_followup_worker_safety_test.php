@@ -7,6 +7,7 @@ declare(strict_types=1);
 $GLOBALS['mailOn'] = false;
 $GLOBALS['otpSelects'] = 0;
 function email_enabled(): bool { return $GLOBALS['mailOn']; }
+function now(): string { return '2026-11-15 08:00:00'; }
 function db_one(string $sql, array $params=[]): ?array {
     return str_contains($sql,'information_schema.tables') ? ['c'=>1] : null;
 }
