@@ -75,7 +75,7 @@ $assert(str_contains($routes, 'http_response_code(410)') &&
         str_contains($routes, 'noindex, nofollow') &&
         str_contains($routes, "['solutions', 'gansell']") &&
         !str_contains($routes, 'iworks_serve_solutions_media(') &&
-        !str_contains($seo, "$".'add(public_url('."'solutions'".'))') &&
+        !str_contains($seo, "    \$add(public_url('solutions'));") &&
         !str_contains($meta, "'solutions' =>") &&
         !str_contains($meta, "'gansell' =>"),
         'Unreleased Gansell must not be publicly discoverable.');
