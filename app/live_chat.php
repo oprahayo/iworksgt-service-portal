@@ -77,6 +77,7 @@ function iw_chat_touch_visitor(array $thread, array $request): void
         ? iw_chat_safe_page((string)($request['page_path'] ?? '')) : null;
     if ($seen) {
         db_execute("UPDATE iw_live_threads SET visitor_last_seen_at=NOW(),
+            updated_at=NOW(),
             current_page=CASE WHEN track_page=1 THEN :page ELSE NULL END,
             visitor_last_read_message_id=GREATEST(visitor_last_read_message_id,
               COALESCE((SELECT MAX(id) FROM iw_live_messages
