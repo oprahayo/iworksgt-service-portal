@@ -93,12 +93,21 @@ $assert(str_contains($landing,'id="iw-solutions"') &&
         str_contains($landing,'id="gansell"') &&
         str_contains($landing,'https://gansell.com/') &&
         str_contains($landing,'https://gansell.com/@ab-african') &&
-        str_contains($landing,'Create your free store') &&
-        str_contains($landing,'gansell-website-project.webp') &&
+        str_contains($landing,'Start on Gansell') &&
+        str_contains($landing,'class="iw-gansell-checklist"') &&
+        substr_count($landing,'<li><strong>') === 8 &&
+        str_contains($landing,'gansell-home-desktop.png') &&
+        str_contains($landing,'gansell-home-mobile.png') &&
+        str_contains($landing,'ab-african-store-desktop.png') &&
         str_contains($landing,'ab-african-store-mobile.png') &&
-        str_contains($landing,'Your shop deserves more') &&
+        !str_contains($landing,'Your shop deserves more') &&
+        !str_contains($landing,'Big possibilities') &&
         !str_contains($landing,'https://gansell.com/register'),
-        'The one-page hub must market free stores and give real mobile and desktop vendor examples.');
+        'Solutions must present a concise eight-feature list with real desktop and mobile captures.');
+$assert(str_contains($landingCss,'iw-gansell-checklist li::before') &&
+        str_contains($landingCss,'iw-gansell-device-gallery') &&
+        strlen($landingCss) < 14000,
+        'Solutions must use lightweight checklist styling instead of the oversized promotional card layout.');
 $assert(str_contains($header,'iw-solutions-critical-css') &&
         str_contains($landingCss,'@media(max-width:550px)') &&
         str_contains($landingCss,'@media(prefers-reduced-motion:reduce)'),

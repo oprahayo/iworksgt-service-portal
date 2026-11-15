@@ -19,6 +19,13 @@ if ($page === null) {
     }
     $rawPath = trim($rawPath, '/');
     if ($rawPath !== '') {
+        // Serve the four real Gansell screenshots from the shared PHP source.
+        // This works even when the apex and portal asset roots differ.
+        if (preg_match('~^solutions/media/([a-z0-9-]+\\.png)$~', $rawPath, $mediaMatch)) {
+            require_once __DIR__ . '/app/public_solutions_media.php';
+            iworks_serve_solutions_media((string)$mediaMatch[1], __DIR__);
+            exit;
+        }
         if ($rawPath === 'blog' || $rawPath === 'insights') {
             $page = 'blog';
             $requestedPrettyPublicPage = true;
@@ -407,7 +414,7 @@ try {
             $pageSeo = [
                 'metaTitle' => $title,
                 'metaDescription' => (string)($searchPage['description'] ?? ''),
-                'ogImage' => 'assets/branding/case-studies/gansell-website-project.webp',
+                'ogImage' => 'solutions/media/gansell-home-desktop.png?v=20261115-images3',
             ];
             require __DIR__ . '/views/partials/public-header.php';
             require __DIR__ . '/views/public-solutions.php';

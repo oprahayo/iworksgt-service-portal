@@ -1,172 +1,114 @@
 <?php
 /**
- * One iWORKS solutions hub: Gansell is the first featured digital product.
- * Authentic screen captures (when available) come from public Chromium visits.
- * No user checkout/session data, unverified payment pricing or fabricated sales.
+ * iWORKS Our Solutions — Gansell feature.
+ * All four images come from actual public desktop/mobile website captures.
+ * The canonical /solutions/media/ route reads from the shared portal source,
+ * independent of the separate apex-domain static assets directory.
  */
-$gansellHome = 'https://gansell.com/';
-$sampleVendor = 'https://gansell.com/@ab-african';
-$solutionImg = static function(string $basename, string $fallback = ''): string {
-    $path = 'assets/branding/solutions/'.$basename;
-    return is_file(__DIR__.'/../'.$path)
-        ? public_absolute_url($path)
-        : ($fallback !== '' ? public_absolute_url($fallback) : '');
+$gansellUrl = 'https://gansell.com/';
+$vendorUrl = 'https://gansell.com/@ab-african';
+$gansellImage = static function (string $file): string {
+    return public_absolute_url('solutions/media/' . $file . '?v=20261115-images3');
 };
-$marketDesktop = $solutionImg('gansell-home-desktop.png', 'assets/branding/case-studies/gansell-website-project.webp');
-$marketMobile = $solutionImg('gansell-home-mobile.png');
-$vendorDesktop = $solutionImg('ab-african-store-desktop.png');
-$vendorMobile = $solutionImg('ab-african-store-mobile.png');
 ?>
 <main class="public-main iw-solutions" id="iw-solutions">
-  <section class="iw-solutions-intro" aria-labelledby="iw-solutions-title">
+  <section class="iw-solutions-header" aria-labelledby="iw-solutions-title">
     <div class="container public-container">
-      <nav class="iw-solutions-crumb" aria-label="Breadcrumb">
-        <a href="<?= e(public_url('home')) ?>">Home</a><i class="bi bi-chevron-right" aria-hidden="true"></i><span>Our Solutions</span>
+      <nav class="iw-solutions-breadcrumb" aria-label="Breadcrumb">
+        <a href="<?= e(public_url('home')) ?>">Home</a><span aria-hidden="true">/</span><span>Our Solutions</span>
       </nav>
-      <div class="iw-solutions-title-grid">
-        <div>
-          <span class="iw-solutions-eyebrow">iWORKS DIGITAL PRODUCTS</span>
-          <h1 id="iw-solutions-title">Big possibilities for every small business.</h1>
-        </div>
-        <div class="iw-solutions-intro-side">
-          <p>Our Solutions brings together practical products that help entrepreneurs build, sell and grow. First up: Gansell, a marketplace and free storefront for Nigerian vendors.</p>
-          <a href="#gansell" class="iw-solutions-inline-cta">Discover Gansell <i class="bi bi-arrow-down" aria-hidden="true"></i></a>
-        </div>
-      </div>
+      <p class="iw-solutions-kicker">OUR SOLUTIONS</p>
+      <h1 id="iw-solutions-title">Digital tools for business.</h1>
+      <p>Products developed by iWORKS to help entrepreneurs sell and operate online. Starting with Gansell.</p>
     </div>
   </section>
 
-  <section class="iw-gansell-hero" id="gansell" aria-labelledby="iw-gansell-title">
-    <div class="container public-container iw-gansell-hero-grid">
-      <div class="iw-gansell-hero-copy">
-        <div class="iw-gansell-wordmark" aria-label="Gansell">gansell<span>.</span></div>
-        <span class="iw-gansell-free"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Free to create your vendor storefront</span>
-        <h2 id="iw-gansell-title">Your shop deserves more than a WhatsApp status.</h2>
-        <p>Give customers a proper place to discover your business, browse your products and services, add to cart and check out. Gansell brings your own vendor page together with a wider marketplace of Nigerian businesses.</p>
-        <div class="iw-gansell-hero-actions">
-          <a class="iw-gansell-cta" href="<?= e($gansellHome) ?>" target="_blank" rel="noopener noreferrer">Create your free store <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-          <a class="iw-gansell-secondary" href="#gansell-demo">See a real vendor store <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  <section class="iw-gansell-showcase" id="gansell" aria-labelledby="iw-gansell-title">
+    <div class="container public-container iw-gansell-showcase-layout">
+      <div class="iw-gansell-details">
+        <div class="iw-gansell-title-row">
+          <span class="iw-gansell-product-name">Gansell</span>
+          <span class="iw-gansell-free-label">Free storefront</span>
         </div>
-        <p class="iw-gansell-note">Storefront setup and product listing are free. Available payment methods and any payment-provider charges depend on the checkout.</p>
+        <h2 id="iw-gansell-title">Create a store. Share your link. Take orders.</h2>
+        <p class="iw-gansell-description">Gansell is a multi-vendor marketplace where businesses can list products and services, manage their own storefront and receive customer orders.</p>
+
+        <h3 class="iw-gansell-checklist-title">What you can do</h3>
+        <ul class="iw-gansell-checklist">
+          <li><strong>Create your own storefront</strong> with a shareable Gansell web address.</li>
+          <li><strong>List products and services</strong> with photos, categories and prices.</li>
+          <li><strong>Share store or product links</strong> on WhatsApp and social media.</li>
+          <li><strong>Reach marketplace visitors</strong> searching for vendors and products.</li>
+          <li><strong>Accept shopping-cart orders</strong> through customer checkout.</li>
+          <li><strong>Offer payment options</strong> supported by your store, including online payment where enabled.</li>
+          <li><strong>Arrange delivery or pickup</strong> using an address or the buyer's live location.</li>
+          <li><strong>Start for free</strong> with no storefront setup or product-listing fee.</li>
+        </ul>
+
+        <div class="iw-gansell-actions">
+          <a class="iw-gansell-action-primary" href="<?= e($gansellUrl) ?>" target="_blank" rel="noopener noreferrer">Start on Gansell <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+          <a class="iw-gansell-action-secondary" href="#gansell-example">View example store <i class="bi bi-arrow-down" aria-hidden="true"></i></a>
+        </div>
+        <p class="iw-gansell-disclaimer">Storefront setup and listings are free. Payment-provider charges, where applicable, are separate.</p>
       </div>
-      <div class="iw-gansell-hero-media" aria-label="Gansell desktop and mobile experiences">
-        <figure class="iw-gansell-desktop-shot">
-          <div class="iw-gansell-browser-chrome" aria-hidden="true"><span class="iw-gansell-dotrow"><i></i><i></i><i></i></span><span>gansell.com</span><i class="bi bi-arrows-fullscreen"></i></div>
-          <img src="<?= e($marketDesktop) ?>" alt="Authentic captured desktop view of the Gansell marketplace" width="1440" height="900" loading="eager" decoding="async">
+
+      <div class="iw-gansell-device-gallery" aria-label="Actual Gansell screenshots">
+        <figure class="iw-gansell-display-desktop">
+          <div class="iw-gansell-browser-bar" aria-hidden="true"><span class="iw-gansell-browser-dots"><i></i><i></i><i></i></span><span>gansell.com</span></div>
+          <img src="<?= e($gansellImage('gansell-home-desktop.png')) ?>" alt="Gansell marketplace desktop website showing vendor search and product categories" width="1440" height="1000" loading="eager" decoding="async" fetchpriority="high">
           <figcaption>Marketplace · desktop</figcaption>
         </figure>
-        <figure class="iw-gansell-phone-shot">
-          <div class="iw-gansell-phone-shell">
-            <div class="iw-gansell-phone-sensor" aria-hidden="true"></div>
-            <?php if ($vendorMobile !== ''): ?>
-              <img src="<?= e($vendorMobile) ?>" alt="Authentic mobile screenshot of the AB ÁFRICAN FOOD AND MALL vendor storefront on Gansell" width="390" height="844" loading="eager" decoding="async">
-            <?php elseif ($marketMobile !== ''): ?>
-              <img src="<?= e($marketMobile) ?>" alt="Authentic mobile screenshot of the Gansell marketplace" width="390" height="844" loading="eager" decoding="async">
-            <?php else: ?>
-              <div class="iw-gansell-phone-fallback" aria-label="Text-based demonstration of a vendor storefront">
-                <div class="iw-gansell-fb-brand">gansell.</div>
-                <div class="iw-gansell-fb-banner"><small>VENDOR STORE</small><strong>AB ÁFRICAN FOOD AND MALL</strong><span>Food · Home · Beauty</span></div>
-                <div class="iw-gansell-fb-browse"><span>Products</span><span>Share store</span></div>
-                <div class="iw-gansell-fb-tiles"><span>Food &amp; Drinks</span><span>Home &amp; Living</span><span>Beauty</span></div>
-                <div class="iw-gansell-fb-cart"><i class="bi bi-bag"></i> Shopping cart &amp; checkout</div>
-              </div>
-            <?php endif; ?>
+        <figure class="iw-gansell-display-mobile">
+          <div class="iw-gansell-phone">
+            <div class="iw-gansell-phone-notch" aria-hidden="true"></div>
+            <img src="<?= e($gansellImage('gansell-home-mobile.png')) ?>" alt="Gansell marketplace mobile website showing vendor search and product categories" width="390" height="844" loading="eager" decoding="async">
           </div>
-          <figcaption><?= $vendorMobile !== '' ? 'AB ÁFRICAN FOOD AND MALL · real mobile capture' : ($marketMobile !== '' ? 'Gansell · real mobile capture' : 'Storefront illustration · see live example below') ?></figcaption>
+          <figcaption>Marketplace · mobile</figcaption>
         </figure>
       </div>
     </div>
-    <div class="container public-container">
-      <div class="iw-gansell-feature-rail" aria-label="Gansell highlights">
-        <span><i class="bi bi-shop" aria-hidden="true"></i> Your own storefront</span>
-        <span><i class="bi bi-box-seam" aria-hidden="true"></i> Products &amp; services</span>
-        <span><i class="bi bi-share" aria-hidden="true"></i> Shareable links</span>
-        <span><i class="bi bi-cart-check" aria-hidden="true"></i> Cart &amp; checkout</span>
-      </div>
-    </div>
   </section>
 
-  <section class="iw-gansell-benefits" aria-labelledby="iw-gansell-benefits-title">
+  <section class="iw-gansell-example" id="gansell-example" aria-labelledby="iw-gansell-example-title">
     <div class="container public-container">
-      <div class="iw-gansell-section-head">
-        <span class="iw-solutions-eyebrow">SELL SMARTER, NOT HARDER</span>
-        <h2 id="iw-gansell-benefits-title">One business. Its own website. Many ways to sell.</h2>
-        <p>From the product you post on WhatsApp to an order placed by someone across town, Gansell gives your business a proper online home.</p>
-      </div>
-      <div class="iw-gansell-benefit-grid">
-        <article><div class="iw-gansell-benefit-icon"><i class="bi bi-globe2" aria-hidden="true"></i></div><h3>A storefront with your name</h3><p>Your vendor page works like a personal business website, with its own link you can send to customers anytime.</p></article>
-        <article><div class="iw-gansell-benefit-icon"><i class="bi bi-tags" aria-hidden="true"></i></div><h3>List everything you offer</h3><p>Showcase products with photos, prices and categories, or introduce services your customers can discover.</p></article>
-        <article><div class="iw-gansell-benefit-icon"><i class="bi bi-whatsapp" aria-hidden="true"></i></div><h3>Share directly to buyers</h3><p>Send a store or product link through WhatsApp, Instagram, Facebook or wherever your customers find you.</p></article>
-        <article><div class="iw-gansell-benefit-icon"><i class="bi bi-bag-check" aria-hidden="true"></i></div><h3>A real shopping cart</h3><p>Shoppers can browse, pick quantities, add items to cart and continue to checkout without a separate buyer account.</p></article>
-        <article><div class="iw-gansell-benefit-icon"><i class="bi bi-credit-card" aria-hidden="true"></i></div><h3>Flexible checkout</h3><p>Customers can complete an order using the payment options available from that seller, including online payment where enabled.</p></article>
-        <article><div class="iw-gansell-benefit-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></div><h3>Delivery on the map</h3><p>Buyers can enter an address, use their live location or arrange pickup and delivery directly with the vendor.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="iw-gansell-proof" id="gansell-demo" aria-labelledby="iw-gansell-demo-title">
-    <div class="container public-container iw-gansell-proof-layout">
-      <div class="iw-gansell-proof-copy">
-        <span class="iw-solutions-eyebrow">SEE A REAL GANSELL STORE</span>
-        <h2 id="iw-gansell-demo-title">Not just a listing. A shop customers can actually use.</h2>
-        <p>Meet <strong>AB ÁFRICAN FOOD AND MALL</strong>, a live Gansell vendor. Its own shareable shop link brings customers straight to a catalogue with categories, product details, cart actions and checkout.</p>
-        <div class="iw-gansell-proof-link">
-          <small>SHAREABLE STOREFRONT LINK</small>
-          <code>gansell.com/@ab-african</code>
-          <a href="<?= e($sampleVendor) ?>" target="_blank" rel="noopener noreferrer">Visit live store <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+      <div class="iw-gansell-example-top">
+        <div>
+          <p class="iw-solutions-kicker">REAL VENDOR EXAMPLE</p>
+          <h2 id="iw-gansell-example-title">AB ÁFRICAN FOOD AND MALL</h2>
+          <p>See how a vendor storefront looks on desktop and mobile. Visitors can browse the catalogue, choose products, use the cart and continue to checkout.</p>
         </div>
-        <p class="iw-gansell-evidence">Public storefront and checkout flows reviewed on 15 November 2026. Product availability and checkout options may change.</p>
+        <a class="iw-gansell-example-link" href="<?= e($vendorUrl) ?>" target="_blank" rel="noopener noreferrer">Visit this store <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
       </div>
-      <div class="iw-gansell-proof-media">
-        <?php if ($vendorDesktop !== ''): ?>
-          <figure class="iw-gansell-proof-desktop"><img src="<?= e($vendorDesktop) ?>" alt="Actual desktop screenshot of AB ÁFRICAN FOOD AND MALL Gansell storefront" width="1440" height="1000" loading="lazy" decoding="async"><figcaption>Live vendor storefront · desktop</figcaption></figure>
-        <?php else: ?>
-          <a class="iw-gansell-proof-link-card" href="<?= e($sampleVendor) ?>" target="_blank" rel="noopener noreferrer"><span class="iw-gansell-proof-card-eyebrow">LIVE SHOP LINK</span><strong>AB ÁFRICAN FOOD AND MALL</strong><span>Browse products · Add to cart · Checkout</span><span class="iw-gansell-proof-link-cta">Open the real storefront <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></a>
-        <?php endif; ?>
-        <?php if ($vendorMobile !== ''): ?>
-          <figure class="iw-gansell-proof-mobile"><img src="<?= e($vendorMobile) ?>" alt="Actual 390-pixel mobile screenshot of the AB ÁFRICAN FOOD AND MALL Gansell vendor store" width="390" height="844" loading="lazy" decoding="async"><figcaption>Live vendor storefront · mobile</figcaption></figure>
-        <?php endif; ?>
+      <div class="iw-gansell-example-gallery">
+        <figure class="iw-gansell-example-desktop">
+          <img src="<?= e($gansellImage('ab-african-store-desktop.png')) ?>" alt="Real desktop screenshot of AB ÁFRICAN FOOD AND MALL storefront, showing products and prices" width="1440" height="1000" loading="lazy" decoding="async">
+          <figcaption>AB ÁFRICAN FOOD AND MALL · desktop</figcaption>
+        </figure>
+        <figure class="iw-gansell-example-mobile">
+          <img src="<?= e($gansellImage('ab-african-store-mobile.png')) ?>" alt="Real mobile screenshot of AB ÁFRICAN FOOD AND MALL storefront showing product categories" width="390" height="844" loading="lazy" decoding="async">
+          <figcaption>AB ÁFRICAN FOOD AND MALL · mobile</figcaption>
+        </figure>
       </div>
+      <p class="iw-gansell-example-note">Example storefront: <a href="<?= e($vendorUrl) ?>" target="_blank" rel="noopener noreferrer">gansell.com/@ab-african</a>. Screenshots captured from public pages on 15 November 2026.</p>
     </div>
   </section>
 
-  <section class="iw-gansell-journey" aria-labelledby="iw-gansell-journey-title">
+  <section class="iw-gansell-steps" aria-labelledby="iw-gansell-steps-title">
     <div class="container public-container">
-      <div class="iw-gansell-section-head">
-        <span class="iw-solutions-eyebrow">MADE FOR NIGERIAN ENTREPRENEURS</span>
-        <h2 id="iw-gansell-journey-title">From “send me your price list” to “here's my store.”</h2>
-      </div>
-      <ol class="iw-gansell-journey-grid">
-        <li><span>01</span><h3>Create your vendor page</h3><p>Get started on Gansell and introduce your business. Your storefront is created as part of the vendor setup.</p></li>
-        <li><span>02</span><h3>List your products or services</h3><p>Add images, pricing and details that make it easy for buyers to understand what you sell.</p></li>
-        <li><span>03</span><h3>Share your link. Receive orders.</h3><p>Put your link on WhatsApp Status or social profiles. Customers browse, add to cart and proceed to checkout.</p></li>
+      <h2 id="iw-gansell-steps-title">How to get started</h2>
+      <ol>
+        <li><span>01</span><div><strong>Create your vendor store.</strong><p>Open Gansell and follow the vendor setup steps.</p></div></li>
+        <li><span>02</span><div><strong>Add products or services.</strong><p>Upload photos, enter prices and organise your listings.</p></div></li>
+        <li><span>03</span><div><strong>Share your store link.</strong><p>Send it to customers or add it to your social profiles.</p></div></li>
       </ol>
+      <a class="iw-gansell-action-primary" href="<?= e($gansellUrl) ?>" target="_blank" rel="noopener noreferrer">Explore Gansell <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
     </div>
   </section>
 
-  <section class="iw-gansell-cost" aria-labelledby="iw-gansell-cost-title">
-    <div class="container public-container iw-gansell-cost-layout">
-      <div>
-        <span class="iw-solutions-eyebrow">A STORE SHOULD NOT BREAK THE BANK</span>
-        <h2 id="iw-gansell-cost-title">Start selling online for free.</h2>
-        <p>Gansell offers free vendor setup and listings, so you can put your business online without paying for a separate website just to start. Payment-processing charges, if applicable, are separate from storefront setup.</p>
-      </div>
-      <div class="iw-gansell-cost-number" aria-label="Zero naira storefront setup"><span>₦0</span><small>STOREFRONT SETUP</small></div>
-    </div>
-  </section>
-
-  <section class="iw-gansell-final" aria-labelledby="iw-gansell-final-title">
-    <div class="container public-container iw-gansell-final-layout">
-      <div><span class="iw-solutions-eyebrow">EVERYONE CAN SELL.</span><h2 id="iw-gansell-final-title">Your next customer needs a link, not another catalogue photo.</h2><p>Start with Gansell. Make your business easier to find, shop and share.</p></div>
-      <a class="iw-gansell-cta" href="<?= e($gansellHome) ?>" target="_blank" rel="noopener noreferrer">Explore Gansell for free <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-    </div>
-  </section>
-
-  <section class="iw-solutions-next" aria-labelledby="iw-solutions-next-title">
-    <div class="container public-container iw-solutions-next-layout">
-      <span class="iw-solutions-eyebrow">OUR SOLUTIONS, GROWING WITH YOU</span>
-      <div><h2 id="iw-solutions-next-title">More ways to do business are coming.</h2><p>As new iWORKS products launch, this same page will introduce them. Gansell is the first digital solution currently featured.</p></div>
-      <a href="<?= e(public_url('services')) ?>">Explore business services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  <section class="iw-solutions-future">
+    <div class="container public-container">
+      <h2>More solutions will be added here.</h2>
+      <p>New iWORKS digital products will appear as they launch.</p>
     </div>
   </section>
 </main>
