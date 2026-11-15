@@ -94,9 +94,30 @@ body.page-public .iw-clean-home .iw-clean-hero {
 body.page-public .iw-back-to-top{
   position:fixed!important;left:clamp(16px,2.4vw,28px)!important;right:auto!important;
   bottom:clamp(18px,2.8vw,30px)!important;z-index:1190!important;
-  width:42px!important;height:42px!important;border-radius:12px!important;
-  display:grid;place-items:center;background:#e86720!important;
-  color:#fff!important;border:0!important;box-shadow:0 8px 19px rgba(51,34,25,.18)!important
+  width:48px!important;height:48px!important;border-radius:0!important;
+  padding:0!important;display:grid;place-items:center;
+  background:transparent!important;background-image:none!important;
+  color:#eb651e!important;border:0!important;box-shadow:none!important;
+  transform:none!important;cursor:pointer;
+}
+body.page-public .iw-back-to-top i{
+  display:inline-block;
+  font-size:33px;
+  line-height:1;
+  color:#eb651e!important;
+  filter:drop-shadow(0 5px 5px rgba(92,45,18,.26));
+  animation:iw-back-to-top-hop 2.3s ease-in-out infinite;
+}
+body.page-public .iw-back-to-top:hover i{color:#bd4d10!important}
+@keyframes iw-back-to-top-hop{
+  0%,100%{transform:translateY(2px)}
+  24%{transform:translateY(-9px)}
+  45%{transform:translateY(-3px)}
+  62%{transform:translateY(-7px)}
+  80%{transform:translateY(2px)}
+}
+@media(prefers-reduced-motion:reduce){
+  body.page-public .iw-back-to-top i{animation:none!important}
 }
 body.page-public .iw-back-to-top:not(.iw-visible){
   opacity:0!important;visibility:hidden!important;pointer-events:none!important
@@ -482,48 +503,130 @@ body.page-public .iw-home-case-cover {position:relative}
 }
 
 
-/* iw-hero-overlay-header-v1
-   The homepage starts as one continuous hero behind its navigation.
-   The already-existing .scrolled class restores the solid sticky header.
-   Keep interior pages and the expanded mobile dropdown on their own canvas. */
+/* iw-hero-overlay-header-v2
+   Homepage navigation floats over the REAL hero: no duplicate white strip,
+   backdrop blur, or second panel at the top. Scroll state already exists. */
 body.page-public-home .public-navbar {
-  --iw-header-overlap: 74px;
-  position: sticky !important;
-  top: 0;
-  z-index: 1045;
-  margin-bottom: calc(-1 * var(--iw-header-overlap)) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border-bottom-color: transparent !important;
-  box-shadow: none !important;
-  transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  position:fixed!important;
+  top:0;
+  right:0;
+  left:0;
+  width:100%;
+  margin:0!important;
+  z-index:1045;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border-bottom-color:transparent!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  transition:background-color .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+body.page-public-home .public-navbar:not(.scrolled) .public-nav-shell,
+body.page-public-home .public-navbar:not(.scrolled) > .container {
+  background:transparent!important;
+  background-image:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
 }
 body.page-public-home .public-navbar.scrolled {
-  background: #fff !important;
-  background-color: #fff !important;
-  border-bottom-color: #eceff0 !important;
-  box-shadow: 0 5px 18px rgba(21, 32, 43, .09) !important;
+  background:#fff!important;
+  border-bottom-color:#eceff0!important;
+  box-shadow:0 5px 18px rgba(21,32,43,.09)!important;
 }
-/* The hero itself, including its warm gradient, starts behind the logo/menu. */
 body.page-public-home .iw-clean-home .iw-clean-hero {
-  min-height: 100vh;
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  min-height:100vh;
+  min-height:100svh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
-@media (max-width: 1199.98px) {
-  body.page-public-home .public-navbar {
-    --iw-header-overlap: 65px;
-  }
-  /* Opening the hamburger should reveal a legible solid panel, even at top. */
+@media (max-width:1199.98px) {
+  /* Only the OPEN hamburger panel has a separate white background. */
   body.page-public-home .public-navbar #publicNav,
   body.page-public-home .public-navbar .iw-mobile-menu {
-    background: #fff;
+    background:#fff;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  body.page-public-home .public-navbar {
-    transition: none;
+@media(min-width:1200px) {
+  /* Right-weighted compact menu; whitespace belongs between brand and links. */
+  body.page-public .public-navbar .public-nav-shell {
+    display:flex;
+    align-items:center;
+    gap:clamp(16px,2.4vw,38px);
   }
+  body.page-public .public-navbar .navbar-collapse {
+    display:flex!important;
+    justify-content:flex-end;
+    flex:1 1 auto;
+    min-width:0;
+  }
+  body.page-public .public-navbar .public-nav-center {
+    gap:clamp(9px,1.15vw,18px)!important;
+    margin-left:auto!important;
+    margin-right:clamp(12px,1.8vw,24px)!important;
+    width:auto;
+    flex:0 1 auto;
+  }
+  body.page-public .public-navbar .public-nav-center .nav-link {
+    font-size:clamp(12px,.92vw,14px)!important;
+    padding:8px 2px;
+    white-space:nowrap;
+  }
+  body.page-public .public-navbar .public-header-cta-group{gap:clamp(10px,1.2vw,16px)}
+}
+body.page-public .public-nav-center .iw-nav-chevron {
+  display:inline-block;
+  margin-left:5px;
+  font-size:.67em;
+  line-height:1;
+  vertical-align:middle;
+}
+body.page-public .public-nav-center .dropdown-toggle::after{display:none}
+body.page-public .public-nav-center .dropdown-menu {
+  border:1px solid #e7e9eb;
+  border-radius:9px;
+  box-shadow:0 14px 35px rgba(24,36,43,.11);
+  min-width:190px;
+}
+body.page-public .public-nav-center .dropdown-menu .dropdown-item {
+  padding:10px 15px;
+  font-size:13px;
+}
+@media(max-width:767.98px) {
+  /* Keep the established two-column link grid; center only the brand panel. */
+  body.page-public .public-footer-brand-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    justify-items:center!important;
+    align-items:center!important;
+    gap:18px!important;
+    text-align:center!important;
+  }
+  body.page-public .public-footer-brand-lockup,
+  body.page-public .public-footer-brand-lockup picture{
+    display:flex!important;
+    justify-content:center!important;
+    align-items:center!important;
+    margin-inline:auto!important;
+  }
+  body.page-public .public-footer-brand-row .public-footer-logo {
+    display:block!important;
+    margin-inline:auto!important;
+  }
+  body.page-public .public-footer-summary{
+    margin:0 auto!important;
+    max-width:430px!important;
+    text-align:center!important;
+  }
+  body.page-public .public-footer-socials{
+    display:flex!important;
+    justify-self:center!important;
+    justify-content:center!important;
+    margin-inline:auto!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.page-public-home .public-navbar{transition:none!important}
 }
