@@ -316,44 +316,70 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
     <div class="container public-container">
       <div class="iw-home-case-head">
         <h2 id="iw-home-cases-title">Case studies</h2>
-        <p>Some of the businesses and organisations we've worked with.</p>
+        <p>Work we've delivered for businesses and organisations.</p>
       </div>
       <?php if ($homeCases !== []): ?>
-        <div class="iw-home-case-grid">
-          <?php foreach (array_slice($homeCases, 0, 3) as $story): ?>
-            <?php
-            $clientName = trim((string)($story['client_name'] ?? '')) ?: 'iWORKS client';
-            $caseLink = public_url('case_study',['slug'=>(string)$story['slug']]);
-            $clientWebsite = iworks_editorial_case_site((string)$story['slug']);
-            ?>
-            <article class="iw-home-case-card" data-iw-reveal>
-              <a class="iw-home-case-cover" href="<?= e($caseLink) ?>" aria-label="Read <?= e($clientName) ?> case study">
-                <?php if (trim((string)($story['image_url']??'')) !== ''): ?>
-                  <img src="<?= e((string)$story['image_url']) ?>" alt="Screenshot of the <?= e($clientName) ?> website" loading="lazy" decoding="async" width="1440" height="900">
-                <?php elseif (trim((string)($story['logo_url']??'')) !== ''): ?>
-                  <img class="iw-home-case-logo-only" src="<?= e((string)$story['logo_url']) ?>" alt="" loading="lazy" decoding="async" width="540" height="330">
-                <?php else: ?>
-                  <span class="iw-home-case-no-image" aria-hidden="true"><i class="bi bi-image"></i></span>
-                <?php endif; ?>
-              </a>
-              <div class="iw-home-case-card-copy">
-                <small><?= e((string)(($story['category'] ?? '') ?: 'Client project')) ?></small>
-                <h3><a href="<?= e($caseLink) ?>"><?= e($clientName) ?></a></h3>
-                <p><?= e((string)($story['summary']??'')) ?></p>
-                <div class="iw-home-case-actions">
-                  <a href="<?= e($caseLink) ?>">Read case study</a>
-                  <?php if ($clientWebsite !== ''): ?>
-                    <a href="<?= e($clientWebsite) ?>" target="_blank" rel="noopener noreferrer" aria-label="Visit <?= e($clientName) ?> website (opens in a new tab)">Visit website</a>
-                  <?php endif; ?>
+        <div class="iw-home-case-showcase" data-iw-showcase>
+          <div class="iw-home-case-grid" data-iw-showcase-track tabindex="0"
+               role="region" aria-roledescription="carousel"
+               aria-label="Client case studies. Swipe, scroll or use the previous and next buttons.">
+            <?php foreach ($homeCases as $story): ?>
+              <?php
+              $clientName = trim((string)($story['client_name'] ?? '')) ?: 'iWORKS client';
+              $caseLink = public_url('case_study',['slug'=>(string)$story['slug']]);
+              $clientWebsite = iworks_editorial_case_site((string)$story['slug']);
+              $siteHost = $clientWebsite !== '' ? (string)(parse_url($clientWebsite,PHP_URL_HOST) ?: '') : '';
+              ?>
+              <article class="iw-home-case-card" data-iw-showcase-slide>
+                <div class="iw-home-case-visual">
+                  <a class="iw-home-case-cover" href="<?= e($caseLink) ?>" aria-label="Read <?= e($clientName) ?> case study">
+                    <span class="iw-home-case-window">
+                      <span class="iw-home-case-window-bar" aria-hidden="true">
+                        <span class="iw-home-case-window-dots"><i></i><i></i><i></i></span>
+                        <span class="iw-home-case-window-address"><?= e($siteHost !== '' ? $siteHost : $clientName) ?></span>
+                      </span>
+                      <?php if (trim((string)($story['image_url']??'')) !== ''): ?>
+                        <img src="<?= e((string)$story['image_url']) ?>" alt="Screenshot of the <?= e($clientName) ?> website" loading="lazy" decoding="async" draggable="false" width="1440" height="900">
+                      <?php elseif (trim((string)($story['logo_url']??'')) !== ''): ?>
+                        <img class="iw-home-case-logo-only" src="<?= e((string)$story['logo_url']) ?>" alt="" loading="lazy" decoding="async" draggable="false" width="540" height="330">
+                      <?php else: ?>
+                        <span class="iw-home-case-no-image" aria-hidden="true"><i class="bi bi-image"></i></span>
+                      <?php endif; ?>
+                    </span>
+                  </a>
+                  <div class="iw-home-case-overlay">
+                    <div class="iw-home-case-overlay-actions">
+                      <a href="<?= e($caseLink) ?>">View case study</a>
+                      <?php if ($clientWebsite !== ''): ?>
+                        <a href="<?= e($clientWebsite) ?>" target="_blank" rel="noopener noreferrer" aria-label="Visit <?= e($clientName) ?> website (opens in a new tab)">Visit website</a>
+                      <?php endif; ?>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </article>
-          <?php endforeach; ?>
+                <div class="iw-home-case-card-copy">
+                  <small><?= e((string)(($story['category'] ?? '') ?: 'Client project')) ?></small>
+                  <h3><a href="<?= e($caseLink) ?>"><?= e($clientName) ?></a></h3>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
+          <div class="iw-home-case-nav">
+            <div class="iw-home-case-controls">
+              <button type="button" class="iw-home-case-control" data-iw-showcase-prev aria-label="Previous case study">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="iw-home-case-control" data-iw-showcase-next aria-label="Next case study">
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+              <span class="iw-home-case-position" data-iw-showcase-status aria-live="polite" aria-atomic="true">1 of <?= count($homeCases) ?></span>
+            </div>
+            <a class="iw-home-case-all" href="<?= e(public_url('case-studies')) ?>">See all case studies</a>
+          </div>
         </div>
       <?php else: ?>
         <p class="iw-home-case-pending">Our published case studies will appear here.</p>
+        <a class="iw-home-case-all" href="<?= e(public_url('case-studies')) ?>">See all case studies</a>
       <?php endif; ?>
-      <a class="iw-home-case-all" href="<?= e(public_url('case-studies')) ?>">See all case studies</a>
     </div>
   </section>
 
