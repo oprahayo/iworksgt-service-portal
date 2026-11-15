@@ -1,7 +1,7 @@
 name: iWORKS Case Studies visual QA
 on:
   push:
-    branches: [ux/restore-native-iworks-case-studies-20261115]
+    branches: [ux/home-case-study-showcase-carousel-20261115]
     paths:
       - .github/workflows/portfolio-visual-audit.yml
       - tests/fixtures/render_portfolio_preview.php
@@ -10,6 +10,7 @@ on:
       - views/public-case-study-detail.php
       - app/editorial.php
       - views/public-home-clean.php
+      - tests/fixtures/render_home_case_preview.php
       - assets/js/portfolio-work.js
   workflow_dispatch:
 permissions:
@@ -30,6 +31,7 @@ jobs:
         run: |
           php tests/fixtures/render_portfolio_preview.php work > portfolio-preview.html
           php tests/fixtures/render_portfolio_preview.php detail > portfolio-detail-preview.html
+          php tests/fixtures/render_home_case_preview.php > home-case-preview.html
           python -m http.server 8765 --bind 127.0.0.1 > /tmp/iworks-portfolio-http.log 2>&1 &
           sleep 2
       - name: Capture current site and new desktop/mobile case-study previews
@@ -42,6 +44,8 @@ jobs:
             "preview-iworks-work-desktop": ("http://127.0.0.1:8765/portfolio-preview.html", 1440, 900),
             "preview-iworks-work-mobile": ("http://127.0.0.1:8765/portfolio-preview.html", 390, 844),
             "preview-iworks-detail-desktop": ("http://127.0.0.1:8765/portfolio-detail-preview.html", 1440, 900),
+            "preview-iworks-home-carousel-desktop": ("http://127.0.0.1:8765/home-case-preview.html", 1440, 900),
+            "preview-iworks-home-carousel-mobile": ("http://127.0.0.1:8765/home-case-preview.html", 390, 844),
           }
           with sync_playwright() as p:
               browser = p.chromium.launch(headless=True,args=['--no-sandbox'])
@@ -59,6 +63,55 @@ jobs:
                             imgs.forEach(img => img.loading='eager');
                             await Promise.all(imgs.map(img => img.decode().catch(() => {})));
                           }""")
+                      if "home-carousel" in name:
+                          rail = page.locator("[data-iw-showcase-track]")
+                          page.locator(".iw-home-case-stories").scroll_into_view_if_needed()
+                          page.wait_for_timeout(450)
+                          stats = rail.evaluate("""el => ({
+                            total: el.scrollWidth, width: el.clientWidth,
+                            count: el.querySelectorAll('[data-iw-showcase-slide]').length
+                          })""")
+                          if stats["count"] != 5 or stats["total"] <= stats["width"]:
+                              raise RuntimeError(f"Case carousel is not showing all five as a scrollable rail: {stats}")
+                          if "desktop" in name:
+                              page.locator("[data-iw-showcase-next]").click()
+                              page.wait_for_timeout(600)
+                              after_next=rail.evaluate("el=>el.scrollLeft")
+                              if after_next < 30:
+                                  raise RuntimeError("Next button failed to scroll")
+                              page.locator("[data-iw-showcase-prev]").click()
+                              page.wait_for_timeout(600)
+                              before_drag=rail.evaluate("el=>el.scrollLeft")
+                              box=rail.bounding_box()
+                              y=box["y"]+box["height"]*.35
+                              page.mouse.move(box["x"]+box["width"]*.7,y)
+                              page.mouse.down()
+                              page.mouse.move(box["x"]+box["width"]*.34,y,steps=9)
+                              page.mouse.up()
+                              page.wait_for_timeout(300)
+                              after_drag=rail.evaluate("el=>el.scrollLeft")
+                              if after_drag <= before_drag+30:
+                                  raise RuntimeError(f"Mouse drag failed: before={before_drag}, after={after_drag}")
+                              page.locator(".iw-home-case-visual").first.hover()
+                              page.wait_for_timeout(360)
+                              overlay_opacity=page.locator(".iw-home-case-overlay").first.evaluate(
+                                  "el=>parseFloat(getComputedStyle(el).opacity)"
+                              )
+                              if overlay_opacity < .9:
+                                  raise RuntimeError(f"Fade overlay did not appear: {overlay_opacity}")
+                              print(f"{name}: next, previous, mouse drag and fade overlay passed")
+                          else:
+                              # Native overflow provides touch-swiping without
+                              # affecting vertical document scrolling.
+                              move=rail.evaluate("""el => {
+                                el.scrollLeft=240;
+                                return el.scrollLeft;
+                              }""")
+                              if move < 60:
+                                  raise RuntimeError("Mobile horizontal scrolling failed")
+                              print(f"{name}: 5 slides and mobile horizontal overflow passed")
+                          rail.evaluate("el=>el.scrollLeft=0")
+                          page.wait_for_timeout(520)
                       if "preview-iworks-" in name:
                           # Scroll through the full page as a visitor would,
                           # so all intersection-based entries become visible.
