@@ -85,6 +85,8 @@ $currentPublicSlug = trim((string) ($publicPageSlug ?? ($page ?? 'home')));
 $isAboutActive = $currentPublicSlug === 'about';
 $isManagementActive = $currentPublicSlug === 'management';
 $isUseCasesActive = in_array($currentPublicSlug, ['case-studies', 'case_study'], true);
+$isSolutionsActive = in_array($currentPublicSlug, ['solutions', 'gansell'], true);
+$isResourcesActive = in_array($currentPublicSlug, ['track', 'blog', 'blog_post'], true);
 $isServicesActive = in_array($currentPublicSlug, ['services', 'service'], true);
 $isBlogActive = in_array($currentPublicSlug, ['blog', 'blog_post'], true);
 $isContactActive = $currentPublicSlug === 'contact';
@@ -271,7 +273,14 @@ $isLaunchHome = $currentPublicSlug === 'home';
               </div>
             </details>
             <details class="iw-mobile-menu-group">
-              <summary>Explore iWorks <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+              <summary>Our Solutions <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+              <div class="iw-mobile-menu-sub">
+                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>All solutions</a>
+                <a href="<?= e(public_url('gansell')) ?>"<?= $currentPublicSlug === 'gansell' ? ' aria-current="page"' : '' ?>>Gansell marketplace</a>
+              </div>
+            </details>
+            <details class="iw-mobile-menu-group">
+              <summary>Resources <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
                 <a href="<?= e(public_url('track')) ?>">Track an order</a>
                 <a href="<?= e(public_url('blog')) ?>">Insights &amp; guides</a>
@@ -293,13 +302,29 @@ $isLaunchHome = $currentPublicSlug === 'home';
               </div>
             </div>
           </div>
-          <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
+          <ul class="navbar-nav ms-xl-auto me-xl-3 align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
+            <li class="nav-item dropdown iw-public-solutions-dropdown">
+              <button type="button" class="nav-link dropdown-toggle<?= $isSolutionsActive ? ' active' : '' ?>"
+                      data-bs-toggle="dropdown" aria-expanded="false" aria-label="Our Solutions menu">Our Solutions <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i></button>
+              <ul class="dropdown-menu iw-public-solutions-menu">
+                <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? ' active' : '' ?>" href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Explore all solutions</a></li>
+                <li><a class="dropdown-item<?= $currentPublicSlug === 'gansell' ? ' active' : '' ?>" href="<?= e(public_url('gansell')) ?>"<?= $currentPublicSlug === 'gansell' ? ' aria-current="page"' : '' ?>>Gansell marketplace</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown iw-public-resources-dropdown">
+              <button type="button" class="nav-link dropdown-toggle<?= $isResourcesActive ? ' active' : '' ?>"
+                      data-bs-toggle="dropdown" aria-expanded="false" aria-label="Resources menu">Resources <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i></button>
+              <ul class="dropdown-menu iw-public-resources-menu">
+                <li><a class="dropdown-item<?= $isTrackActive ? ' active' : '' ?>" href="<?= e(public_url('track')) ?>"<?= $isTrackActive ? ' aria-current="page"' : '' ?>>Track order</a></li>
+                <li><a class="dropdown-item<?= $isBlogActive ? ' active' : '' ?>" href="<?= e(public_url('blog')) ?>"<?= $isBlogActive ? ' aria-current="page"' : '' ?>>Insights</a></li>
+              </ul>
+            </li>
             <?php if ($aboutLabel !== ''): ?>
               <li class="nav-item dropdown iw-public-about-dropdown">
                 <button type="button" class="nav-link dropdown-toggle<?= ($isAboutActive || $isUseCasesActive) ? ' active' : '' ?>"
                         data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?= e($aboutLabel) ?> menu">
-                  <?= e($aboutLabel) ?>
+                  <?= e($aboutLabel) ?> <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i>
                 </button>
                 <ul class="dropdown-menu iw-public-about-menu">
                   <li><a class="dropdown-item<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>>About iWORKS</a></li>
@@ -307,8 +332,6 @@ $isLaunchHome = $currentPublicSlug === 'home';
                 </ul>
               </li>
             <?php endif; ?>
-            <li class="nav-item"><a class="nav-link<?= $isTrackActive ? ' active' : '' ?>" href="<?= e(public_url('track')) ?>"<?= $isTrackActive ? ' aria-current="page"' : '' ?>>Track order</a></li>
-            <li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e(public_url('blog')) ?>"<?= $isBlogActive ? ' aria-current="page"' : '' ?>>Insights</a></li>
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
           </ul>
           <div class="public-header-cta-group">
