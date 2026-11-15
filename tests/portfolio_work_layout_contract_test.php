@@ -53,10 +53,11 @@ $check(str_contains($home,'<h2 id="iw-home-cases-title">Case studies</h2>'),'Hom
 $check(!str_contains($home,'SELECTED WORK')
     && !str_contains($home,'Real projects. Real progress.')
     && !str_contains($home,'iw-work-browser'),'Keep the restored browser-window visuals scoped to homepage only.');
-foreach(['iw-home-case-grid','View case study','Visit website','data-iw-showcase-track',
+foreach(['iw-home-case-grid','iw-home-case-cover','iw-home-case-overlay','data-iw-showcase-track',
          'iworks_editorial_case_site(','iw-home-case-window'] as $marker){
     $check(str_contains($home,$marker),'Home case study feature missing: '.$marker);
 }
+$check(!str_contains($home,'iw-home-case-overlay-actions'), 'Homepage artwork must not be covered by extra case-study action buttons.');
 $css=$read('assets/css/portfolio-work.css');
 foreach(['--iw-cases-paper:#fffaf6','font-family:Inter','display:flex;',
     'scroll-snap-type:x mandatory',

@@ -668,54 +668,23 @@ body.page-public .iw-home-case-visual:hover img,
 body.page-public .iw-home-case-visual:focus-within img {
   transform:scale(1.025);
 }
+/* No action buttons on top of the case-study preview: the screenshot itself
+   links to the full case, which contains the website actions. */
 body.page-public .iw-home-case-overlay {
   position:absolute;
   inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-  padding:23px;
-  background:linear-gradient(180deg,rgba(12,21,30,.05) 27%,rgba(12,21,30,.82) 100%);
+  display:block;
+  background:linear-gradient(180deg,rgba(239,103,21,.01) 40%,rgba(237,102,23,.38) 100%);
   opacity:0;
   visibility:hidden;
-  transition:opacity .3s ease,visibility .3s;
   pointer-events:none;
+  transition:opacity .26s ease,visibility .26s;
 }
-body.page-public .iw-home-case-visual:is(:hover,:focus-within) .iw-home-case-overlay {
+body.page-public .iw-home-case-visual:is(:hover,:focus-within,:active) .iw-home-case-overlay {
   opacity:1;
   visibility:visible;
-  pointer-events:none;
 }
-body.page-public .iw-home-case-overlay-actions {
-  pointer-events:auto;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:10px;
-}
-body.page-public .iw-home-case-overlay-actions a {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:auto!important;
-  height:auto!important;
-  min-height:42px;
-  padding:10px 16px;
-  background:rgba(255,255,255,.96);
-  color:#24303a!important;
-  border:1px solid rgba(255,255,255,.7);
-  border-radius:5px;
-  font-size:12px;
-  font-weight:740;
-  text-decoration:none;
-  transition:background-color .2s,color .2s;
-}
-body.page-public .iw-home-case-overlay-actions a:hover {
-  background:#f28d4f;
-  border-color:#f28d4f;
-  color:#fff!important;
-}
+
 body.page-public .iw-home-case-card .iw-home-case-card-copy {
   padding:15px 2px 0;
 }
@@ -910,23 +879,10 @@ body.page-public .iw-case-project-notes .iw-article-body h2 {margin-top:22px}
   body.page-public .iw-home-case-all {font-size:12px}
   body.page-public .iw-case-digital .iw-work-detail-cover {margin-bottom:22px}
 }
-@media(hover:none) {
-  body.page-public .iw-home-case-overlay {
-    opacity:1;
-    visibility:visible;
-    pointer-events:none;
-    justify-content:flex-start;
-    align-items:flex-end;
-    padding:14px;
-    background:linear-gradient(180deg,transparent 63%,rgba(12,21,30,.73) 100%);
-  }
-  body.page-public .iw-home-case-overlay-actions a {padding:8px 11px;min-height:34px;font-size:11px}
-}
 @media(prefers-reduced-motion:reduce) {
   body.page-public .iw-home-case-grid {scroll-behavior:auto!important}
   body.page-public .iw-home-case-overlay,
   body.page-public .iw-home-case-control,
-  body.page-public .iw-home-case-overlay-actions a,
   body.page-public .iw-case-project-notes summary i {transition:none!important}
 }
 

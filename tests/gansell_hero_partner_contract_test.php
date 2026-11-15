@@ -25,7 +25,9 @@ foreach(['orangeserver-logo.svg','rilahost-logo.svg','iw-home-brand-ribbon',
 $must(str_contains($css,'.iw-home-brand-mark.iw-home-brand-rilahost img')
     && str_contains($css,'background:#26343f')
     && str_contains($css,'.iw-home-brand-mark.iw-home-brand-orangeserver img')
-    && str_contains($css,'filter:none!important'),
+    && !str_contains($css,'filter:none!important')
+    && str_contains($css,'filter:grayscale(1)!important')
+    && str_contains($css,'filter:grayscale(0)!important'),
     'Hosting logos must render legibly in the existing hero carousel.');
 $manifest=json_decode($read('assets/branding/case-studies/gansell-website-project-capture.json'),true,512,JSON_THROW_ON_ERROR);
 $must($manifest['http_status']===200

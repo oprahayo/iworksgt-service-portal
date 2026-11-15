@@ -25,6 +25,8 @@ function iworks_search_page_meta(string $page): array
         'faq' => ['Business Registration and Service FAQs | iWorks Global', 'Answers about CAC-related service requests, document submission, remote business support and tracking your iWorks Global service order.'],
         'blog' => ['CAC Registration & Digital Business Guides | iWorks Global', 'Practical guides for founders on Nigerian business registration, trademarks, website planning and remote business operations.'],
         'case-studies' => ['Client Projects & Case Studies | iWORKS GLOBAL', 'Explore completed business registration and digital service projects, their scope and documented results from iWORKS GLOBAL.'],
+        'solutions' => ['Our Solutions | Digital Products for Entrepreneurs | iWORKS GLOBAL', 'Explore iWORKS digital solutions for entrepreneurs, starting with Gansell, a marketplace for Nigerian vendors, products and services.'],
+        'gansell' => ['Gansell | Discover Vendors, Products & Services in Nigeria | iWORKS', 'Gansell connects Nigerian vendors and shoppers through searchable business, product and service listings. See how to start listing your business.'],
         'management' => ['Management & Leadership | iWORKS GLOBAL LTD', 'Meet the people responsible for iWORKS GLOBAL LTD operations and the delivery of business and digital services.'],
         'pricing' => ['Business Services & Pricing | iWorks Global', 'Review published business registration and digital service prices; final quotes and applicable charges are confirmed before payment.'],
         'track' => ['Track Your iWorks Order | Service Progress', 'Find the latest status of your existing iWorks service request using your job reference and contact details.'],

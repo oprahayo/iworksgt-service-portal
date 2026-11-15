@@ -15,14 +15,18 @@ $section = substr($home,$start,$end-$start);
 foreach([
   'data-iw-showcase', 'data-iw-showcase-track','data-iw-showcase-slide',
   'data-iw-showcase-prev','data-iw-showcase-next','data-iw-showcase-status',
-  'iw-home-case-window','iw-home-case-overlay','iw-home-case-overlay-actions',
+  'iw-home-case-window','iw-home-case-overlay',
   'iw-home-case-grid','aria-roledescription="carousel"','tabindex="0"',
-  'draggable="false"','View case study','Visit website',
+  'draggable="false"','aria-label="Read <?= e($clientName) ?> case study"',
   'aria-live="polite"','foreach ($homeCases as $story)',
   'See all case studies'
 ] as $marker) {
     $check(str_contains($section,$marker),'Missing carousel feature: '.$marker);
 }
+$check(!str_contains($section,'iw-home-case-overlay-actions')
+   && !str_contains($section,'View case study')
+   && !str_contains($section,'Visit website'),
+    'Homepage case study imagery must never be obstructed by action buttons.');
 $check(!str_contains($section,"$".'story[\'summary\']')
    && !str_contains($section,"$".'story[\'outcome\']'),
     'Homepage must show project category/name, not long descriptions.');
@@ -62,7 +66,7 @@ foreach([
   'background:#fff6ee!important','scroll-snap-type:x mandatory',
   '.iw-home-case-window-bar','.iw-home-case-overlay',
   'linear-gradient(180deg','cursor:grab','is-dragging',
-  '@media(hover:none)','@media(prefers-reduced-motion:reduce)'
+  'pointer-events:none','@media(prefers-reduced-motion:reduce)'
 ] as $marker) {
     $check(str_contains($css,$marker),'Carousel styling missing: '.$marker);
 }
