@@ -180,7 +180,8 @@ function public_url(string $page = 'home', array $params = []): string
     if ($page === '' || $page === 'home') {
         $path = '';
     } elseif ($page === 'gansell') {
-        $path = 'solutions/gansell';
+        // Legacy product links now land in the Gansell section of Our Solutions.
+        $path = 'solutions#gansell';
     } elseif ($page === 'insights') {
         $path = 'blog';
     } elseif ($page === 'service') {
