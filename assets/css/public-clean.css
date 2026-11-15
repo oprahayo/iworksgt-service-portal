@@ -141,9 +141,15 @@ body.page-public .public-footer { background:#fafafa; border-top:1px solid #eded
   transition:filter .3s ease,opacity .3s ease;
 }
 .iw-clean-home .iw-home-brand-mark:hover img { filter:grayscale(0); opacity:1; }
-/* Owner-provided hosting-service identities: faithful brand colors in the
- * same modest ribbon footprint. RilaHost needs a dark surface because its
- * supplied logo is transparent white on a transparent background. */
+/* Owner-approved monochrome template applies to the two hosting logos, too.
+   Full source-brand color is revealed only on interaction. */
+.iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver:hover img,
+.iw-clean-home .iw-home-brand-mark.iw-home-brand-rilahost:hover img {
+  filter:grayscale(0)!important;
+  opacity:1!important;
+}
+/* Owner-provided hosting-service marks keep the same grayscale-first template.
+ * RillaHost's original white artwork needs a neutral dark backing for contrast. */
 .iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver {
   min-width:148px;
   width:148px;
@@ -155,8 +161,8 @@ body.page-public .public-footer { background:#fafafa; border-top:1px solid #eded
   max-height:45px;
   height:auto;
   object-fit:contain;
-  filter:none!important;
-  opacity:1!important;
+  filter:grayscale(1)!important;
+  opacity:.62!important;
 }
 .iw-clean-home .iw-home-brand-mark.iw-home-brand-rilahost {
   min-width:136px;
@@ -172,8 +178,8 @@ body.page-public .public-footer { background:#fafafa; border-top:1px solid #eded
   object-fit:contain;
   border-radius:6px;
   background:#26343f;
-  filter:none!important;
-  opacity:1!important;
+  filter:grayscale(1)!important;
+  opacity:.62!important;
 }
 @media(max-width:767px){
   .iw-clean-home .iw-home-brand-mark.iw-home-brand-orangeserver {
