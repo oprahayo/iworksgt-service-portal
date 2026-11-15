@@ -289,7 +289,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
         </a>
       </div>
       <a class="iw-clean-all-services" href="<?= e(public_url('services')) ?>">View all services <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-      <p class="iw-home-compliance-extra">Looking for something else? <a href="<?= e(public_url('services')) ?>">Explore the full service catalogue <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+
     </div>
   </section>
 
