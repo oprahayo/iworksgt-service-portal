@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only public HTTP acceptance for the five published iWORKS project pages.
+# Read-only public HTTP acceptance for the six published iWORKS project pages.
 # Never signs in, writes site files, downloads customer information or calls a DB.
 # Usage: bash scripts/audit_portfolio_live.sh [https://iworksgt.com]
 set -Eeuo pipefail
@@ -37,10 +37,20 @@ for slug in \
   triply-travels-company-formation-travel-website-portals \
   restoration-llc-healthcare-website-design-hosting-management \
   karis-health-services-digital-healthcare-presence \
-  cornerstonetl-senior-care-website-design-hosting; do
+  cornerstonetl-senior-care-website-design-hosting \
+  gansell-website-project; do
     check "Case detail /$slug" "$BASE/case-studies/$slug" 'iw-work-client-website'
     check "Genuine screenshot /$slug" "$BASE/assets/branding/case-studies/$slug.webp"
 done
+check 'Real Gansell client page' "$BASE/case-studies/gansell-website-project" 'Gansell'
+check 'Gansell external website link' "$BASE/case-studies/gansell-website-project" 'https://gansell.com/'
+check 'Gansell in case study gallery' "$BASE/case-studies" 'Gansell'
+check 'OrangeServer hero brand' "$BASE/" 'OrangeServer'
+check 'RillaHost hero brand' "$BASE/" 'RillaHost'
+check 'OrangeServer SVG asset' "$BASE/assets/branding/orangeserver-logo.svg" '#00a651'
+check 'RillaHost SVG asset' "$BASE/assets/branding/rilahost-logo.svg" '#ffffff'
+check 'Hosting-service logo treatment' "$BASE/" 'iw-home-brand-rilahost'
+check 'Provider identification' "$BASE/" 'independent service provider'
 check 'Homepage graphical carousel' "$BASE/" 'data-iw-showcase-track'
 check 'Homepage window previews' "$BASE/" 'iw-home-case-window'
 check 'Homepage fade actions' "$BASE/" 'iw-home-case-overlay-actions'
