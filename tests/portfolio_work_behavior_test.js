@@ -29,14 +29,14 @@ const root={
   querySelector:(name)=>name==='[data-iw-work-count]'?summary:empty,
 };
 assert.equal(filterProjects(root,'all'),5);
-assert.equal(summary.textContent,'5 projects shown');
+assert.equal(summary.textContent,'5 case studies');
 assert.equal(filterProjects(root,'healthcare'),3);
 assert.equal(projects.filter(p=>!p.hidden).length,3);
 assert.equal(buttons[4].attrs['aria-pressed'],'true');
 assert.equal(buttons[0].attrs['aria-pressed'],'false');
 assert.equal(filterProjects(root,'formation'),2);
 assert.equal(filterProjects(root,'travel'),1);
-assert.equal(summary.textContent,'1 project shown');
+assert.equal(summary.textContent,'1 case study');
 assert.equal(filterProjects(root,'nonprofit'),1);
 assert.equal(filterProjects(root,'invalid-filter'),0);
 assert.equal(empty.hidden,false);
