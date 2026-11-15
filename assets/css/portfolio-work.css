@@ -573,6 +573,7 @@ body.page-public .iw-home-case-card {
   overflow:visible!important;
 }
 body.page-public .iw-home-case-visual {
+  display:block!important; /* override legacy mobile .iw-home-case-visual display:none */
   position:relative;
   isolation:isolate;
   aspect-ratio:16/10;
