@@ -1,0 +1,47 @@
+name: Gansell editorial layout visual QA
+
+on:
+  pull_request:
+    paths:
+      - 'views/public-solutions.php'
+      - 'assets/css/solutions.css'
+      - 'tests/gansell_visual_preview.php'
+      - 'tests/gansell_visual_qa.mjs'
+      - '.github/workflows/gansell-visual-qa.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  screenshot:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+      - name: Start isolated PHP visual fixture
+        run: |
+          php -S 127.0.0.1:8011 -t . > /tmp/iworks-gansell-visual.log 2>&1 &
+          sleep 2
+      - name: Verify actual screenshots and capture responsive page
+        run: node tests/gansell_visual_qa.mjs
+      - name: Commit visual review images
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/visual-qa/gansell-desktop.png docs/visual-qa/gansell-mobile.png
+          git diff --cached --quiet && exit 0
+          git commit -m 'test(gansell): verified responsive editorial product page visuals'
+          git fetch origin "$GITHUB_HEAD_REF"
+          git rebase FETCH_HEAD
+          git push origin HEAD:"$GITHUB_HEAD_REF"

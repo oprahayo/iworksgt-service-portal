@@ -196,8 +196,16 @@ if [[ "$real_images" != 4 ]]; then
   echo "Expected all four embedded PNG screenshots; found $real_images. Rolling back." >&2
   false
 fi
-grep -Fq 'class="iw-gansell-free-sticker"' "$live_html" || {
+grep -Fq 'class="iw-gansell-free-seal"' "$live_html" || {
   echo 'FREE sticker not visible in the published markup; rolling back.' >&2
+  false
+}
+grep -Fq 'class="iw-gansell-product-gallery"' "$live_html" || {
+  echo 'Full-width product gallery missing in published markup; rolling back.' >&2
+  false
+}
+grep -Fq 'class="iw-gansell-functions"' "$live_html" || {
+  echo 'Compact feature checklist missing in published markup; rolling back.' >&2
   false
 }
 if grep -Fqi 'Explore all solutions' "$live_html"; then
@@ -205,7 +213,7 @@ if grep -Fqi 'Explore all solutions' "$live_html"; then
   false
 fi
 echo 'PASS 4 genuine screenshots embedded in public Gansell HTML'
-echo 'PASS FREE sticker and product-only navigation'
+echo 'PASS full-width product gallery, feature list, FREE sticker and product navigation'
 
 STARTED=0
 trap - ERR

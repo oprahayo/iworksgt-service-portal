@@ -47,6 +47,7 @@ jobs:
           bash -n scripts/deploy_mobile_header_footer_restore.sh
           bash -n scripts/deploy_home_hero_overlay.sh
           bash -n scripts/deploy_solutions_ui_refresh.sh
+          bash -n g.sh
           bash -n scripts/deploy_launch_products.sh
           php -l scripts/activate_launch_prices.php
           bash -n scripts/deploy_businesshub_home.sh

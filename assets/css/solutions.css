@@ -1,315 +1,400 @@
-/* Gansell by iWORKS — use the restrained iWORKS public-site design system.
-   No standalone SaaS template, tiled feature cards, or decorative mockups. */
+/*
+ * GANSELL / iWORKS GLOBAL
+ * Editorial product showcase, not a generic SaaS template.
+ * Existing public Inter typography, #f56613 orange and 1140px grid retained.
+ */
 body.page-public .iw-solutions {
-  --ig-orange:#f56613;
-  --ig-orange-dark:#d9520b;
-  --ig-text:#20242a;
-  --ig-muted:#626d76;
-  --ig-border:#e7e9ea;
-  color:var(--ig-text);
+  --iwg-orange:#f56613;
+  --iwg-dark:#1f242a;
+  --iwg-quiet:#626e78;
+  --iwg-line:#e5e7e8;
   background:#fff;
+  color:var(--iwg-dark);
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   overflow-x:clip;
 }
 body.page-public .iw-solutions *,
 body.page-public .iw-solutions *::before,
-body.page-public .iw-solutions *::after {box-sizing:border-box}
+body.page-public .iw-solutions *::after{box-sizing:border-box}
 body.page-public .iw-solutions :is(h1,h2,p,figure){margin-top:0}
 body.page-public .iw-solutions :is(h1,h2){
   font-family:inherit;
-  color:var(--ig-text);
-  letter-spacing:-.052em;
-  line-height:1.12;
+  font-weight:740;
+  letter-spacing:-.05em;
+  line-height:1.11;
+  color:var(--iwg-dark);
   text-wrap:balance;
 }
 body.page-public .iw-solutions a{text-decoration:none}
 body.page-public .iw-solutions a:focus-visible{
-  outline:2px solid var(--ig-orange);
+  outline:2px solid var(--iwg-orange);
   outline-offset:4px;
 }
-body.page-public .iw-gansell-product {
-  background:linear-gradient(110deg,#fff 0%,#fff 54%,#fff9f4 100%);
-  scroll-margin-top:82px;
-  padding:clamp(55px,8vw,103px) 0 clamp(64px,7vw,94px);
+body.page-public .iw-gansell-stage{
+  background:linear-gradient(135deg,#fff 2%,#fffaf7 65%,#fff0e4 100%);
+  padding:clamp(50px,6vw,87px) 0 clamp(62px,7vw,100px);
+  scroll-margin-top:88px;
 }
-body.page-public .iw-gansell-product-layout {
+body.page-public .iw-gansell-intro{
   display:grid;
-  grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);
-  gap:clamp(36px,5.4vw,80px);
-  align-items:center;
+  grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);
+  align-items:end;
+  gap:clamp(25px,5vw,73px);
+  margin:0 0 clamp(29px,4.5vw,62px);
 }
-body.page-public .iw-gansell-product-copy{min-width:0}
-body.page-public .iw-gansell-product-overline{
-  margin:0 0 12px;
+body.page-public .iw-gansell-overline{
+  margin:0 0 19px;
   font-size:11px;
-  font-weight:730;
-  letter-spacing:.095em;
-  color:#db5a0d;
-  line-height:1.5;
-}
-body.page-public .iw-gansell-product h1{
-  margin:0 0 12px;
-  font-size:clamp(48px,5.6vw,79px);
   font-weight:760;
+  letter-spacing:.12em;
+  line-height:1.45;
+  color:#d4580e;
 }
-body.page-public .iw-gansell-product-tagline{
-  font-size:clamp(21px,2.3vw,31px);
-  letter-spacing:-.034em;
-  font-weight:650;
-  line-height:1.3;
-  color:#303740;
-  max-width:510px;
-  margin:0 0 15px;
+body.page-public .iw-gansell-overline span{color:#b4a49a;padding:0 7px}
+body.page-public .iw-gansell-intro h1{
+  max-width:750px;
+  font-size:clamp(40px,5.1vw,69px);
+  margin:0;
 }
-body.page-public .iw-gansell-product-lead,
-body.page-public .iw-gansell-vendor-copy>p:not(.iw-gansell-product-overline){
-  font-size:clamp(14px,1.22vw,16px);
-  line-height:1.7;
-  color:var(--ig-muted);
-  max-width:560px;
-  margin:0 0 20px;
+body.page-public .iw-gansell-intro-detail{padding-bottom:4px;min-width:0}
+body.page-public .iw-gansell-intro-detail>p{
+  font-size:clamp(14px,1.2vw,16px);
+  line-height:1.75;
+  color:#56616b;
+  max-width:455px;
+  margin:0 0 22px;
 }
-body.page-public .iw-gansell-feature-list{
-  list-style:none;
-  display:grid;
-  gap:0;
-  padding:0;
-  margin:20px 0 27px;
-  max-width:575px;
-}
-body.page-public .iw-gansell-feature-list li{
-  position:relative;
-  padding:9px 0 9px 28px;
-  color:#3e4852;
-  font-size:13.5px;
-  font-weight:520;
-  line-height:1.55;
-  border-bottom:1px solid #edeef0;
-}
-body.page-public .iw-gansell-feature-list li:last-child{border-bottom:0}
-body.page-public .iw-gansell-feature-list li::before{
-  content:"✓";
-  position:absolute;
-  top:10px;
-  left:0;
-  color:var(--ig-orange);
-  font-size:18px;
-  font-weight:750;
-  line-height:1.2;
-}
-body.page-public .iw-gansell-product-actions{
+body.page-public .iw-gansell-actions{
   display:flex;
+  gap:14px 20px;
   align-items:center;
   flex-wrap:wrap;
-  gap:13px 23px;
 }
-body.page-public .iw-gansell-primary{
+body.page-public .iw-gansell-button{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:12px;
-  min-height:47px;
-  padding:11px 17px;
+  min-height:48px;
+  padding:12px 18px;
+  background:var(--iwg-orange);
   color:#fff!important;
-  background:var(--ig-orange);
-  border:1px solid var(--ig-orange);
+  border:1px solid var(--iwg-orange);
   border-radius:7px;
-  font-size:13.5px;
+  font-size:13px;
+  font-weight:720;
   line-height:1.35;
-  font-weight:690;
-  transition:background-color .15s ease;
+  box-shadow:none;
+  transition:background-color .18s ease;
 }
-body.page-public .iw-gansell-primary:hover{
-  background:var(--ig-orange-dark);
-  border-color:var(--ig-orange-dark);
+body.page-public .iw-gansell-button:hover{
+  background:#dc560b;
+  border-color:#dc560b;
 }
-body.page-public .iw-gansell-secondary{
+body.page-public .iw-gansell-quiet-link{
   display:inline-flex;
   align-items:center;
-  gap:9px;
-  color:#404a53!important;
-  font-size:13.5px;
+  gap:8px;
+  color:#343c45!important;
+  font-size:13px;
   font-weight:660;
-  line-height:1.35;
+  line-height:1.5;
 }
-body.page-public .iw-gansell-secondary:hover{color:var(--ig-orange-dark)!important}
-body.page-public .iw-gansell-product-note{
-  margin:14px 0 0;
-  font-size:11px;
-  line-height:1.6;
-  color:#7a8289;
-  max-width:500px;
-}
-body.page-public .iw-gansell-product-visual{
+body.page-public .iw-gansell-quiet-link:hover{color:#d25611!important}
+body.page-public .iw-gansell-product-gallery{
   position:relative;
-  padding:34px 0 0;
-  min-width:0;
+  width:100%;
+  height:clamp(320px,54vw,630px);
+  margin:0 0 35px;
 }
-body.page-public .iw-gansell-free-sticker{
+body.page-public .iw-gansell-browser-shot{
   position:absolute;
   top:0;
-  right:1%;
-  z-index:3;
-  display:grid;
-  place-items:center;
-  width:86px;
-  height:86px;
-  background:#f56613;
-  color:#fff;
-  font-size:18px;
-  font-weight:830;
-  letter-spacing:.06em;
-  line-height:1;
-  text-shadow:0 1px 1px rgba(0,0,0,.12);
-  transform:rotate(12deg);
-  clip-path:polygon(50% 0,61% 9%,75% 5%,81% 19%,95% 25%,91% 39%,100% 50%,91% 61%,95% 75%,81% 81%,75% 95%,61% 91%,50% 100%,39% 91%,25% 95%,19% 81%,5% 75%,9% 61%,0 50%,9% 39%,5% 25%,19% 19%,25% 5%,39% 9%);
-}
-body.page-public .iw-gansell-screenshot-pair{
-  display:grid;
-  grid-template-columns:minmax(0,1.66fr) minmax(0,.8fr);
-  align-items:center;
-  gap:14px;
-}
-body.page-public .iw-gansell-screenshot {
-  min-width:0;
-  margin:0;
-  border:1px solid #e1e4e6;
-  border-radius:9px;
+  left:0;
+  width:87%;
   overflow:hidden;
   background:#fff;
-  box-shadow:0 15px 30px rgba(30,39,47,.11);
+  border-radius:11px;
+  border:1px solid #e3e4e4;
+  box-shadow:0 24px 50px rgba(48,36,29,.14);
 }
-body.page-public .iw-gansell-screenshot img {
+body.page-public .iw-gansell-browser-top{
+  height:34px;
+  background:#fafafa;
+  border-bottom:1px solid #e9e9e9;
+  color:#82878a;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
+  font-size:10px;
+  line-height:1;
+}
+body.page-public .iw-gansell-browser-dots{display:flex;gap:6px}
+body.page-public .iw-gansell-browser-dots i{
+  width:7px;height:7px;border-radius:50%;
+  display:block;background:#d6d6d6;
+}
+body.page-public .iw-gansell-browser-dots i:first-child{background:#e9a7a5}
+body.page-public .iw-gansell-browser-dots i:nth-child(2){background:#ebd09f}
+body.page-public .iw-gansell-browser-dots i:last-child{background:#bfdcc4}
+body.page-public .iw-gansell-browser-shot img{
+  width:100%;
+  height:auto;
+  aspect-ratio:1440/780;
+  object-fit:cover;
+  object-position:top left;
+  display:block;
+  background:#fff0cc;
+}
+body.page-public .iw-gansell-phone-shot{
+  position:absolute;
+  top:7%;
+  right:0;
+  z-index:2;
+  width:24%;
+  overflow:hidden;
+  background:#fff;
+  border:6px solid #24272b;
+  border-radius:26px;
+  box-shadow:0 20px 42px rgba(29,29,29,.23);
+}
+body.page-public .iw-gansell-phone-shot img{
   display:block;
   width:100%;
   height:auto;
-  object-fit:contain;
-  object-position:top center;
-  background:#fff;
+  aspect-ratio:390/844;
+  object-fit:cover;
+  object-position:top left;
+  background:#fff0cc;
 }
-body.page-public .iw-gansell-screenshot-desktop img,
-body.page-public .iw-gansell-vendor-desktop img{aspect-ratio:1440/1000}
-body.page-public .iw-gansell-screenshot-mobile img,
-body.page-public .iw-gansell-vendor-mobile img{aspect-ratio:390/844}
-body.page-public .iw-gansell-screenshot figcaption{
-  padding:9px 11px;
-  font-size:10.5px;
-  line-height:1.35;
-  color:#646e76;
-  background:#fff;
-  text-align:left;
+body.page-public .iw-gansell-phone-top{
+  position:absolute;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:64px;
+  height:12px;
+  z-index:3;
+  background:#24272b;
+  border-radius:0 0 12px 12px;
 }
-body.page-public .iw-gansell-screenshot-credit{
-  font-size:10.5px;
-  color:#7b848b;
-  margin:12px 0 0;
+body.page-public .iw-gansell-free-seal{
+  position:absolute;
+  right:21%;
+  top:-4%;
+  z-index:4;
+  width:100px;
+  height:100px;
+  transform:rotate(-13deg);
+  display:grid;
+  place-items:center;
+  background:#f56613;
+  color:#fff;
+  filter:drop-shadow(0 5px 8px rgba(105,45,13,.2));
+  clip-path:polygon(50% 0%,61% 9%,74% 4%,81% 18%,96% 24%,92% 39%,100% 50%,92% 61%,96% 76%,81% 82%,74% 96%,61% 91%,50% 100%,39% 91%,26% 96%,19% 82%,4% 76%,8% 61%,0% 50%,8% 39%,4% 24%,19% 18%,26% 4%,39% 9%);
 }
-body.page-public .iw-gansell-image-error{
+body.page-public .iw-gansell-free-seal span{
+  color:#fff;
+  font-size:20px;
+  font-weight:830;
+  line-height:1;
+  letter-spacing:.06em;
+}
+body.page-public .iw-gansell-gallery-caption{
+  position:absolute;
+  bottom:0;
+  left:0;
+  display:block;
+  color:#788188;
+  font-size:11px;
+  line-height:1.5;
+}
+body.page-public .iw-gansell-photo-unavailable{
+  min-height:195px;
+  padding:25px;
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:180px;
-  padding:15px;
+  gap:5px;
   font-size:12px;
-  text-align:center;
   line-height:1.6;
-  color:#66707b;
+  text-align:center;
+  color:#666;
+  background:#fff9f2;
 }
-body.page-public .iw-gansell-image-error a{color:#bd571d!important}
-body.page-public .iw-gansell-vendor{
-  background:#fafafa;
-  border-top:1px solid #ececec;
-  padding:clamp(60px,7.4vw,100px) 0;
-  scroll-margin-top:86px;
-}
-body.page-public .iw-gansell-vendor-layout{
+body.page-public .iw-gansell-photo-unavailable a{color:#bb521a!important}
+body.page-public .iw-gansell-functions{
   display:grid;
-  grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
-  align-items:center;
-  gap:clamp(35px,6vw,95px);
+  grid-template-columns:minmax(0,.36fr) minmax(0,.64fr);
+  gap:clamp(25px,5vw,74px);
+  align-items:start;
+  padding-top:36px;
+  border-top:1px solid #e9ded5;
 }
-body.page-public .iw-gansell-vendor-visual{
-  display:grid;
-  grid-template-columns:minmax(0,1.64fr) minmax(0,.75fr);
-  gap:13px;
-  align-items:center;
-  min-width:0;
-}
-body.page-public .iw-gansell-vendor-copy h2{
-  margin:0 0 19px;
-  font-size:clamp(27px,3.1vw,41px);
-  font-weight:730;
-}
-body.page-public .iw-gansell-vendor-link{
-  display:inline-block;
-  padding:10px 0;
-  border-top:1px solid #dfe2e4;
-  color:#353d46;
-  font-size:13.5px;
-  font-weight:680;
-  overflow-wrap:anywhere;
-}
-body.page-public .iw-gansell-vendor-cta{
-  display:flex;
-  width:max-content;
-  margin-top:16px;
-}
-body.page-public .iw-gansell-bottom-cta{
-  padding:42px 0;
-  background:#fff;
-  border-bottom:1px solid #ededed;
-}
-body.page-public .iw-gansell-bottom-inner{
-  display:flex;
-  gap:20px;
-  align-items:center;
-  justify-content:space-between;
-}
-body.page-public .iw-gansell-bottom-inner p{
-  font-size:clamp(19px,2.25vw,28px);
-  color:#28313b;
-  font-weight:670;
-  letter-spacing:-.035em;
+body.page-public .iw-gansell-functions h2{
+  max-width:290px;
+  font-size:clamp(24px,2.5vw,34px);
+  line-height:1.22;
   margin:0;
 }
-@media(max-width:1000px){
-  body.page-public .iw-gansell-product-layout,
-  body.page-public .iw-gansell-vendor-layout{
-    grid-template-columns:minmax(0,1fr);
-    gap:34px;
-  }
-  body.page-public .iw-gansell-product-visual,
-  body.page-public .iw-gansell-vendor-visual{max-width:700px}
-  body.page-public .iw-gansell-product-visual{margin-top:5px}
-  body.page-public .iw-gansell-vendor-copy{order:-1}
+body.page-public .iw-gansell-functions ul{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  column-gap:28px;
+  row-gap:0;
+  padding:0;
+  margin:0;
+  list-style:none;
+}
+body.page-public .iw-gansell-functions li{
+  border-bottom:1px solid #eee5df;
+  position:relative;
+  padding:0 0 15px 25px;
+  margin:0 0 15px;
+  font-size:13px;
+  line-height:1.6;
+  color:#3b4650;
+}
+body.page-public .iw-gansell-functions li::before{
+  content:"✓";
+  position:absolute;
+  top:0;
+  left:0;
+  font-size:15px;
+  font-weight:800;
+  color:var(--iwg-orange);
+}
+body.page-public .iw-gansell-real-store{
+  background:#fff;
+  padding:clamp(64px,8vw,105px) 0 clamp(76px,9vw,120px);
+  scroll-margin-top:88px;
+}
+body.page-public .iw-gansell-example-intro{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,.85fr);
+  align-items:end;
+  gap:clamp(30px,6vw,85px);
+  margin:0 0 clamp(30px,4vw,55px);
+}
+body.page-public .iw-gansell-example-intro h2{
+  font-size:clamp(30px,4vw,54px);
+  margin:0;
+}
+body.page-public .iw-gansell-example-copy p{
+  color:var(--iwg-quiet);
+  font-size:14px;
+  line-height:1.7;
+  margin:0 0 16px;
+  max-width:490px;
+}
+body.page-public .iw-gansell-example-copy strong{font-weight:720;color:#252d34}
+body.page-public .iw-gansell-example-copy a{
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  color:#b44d14!important;
+  font-size:13px;
+  font-weight:720;
+  padding-bottom:4px;
+  border-bottom:1px solid currentColor;
+  overflow-wrap:anywhere;
+}
+body.page-public .iw-gansell-example-gallery{
+  display:grid;
+  grid-template-columns:minmax(0,1.62fr) minmax(0,.58fr);
+  gap:20px;
+  align-items:start;
+}
+body.page-public .iw-gansell-example-gallery figure{
+  margin:0;
+  border:1px solid #e5e8e8;
+  box-shadow:0 14px 35px rgba(34,45,49,.075);
+  border-radius:9px;
+  overflow:hidden;
+  background:#fff;
+  min-width:0;
+}
+body.page-public .iw-gansell-example-gallery img{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:cover;
+  object-position:top center;
+}
+body.page-public .iw-gansell-example-wide img{aspect-ratio:1440/930}
+body.page-public .iw-gansell-example-phone img{aspect-ratio:390/844}
+body.page-public .iw-gansell-example-gallery figcaption{
+  color:#707b82;
+  padding:10px 13px;
+  font-size:11px;
+  line-height:1.4;
+}
+body.page-public .iw-gansell-next{
+  background:#f9faf9;
+  border-top:1px solid #e9eaea;
+  padding:35px 0 40px;
+}
+body.page-public .iw-gansell-next-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:26px;
+}
+body.page-public .iw-gansell-next strong{
+  display:block;
+  font-size:clamp(20px,2.2vw,27px);
+  line-height:1.3;
+  font-weight:700;
+  letter-spacing:-.035em;
+  color:#262d34;
+}
+body.page-public .iw-gansell-next p{
+  color:#737d85;
+  font-size:11.5px;
+  line-height:1.65;
+  max-width:620px;
+  margin:8px 0 0;
+}
+body.page-public .iw-gansell-next .iw-gansell-button{flex:0 0 auto}
+@media(max-width:950px){
+  body.page-public .iw-gansell-intro{grid-template-columns:1fr;gap:20px}
+  body.page-public .iw-gansell-intro-detail>p{max-width:680px}
+  body.page-public .iw-gansell-product-gallery{height:clamp(310px,59vw,560px)}
+  body.page-public .iw-gansell-example-intro{grid-template-columns:1fr;gap:15px}
+}
+@media(max-width:700px){
+  body.page-public .iw-gansell-functions{grid-template-columns:1fr;gap:20px}
+  body.page-public .iw-gansell-functions h2{max-width:none}
+  body.page-public .iw-gansell-functions ul{column-gap:22px}
+  body.page-public .iw-gansell-next-inner{flex-direction:column;align-items:stretch}
+  body.page-public .iw-gansell-next .iw-gansell-button{width:100%}
 }
 @media(max-width:550px){
-  body.page-public .iw-gansell-product{padding:40px 0 56px}
-  body.page-public .iw-gansell-product h1{font-size:52px}
-  body.page-public .iw-gansell-product-tagline{font-size:22px}
-  body.page-public .iw-gansell-product-lead{font-size:14px}
-  body.page-public .iw-gansell-feature-list li{font-size:13px}
-  body.page-public .iw-gansell-product-actions{
-    flex-direction:column;
-    align-items:stretch;
-    gap:16px;
-  }
-  body.page-public .iw-gansell-primary{width:100%}
-  body.page-public .iw-gansell-product-visual{padding-top:22px}
-  body.page-public .iw-gansell-free-sticker{
-    width:68px;height:68px;font-size:14px;right:0;
-  }
-  body.page-public .iw-gansell-screenshot-pair,
-  body.page-public .iw-gansell-vendor-visual{gap:8px}
-  body.page-public .iw-gansell-screenshot figcaption{padding:7px;font-size:9.5px}
-  body.page-public .iw-gansell-vendor{padding:55px 0}
-  body.page-public .iw-gansell-vendor-copy h2{font-size:30px}
-  body.page-public .iw-gansell-bottom-inner{
-    flex-direction:column;
-    align-items:stretch;
-    gap:19px;
-  }
+  body.page-public .iw-gansell-stage{padding:39px 0 59px}
+  body.page-public .iw-gansell-overline{margin-bottom:15px}
+  body.page-public .iw-gansell-intro{margin-bottom:33px}
+  body.page-public .iw-gansell-intro h1{font-size:clamp(39px,10.2vw,53px)}
+  body.page-public .iw-gansell-actions{flex-direction:column;align-items:stretch;gap:16px}
+  body.page-public .iw-gansell-button{width:100%}
+  body.page-public .iw-gansell-product-gallery{height:clamp(240px,75vw,330px);margin-bottom:17px}
+  body.page-public .iw-gansell-browser-shot{width:88%}
+  body.page-public .iw-gansell-browser-top{height:27px;padding:0 10px}
+  body.page-public .iw-gansell-browser-shot img{aspect-ratio:1440/820}
+  body.page-public .iw-gansell-phone-shot{width:37%;border-width:4px;border-radius:19px;top:7%}
+  body.page-public .iw-gansell-phone-top{height:8px;width:41px}
+  body.page-public .iw-gansell-free-seal{width:64px;height:64px;right:31%;top:-7%}
+  body.page-public .iw-gansell-free-seal span{font-size:13px}
+  body.page-public .iw-gansell-gallery-caption{font-size:9.5px}
+  body.page-public .iw-gansell-functions{padding-top:26px}
+  body.page-public .iw-gansell-functions h2{font-size:25px}
+  body.page-public .iw-gansell-functions ul{grid-template-columns:1fr}
+  body.page-public .iw-gansell-functions li{margin-bottom:10px;padding-bottom:10px}
+  body.page-public .iw-gansell-real-store{padding:56px 0 72px}
+  body.page-public .iw-gansell-example-intro h2{font-size:36px}
+  body.page-public .iw-gansell-example-gallery{gap:9px;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr)}
+  body.page-public .iw-gansell-example-gallery figcaption{padding:8px;font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){
-  body.page-public .iw-gansell-primary{transition:none!important}
+  body.page-public .iw-gansell-button{transition:none}
 }
