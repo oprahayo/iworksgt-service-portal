@@ -497,7 +497,7 @@ $socialIcons = [
 <?php else: ?>
   <script defer src="<?= e(public_absolute_url('assets/js/public-assistance.js')) ?>?v=20261114-compact2"></script>
 <?php endif; ?>
-<?php if (($currentPublicSlug ?? '') === 'case-studies'): ?>
+<?php if (in_array(($currentPublicSlug ?? ''), ['home','case-studies','case_study'], true)): ?>
   <?php $iwWorkJs = __DIR__.'/../../assets/js/portfolio-work.js'; ?>
   <?php if (is_file($iwWorkJs) && is_readable($iwWorkJs)): ?>
     <script id="iw-portfolio-work-controller"><?= str_ireplace('</script', '<\\/script', (string)file_get_contents($iwWorkJs)) ?></script>

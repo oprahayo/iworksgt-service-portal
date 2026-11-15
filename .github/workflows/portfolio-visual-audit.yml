@@ -1,7 +1,7 @@
-name: Portfolio visual reference audit
+name: iWORKS Case Studies visual QA
 on:
   push:
-    branches: [ux/ckdigital-inspired-portfolio-20261114]
+    branches: [ux/restore-native-iworks-case-studies-20261115]
     paths:
       - .github/workflows/portfolio-visual-audit.yml
       - tests/fixtures/render_portfolio_preview.php
@@ -9,6 +9,8 @@ on:
       - views/public-case-studies-refined.php
       - views/public-case-study-detail.php
       - app/editorial.php
+      - views/public-home-clean.php
+      - assets/js/portfolio-work.js
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,13 +32,12 @@ jobs:
           php tests/fixtures/render_portfolio_preview.php detail > portfolio-detail-preview.html
           python -m http.server 8765 --bind 127.0.0.1 > /tmp/iworks-portfolio-http.log 2>&1 &
           sleep 2
-      - name: Capture reference, current site, and new desktop/mobile previews
+      - name: Capture current site and new desktop/mobile case-study previews
         run: |
           mkdir -p portfolio-reference
           python - <<'PY'
           from playwright.sync_api import sync_playwright
           sites = {
-            "reference-ckdigital-work": ("https://ckdigital.com/work", 1440, 900),
             "current-iworks-case-studies": ("https://iworksgt.com/case-studies", 1440, 900),
             "preview-iworks-work-desktop": ("http://127.0.0.1:8765/portfolio-preview.html", 1440, 900),
             "preview-iworks-work-mobile": ("http://127.0.0.1:8765/portfolio-preview.html", 390, 844),
@@ -58,6 +59,31 @@ jobs:
                             imgs.forEach(img => img.loading='eager');
                             await Promise.all(imgs.map(img => img.decode().catch(() => {})));
                           }""")
+                      if "preview-iworks-" in name:
+                          # Scroll through the full page as a visitor would,
+                          # so all intersection-based entries become visible.
+                          # Then verify no hidden content and no mobile overflow.
+                          page.evaluate("""async () => {
+                            const total = document.documentElement.scrollHeight;
+                            const increment = Math.max(250, window.innerHeight * .7);
+                            for (let y=0; y<=total; y+=increment) {
+                              window.scrollTo(0,y);
+                              await new Promise(r => setTimeout(r,110));
+                            }
+                            window.scrollTo(0,0);
+                            await new Promise(r => setTimeout(r,720));
+                          }""")
+                          hidden = page.evaluate("""() => [...document.querySelectorAll('[data-iw-reveal]')]
+                            .filter(el => !el.classList.contains('is-visible')
+                                      && getComputedStyle(el).opacity === '0').length""")
+                          overflow = page.evaluate(
+                            "() => document.documentElement.scrollWidth - window.innerWidth"
+                          )
+                          if hidden:
+                              raise RuntimeError(f"{hidden} case-study entries remained invisible after scroll")
+                          if overflow > 3:
+                              raise RuntimeError(f"Horizontal overflow {overflow}px at width {width}")
+                          print(f"{name}: scroll effects verified; horizontal overflow={overflow}px")
                       page.screenshot(path=f"portfolio-reference/{name}.png",full_page=True,animations="disabled")
                       print(f"{name}: HTTP {result.status if result else 'n/a'}, TITLE {page.title()}")
                   except Exception as e:

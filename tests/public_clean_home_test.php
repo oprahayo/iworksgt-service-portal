@@ -109,7 +109,10 @@ check_home(str_contains($html, 'Can I pay in naira or US dollars?'), 'Currency F
 check_home(substr_count($html, '<section') <= 9, 'Keep marketing sections concise, including the requested illustrated benefits.');
 check_home(substr_count($html, 'class="iw-home-benefits"') === 1, 'Illustrated benefit section must appear once.');
 check_home(str_contains($html, 'class="iw-home-case-stories"'), 'Honest case-study section must appear before support.');
-check_home(str_contains($html, 'Only approved case studies will appear here.'), 'No unpublished or fabricated client projects.');
+check_home(str_contains($html, 'Our published case studies will appear here.')
+    && str_contains($html, '<h2 id="iw-home-cases-title">Case studies</h2>')
+    && !str_contains($html, 'SELECTED WORK'),
+    'The empty state must be accurate and the homepage must use the new Case studies heading.');
 check_home(str_contains($html, 'Step 1') && str_contains($html, 'Step 3'), 'Connected steps need accessible labels.');
 check_home(str_contains($html, 'name="form_action" value="public_track"'), 'Home must submit to the existing track handler.');
 check_home(str_contains($html, 'name="job_code"') && str_contains($html, 'name="identifier"'), 'Tracking fields must match the handler.');
