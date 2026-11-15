@@ -23,12 +23,6 @@ $siteUrl = iworks_editorial_case_site((string)($record['slug']??''));
       <?php endif; ?>
       <div class="iw-work-detail-story" data-iw-reveal>
         <div class="iw-article-body"><?= sanitize_limited_html((string)$record['story_html']) ?></div>
-        <?php if (!empty($record['outcome'])): ?>
-          <section class="iw-work-detail-outcome" aria-label="Project outcome">
-            <h2>Outcome</h2>
-            <p><?= e((string)$record['outcome']) ?></p>
-          </section>
-        <?php endif; ?>
       </div>
       <nav class="iw-work-detail-footer" aria-label="Case study links">
         <a href="<?= e(public_url('case-studies')) ?>" class="iw-work-return">All case studies</a>
