@@ -30,7 +30,7 @@ $check(!str_contains($section,'Real projects. Real progress.')
    && !str_contains($section,'SELECTED WORK'),'Previously rejected homepage slogan must stay removed.');
 $check(str_contains($section,'<h2 id="iw-home-cases-title">Case studies</h2>'),
     'Section title must be Case studies.');
-$check(str_contains($home,"iworks_editorial_cases(true, 5)"),
+$check(str_contains($home,"iworks_editorial_cases(true, 6)"),
     'Use genuine published CMS case studies; do not fabricate carousel items.');
 $check(str_contains($section,'$caseScreenshotPath')
     && str_contains($section,'is_file(__DIR__')

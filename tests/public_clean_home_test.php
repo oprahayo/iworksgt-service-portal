@@ -10,6 +10,7 @@ function public_url(string $page, array $params = []): string
     if ($page === 'service') { return '/services/' . rawurlencode((string) ($params['slug'] ?? '')); }
     return '/' . $page . ($params === [] ? '' : '?' . http_build_query($params));
 }
+function public_absolute_url(string $path): string { return '/'.ltrim($path,'/'); }
 function normalize_public_href(string $href, string $fallback): string { return trim($href) ?: $fallback; }
 function get_media_asset(int $id): ?array {
     $assets = [

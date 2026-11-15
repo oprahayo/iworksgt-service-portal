@@ -157,7 +157,7 @@ $faqs = array_slice($faqs, 0, 8);
 
 $featuredInsights = [];
 try { $featuredInsights = list_blog_posts_public(4); } catch (Throwable $e) { $featuredInsights = []; }
-$homeCases = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 5) : [];
+$homeCases = function_exists('iworks_editorial_cases') ? iworks_editorial_cases(true, 6) : [];
 $homeFeedback = function_exists('iworks_editorial_reviews') ? iworks_editorial_reviews(true, 3) : [];
 
 // Restore the Website Editor's complete saved hero logo carousel.
@@ -195,6 +195,28 @@ foreach (array_merge($logoCaseRecords, $logoReviewRecords) as $record) {
     if ($name !== '' && $logo !== '' && !isset($homeBrandLogos[$key])) {
         $homeBrandLogos[$key] = ['name' => $name, 'logo' => $logo, 'type' => 'client'];
     }
+}
+// Owner-supplied hosting-service logos belong to the existing hero carousel,
+// not a new hero block or a list of alleged client endorsements. Store them
+// as source-controlled assets so no Website Editor upload ID is required.
+foreach ([
+    ['name'=>'OrangeServer','asset'=>'assets/branding/orangeserver-logo.svg','key'=>'orangeserver'],
+    ['name'=>'RillaHost','asset'=>'assets/branding/rilahost-logo.svg','key'=>'rilahost'],
+] as $provider) {
+    if (!is_file(__DIR__.'/../'.$provider['asset'])) continue;
+    // A saved CMS version of the same logo must not appear twice.
+    foreach (array_keys($homeBrandLogos) as $existingName) {
+        if (strtolower((string)preg_replace('/[^a-z0-9]/i','',$existingName))===$provider['key']) {
+            unset($homeBrandLogos[$existingName]);
+        }
+    }
+    $homeBrandLogos[$provider['key']] = [
+        'name'=>$provider['name'],
+        'logo'=>public_absolute_url($provider['asset']),
+        'type'=>'provider',
+        'brand_asset'=>$provider['key'],
+    ];
+    $hasExternalLogo=true;
 }
 $homeBrandLogos = array_values($homeBrandLogos);
 
@@ -239,7 +261,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
           <div class="iw-home-brand-track <?= count($homeBrandLogos) >= 4 ? 'is-scrolling' : '' ?>">
             <div class="iw-home-brand-sequence">
               <?php foreach ($homeBrandLogos as $brand): ?>
-                <span class="iw-home-brand-mark" title="<?= e($brand['name'] . (($brand['type'] ?? 'client') === 'registry' ? ' — independent government registry' : (($brand['type'] ?? 'client') === 'provider' ? ' — independent service provider' : ' — client project'))) ?>">
+                <span class="iw-home-brand-mark<?= !empty($brand['brand_asset']) ? ' iw-home-brand-'.e((string)$brand['brand_asset']) : '' ?>" title="<?= e($brand['name'] . (($brand['type'] ?? 'client') === 'registry' ? ' — independent government registry' : (($brand['type'] ?? 'client') === 'provider' ? ' — independent service provider' : ' — client project'))) ?>">
                   <img src="<?= e($brand['logo']) ?>" alt="<?= e($brand['name'] . (($brand['type'] ?? 'client') === 'registry' ? ', independent government registry' : (($brand['type'] ?? 'client') === 'provider' ? ', independent service provider' : ', client project'))) ?>" loading="lazy" decoding="async">
                 </span>
               <?php endforeach; ?>
@@ -247,7 +269,7 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
             <?php if (count($homeBrandLogos) >= 4): ?>
               <div class="iw-home-brand-sequence" aria-hidden="true">
                 <?php foreach ($homeBrandLogos as $brand): ?>
-                  <span class="iw-home-brand-mark">
+                  <span class="iw-home-brand-mark<?= !empty($brand['brand_asset']) ? ' iw-home-brand-'.e((string)$brand['brand_asset']) : '' ?>">
                     <img src="<?= e($brand['logo']) ?>" alt="" loading="lazy" decoding="async">
                   </span>
                 <?php endforeach; ?>

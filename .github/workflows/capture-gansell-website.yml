@@ -1,0 +1,49 @@
+name: Capture Gansell genuine website preview
+on:
+  push:
+    branches:
+      - feat/hero-hosting-logos-gansell-case-20261115
+    paths:
+      - scripts/capture_gansell_website.py
+      - .github/workflows/capture-gansell-website.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Capture and verify Gansell website
+        run: python scripts/capture_gansell_website.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verified-gansell-site-capture
+          path: |
+            assets/branding/case-studies/gansell-website-project.webp
+            assets/branding/case-studies/gansell-website-project-capture.json
+          retention-days: 14
+      - name: Commit real snapshot to feature branch
+        run: |
+          git add assets/branding/case-studies/gansell-website-project.webp assets/branding/case-studies/gansell-website-project-capture.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'assets(cases): real verified Gansell website screenshot'
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
