@@ -26,6 +26,9 @@ if ($page === null) {
             $page = 'blog_post';
             $_GET['slug'] = urldecode((string) ($matches[1] ?? ''));
             $requestedPrettyPublicPage = true;
+        } elseif ($rawPath === 'solutions/gansell') {
+            $page = 'gansell';
+            $requestedPrettyPublicPage = true;
         } elseif (preg_match('~^case-studies/([^/]+)$~',$rawPath,$matches)) {
             $page='case_study';
             $_GET['slug']=urldecode((string)$matches[1]);
@@ -40,7 +43,7 @@ if ($page === null) {
             $page = 'service';
             $_GET['slug'] = urldecode((string) ($matches[1] ?? ''));
             $requestedPrettyPublicPage = true;
-        } elseif (in_array($rawPath, ['home', 'management', 'about', 'case-studies', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'login'], true)) {
+        } elseif (in_array($rawPath, ['home', 'management', 'about', 'case-studies', 'solutions', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'login'], true)) {
             $page = $rawPath;
             $requestedPrettyPublicPage = true;
         }
@@ -131,7 +134,7 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'solutions', 'gansell', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
@@ -381,6 +384,27 @@ try {
             require __DIR__ . '/views/partials/public-header.php';
             require __DIR__ . ($publicSlug === 'privacy' || $publicSlug === 'terms' || $publicSlug === 'cookies'
                 ? '/views/public-legal-pages.php' : '/views/public-international-formation.php');
+            require __DIR__ . '/views/partials/public-footer.php';
+            return;
+        }
+
+        // Source-controlled solutions pages: they work before any CMS record is
+        // published. No vendor account or subscription is created on iWORKS.
+        if (in_array($publicSlug, ['solutions', 'gansell'], true)) {
+            $publicPageSlug = $publicSlug;
+            $publicServices = list_public_services_catalog();
+            $publicServiceCategories = list_public_service_categories();
+            $publicHeaderConfig = get_public_header_config();
+            $publicFooterData = get_public_footer_data('home');
+            $searchPage = iworks_search_page_meta($publicSlug);
+            $title = (string)($searchPage['title'] ?? 'iWORKS Digital Solutions');
+            $pageSeo = [
+                'metaTitle' => $title,
+                'metaDescription' => (string)($searchPage['description'] ?? ''),
+                'ogImage' => 'assets/branding/case-studies/gansell-website-project.webp',
+            ];
+            require __DIR__ . '/views/partials/public-header.php';
+            require __DIR__ . '/views/public-solutions.php';
             require __DIR__ . '/views/partials/public-footer.php';
             return;
         }
