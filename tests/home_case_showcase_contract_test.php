@@ -53,6 +53,11 @@ $check(str_contains($nav,'iw-public-about-dropdown')
     && str_contains($nav,'<summary>What we do'),
     'Desktop must have a compact About dropdown while mobile keeps What we do.');
 $css = $read('assets/css/portfolio-work.css');
+$sharedCss = $read('assets/css/editorial-brand.css');
+$check(!str_contains($sharedCss,'.iw-home-case-visual{display:none}'),
+    'Do not hide the entire graphical case-study image panel on mobile.');
+$check(str_contains($css,'display:block!important; /* override legacy mobile'),
+    'The case study preview must have a scoped explicit display override.');
 foreach([
   'background:#fff6ee!important','scroll-snap-type:x mandatory',
   '.iw-home-case-window-bar','.iw-home-case-overlay',
