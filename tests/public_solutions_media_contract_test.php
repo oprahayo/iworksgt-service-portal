@@ -40,11 +40,11 @@ $assert(str_contains($router,"solutions/media/([a-z0-9-]+") &&
     str_contains($router,"iworks_serve_solutions_media("),
     'Image URL must work through the shared public PHP entry point.');
 $assert(str_contains($landing,'iworks_solutions_embedded_image(') &&
-    str_contains($landing,'iw-gansell-feature-list') &&
-    str_contains($landing,'iw-gansell-free-sticker') &&
-    substr_count($landing,'<img src="<?= e($gansellScreens[') === 4 &&
+    str_contains($landing,'iw-gansell-product-gallery') &&
+    str_contains($landing,'iw-gansell-free-seal') &&
+    substr_count($landing,'<img src="<?= e($screens[') === 4 &&
     !str_contains($landing,"public_absolute_url('solutions/media/'"),
-    'Page must render four authentic embedded images and a graphic FREE sticker.');
+    'Page must render four authentic embedded images with a large desktop gallery and FREE sticker.');
 foreach ($expected as $name) {
     $assert(str_contains($deployer, "assets/branding/solutions/".$name),
         'Deployment must require screenshot '.$name);
