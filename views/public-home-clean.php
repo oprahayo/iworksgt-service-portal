@@ -329,6 +329,20 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
               $caseLink = public_url('case_study',['slug'=>(string)$story['slug']]);
               $clientWebsite = iworks_editorial_case_site((string)$story['slug']);
               $siteHost = $clientWebsite !== '' ? (string)(parse_url($clientWebsite,PHP_URL_HOST) ?: '') : '';
+              // The five reviewed client projects have packaged first-viewport
+              // WebP screenshots. Prefer those for the graphical homepage
+              // showcase: they are predictable on mobile and do not depend on
+              // an older CMS-uploaded image URL that may have expired or moved.
+              $caseScreenshot = '';
+              $caseSlug = (string)($story['slug'] ?? '');
+              if (preg_match('/^[a-z0-9][a-z0-9-]{0,180}$/D', $caseSlug)) {
+                  $caseScreenshotPath = 'assets/branding/case-studies/'.$caseSlug.'.webp';
+                  if (is_file(__DIR__.'/../'.$caseScreenshotPath)) {
+                      $caseScreenshot = public_absolute_url($caseScreenshotPath);
+                  }
+              }
+              $casePreview = $caseScreenshot !== ''
+                  ? $caseScreenshot : trim((string)($story['image_url'] ?? ''));
               ?>
               <article class="iw-home-case-card" data-iw-showcase-slide>
                 <div class="iw-home-case-visual">
@@ -338,10 +352,10 @@ if ($bannerTitle === '' || $bannerTitle === 'Launch faster with the right suppor
                         <span class="iw-home-case-window-dots"><i></i><i></i><i></i></span>
                         <span class="iw-home-case-window-address"><?= e($siteHost !== '' ? $siteHost : $clientName) ?></span>
                       </span>
-                      <?php if (trim((string)($story['image_url']??'')) !== ''): ?>
-                        <img src="<?= e((string)$story['image_url']) ?>" alt="Screenshot of the <?= e($clientName) ?> website" loading="lazy" decoding="async" draggable="false" width="1440" height="900">
+                      <?php if ($casePreview !== ''): ?>
+                        <img src="<?= e($casePreview) ?>" alt="Screenshot of the <?= e($clientName) ?> website" loading="eager" decoding="async" draggable="false" width="1440" height="900">
                       <?php elseif (trim((string)($story['logo_url']??'')) !== ''): ?>
-                        <img class="iw-home-case-logo-only" src="<?= e((string)$story['logo_url']) ?>" alt="" loading="lazy" decoding="async" draggable="false" width="540" height="330">
+                        <img class="iw-home-case-logo-only" src="<?= e((string)$story['logo_url']) ?>" alt="" loading="eager" decoding="async" draggable="false" width="540" height="330">
                       <?php else: ?>
                         <span class="iw-home-case-no-image" aria-hidden="true"><i class="bi bi-image"></i></span>
                       <?php endif; ?>
