@@ -141,6 +141,7 @@ jobs:
           php tests/logout_login_csrf_regression_test.php
           php tests/f22_safe_error_response_test.php
           php tests/f06_notification_outbox_test.php
+          php tests/support_followup_worker_safety_test.php
           php tests/f13_cac_quote_consistency_test.php
           php tests/remediation_release_gate_test.php
           php tests/cpanel_finalize_release_contract_test.php
