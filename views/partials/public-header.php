@@ -85,7 +85,7 @@ $currentPublicSlug = trim((string) ($publicPageSlug ?? ($page ?? 'home')));
 $isAboutActive = $currentPublicSlug === 'about';
 $isManagementActive = $currentPublicSlug === 'management';
 $isUseCasesActive = in_array($currentPublicSlug, ['case-studies', 'case_study'], true);
-$isSolutionsActive = in_array($currentPublicSlug, ['solutions', 'gansell'], true);
+$isSolutionsActive = $currentPublicSlug === 'solutions';
 $isResourcesActive = in_array($currentPublicSlug, ['track', 'blog', 'blog_post'], true);
 $isServicesActive = in_array($currentPublicSlug, ['services', 'service'], true);
 $isBlogActive = in_array($currentPublicSlug, ['blog', 'blog_post'], true);
@@ -226,16 +226,16 @@ $isLaunchHome = $currentPublicSlug === 'home';
     <?php if (is_file($iwWorkCss) && is_readable($iwWorkCss)): ?>
       <style id="iw-portfolio-work-css"><?= (string)file_get_contents($iwWorkCss) ?></style>
     <?php else: ?>
-      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261115-portfolio-orange1">
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261115-center-focus1">
     <?php endif; ?>
   <?php endif; ?>
-  <?php if (in_array($currentPublicSlug, ['solutions','gansell'], true)):
+  <?php if ($currentPublicSlug === 'solutions'):
     // Split apex/portal roots: inline the product landing stylesheet when present.
     $iwSolutionsCss = __DIR__.'/../../assets/css/solutions.css';
     if (is_file($iwSolutionsCss) && is_readable($iwSolutionsCss)): ?>
       <style id="iw-solutions-critical-css"><?= (string)file_get_contents($iwSolutionsCss) ?></style>
     <?php else: ?>
-      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/solutions.css')) ?>?v=20261115-solutions1">
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/solutions.css')) ?>?v=20261115-gansell-hub2">
     <?php endif;
   endif; ?>
   <style>
@@ -284,8 +284,8 @@ $isLaunchHome = $currentPublicSlug === 'home';
             <details class="iw-mobile-menu-group">
               <summary>Our Solutions <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
-                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>All solutions</a>
-                <a href="<?= e(public_url('gansell')) ?>"<?= $currentPublicSlug === 'gansell' ? ' aria-current="page"' : '' ?>>Gansell marketplace</a>
+                <a href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Explore all solutions</a>
+                <a href="<?= e(public_url('solutions')) ?>#gansell">Gansell marketplace</a>
               </div>
             </details>
             <details class="iw-mobile-menu-group">
@@ -318,7 +318,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
                       data-bs-toggle="dropdown" aria-expanded="false" aria-label="Our Solutions menu">Our Solutions <i class="bi bi-chevron-down iw-nav-chevron" aria-hidden="true"></i></button>
               <ul class="dropdown-menu iw-public-solutions-menu">
                 <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? ' active' : '' ?>" href="<?= e(public_url('solutions')) ?>"<?= $currentPublicSlug === 'solutions' ? ' aria-current="page"' : '' ?>>Explore all solutions</a></li>
-                <li><a class="dropdown-item<?= $currentPublicSlug === 'gansell' ? ' active' : '' ?>" href="<?= e(public_url('gansell')) ?>"<?= $currentPublicSlug === 'gansell' ? ' aria-current="page"' : '' ?>>Gansell marketplace</a></li>
+                <li><a class="dropdown-item<?= $currentPublicSlug === 'solutions' ? '' : '' ?>" href="<?= e(public_url('solutions')) ?>#gansell">Gansell marketplace</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown iw-public-resources-dropdown">

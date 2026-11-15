@@ -530,21 +530,27 @@ body.page-public .iw-home-case-head p {
   margin:0 auto;
   text-align:center;
 }
-body.page-public .iw-home-case-showcase {position:relative;min-width:0}
+/* Centered-coverflow case-study rail. Keep a full-size focused screenshot and
+   visible, slightly smaller previews on either side (desktop + touch). */
+body.page-public .iw-home-case-showcase {
+  --iw-case-card-width:min(54vw,660px);
+  position:relative;
+  min-width:0;
+}
 body.page-public .iw-home-case-grid {
   display:flex!important;
   grid-template-columns:none!important;
   gap:clamp(16px,2.5vw,29px)!important;
-  padding:0 0 15px;
+  padding:14px max(0px,calc((100% - var(--iw-case-card-width)) / 2)) 22px;
   margin:0;
   width:100%;
   overflow-x:auto;
   overflow-y:hidden;
   overscroll-behavior-inline:contain;
   -webkit-overflow-scrolling:touch;
-  scroll-behavior:smooth;
+  scroll-behavior:auto;
   scroll-snap-type:x mandatory;
-  scroll-padding-inline:1px;
+  scroll-padding-inline:0;
   scrollbar-width:thin;
   scrollbar-color:#dbb59a transparent;
   touch-action:pan-x pan-y;
@@ -561,16 +567,30 @@ body.page-public .iw-home-case-grid:focus-visible {
   outline-offset:5px;
 }
 body.page-public .iw-home-case-card {
-  flex:0 0 clamp(300px,55%,680px);
+  flex:0 0 var(--iw-case-card-width);
   width:auto;
   min-width:0;
-  scroll-snap-align:start;
+  scroll-snap-align:center;
   scroll-snap-stop:normal;
   border:0;
   background:transparent!important;
   box-shadow:none!important;
   border-radius:0!important;
   overflow:visible!important;
+  opacity:.74;
+  transform:translateY(11px) scale(.89);
+  transform-origin:center top;
+  transition:transform .36s ease,opacity .36s ease;
+}
+body.page-public .iw-home-case-card.is-active,
+body.page-public .iw-home-case-grid:not(.is-ready) .iw-home-case-card:first-child {
+  opacity:1;
+  transform:translateY(0) scale(1);
+  position:relative;
+  z-index:1;
+}
+body.page-public .iw-home-case-card.is-active .iw-home-case-visual {
+  box-shadow:0 18px 38px rgba(65,45,30,.14);
 }
 body.page-public .iw-home-case-visual {
   display:block!important; /* override legacy mobile .iw-home-case-visual display:none */
@@ -868,8 +888,11 @@ body.page-public .iw-case-project-notes .iw-article-body h2 {margin-top:22px}
 }
 @media(max-width:650px) {
   body.page-public .iw-home-case-stories {padding:45px 0!important}
-  body.page-public .iw-home-case-grid {gap:15px!important}
-  body.page-public .iw-home-case-card {flex:0 0 min(83vw,415px)}
+  body.page-public .iw-home-case-grid {
+    --iw-case-card-width:min(82vw,415px);
+    gap:12px!important;
+  }
+  body.page-public .iw-home-case-card {flex:0 0 var(--iw-case-card-width)}
   body.page-public .iw-home-case-head {margin-bottom:23px}
   body.page-public .iw-home-case-visual {aspect-ratio:4/3}
   body.page-public .iw-home-case-card .iw-home-case-cover {padding:10px 10px 0}
@@ -881,6 +904,7 @@ body.page-public .iw-case-project-notes .iw-article-body h2 {margin-top:22px}
 }
 @media(prefers-reduced-motion:reduce) {
   body.page-public .iw-home-case-grid {scroll-behavior:auto!important}
+  body.page-public .iw-home-case-card,
   body.page-public .iw-home-case-overlay,
   body.page-public .iw-home-case-control,
   body.page-public .iw-case-project-notes summary i {transition:none!important}

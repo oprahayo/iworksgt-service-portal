@@ -45,6 +45,20 @@
     });
   }
 
+  // Pure geometry: screen-centered target works for the first/last slide,
+  // responsive rail padding, and partially visible neighbouring previews.
+  function centeredShowcaseOffset(track, slide, maxScroll) {
+    var frame = track.getBoundingClientRect();
+    var card = slide.getBoundingClientRect();
+    var delta = (card.left + card.width / 2) - (frame.left + frame.width / 2);
+    return Math.min(maxScroll, Math.max(0, track.scrollLeft + delta));
+  }
+
+  function initialShowcaseIndex(count) {
+    // Show neighbours on both sides immediately when there are >= 3 stories.
+    return count > 2 ? 1 : 0;
+  }
+
   function initShowcase() {
     var showcase = document.querySelector('[data-iw-showcase]');
     if (!showcase) return;
@@ -59,17 +73,7 @@
     var maxScroll = function () {
       return Math.max(0, track.scrollWidth - track.clientWidth);
     };
-    var stepSize = function () {
-      var first = slides[0];
-      if (!first) return track.clientWidth * 0.85;
-      var second = slides[1];
-      if (second) return Math.max(100, second.offsetLeft - first.offsetLeft);
-      return Math.max(100, first.getBoundingClientRect().width);
-    };
-    var scrollStep = function (direction) {
-      var end = Math.min(maxScroll(), Math.max(0, track.scrollLeft + direction * stepSize()));
-      track.scrollTo({ left: end, behavior: prefersReduce ? 'auto' : 'smooth' });
-    };
+    var activeIndex = 0;
     var update = function () {
       var container = track.getBoundingClientRect();
       var center = container.left + container.width / 2;
@@ -79,14 +83,33 @@
         var d = Math.abs(rect.left + rect.width / 2 - center);
         if (d < distance) { distance = d; nearest = i; }
       });
+      activeIndex = nearest;
+      slides.forEach(function (slide, i) {
+        var focused = i === nearest;
+        slide.classList.toggle('is-active', focused);
+        if (focused) slide.setAttribute('aria-current', 'true');
+        else slide.removeAttribute('aria-current');
+      });
       if (status) status.textContent = (nearest + 1) + ' of ' + slides.length;
-      if (previous) previous.disabled = track.scrollLeft <= 3;
-      if (next) next.disabled = track.scrollLeft >= maxScroll() - 3;
+      if (previous) previous.disabled = nearest === 0;
+      if (next) next.disabled = nearest === slides.length - 1;
+    };
+    var centerSlide = function (index, behavior) {
+      var target = slides[Math.max(0, Math.min(slides.length - 1, index))];
+      if (!target) return;
+      track.scrollTo({
+        left: centeredShowcaseOffset(track, target, maxScroll()),
+        behavior: behavior
+      });
+      if (behavior === 'auto') update();
+    };
+    var scrollStep = function (direction) {
+      centerSlide(activeIndex + direction, prefersReduce ? 'auto' : 'smooth');
     };
     if (previous) previous.addEventListener('click', function () { scrollStep(-1); });
     if (next) next.addEventListener('click', function () { scrollStep(1); });
     track.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update, { passive: true });
+    window.addEventListener('resize', function () { centerSlide(activeIndex, 'auto'); }, { passive: true });
 
     // Native trackpad horizontal scroll works normally. A vertical wheel is
     // converted only while the pointer is over a rail that can still move,
@@ -161,6 +184,10 @@
         scrollStep(event.key === 'ArrowRight' ? 1 : -1);
       }
     });
+    // Align story two by default when available. This keeps the left and
+    // right previews visible, matching the approved reference composition.
+    centerSlide(initialShowcaseIndex(slides.length), 'auto');
+    track.classList.add('is-ready');
     update();
   }
 
@@ -182,7 +209,11 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {filterProjects:filterProjects};
+    module.exports = {
+      filterProjects:filterProjects,
+      centeredShowcaseOffset:centeredShowcaseOffset,
+      initialShowcaseIndex:initialShowcaseIndex
+    };
   }
   if (typeof document === 'undefined') return;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

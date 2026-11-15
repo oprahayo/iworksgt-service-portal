@@ -66,7 +66,7 @@ $assert(str_contains($header,'iw-public-solutions-dropdown') &&
         str_contains($header,'aria-label="Our Solutions menu"') &&
         str_contains($header,'aria-label="Resources menu"') &&
         str_contains($header,'ms-xl-auto me-xl-3') &&
-        str_contains($header,"public_url('gansell')") &&
+        str_contains($header,'#gansell') &&
         str_contains($header,"public_url('solutions')"),
         'Navigation must be grouped with accessible visible dropdown chevrons.');
 $assert(str_contains($chromeCss,'margin-left:auto!important;') &&
@@ -74,32 +74,33 @@ $assert(str_contains($chromeCss,'margin-left:auto!important;') &&
         'Desktop menu must be compact and right aligned.');
 
 $assert(str_contains($routes,"'solutions/gansell'") &&
-        str_contains($routes,"['solutions', 'gansell']") &&
+        str_contains($routes,"$".'publicSlug === '."'solutions'") &&
+        !str_contains($routes,"['solutions', 'gansell']") &&
         str_contains($routes,"'/views/public-solutions.php'") &&
-        str_contains($helpers,"$".'page === '."'gansell'") &&
-        str_contains($helpers,"$".'path = '."'solutions/gansell'") &&
+        str_contains($helpers,"$".'path = '."'solutions#gansell'") &&
         str_contains($meta,"'solutions' =>") &&
-        str_contains($meta,"'gansell' =>") &&
         str_contains($seo,"public_url('solutions')") &&
-        str_contains($seo,"public_url('gansell')"),
-        'Both routes must resolve, have search meta and be exposed in the sitemap.');
+        !str_contains($seo,"$".'add(public_url('."'gansell'".'))'),
+        'Gansell must use the single Our Solutions page; old links redirect to #gansell.');
 $assert(str_contains($header,'20261115-brand-grayscale1')
-    && str_contains($header,'20261115-portfolio-orange1')
+    && str_contains($header,'20261115-center-focus1')
     && str_contains($header,'20261115-visual-finish1'),
     'Public CSS URLs must invalidate old client cache after this release.');
 $assert(str_contains($deployer,'assets/branding/orangeserver-logo.svg')
     && str_contains($deployer,'assets/branding/rilahost-logo.svg'),
     'Deploy both hosting logo assets if missing from the public docroot.');
 $assert(str_contains($landing,'id="iw-solutions"') &&
+        str_contains($landing,'id="gansell"') &&
         str_contains($landing,'https://gansell.com/') &&
-        str_contains($landing,'Get started on Gansell') &&
-        str_contains($landing,'Our Solutions') &&
+        str_contains($landing,'https://gansell.com/@ab-african') &&
+        str_contains($landing,'Create your free store') &&
         str_contains($landing,'gansell-website-project.webp') &&
-        !str_contains($landing,'https://gansell.com/register') &&
-        !str_contains($landing,'₦'),
-        'Gansell introduction must use verified source material and a real, noninvented destination.');
+        str_contains($landing,'ab-african-store-mobile.png') &&
+        str_contains($landing,'Your shop deserves more') &&
+        !str_contains($landing,'https://gansell.com/register'),
+        'The one-page hub must market free stores and give real mobile and desktop vendor examples.');
 $assert(str_contains($header,'iw-solutions-critical-css') &&
-        str_contains($landingCss,'@media(max-width:420px)') &&
+        str_contains($landingCss,'@media(max-width:550px)') &&
         str_contains($landingCss,'@media(prefers-reduced-motion:reduce)'),
         'Solutions pages need split-root compatible responsive styles.');
 $assert(str_contains($deployer,'check_remediation_release.php') &&

@@ -27,8 +27,8 @@ if ($page === null) {
             $_GET['slug'] = urldecode((string) ($matches[1] ?? ''));
             $requestedPrettyPublicPage = true;
         } elseif ($rawPath === 'solutions/gansell') {
-            $page = 'gansell';
-            $requestedPrettyPublicPage = true;
+            header('Location: ' . public_url('solutions') . '#gansell', true, 301);
+            exit;
         } elseif (preg_match('~^case-studies/([^/]+)$~',$rawPath,$matches)) {
             $page='case_study';
             $_GET['slug']=urldecode((string)$matches[1]);
@@ -134,7 +134,13 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'solutions', 'gansell', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'solutions', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
+
+    // Preserve any previously linked Gansell URLs without a second landing page.
+    if ($page === 'gansell') {
+        header('Location: ' . public_url('solutions') . '#gansell', true, 301);
+        exit;
+    }
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
@@ -390,7 +396,7 @@ try {
 
         // Source-controlled solutions pages: they work before any CMS record is
         // published. No vendor account or subscription is created on iWORKS.
-        if (in_array($publicSlug, ['solutions', 'gansell'], true)) {
+        if ($publicSlug === 'solutions') {
             $publicPageSlug = $publicSlug;
             $publicServices = list_public_services_catalog();
             $publicServiceCategories = list_public_service_categories();

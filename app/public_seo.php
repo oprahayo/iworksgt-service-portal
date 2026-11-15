@@ -154,7 +154,6 @@ function iworks_seo_sitemap_xml(array $services, array $pages, array $posts, arr
     $add(public_url('home'));
     $add(public_url('services'));
     $add(public_url('solutions'));
-    $add(public_url('gansell'));
     foreach ($pages as $record) {
         $slug = trim((string) ($record['slug'] ?? ''));
         // The tracking form and authenticated account routes are deliberately not indexed.

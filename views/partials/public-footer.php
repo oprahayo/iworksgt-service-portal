@@ -502,7 +502,7 @@ $socialIcons = [
   <?php if (is_file($iwWorkJs) && is_readable($iwWorkJs)): ?>
     <script id="iw-portfolio-work-controller"><?= str_ireplace('</script', '<\\/script', (string)file_get_contents($iwWorkJs)) ?></script>
   <?php else: ?>
-    <script defer src="<?= e(public_absolute_url('assets/js/portfolio-work.js')) ?>?v=20261114-work1"></script>
+    <script defer src="<?= e(public_absolute_url('assets/js/portfolio-work.js')) ?>?v=20261115-center-focus1"></script>
   <?php endif; ?>
 <?php endif; ?>
 </body>

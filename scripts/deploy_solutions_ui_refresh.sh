@@ -37,18 +37,28 @@ app/helpers.php
 app/public_marketing.php
 app/public_seo.php
 views/partials/public-header.php
+views/partials/public-footer.php
 views/public-home-clean.php
 views/public-solutions.php
 PHP
 cat > "$WORK/asset-files" <<'ASSETS'
 assets/css/public-clean.css
 assets/css/portfolio-work.css
+assets/js/portfolio-work.js
 assets/css/site-launch-polish.css
 assets/css/solutions.css
 assets/branding/orangeserver-logo.svg
 assets/branding/rilahost-logo.svg
 assets/branding/case-studies/gansell-website-project.webp
 ASSETS
+# Real public screenshots are optional until the guarded Chromium capture
+# finishes. Never install a placeholder image as a real vendor screenshot.
+for image in gansell-home-desktop.png gansell-home-mobile.png ab-african-store-desktop.png ab-african-store-mobile.png; do
+  candidate="assets/branding/solutions/$image"
+  if [[ -s "$SOURCE/$candidate" ]]; then
+    echo "$candidate" >> "$WORK/asset-files"
+  fi
+done
 cat "$WORK/php-files" "$WORK/asset-files" > "$WORK/portal-files"
 
 while IFS= read -r path; do
@@ -69,6 +79,7 @@ while IFS= read -r path; do php -l "$SOURCE/$path" >/dev/null; done < "$WORK/php
 php "$SOURCE/tests/solutions_visual_refinement_contract_test.php"
 php "$SOURCE/tests/gansell_hero_partner_contract_test.php"
 php "$SOURCE/tests/home_case_showcase_contract_test.php"
+php "$SOURCE/tests/centered_case_study_carousel_contract_test.php"
 php "$SOURCE/tests/home_transparent_sticky_header_contract_test.php"
 
 # Mandatory production security, schema and mail readiness still apply.
@@ -155,8 +166,7 @@ while IFS= read -r path; do cmp -s "$SOURCE/$path" "$PORTAL/$path"; done < "$WOR
 while IFS= read -r path; do cmp -s "$SOURCE/$path" "$PUBLIC/$path"; done < "$WORK/apex-changed"
 while IFS= read -r path; do php -l "$PORTAL/$path" >/dev/null; done < "$WORK/php-files"
 for url in 'https://iworksgt.com/' \
-           'https://iworksgt.com/solutions' \
-           'https://iworksgt.com/solutions/gansell'; do
+           'https://iworksgt.com/solutions'; do
   filename="$WORK/response-$(printf '%s' "$url" | sha256sum | cut -c1-10).html"
   code="$(curl --http1.1 -sS --max-time 25 -o "$filename" -w '%{http_code}' "$url" || true)"
   [[ "$code" == 200 ]] || { echo "HTTP $code on $url; rolling back." >&2; false; }
