@@ -131,7 +131,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <link rel="dns-prefetch" href="//images.unsplash.com">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-unified.css')) ?>">
-  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>?v=20261114-hero-logos1">
+  <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-clean.css')) ?>?v=20261115-brand-grayscale1">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-polish.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/reviews.css')) ?>">
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/ux-finish.css')) ?>?v=20261112b">
@@ -175,7 +175,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <?php if (is_file($iwLaunchPolishCss) && is_readable($iwLaunchPolishCss)): ?>
     <style id="iw-site-launch-polish"><?= (string)file_get_contents($iwLaunchPolishCss) ?></style>
   <?php else: ?>
-    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261114-mobile-footer2">
+    <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/site-launch-polish.css')) ?>?v=20261115-visual-finish1">
   <?php endif; ?>
   <?php if (in_array($currentPublicSlug, ['blog', 'blog_post'], true)): ?>
     <?php
@@ -226,7 +226,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
     <?php if (is_file($iwWorkCss) && is_readable($iwWorkCss)): ?>
       <style id="iw-portfolio-work-css"><?= (string)file_get_contents($iwWorkCss) ?></style>
     <?php else: ?>
-      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261114-work1">
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261115-portfolio-orange1">
     <?php endif; ?>
   <?php endif; ?>
   <?php if (in_array($currentPublicSlug, ['solutions','gansell'], true)):
