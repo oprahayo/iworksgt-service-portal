@@ -78,7 +78,8 @@ $ok(str_contains($server,'function iw_chat_resume_cookie_name()')
     && str_contains($server,"$"."action === 'resume'"),
     'Returning browser conversation cookie must be HttpOnly and bounded to 30 days.');
 $ok(str_contains($server,'visitor_token_hash=:hash')
-    && str_contains($server,"hash('sha256', $"."token)"),
+    && (str_contains($server,"hash('sha256', $"."token)")
+        || str_contains($server,"hash('sha256',$"."token)")),
     'Resume credentials must be validated against hashed server-side tokens.');
 $ok(str_contains($server,"$"."action === 'resume'")
     && str_contains($server,"$"."savedToken=iw_chat_resume_cookie_token()")
