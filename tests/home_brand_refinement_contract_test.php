@@ -38,12 +38,12 @@ $check(str_contains($home, 'count($homeBrandLogos) >= 4')
     'Non-clickable logo loop must be grayscale, hover-color and motion-safe.');
 $check(!str_contains($home, 'href="<?= e($brand[\'logo\']) ?>"'),
     'Client logos should not be clickable.');
-$check(str_contains($home, 'array_slice($homeCases, 0, 3)')
+$check(str_contains($home, 'foreach ($homeCases as $story)')
     && str_contains($home, 'Our published case studies will appear here.')
     && str_contains($home, '<h2 id="iw-home-cases-title">Case studies</h2>')
     && !str_contains($home, 'SELECTED WORK')
     && !str_contains($home, 'Real projects. Real progress.'),
-    'Homepage must show a maximum of three published case studies and honest empty state.');
+    'Homepage must allow all published client cases in the draggable showcase and retain honest empty state.');
 $check(strpos($home, 'class="iw-home-case-stories"') < strpos($home, 'class="iw-clean-section iw-clean-support"'),
     'Case study section should be placed after steps and before support.');
 $check(str_contains($caseCss, '.iw-home-case-grid') && str_contains($caseCss, 'grid-template-columns:repeat(3,minmax(0,1fr))'),

@@ -45,6 +45,125 @@
     });
   }
 
+  function initShowcase() {
+    var showcase = document.querySelector('[data-iw-showcase]');
+    if (!showcase) return;
+    var track = showcase.querySelector('[data-iw-showcase-track]');
+    var previous = showcase.querySelector('[data-iw-showcase-prev]');
+    var next = showcase.querySelector('[data-iw-showcase-next]');
+    var status = showcase.querySelector('[data-iw-showcase-status]');
+    if (!track) return;
+    var slides = Array.prototype.slice.call(track.querySelectorAll('[data-iw-showcase-slide]'));
+    if (!slides.length) return;
+    var prefersReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var maxScroll = function () {
+      return Math.max(0, track.scrollWidth - track.clientWidth);
+    };
+    var stepSize = function () {
+      var first = slides[0];
+      if (!first) return track.clientWidth * 0.85;
+      var second = slides[1];
+      if (second) return Math.max(100, second.offsetLeft - first.offsetLeft);
+      return Math.max(100, first.getBoundingClientRect().width);
+    };
+    var scrollStep = function (direction) {
+      var end = Math.min(maxScroll(), Math.max(0, track.scrollLeft + direction * stepSize()));
+      track.scrollTo({ left: end, behavior: prefersReduce ? 'auto' : 'smooth' });
+    };
+    var update = function () {
+      var container = track.getBoundingClientRect();
+      var center = container.left + container.width / 2;
+      var nearest = 0, distance = Infinity;
+      slides.forEach(function (slide, i) {
+        var rect = slide.getBoundingClientRect();
+        var d = Math.abs(rect.left + rect.width / 2 - center);
+        if (d < distance) { distance = d; nearest = i; }
+      });
+      if (status) status.textContent = (nearest + 1) + ' of ' + slides.length;
+      if (previous) previous.disabled = track.scrollLeft <= 3;
+      if (next) next.disabled = track.scrollLeft >= maxScroll() - 3;
+    };
+    if (previous) previous.addEventListener('click', function () { scrollStep(-1); });
+    if (next) next.addEventListener('click', function () { scrollStep(1); });
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+
+    // Native trackpad horizontal scroll works normally. A vertical wheel is
+    // converted only while the pointer is over a rail that can still move,
+    // so the overall page is never trapped at the left/right end.
+    track.addEventListener('wheel', function (event) {
+      if (event.ctrlKey || event.shiftKey || event.deltaX !== 0 || Math.abs(event.deltaY) < 2) return;
+      var delta = event.deltaY;
+      var current = track.scrollLeft;
+      var limit = maxScroll();
+      if ((delta < 0 && current <= 1) || (delta > 0 && current >= limit - 1) || limit < 2) return;
+      event.preventDefault();
+      track.scrollLeft = Math.min(limit, Math.max(0, current + delta));
+    }, { passive: false });
+
+    // Desktop mouse-drag. Touch devices keep native browser swipe behavior.
+    var drag = null;
+    var blockClick = false;
+    track.addEventListener('dragstart', function (event) {
+      event.preventDefault();
+    });
+    track.addEventListener('pointerdown', function (event) {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+      drag = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        left: track.scrollLeft,
+        moved: false
+      };
+    });
+    track.addEventListener('pointermove', function (event) {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      var dx = event.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) < 7) return;
+      if (!drag.moved) {
+        drag.moved = true;
+        track.classList.add('is-dragging');
+        if (track.setPointerCapture) track.setPointerCapture(event.pointerId);
+      }
+      track.scrollLeft = drag.left - dx;
+      event.preventDefault();
+    });
+    var endDrag = function () {
+      if (!drag) return;
+      if (drag.moved) {
+        blockClick = true;
+        window.setTimeout(function () { blockClick = false; }, 160);
+      }
+      var pointerId = drag.pointerId;
+      drag = null;
+      if (track.releasePointerCapture && track.hasPointerCapture &&
+          track.hasPointerCapture(pointerId)) {
+        track.releasePointerCapture(pointerId);
+      }
+      track.classList.remove('is-dragging');
+      update();
+    };
+    track.addEventListener('pointerup', endDrag);
+    track.addEventListener('pointercancel', endDrag);
+    track.addEventListener('lostpointercapture', endDrag);
+    track.addEventListener('click', function (event) {
+      if (!blockClick) return;
+      if (event.target.closest('a')) {
+        event.preventDefault();
+        event.stopPropagation();
+        blockClick = false;
+      }
+    }, true);
+    track.addEventListener('keydown', function (event) {
+      if (event.target !== track) return;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        scrollStep(event.key === 'ArrowRight' ? 1 : -1);
+      }
+    });
+    update();
+  }
+
   function init() {
     var root = document.querySelector('.iw-portfolio-work');
     if (root) {
@@ -59,6 +178,7 @@
       }
     }
     initReveal();
+    initShowcase();
   }
 
   if (typeof module !== 'undefined' && module.exports) {
