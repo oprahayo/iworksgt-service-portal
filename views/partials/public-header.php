@@ -282,11 +282,10 @@ $isLaunchHome = $currentPublicSlug === 'home';
               <summary>About <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
               <div class="iw-mobile-menu-sub">
                 <a href="<?= e(public_url('about')) ?>">Our company</a>
+                <a href="<?= e($useCasesHref)"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a>
                 <a href="<?= e(public_url('contact')) ?>">Contact</a>
               </div>
             </details>
-            <a class="iw-mobile-menu-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a>
-            <a class="iw-mobile-menu-link" href="<?= e(public_url('services')) ?>">Pricing &amp; services</a>
             <div class="iw-mobile-menu-bottom">
               <a class="iw-mobile-menu-signin iw-public-auth-status" data-iw-auth="login" data-iw-auth-status href="<?= e(portal_url('login')) ?>">Sign in</a>
               <div class="iw-mobile-menu-cta-row">
@@ -297,8 +296,18 @@ $isLaunchHome = $currentPublicSlug === 'home';
           </div>
           <ul class="navbar-nav mx-auto align-items-xl-center public-nav-center">
             <li class="nav-item"><a class="nav-link<?= $isServicesActive ? ' active' : '' ?>" href="<?= e(public_url('services')) ?>"<?= $isServicesActive ? ' aria-current="page"' : '' ?>>Services</a></li>
-            <li class="nav-item"><a class="nav-link<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a></li>
-            <?php if ($aboutLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>><?= e($aboutLabel) ?></a></li><?php endif; ?>
+            <?php if ($aboutLabel !== ''): ?>
+              <li class="nav-item dropdown iw-public-about-dropdown">
+                <button type="button" class="nav-link dropdown-toggle<?= ($isAboutActive || $isUseCasesActive) ? ' active' : '' ?>"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?= e($aboutLabel) ?> menu">
+                  <?= e($aboutLabel) ?>
+                </button>
+                <ul class="dropdown-menu iw-public-about-menu">
+                  <li><a class="dropdown-item<?= $isAboutActive ? ' active' : '' ?>" href="<?= e($aboutHref) ?>"<?= $isAboutActive ? ' aria-current="page"' : '' ?>>About iWORKS</a></li>
+                  <li><a class="dropdown-item<?= $isUseCasesActive ? ' active' : '' ?>" href="<?= e($useCasesHref) ?>"<?= $isUseCasesActive ? ' aria-current="page"' : '' ?>>Case Studies</a></li>
+                </ul>
+              </li>
+            <?php endif; ?>
             <li class="nav-item"><a class="nav-link<?= $isTrackActive ? ' active' : '' ?>" href="<?= e(public_url('track')) ?>"<?= $isTrackActive ? ' aria-current="page"' : '' ?>>Track order</a></li>
             <li class="nav-item"><a class="nav-link<?= $isBlogActive ? ' active' : '' ?>" href="<?= e(public_url('blog')) ?>"<?= $isBlogActive ? ' aria-current="page"' : '' ?>>Insights</a></li>
             <?php if ($contactLabel !== ''): ?><li class="nav-item"><a class="nav-link<?= $isContactActive ? ' active' : '' ?>" href="<?= e($contactHref) ?>"<?= $isContactActive ? ' aria-current="page"' : '' ?>><?= e($contactLabel) ?></a></li><?php endif; ?>
