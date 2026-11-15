@@ -683,9 +683,10 @@ body.page-public .iw-home-case-overlay {
 body.page-public .iw-home-case-visual:is(:hover,:focus-within) .iw-home-case-overlay {
   opacity:1;
   visibility:visible;
-  pointer-events:auto;
+  pointer-events:none;
 }
 body.page-public .iw-home-case-overlay-actions {
+  pointer-events:auto;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -912,7 +913,7 @@ body.page-public .iw-case-project-notes .iw-article-body h2 {margin-top:22px}
   body.page-public .iw-home-case-overlay {
     opacity:1;
     visibility:visible;
-    pointer-events:auto;
+    pointer-events:none;
     justify-content:flex-start;
     align-items:flex-end;
     padding:14px;
