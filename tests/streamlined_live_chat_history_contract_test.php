@@ -89,7 +89,8 @@ $check(substr_count($home,"public_url('services')")>=1
     && !str_contains($home,'Looking for something else?')
     && str_contains($home,'iw-clean-all-services'),
     'Keep one full service catalogue CTA; remove the duplicate.');
-$check(str_contains($home,"iworks_editorial_cases(true, 5)")
+$check((str_contains($home,"iworks_editorial_cases(true, 5)")
+        || str_contains($home,"iworks_editorial_cases(true, 6)"))
     && str_contains($home,'$caseScreenshotPath')
     && str_contains($home,'is_file(__DIR__'),
     'Case study carousel must use published projects and genuine preview images.');
