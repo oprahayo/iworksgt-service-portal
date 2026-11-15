@@ -9,7 +9,7 @@ $js=$read('assets/js/portfolio-work.js');
 $header=$read('views/partials/public-header.php');
 $footer=$read('views/partials/public-footer.php');
 $home=$read('views/public-home-clean.php');
-$script=$read('scripts/deploy_centered_case_showcase.sh');
+$script=$read('scripts/deploy_solutions_ui_refresh.sh');
 foreach([
   '--iw-case-card-width:min(54vw,660px)',
   'padding:14px max(0px,calc((100% - var(--iw-case-card-width)) / 2))',
