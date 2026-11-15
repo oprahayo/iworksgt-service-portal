@@ -44,6 +44,17 @@ try {
         $otp = process_otp_dispatch_queue(25);
         $email = iworks_process_notification_email_outbox(25);
         $chatEmail = iw_chat_process_email_outbox(15);
+        // Existing installed queue worker also enforces the documented
+        // 30-day support-history expiry; no second cron is required if this
+        // five-minute worker is already configured.
+        $expiredChatCount=0;
+        if (iw_chat_engagement_ready()) {
+            $deleted = db_query("DELETE FROM iw_live_threads
+                 WHERE updated_at < DATE_SUB(NOW(),INTERVAL 30 DAY)
+                 ORDER BY updated_at ASC LIMIT 150");
+            $expiredChatCount=$deleted->rowCount();
+        }
+        $metric['chat_expired_deleted']=$expiredChatCount;
         $pending = db_one(
             "SELECT COUNT(*) AS n FROM otp_dispatch_queue
              WHERE status IN ('queued','retrying','processing')"
