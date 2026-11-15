@@ -104,6 +104,9 @@
     // Desktop mouse-drag. Touch devices keep native browser swipe behavior.
     var drag = null;
     var blockClick = false;
+    track.addEventListener('dragstart', function (event) {
+      event.preventDefault();
+    });
     track.addEventListener('pointerdown', function (event) {
       if (event.pointerType !== 'mouse' || event.button !== 0) return;
       drag = {
@@ -131,12 +134,13 @@
         blockClick = true;
         window.setTimeout(function () { blockClick = false; }, 160);
       }
+      var pointerId = drag.pointerId;
+      drag = null;
       if (track.releasePointerCapture && track.hasPointerCapture &&
-          track.hasPointerCapture(drag.pointerId)) {
-        track.releasePointerCapture(drag.pointerId);
+          track.hasPointerCapture(pointerId)) {
+        track.releasePointerCapture(pointerId);
       }
       track.classList.remove('is-dragging');
-      drag = null;
       update();
     };
     track.addEventListener('pointerup', endDrag);
