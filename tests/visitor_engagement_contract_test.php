@@ -33,11 +33,11 @@ $ok(str_ends_with(iw_chat_ip_prefix(),'/48') && !str_contains(iw_chat_ip_prefix(
 // An optional country selection can always be supplied without an external IP service.
 unset($_SERVER['GEOIP_COUNTRY_CODE'], $_SERVER['MM_COUNTRY_CODE'], $_SERVER['HTTP_CF_IPCOUNTRY']);
 $_SERVER['REMOTE_ADDR']='invalid address';
-$ok(iw_chat_country_code('ng')==='NG', 'Visitor-selected country must be normalized.');
+$ok(iw_chat_country_code('ng')===null, 'Client supplied country must not replace server geography.');
 $ok(iw_chat_country_code('XX')===null, 'Unknown country must not be fabricated.');
 $_SERVER['GEOIP_COUNTRY_CODE']='ES';
 $ok(iw_chat_country_code()==='ES', 'Server-local GeoIP metadata should supply country when present.');
-$ok(iw_chat_country_code('NG')==='NG', 'Explicit country selection has precedence over hints.');
+$ok(iw_chat_country_code('NG')==='ES', 'Trusted network country takes precedence over client input.');
 unset($_SERVER['GEOIP_COUNTRY_CODE']);
 $_COOKIE[iw_chat_resume_cookie_name()]=str_repeat('a',64);
 $ok(iw_chat_resume_cookie_token()===str_repeat('a',64),
@@ -76,60 +76,55 @@ $ok(str_contains($server,'function iw_chat_resume_cookie_name()')
     && str_contains($server,'httponly') && str_contains($server,'samesite')
     && str_contains($server,'30 * 86400')
     && str_contains($server,"$"."action === 'resume'"),
-    'Returning browser conversation cookie must be optional, HttpOnly and bounded to 30 days.');
-$ok(str_contains($server,'visitor_token_hash = :hash')
+    'Returning browser conversation cookie must be HttpOnly and bounded to 30 days.');
+$ok(str_contains($server,'visitor_token_hash=:hash')
     && str_contains($server,"hash('sha256', $"."token)"),
     'Resume credentials must be validated against hashed server-side tokens.');
 $ok(str_contains($server,"$"."action === 'resume'")
-    && str_contains($server,"$"."savedToken = iw_chat_resume_cookie_token()")
+    && str_contains($server,"$"."savedToken=iw_chat_resume_cookie_token()")
     && str_contains($client,"liveApi('resume'"),
     'Returning visitors must actually fetch persisted thread messages.');
 $ok(str_contains($server,'visitor_last_read_message_id')
     && str_contains($client,'iwAssistUnread')
     && str_contains($client,'updateUnread(data.unread)'),
     'Customer should find unread staff replies without opening a new chat.');
-$ok(str_contains($widget,'name="notify_offline"')
-    && str_contains($widget,'name="remember_chat"')
-    && str_contains($widget,'name="track_page"')
-    && str_contains($widget,'iw_chat_engagement_ready()'),
-    'Privacy/return options must be unchecked and hidden before schema migration.');
+$ok(!str_contains($widget,'name="notify_offline"')
+    && !str_contains($widget,'name="remember_chat"')
+    && !str_contains($widget,'name="track_page"')
+    && str_contains($widget,'How we use your details'),
+    'Standard support follow-up is disclosed without three distracting checkbox controls.');
 $ok(str_contains($server,"$"."action === 'preferences'")
     && str_contains($server,'function iw_chat_preferences(')
-    && str_contains($server,'notify_offline=:notify_offline')
-    && str_contains($server,"status IN ('pending','retry')")
-    && str_contains($server,'iw_chat_remember_cookie($token,$remember)')
-    && str_contains($server,'current_page=:current_page')
-    && str_contains($client,"liveApi('preferences'")
-    && str_contains($client,'preferencesDirty')
-    && str_contains($client,'syncOfflineControl(preferencesForm)')
-    && str_contains($widget,'id="iwAssistPreferencesForm"'),
-    'Existing visitors must explicitly edit/revoke preferences and stop outstanding emails.');
-$ok(str_contains($widget,'data-assist-country')
+    && str_contains($server,'Standard support')
+    && !str_contains($widget,'id="iwAssistPreferencesForm"')
+    && str_contains($client,"liveApi('restart'"),
+    'Legacy preference requests cannot disable required support messages; visitors can start new topics.');
+$ok(str_contains($widget,'data-assist-country-label')
     && str_contains($client,'Intl.DisplayNames')
-    && str_contains($server,"$"."countryCode = iw_chat_country_code(")
+    && str_contains($server,"$"."countryCode = iw_chat_country_code();")
     && str_contains($server,"'country_code'=>(string)($"."countryCode ?? '')")
     && str_contains($server,"'country'=>$"."countryCode")
     && !str_contains($server,'HTTP_X_FORWARDED_FOR')
     && !str_contains($server,'ip-api.com'),
-    'Country must remain optional and limited to local or server-provided hints.');
+    'Country must be a read-only approximate server-derived hint.');
 $ok(str_contains($server,"'token'=>$"."savedToken")
     && str_contains($client,'session.token = data.token')
     && str_contains($server,"'preferences'=>iw_chat_preferences")
     && str_contains($client,'applyPreferences(data.preferences)'),
     'Browser-returning visitors must retain chat access and see actual saved settings.');
-$ok(str_contains($server,"$"."engagement && $"."remember &&")
+$ok(str_contains($server,'$notify = $engagement;')
     && str_contains($server,'iw_chat_enqueue_offline_reply(')
     && str_contains($server,'INSERT IGNORE INTO iw_live_email_outbox')
     && str_contains($worker,'iw_chat_process_email_outbox(15)')
     && str_contains($server,'New reply from iWORKS Support')
-    && str_contains($server,"status='skipped'")
+    && str_contains($server,'iWORKS Support conversation receipt #')
     && str_contains($server,'INTERVAL 15 MINUTE'),
-    'Only opted-in returning visitors should receive durable, idempotent offline email notices.');
+    'Initiated support chats need automatic, durable service emails and closure receipts.');
 $ok(!str_contains($server,'HTTP_X_FORWARDED_FOR')
     && str_contains($server,'iw_chat_safe_page(')
     && str_contains($server,'current_page=CASE WHEN track_page=1')
-    && str_contains($inbox,'Current page information is available only'),
-    'Do not collect raw proxy IP or unconsented browsing paths.');
+    && str_contains($inbox,'Current public page paths are recorded'),
+    'Only a requested support chat may include a whitelisted public page path; never raw IP or full history.');
 $ok(str_contains($client,"pageSuggestion()") && str_contains($widget,'AUTOMATED SUGGESTION')
     && str_contains($client,'nudge-dismissed')
     && str_contains($client,'120000 -'),
@@ -141,9 +136,9 @@ $ok(str_contains($dashboard,'live-visitor-overview.php')
     && str_contains($dashboardJs,"fields.set('action','summary')"),
     'Authorized staff dashboard must show graphical live chat activity near the top.');
 $ok(str_contains($staff,'thread.current_page')
-    && str_contains($staff,'Offline email opted in')
+    && str_contains($staff,'Offline reply and closure emails')
     && str_contains($inbox,'iwLiveActivityBars'),
-    'Staff inbox should distinguish current page consent, offline email and chart activity.');
+    'Staff inbox must show current public page, transactional email notices and activity.');
 $ok(str_contains($migration,'--backup-confirmed') && str_contains($migration,'information_schema.COLUMNS')
     && str_contains($migration,'CREATE TABLE IF NOT EXISTS iw_live_email_outbox')
     && str_contains($sql,'visitor_last_read_message_id BIGINT UNSIGNED'),
