@@ -6,7 +6,7 @@ import io, json, re
 from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import urlparse
-from PIL import Image
+from PIL import Image, ImageStat
 from playwright.sync_api import sync_playwright
 
 slug="gansell-website-project"
@@ -32,8 +32,21 @@ with sync_playwright() as p:
                 if len(body)<65 or re.search(r"Access Denied|Just a moment|Forbidden|Site can't be reached",title,re.I):
                     raise RuntimeError("Rendered website is an error or interstitial")
                 page.evaluate("() => {const s=window.getSelection();if(s)s.removeAllRanges();if(document.activeElement instanceof HTMLElement)document.activeElement.blur();}")
-                png=page.screenshot(type="png",full_page=False,animations="disabled")
-                image=Image.open(io.BytesIO(png)).convert("RGB")
+                # This SPA initially paints a solid green loading splash
+                # even though the full marketplace content is already in DOM.
+                # An honest case preview must show the real rendered UI.
+                image=None
+                for attempt in range(10):
+                    png=page.screenshot(type="png",full_page=False,animations="disabled")
+                    candidate=Image.open(io.BytesIO(png)).convert("RGB")
+                    variance=max(ImageStat.Stat(candidate.resize((144,90))).stddev)
+                    print(f"GANSELL RENDER pass={attempt+1} screenshot_variation={variance:.2f}")
+                    if variance>=18:
+                        image=candidate
+                        break
+                    page.wait_for_timeout(2000)
+                if image is None:
+                    raise RuntimeError("website remained on the loading splash, no valid screenshot captured")
                 image.save(root/(slug+".webp"),"WEBP",quality=79,method=6)
                 metadata={
                     "requested":url,
