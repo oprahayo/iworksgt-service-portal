@@ -92,27 +92,32 @@ $assert(str_contains($deployer,'assets/branding/orangeserver-logo.svg')
     'Deploy both hosting logo assets if missing from the public docroot.');
 $assert(str_contains($landing,'id="iw-solutions"') &&
         str_contains($landing,'id="gansell"') &&
+        str_contains($landing,'id="gansell-example"') &&
         str_contains($landing,'https://gansell.com/') &&
         str_contains($landing,'https://gansell.com/@ab-african') &&
-        str_contains($landing,'<h1 id="iw-gansell-title">Gansell</h1>') &&
-        str_contains($landing,'class="iw-gansell-free-sticker"') &&
-        str_contains($landing,'class="iw-gansell-feature-list"') &&
-        substr_count($landing,'<li>') === 7 &&
+        str_contains($landing,'Put your business online with Gansell.') &&
+        str_contains($landing,'class="iw-gansell-free-seal"') &&
+        str_contains($landing,'class="iw-gansell-product-gallery"') &&
+        str_contains($landing,'class="iw-gansell-functions"') &&
+        substr_count($landing,'<li>') === 6 &&
         str_contains($landing,'gansell-home-desktop.png') &&
         str_contains($landing,'gansell-home-mobile.png') &&
         str_contains($landing,'ab-african-store-desktop.png') &&
         str_contains($landing,'ab-african-store-mobile.png') &&
         !str_contains($landing,'iw-gansell-steps') &&
         !str_contains($landing,'iw-solutions-future') &&
+        !str_contains($landing,'three ways') &&
         !str_contains($landing,'Digital tools for business.') &&
         !str_contains($landing,'Explore all solutions'),
-        'Gansell needs one restrained iWORKS product page with FREE sticker, 7 checks, 4 genuine screenshots and no generic panels.');
-$assert(str_contains($landingCss,'iw-gansell-feature-list li::before') &&
-        str_contains($landingCss,'iw-gansell-free-sticker') &&
-        str_contains($landingCss,'iw-gansell-screenshot-pair') &&
+        'Gansell must be an editorial product page: full-width real gallery, compact checks, real vendor example, no generic marketing panels.');
+$assert(str_contains($landingCss,'iw-gansell-browser-shot img') &&
+        str_contains($landingCss,'iw-gansell-product-gallery') &&
+        str_contains($landingCss,'iw-gansell-phone-shot img') &&
+        str_contains($landingCss,'iw-gansell-free-seal') &&
+        str_contains($landingCss,'iw-gansell-functions li::before') &&
         str_contains($landingCss,'#f56613') &&
-        strlen($landingCss) < 11000,
-        'Reuse iWORKS typography and orange; no oversized SaaS template styling.');
+        strlen($landingCss) < 14000,
+        'Gansell styling must use a prominent real screenshot, smaller mobile overlay, real FREE sticker and iWORKS colors.');
 $assert(str_contains($header,'iw-solutions-critical-css') &&
         str_contains($landingCss,'@media(max-width:550px)') &&
         str_contains($landingCss,'@media(prefers-reduced-motion:reduce)'),
