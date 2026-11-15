@@ -14,6 +14,15 @@ try {
     page.on('pageerror',e=>failures.push(e.message));
     const response=await page.goto('http://127.0.0.1:8011/tests/gansell_visual_preview.php',{waitUntil:'load',timeout:25000});
     if (!response?.ok()) throw Error('Preview HTTP '+response?.status());
+    // Visual evidence must show actual storefront photographs, not unpainted
+    // lazy elements or empty framed boxes in a full-page screenshot.
+    await page.locator('.iw-gansell-example-wide img').scrollIntoViewIfNeeded();
+    await page.locator('.iw-gansell-example-phone img').scrollIntoViewIfNeeded();
+    await page.evaluate(async ()=>{
+      await Promise.all([...document.querySelectorAll('.iw-solutions img')].map(img=>img.decode()));
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    });
+    await page.evaluate(()=>window.scrollTo(0,0));
     const observed=await page.evaluate(()=>{
       const $=s=>document.querySelector(s);
       const photos=[...document.querySelectorAll('.iw-solutions img')];
@@ -28,11 +37,22 @@ try {
         gallery:rect($('.iw-gansell-product-gallery')),
         browser:rect($('.iw-gansell-browser-shot')),
         phone:rect($('.iw-gansell-phone-shot')),
-        checks:document.querySelectorAll('.iw-gansell-functions li').length
+        checks:document.querySelectorAll('.iw-gansell-functions li').length,
+      storefrontPainted:[...document.querySelectorAll('.iw-gansell-example-gallery img')].every(img=>{
+        let c=document.createElement('canvas');c.width=24;c.height=24;
+        let ctx=c.getContext('2d',{willReadFrequently:true});
+        ctx.drawImage(img,0,0,24,24);
+        let d=ctx.getImageData(0,0,24,24).data,dark=0;
+        for(let k=0;k<d.length;k+=4){
+          if(d[k]<220||d[k+1]<220||d[k+2]<220)dark++;
+        }
+        return dark>15;
+      })
       };
     });
     if (observed.title!=='Put your business online with Gansell.')failures.push('Wrong heading');
     if (observed.photoCount!==4 || !observed.photosValid)failures.push('Actual photographs failed to render');
+    if (!observed.storefrontPainted)failures.push('Vendor screenshots visually blank after decode');
     if (observed.total>observed.screen+2)failures.push('Horizontal overflow');
     if (observed.seal!=='FREE')failures.push('Missing FREE sticker');
     if (observed.checks!==6)failures.push('Feature list must contain exactly six points');
