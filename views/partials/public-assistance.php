@@ -4,6 +4,7 @@
  * handler; it is an asynchronous enquiry channel, not a simulated live agent.
  */
 $iwAssistEndpoint = public_url('home');
+$iwChatCountryCode = function_exists('iw_chat_country_code') ? (iw_chat_country_code() ?: '') : '';
 $iwChatEngagementEnabled = false;
 try {
     $iwChatEngagementEnabled = iw_chat_engagement_ready();
@@ -38,7 +39,7 @@ try {
 
   <section class="iw-assist-chat" id="iwAssistChat" role="dialog" aria-labelledby="iwAssistChatTitle" aria-modal="false" hidden>
     <header class="iw-assist-chat-head">
-      <div><h2 id="iwAssistChatTitle">iWorks Support</h2><p><span class="iw-assist-indicator" aria-hidden="true"></span><span id="iwAssistLiveStatus" role="status" aria-live="polite" aria-atomic="true">Send a message. Our team will reply here when available.</span></p></div>
+      <div><h2 id="iwAssistChatTitle">iWorks Support</h2><p><span class="iw-assist-indicator" aria-hidden="true"></span><span id="iwAssistLiveStatus" role="status" aria-live="polite" aria-atomic="true">Ask us anything. We'll reply here or by email.</span></p></div>
       <div class="iw-assist-head-actions">
         <button type="button" class="iw-assist-end-trigger" data-assist-end-open hidden>End chat</button>
         <button type="button" data-assist-chat-minimize title="Minimize" aria-label="Minimize support chat"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
@@ -59,60 +60,29 @@ try {
           <input id="iwAssistName" name="full_name" autocomplete="name" maxlength="150" placeholder="Your name" required>
           <label for="iwAssistEmail">Email address</label>
           <input id="iwAssistEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
-          <?php if ($iwChatEngagementEnabled): ?>
-          <label for="iwAssistCountry">Country <small>(optional)</small></label>
-          <select id="iwAssistCountry" name="country_code" data-assist-country aria-describedby="iwAssistCountryHint">
-            <option value="">Use an available approximate country hint</option>
-          </select>
-          <p class="iw-assist-country-hint" id="iwAssistCountryHint">No precise location is collected. Leave blank if you prefer.</p>
-          <div class="iw-assist-consent-options" role="group" aria-label="Support preferences">
-            <strong class="iw-assist-option-heading">Choose how support can follow up</strong>
-            <label><input type="checkbox" name="remember_chat" value="1">
-              Remember this conversation on this browser for 30 days</label>
-            <label><input type="checkbox" name="notify_offline" value="1">
-              Email me when support replies while I am offline (requires remembering my chat)</label>
-            <label><input type="checkbox" name="track_page" value="1">
-              Share my current website page with support while this chat is active</label>
+          <div class="iw-assist-country-readonly" aria-label="Approximate country, detected automatically">
+            <span class="iw-assist-country-caption">Country <small>automatically detected</small></span>
+            <span class="iw-assist-country-value" data-assist-country-label data-country="<?= e($iwChatCountryCode) ?>"><span aria-hidden="true">🌐</span> Approximate country unavailable</span>
           </div>
-          <?php endif; ?>
+          <p class="iw-assist-short-notice">Your chat is saved for up to 30 days. We email a receipt when it closes and notify you of offline replies. Support sees the public page you're asking about.</p>
           <button type="submit" class="iw-assist-primary">Start conversation <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
           <details class="iw-assist-privacy-details">
             <summary>How we use your details</summary>
-            <p>We store your conversation, its time, and a masked network prefix; support may see an approximate country hint. A returning-browser cookie, offline email reminders and live page sharing are optional and unchecked by default. No precise GPS is collected. We do not collect street addresses or full browsing histories. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
+            <p>We use your name, email, messages, approximate country and the current public page path while your support conversation is active, to answer and follow up on your enquiry. A necessary 30-day chat continuity cookie lets you return to the same case. We retain conversation history for up to 30 days after its last activity, including closed cases; we send support replies and a closure receipt to the email you provide. We do not collect exact GPS, street addresses, URL query strings or a full browsing history. <a href="<?= e(public_url('privacy')) ?>">Read our privacy policy</a>.</p>
           </details>
           <p class="iw-assist-error" id="iwAssistStartError" role="alert" hidden></p>
         </form>
       </div>
       <div class="iw-assist-conversation" id="iwAssistConversation" hidden>
         <p class="iw-assist-chat-intro">Welcome back. Messages are kept in this conversation. Our team can reply here whenever available.</p>
-        <?php if ($iwChatEngagementEnabled): ?>
-        <details class="iw-assist-preferences" id="iwAssistPreferences">
-          <summary><i class="bi bi-sliders" aria-hidden="true"></i> Notifications and privacy settings</summary>
-          <form id="iwAssistPreferencesForm">
-            <p>Change these at any time. All optional features stay off unless you select them.</p>
-            <div class="iw-assist-consent-options" role="group" aria-label="Conversation settings">
-              <label><input type="checkbox" name="remember_chat" value="1">
-                Remember my chat in this browser for 30 days</label>
-              <label><input type="checkbox" name="notify_offline" value="1">
-                Email me when support replies while I am offline</label>
-              <label><input type="checkbox" name="track_page" value="1">
-                Share my current public website page while chatting</label>
-            </div>
-            <label for="iwAssistPreferencesCountry">Country <small>(optional; not a precise location)</small></label>
-            <select id="iwAssistPreferencesCountry" name="country_code" data-assist-country>
-              <option value="">Use an available approximate country hint</option>
-            </select>
-            <button type="submit" class="iw-assist-preferences-save">Save preferences</button>
-            <p id="iwAssistPreferencesStatus" role="status" aria-live="polite" class="iw-assist-preferences-status" hidden></p>
-          </form>
-        </details>
-        <?php endif ?>
+        <p class="iw-assist-history-note">Previous topics and closure events remain visible for up to 30 days.</p>
+
         <div class="iw-assist-messages" id="iwAssistMessages" role="log" aria-live="polite" aria-label="Support conversation"></div>
       </div>
       <div class="iw-assist-ended" id="iwAssistEnded" hidden>
         <i class="bi bi-check-circle" aria-hidden="true"></i>
         <h3>Conversation ended</h3>
-        <p>Thank you for contacting iWorks. You can start another conversation whenever you need us.</p>
+        <p>This case is closed. Your history remains available for 30 days. Start a new topic without entering your details again.</p>
         <button type="button" class="iw-assist-primary" data-assist-restart>Start a new conversation</button>
       </div>
       <div class="iw-assist-end-sheet" id="iwAssistEndSheet" hidden>

@@ -127,15 +127,16 @@
     }
     text(titleNode,thread.name + ' · #' + thread.id);
     text(metaNode,thread.email + '  ·  ' +
-       (thread.country_code ? 'Country (selected or approximate): '+thread.country_code : 'Country not supplied; no reliable lookup') +
+       (thread.country_code ? 'Approximate country: '+thread.country_code : 'Approximate country unavailable') +
        '  ·  Masked network: '+(thread.ip_prefix || 'unknown') +
        '  ·  '+(Number(thread.visitor_online) ? 'Active now' : 'Offline') +
        '  ·  '+(Number(thread.track_page) && thread.current_page
-         ? 'Current page: '+thread.current_page : 'Current page not shared (permission off)') +
-       '  ·  '+(Number(thread.notify_offline) ? 'Offline email opted in' : 'Offline email off; replies remain in chat'));
+         ? 'Current public page: '+thread.current_page : 'Current public page unavailable') +
+       '  ·  '+'30-day support history · Offline reply and closure emails');
     var open = thread.status === 'open';
-    replyInput.disabled = !open; sendButton.disabled = !open; closeButton.disabled = !open;
-    replyInput.placeholder = open ? 'Write a reply to this visitor…' : 'Conversation ended';
+    replyInput.disabled = !open; sendButton.disabled = !open; closeButton.disabled = false;
+    closeButton.textContent = open ? 'Close chat' : 'Reopen case';
+    replyInput.placeholder = open ? 'Write a reply to this visitor…' : 'Reopen the case to send a reply';
   }
 
   function renderMessages(newMessages) {
@@ -144,8 +145,8 @@
       var id=Number(message.id);
       if (!Number.isFinite(id) || id <= lastMessageId) return;
       lastMessageId=id;
-      var node=el('div','iw-live-message ' + (message.sender === 'staff' ? 'is-staff':'is-visitor'));
-      var author=el('span','iw-live-message-author',message.sender === 'staff' ? 'iWorks team':'Visitor');
+      var node=el('div','iw-live-message ' + (message.sender === 'staff' ? 'is-staff' : message.sender === 'system' ? 'is-system' : 'is-visitor'));
+      var author=el('span','iw-live-message-author',message.sender === 'staff' ? 'iWorks team' : message.sender === 'system' ? 'Case history' : 'Visitor');
       var body=el('p','',message.body);
       var time=el('time','',message.created_at);
       node.append(author,body,time);
@@ -227,7 +228,7 @@
       renderMessages(data.messages || []);
       allThreads=data.threads || allThreads;
       renderThreads();
-      text(statusNode,'Reply saved. The visitor will see it on return; offline email is queued only if they opted in.');
+      text(statusNode,'Reply saved. A transactional offline email will be queued if the visitor is away.');
     } catch (error) { text(statusNode,error.message || 'Message not sent.'); }
     finally { sendButton.disabled=false; }
   });
@@ -237,12 +238,19 @@
     }
   });
   closeButton.addEventListener('click',async function () {
-    if (!activeId || !window.confirm('Close this conversation? The visitor will see it as ended.')) return;
+    if (!activeId) return;
+    var selected = allThreads.find(function (t) { return Number(t.id) === activeId; });
+    var reopening = selected && selected.status !== 'open';
+    if (!reopening && !window.confirm('Close this conversation? A support receipt will be emailed.')) return;
     try {
-      var data=await api('close',{thread_id:activeId});
+      var data=await api(reopening ? 'reopen' : 'close',{thread_id:activeId});
       allThreads=data.threads || allThreads;
+      lastMessageId=0;
+      messagesNode.replaceChildren();
+      renderMessages(data.messages || []);
       renderThreads(); populateActive();
-    } catch (error) { text(statusNode,error.message || 'Unable to close chat.'); }
+      text(statusNode,reopening?'Case reopened. Full history retained.':'Case closed. Receipt queued for delivery.');
+    } catch (error) { text(statusNode,error.message || 'Unable to update case.'); }
   });
   filterNode.addEventListener('input',renderThreads);
   document.addEventListener('visibilitychange',function () { if (document.visibilityState==='visible') poll(); });

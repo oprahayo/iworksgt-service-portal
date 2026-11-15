@@ -241,3 +241,26 @@
 .iw-assist-preferences-status{font-size:11px;line-height:1.4;margin-top:8px!important;color:#365772}
 .iw-assist-preferences-status[hidden]{display:none!important}
 .iw-assist-preferences summary:focus-visible,.iw-assist-preferences-save:focus-visible{outline:2px solid #d45c15;outline-offset:2px}
+
+
+/* November support-first flow: no consent-checkbox wall; keep legal notice. */
+.iw-assist .iw-assist-identity{padding:clamp(13px,2.8vh,21px) 20px 16px!important}
+.iw-assist .iw-assist-welcome{margin-bottom:9px!important}
+.iw-assist .iw-assist-hello{width:43px;height:43px;margin:0 auto 8px!important;font-size:23px}
+.iw-assist .iw-assist-identity form{gap:5px!important}
+.iw-assist .iw-assist-identity label{font-size:12px!important}
+.iw-assist .iw-assist-identity input{margin-bottom:5px!important;min-height:42px}
+.iw-assist .iw-assist-country-readonly{display:grid;gap:3px;margin:5px 0 0;text-align:left}
+.iw-assist .iw-assist-country-caption{font-size:12px;color:#27344b;font-weight:680}
+.iw-assist .iw-assist-country-caption small{font-size:10px;color:#738097;font-weight:500;margin-left:4px}
+.iw-assist .iw-assist-country-value{display:flex;align-items:center;gap:8px;padding:9px 11px;min-height:39px;background:#f7f8fa;border-radius:9px;border:1px solid #e4e8ed;font-size:12px;color:#465567}
+.iw-assist .iw-assist-short-notice{margin:8px 0 5px!important;font-size:11px!important;line-height:1.5!important;text-align:left;color:#607184}
+.iw-assist .iw-assist-privacy-details{margin-top:6px!important}
+.iw-assist .iw-assist-history-note{font-size:11px;color:#657187;margin:3px 0 9px;line-height:1.5}
+.iw-assist .iw-assist-bubble.is-system{margin-inline:auto;background:#f6f7f9;color:#546273;font-size:11px;text-align:center;max-width:95%;border-radius:9px}
+@media(max-width:580px){
+ .iw-assist .iw-assist-identity{padding:11px 16px 12px!important}
+ .iw-assist .iw-assist-identity h3{font-size:20px!important}
+ .iw-assist .iw-assist-identity .iw-assist-welcome-copy p{margin-bottom:8px!important}
+ .iw-assist .iw-assist-short-notice{font-size:10.5px!important}
+}

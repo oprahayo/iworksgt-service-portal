@@ -38,6 +38,7 @@ jobs:
           bash -n scripts/deploy_authentic_photography.sh
           bash -n scripts/deploy_home_brand_polish.sh
           bash -n scripts/deploy_hero_logo_carousel_restore.sh
+          bash -n scripts/deploy_chat_case_history_refresh.sh
           bash -n scripts/deploy_home_color_finish.sh
           bash -n scripts/deploy_chat_launcher_bubble.sh
           bash -n scripts/deploy_chat_photo_polish.sh
@@ -87,6 +88,8 @@ jobs:
           php tests/public_service_detail_clean_test.php
           php tests/public_auth_modal_contract_test.php
           php tests/public_assistance_contract_test.php
+          php tests/streamlined_live_chat_history_contract_test.php
+          php tests/chat_country_page_safety_test.php
           php tests/chat_launcher_bubble_contract_test.php
           php tests/compact_chat_photo_contract_test.php
           php tests/international_legal_seo_contract_test.php
