@@ -62,6 +62,7 @@ def inspect(page, name):
 def main():
     failures=[]
     results=[]
+    verify_live=os.environ.get("IWORKS_VERIFY_LIVE", "0") == "1"
     with sync_playwright() as p:
         for engine in ("chromium","webkit"):
             browser=getattr(p, engine).launch(headless=True)
@@ -88,8 +89,10 @@ def main():
                     result["bad_responses"]=bad_responses
                     print(json.dumps(result,indent=2))
                     page.screenshot(path=str(OUT/f"{name}.png"),full_page=True,animations="disabled")
-                    if platform=="fixture":
+                    if platform=="fixture" or (platform=="live" and verify_live):
                         if not result["has_showcase"]:failures.append(f"{name}: carousel missing")
+                        if platform=="live" and result["has_pricing_services"]:
+                            failures.append(f"{name}: redundant Pricing & services still in public menu")
                         if not result["images"]:failures.append(f"{name}: no image tags")
                         for photo in result["images"]:
                             if not photo["naturalWidth"] or photo["width"]<180 or photo["height"]<120:
@@ -107,6 +110,6 @@ def main():
     if failures:
         print("FAILED: "+"; ".join(failures))
         raise SystemExit(1)
-    print("Mobile case-study image QA PASS.")
+    print("Mobile case-study image QA PASS." + (" Live production verified." if verify_live else " Source preview verified; live is diagnostic only."))
 
 if __name__=="__main__": main()

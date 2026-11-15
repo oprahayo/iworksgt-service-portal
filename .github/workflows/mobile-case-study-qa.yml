@@ -36,6 +36,11 @@ jobs:
           python -m http.server 8765 --bind 127.0.0.1 > /tmp/iworks-mobile-qa-server.log 2>&1 &
           sleep 2
       - name: Test live mobile website and source preview with Chromium and WebKit
+        env:
+          # A manual run after cPanel deployment verifies live production,
+          # while branch push diagnostics allow the old live site to remain
+          # unchanged until a safe source-only release is applied.
+          IWORKS_VERIFY_LIVE: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
         run: python scripts/qa_mobile_case_images.py
       - uses: actions/upload-artifact@v4
         if: always()

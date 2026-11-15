@@ -47,6 +47,8 @@ check 'Homepage fade actions' "$BASE/" 'iw-home-case-overlay-actions'
 check 'Homepage carousel controls' "$BASE/" 'data-iw-showcase-next'
 check 'Homepage matching How It Works background' "$BASE/" 'background:#fff6ee!important'
 check 'Homepage drag controller' "$BASE/" 'function initShowcase()'
+check 'Case Studies in About navigation' "$BASE/" 'iw-public-about-menu'
+check 'Visible mobile image override' "$BASE/" 'display:block!important; /* override legacy mobile'
 check 'Top-level Case Studies navigation' "$BASE/" '>Case Studies</a>'
 check 'Structured client case overview' "$BASE/case-studies/triply-travels-company-formation-travel-website-portals" 'iw-case-project-facts'
 check 'Expandable full project details' "$BASE/case-studies/triply-travels-company-formation-travel-website-portals" 'iw-case-project-notes'
@@ -63,6 +65,8 @@ check_absent() {
     fail=$((fail+1))
   fi
 }
+check_absent 'No redundant Pricing and services menu' "$BASE/" 'Pricing &amp; services'
+check_absent 'No old mobile hide-image CSS' "$BASE/assets/css/editorial-brand.css" '.iw-home-case-visual{display:none}'
 check_absent 'No rejected Selected Work heading' "$BASE/" 'Real projects. Real progress.'
 check_absent 'No dark mock browser frames' "$BASE/case-studies" 'iw-work-browser'
 check_absent 'No decorative up-arrow buttons' "$BASE/case-studies" 'bi-arrow-up-right'
