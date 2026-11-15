@@ -153,11 +153,10 @@ function iworks_seo_sitemap_xml(array $services, array $pages, array $posts, arr
     };
     $add(public_url('home'));
     $add(public_url('services'));
-    $add(public_url('solutions'));
     foreach ($pages as $record) {
         $slug = trim((string) ($record['slug'] ?? ''));
         // The tracking form and authenticated account routes are deliberately not indexed.
-        if (!iworks_seo_allowed_slug($slug) || in_array($slug, ['home','track','login'], true)) { continue; }
+        if (!iworks_seo_allowed_slug($slug) || in_array($slug, ['home','track','login','solutions','gansell'], true)) { continue; }
         $add(public_url($slug), (string) ($record['updated_at'] ?? ''));
     }
     foreach ($services as $record) {
@@ -172,7 +171,7 @@ function iworks_seo_sitemap_xml(array $services, array $pages, array $posts, arr
     }
     foreach ($cases as $record) {
         $slug=trim((string)($record['slug']??''));
-        if(!iworks_seo_allowed_slug($slug))continue;
+        if(!iworks_seo_allowed_slug($slug) || stripos($slug, 'gansell') !== false)continue;
         $add(public_url('case_study',['slug'=>$slug]),(string)($record['updated_at']??''));
     }
     $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
