@@ -6,7 +6,7 @@ MODE="${1:---check}"
 PORTAL_INPUT="${2:-$HOME/public_html/portal.iworksgt.com}"
 PUBLIC_INPUT="${3:-$HOME/public_html}"
 OPERATOR_SHA="${4:-}"
-RELEASE="cb1a19a5a6d906c357ccf82336b86c77c630667a"
+RELEASE="c6a4e6e0da10b6f158832180880972111e1c687a"
 [[ "$MODE" == --check || "$MODE" == --publish || "$MODE" == --chat-upgrade ]] || { echo 'Use --check, --publish, or --chat-upgrade.' >&2; exit 2; }
 [[ "$OPERATOR_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Pin the operator to an immutable 40-character GitHub commit.' >&2; exit 2; }
 for tool in curl php mysql mysqldump gzip openssl sha256sum readlink mktemp awk cmp grep; do
