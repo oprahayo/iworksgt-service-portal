@@ -143,6 +143,10 @@ function iw_chat_process_email_outbox(int $limit = 12): array
             ['id'=>(int)$item['id']]);
         if (!$entry) continue;
         $result['processed']++;
+        $event = db_one("SELECT sender,body FROM iw_live_messages WHERE id=:id AND thread_id=:thread",
+            ['id'=>(int)$entry['message_id'],'thread'=>(int)$entry['thread_id']]);
+        $isReceipt = $event && $event['sender'] === 'system'
+            && str_starts_with((string)$event['body'],'Chat receipt:');
         $visitor = db_one("SELECT notify_offline,visitor_last_seen_at,visitor_last_read_message_id
             FROM iw_live_threads WHERE id=:id",
             ['id'=>(int)$entry['thread_id']]);
@@ -150,9 +154,11 @@ function iw_chat_process_email_outbox(int $limit = 12): array
             WHERE thread_id=:thread AND status='sent'
               AND sent_at>=DATE_SUB(NOW(),INTERVAL 15 MINUTE)
             LIMIT 1", ['thread'=>(int)$entry['thread_id']]);
-        if (!$visitor || (int)$visitor['notify_offline'] !== 1
-            || (int)$visitor['visitor_last_read_message_id'] >= (int)$entry['message_id']
-            || $alreadyMailed) {
+        if (!$visitor || !$event
+            || (!$isReceipt && (
+                (int)$visitor['notify_offline'] !== 1
+                || (int)$visitor['visitor_last_read_message_id'] >= (int)$entry['message_id']
+                || $alreadyMailed))) {
             // The visitor already read the reply, disabled reminders, or was
             // recently notified. Never send redundant or unsolicited mail.
             db_execute("UPDATE iw_live_email_outbox SET status='skipped',updated_at=NOW()
@@ -160,7 +166,7 @@ function iw_chat_process_email_outbox(int $limit = 12): array
             continue;
         }
         $seenAt = strtotime((string)($visitor['visitor_last_seen_at']??'')) ?: 0;
-        if ($seenAt > time()-70) {
+        if (!$isReceipt && $seenAt > time()-70) {
             // Still browsing: put it back until they are genuinely away.
             // Do not spend a transport retry on an active visitor.
             db_execute("UPDATE iw_live_email_outbox
@@ -171,12 +177,23 @@ function iw_chat_process_email_outbox(int $limit = 12): array
                  'next'=>date('Y-m-d H:i:s',time()+90)]);
             continue;
         }
-        $message = "iWORKS Support has replied to your website conversation.\n\n"
-            ."Open https://iworksgt.com/ in the same browser and select the support chat "
-            ."to read the new reply. This email does not include private chat content.\n\n"
-            ."This is a service message about the support conversation you started.\n";
-        $ok = send_email((string)$entry['recipient_email'],
-            'New reply from iWORKS Support', $message);
+        if ($isReceipt) {
+            $message = "Your iWORKS Support conversation has been closed.\n\n"
+                ."Reference: #".(int)$entry['thread_id']."\n"
+                ."Closed: ".date('Y-m-d H:i')."\n\n"
+                ."Your chat history remains available for up to 30 days after last activity. "
+                ."Open https://iworksgt.com/ in the same browser and choose Support "
+                ."to review it or start a new topic. Private messages are not copied into email.\n\n"
+                ."This is a transactional receipt for the conversation you started.\n";
+            $subject='iWORKS Support conversation receipt #'.(int)$entry['thread_id'];
+        } else {
+            $message = "iWORKS Support has replied to your website conversation.\n\n"
+                ."Open https://iworksgt.com/ in the same browser and select the support chat "
+                ."to read the new reply. This email does not include private chat content.\n\n"
+                ."This is a service message about the support conversation you started.\n";
+            $subject='New reply from iWORKS Support';
+        }
+        $ok=send_email((string)$entry['recipient_email'],$subject,$message);
         $attempt = max(1,(int)$entry['attempt_count']);
         $failed = !$ok && $attempt >= 5;
         db_execute("UPDATE iw_live_email_outbox
@@ -569,8 +586,31 @@ function iw_chat_public_request(): void
                     iw_chat_send_json(['ok'=>false,'message'=>'You are sending too quickly. Try again shortly.'],429);
                     return;
                 }
+                // The first message after a conversation boundary becomes
+                // its topic. This preserves dates/topics without a new table.
+                $latest=db_one("SELECT sender,body FROM iw_live_messages
+                    WHERE thread_id=:id ORDER BY id DESC LIMIT 1",['id'=>$threadId]);
+                if ($latest && $latest['sender']==='system'
+                    && (str_starts_with((string)$latest['body'],'New conversation started')
+                        || str_starts_with((string)$latest['body'],'Conversation started'))) {
+                    $topic=preg_replace('/\\s+/u',' ',mb_substr($body,0,90));
+                    iw_chat_system_event($threadId,'Topic: '.($topic?:'Support enquiry'));
+                }
+                $recent=db_one("SELECT COUNT(*) AS n FROM iw_live_messages
+                    WHERE thread_id=:id AND sender='visitor'
+                      AND created_at>=DATE_SUB(NOW(),INTERVAL 5 MINUTE)",
+                    ['id'=>$threadId]);
                 db_execute("INSERT INTO iw_live_messages (thread_id,sender,body,created_at)
                             VALUES (:id,'visitor',:body,NOW())",['id'=>$threadId,'body'=>$body]);
+                if ((int)($recent['n']??0)===0) {
+                    try {
+                        notify_roles(['admin','agent'],'New visitor support message',
+                            (string)$thread['name'].' sent a message in chat #'.$threadId.
+                            '. Open the live-chat inbox to reply.',url('live_inbox'));
+                    } catch (Throwable $notifyError) {
+                        error_log('[iWORKS incoming chat alert] '.get_class($notifyError));
+                    }
+                }
                 db_execute('UPDATE iw_live_threads SET last_message_at=NOW(),updated_at=NOW() WHERE id=:id',
                     ['id'=>$threadId]);
             }
@@ -633,12 +673,19 @@ function iw_chat_staff_request(): void
             return;
         }
         $threadId = max(0,(int)($_POST['thread_id'] ?? 0));
-        if ($action === 'send' || $action === 'close') {
-            $thread = db_one('SELECT id,status FROM iw_live_threads WHERE id=:id LIMIT 1',['id'=>$threadId]);
+        if (in_array($action,['send','close','reopen'],true)) {
+            $thread = db_one('SELECT id,status,email,name FROM iw_live_threads WHERE id=:id LIMIT 1',
+                ['id'=>$threadId]);
             if (!$thread) { iw_chat_send_json(['ok'=>false,'message'=>'Conversation not found.'],404); return; }
             if ($action === 'close') {
-                db_execute("UPDATE iw_live_threads SET status='closed',updated_at=NOW()
-                             WHERE id=:id",['id'=>$threadId]);
+                iw_chat_close_and_queue_receipt($thread,'closed');
+            } elseif ($action === 'reopen') {
+                $changed=db_query("UPDATE iw_live_threads SET status='open',
+                    assigned_user_id=:user,updated_at=NOW()
+                    WHERE id=:id AND status IN ('closed','ended')",
+                    ['id'=>$threadId,'user'=>$userId])->rowCount();
+                if ($changed===1) iw_chat_system_event($threadId,
+                    'Case reopened by support on '.date('Y-m-d H:i').'.');
             } else {
                 if ((string)$thread['status'] !== 'open') {
                     iw_chat_send_json(['ok'=>false,'message'=>'This conversation has ended.'],409);
@@ -669,7 +716,7 @@ function iw_chat_staff_request(): void
                 }
             }
         }
-        if ($threadId > 0 && in_array($action,['poll','send','close'],true)) {
+        if ($threadId > 0 && in_array($action,['poll','send','close','reopen'],true)) {
             db_execute('UPDATE iw_live_threads SET last_staff_read_at=NOW() WHERE id=:id',
                 ['id'=>$threadId]);
         }
