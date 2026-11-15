@@ -24,7 +24,6 @@ foreach ($serviceNames as $tag => $label) {
       <header class="iw-work-detail-hero">
         <span class="iw-work-detail-client"><?= e($clientName) ?></span>
         <h1><?= e((string)$record['title']) ?></h1>
-        <p class="iw-work-detail-summary"><?= e((string)($record['summary']??'')) ?></p>
       </header>
       <?php if (!empty($record['image_url'])): ?>
         <figure class="iw-work-detail-cover" data-iw-reveal>
