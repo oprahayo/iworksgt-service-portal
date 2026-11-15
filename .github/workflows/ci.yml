@@ -114,6 +114,7 @@ jobs:
           php tests/editorial_launch_contract_test.php
           php tests/portfolio_work_layout_contract_test.php
           php tests/home_case_showcase_contract_test.php
+          php tests/gansell_hero_partner_contract_test.php
           php tests/five_client_case_studies_publish_test.php
           php tests/cornerstone_editorial_publish_test.php
           php tests/blog_journal_render_test.php
