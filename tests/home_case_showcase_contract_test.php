@@ -32,13 +32,26 @@ $check(str_contains($section,'<h2 id="iw-home-cases-title">Case studies</h2>'),
     'Section title must be Case studies.');
 $check(str_contains($home,"iworks_editorial_cases(true, 5)"),
     'Use genuine published CMS case studies; do not fabricate carousel items.');
+$check(str_contains($section,'$caseScreenshotPath')
+    && str_contains($section,'is_file(__DIR__')
+    && str_contains($section,'loading="eager"')
+    && str_contains($section,'$casePreview'),
+    'Mobile carousel must use reviewed WebP screenshot assets with eager loading.');
 $nav = $read('views/partials/public-header.php');
 $check(substr_count($nav,'>>Case Studies</a>')===0 || str_contains($nav,'Case Studies'),
     'Case Studies navigation not present.');
 $check(str_contains($nav,'$isUseCasesActive')
     && str_contains($nav,"['case-studies', 'case_study']")
     && substr_count($nav,'href="<?= e($useCasesHref) ?>"')>=2,
-    'Desktop/mobile primary menu must link to Case Studies and highlight detail pages.');
+    'Desktop About dropdown and mobile About submenu must link to Case Studies.');
+$check(!str_contains($nav,'Pricing &amp; services')
+    && !str_contains($nav,'>Find a service</a>')
+    && substr_count($nav,'>Case Studies</a>')===2,
+    'Remove duplicate mobile Pricing and Services and top-level Case Studies, but retain discoverability.');
+$check(str_contains($nav,'iw-public-about-dropdown')
+    && str_contains($nav,'iw-public-about-menu')
+    && str_contains($nav,'<summary>What we do'),
+    'Desktop must have a compact About dropdown while mobile keeps What we do.');
 $css = $read('assets/css/portfolio-work.css');
 foreach([
   'background:#fff6ee!important','scroll-snap-type:x mandatory',
