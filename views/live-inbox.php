@@ -52,9 +52,9 @@
         <p class="iw-live-status" id="iwLiveStatus" role="status">Connecting…</p>
       </section>
     </div>
-    <p class="iw-live-privacy-note"><i class="bi bi-shield-lock"></i> This dashboard includes people who opened a website chat. Current page information is available only when they choose to share it; location is an approximate country hint, never an exact street address. Network prefixes are masked. Offline emails are sent only to visitors who opted in. Online status requires a recent heartbeat.</p>
+    <p class="iw-live-privacy-note"><i class="bi bi-shield-lock"></i> This dashboard includes people who opened a website chat. Current public page paths are recorded while an initiated support chat is active; no URL query strings, full browsing history or precise addresses are collected. Country is an approximate server hint and network prefixes are masked. Support reply emails and closure receipts are transactional. Closed-case histories expire after 30 days of inactivity via the scheduled worker.</p>
   <?php endif; ?>
 </section>
 <?php if ($liveChatInstalled): ?>
-<script defer src="assets/js/live-inbox.js?v=20261114-visit1"></script>
+<script defer src="assets/js/live-inbox.js?v=20261115-casehistory1"></script>
 <?php endif; ?>
