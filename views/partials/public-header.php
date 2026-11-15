@@ -226,7 +226,7 @@ $isLaunchHome = $currentPublicSlug === 'home';
     <?php if (is_file($iwWorkCss) && is_readable($iwWorkCss)): ?>
       <style id="iw-portfolio-work-css"><?= (string)file_get_contents($iwWorkCss) ?></style>
     <?php else: ?>
-      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261115-portfolio-orange1">
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/portfolio-work.css')) ?>?v=20261115-center-focus1">
     <?php endif; ?>
   <?php endif; ?>
   <?php if (in_array($currentPublicSlug, ['solutions','gansell'], true)):
