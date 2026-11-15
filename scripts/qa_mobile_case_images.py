@@ -28,6 +28,22 @@ def inspect(page, name):
         "images": [],
         "body_overflow_px":page.evaluate("document.documentElement.scrollWidth-window.innerWidth"),
     }
+    if img.count():
+        report["first_image_ancestor_layout"]=img.first.evaluate("""image => {
+          const nodes=[], labels=['IMG','.iw-home-case-window','.iw-home-case-cover',
+            '.iw-home-case-visual','.iw-home-case-card','.iw-home-case-grid',
+            '.iw-home-case-showcase','.iw-home-case-stories'];
+          for (let el=image;el&&nodes.length<11;el=el.parentElement) {
+            const r=el.getBoundingClientRect(), s=getComputedStyle(el);
+            nodes.push({tag:el.tagName,classes:el.className,
+              width:r.width,height:r.height,x:r.x,y:r.y,
+              display:s.display,position:s.position,
+              aspectRatio:s.aspectRatio,overflow:s.overflow,
+              flex:s.flex,gridTemplateColumns:s.gridTemplateColumns,
+              minWidth:s.minWidth,widthCss:s.width,heightCss:s.height});
+          }
+          return nodes;
+        }""")
     for i in range(min(img.count(),5)):
         report["images"].append(img.nth(i).evaluate("""image => {
             const s=getComputedStyle(image), r=image.getBoundingClientRect();
