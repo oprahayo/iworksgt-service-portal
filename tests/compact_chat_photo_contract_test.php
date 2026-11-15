@@ -28,7 +28,7 @@ $privacyDetail=strpos($widget, '<details class="iw-assist-privacy-details">');
 $assert($startButton!==false && $privacyDetail!==false && $startButton<$privacyDetail,
     'First-screen start button must appear above long optional privacy details.');
 $assert(str_contains($widget,'<summary>How we use your details</summary>')
-    && str_contains($widget,'No precise GPS is collected')
+    && str_contains($widget,'We do not collect exact GPS')
     && str_contains($widget,"public_url('privacy')"),
     'Privacy details must remain accessible and truthful.');
 $assert(str_contains($chatCss,'.iw-assist .iw-assist-welcome')
@@ -63,8 +63,8 @@ $assert(str_contains($home,'Business services')
     && !str_contains($home,'830+ Countries'),
     'Decorative service labels must not invent numerical statistics.');
 $assert(str_contains($publicHeader,'20261114-mobile-footer2')
-    && str_contains($publicHeader,'20261114-compact2')
-    && str_contains($publicFooter,'20261114-compact2'),
+    && str_contains($publicHeader,'20261115-quickchat1')
+    && str_contains($publicFooter,'20261115-quickchat1'),
     'Public split-root CSS/JS cache versions must be updated.');
 $assert(str_contains($installer,'check_remediation_release.php')
     && str_contains($installer,'portal.tgz')
