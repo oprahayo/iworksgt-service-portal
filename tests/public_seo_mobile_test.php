@@ -43,8 +43,8 @@ $xml = iworks_seo_sitemap_xml(
   [['slug'=>'how-to-register','published_at'=>'2026-11-01']]
 );
 check(str_contains($xml, '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'), 'Valid XML namespace missing.');
-check(substr_count($xml, '<loc>https://iworksgt.com/') === 7, 'Expected home, services, Our Solutions, about, 2 services and 1 article.');
-check(str_contains($xml, 'https://iworksgt.com/solutions</loc>') && !str_contains($xml,'https://iworksgt.com/solutions/gansell</loc>'), 'Gansell must share the indexed Our Solutions page.');
+check(substr_count($xml, '<loc>https://iworksgt.com/') === 6, 'Expected home, services, about, 2 services and 1 article.');
+check(!str_contains($xml, 'https://iworksgt.com/solutions</loc>') && !str_contains($xml,'https://iworksgt.com/solutions/gansell</loc>'), 'Unreleased Gansell must not be indexed.');
 check(str_contains($xml, '/services/incorporated-trustees</loc>'), 'Service omitted from sitemap.');
 check(str_contains($xml, '/blog/how-to-register</loc>'), 'Published article omitted from sitemap.');
 check(!str_contains($xml, 'https://iworksgt.com/track'), 'Private job lookup must not be indexed.');

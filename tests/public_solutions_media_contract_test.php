@@ -36,9 +36,9 @@ foreach (['../app/config.php','../../storage/data.png','unknown.png','gansell-ho
 $router = (string)file_get_contents($root.'/index.php');
 $landing = (string)file_get_contents($root.'/views/public-solutions.php');
 $deployer = (string)file_get_contents($root.'/scripts/deploy_solutions_ui_refresh.sh');
-$assert(str_contains($router,"solutions/media/([a-z0-9-]+") &&
-    str_contains($router,"iworks_serve_solutions_media("),
-    'Image URL must work through the shared public PHP entry point.');
+$assert(!str_contains($router,"iworks_serve_solutions_media(") &&
+    !str_contains($router,"solutions/media/([a-z0-9-]+"),
+    'Unreleased product images must not have a public route on iWorks.');
 $assert(str_contains($landing,'iworks_solutions_embedded_image(') &&
     str_contains($landing,'iw-gansell-product-gallery') &&
     str_contains($landing,'iw-gansell-free-seal') &&

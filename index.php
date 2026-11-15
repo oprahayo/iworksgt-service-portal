@@ -19,13 +19,6 @@ if ($page === null) {
     }
     $rawPath = trim($rawPath, '/');
     if ($rawPath !== '') {
-        // Serve the four real Gansell screenshots from the shared PHP source.
-        // This works even when the apex and portal asset roots differ.
-        if (preg_match('~^solutions/media/([a-z0-9-]+\\.png)$~', $rawPath, $mediaMatch)) {
-            require_once __DIR__ . '/app/public_solutions_media.php';
-            iworks_serve_solutions_media((string)$mediaMatch[1], __DIR__);
-            exit;
-        }
         if ($rawPath === 'blog' || $rawPath === 'insights') {
             $page = 'blog';
             $requestedPrettyPublicPage = true;
@@ -34,8 +27,8 @@ if ($page === null) {
             $_GET['slug'] = urldecode((string) ($matches[1] ?? ''));
             $requestedPrettyPublicPage = true;
         } elseif ($rawPath === 'solutions/gansell') {
-            header('Location: ' . public_url('solutions') . '#gansell', true, 301);
-            exit;
+            $page = 'solutions';
+            $requestedPrettyPublicPage = true;
         } elseif (preg_match('~^case-studies/([^/]+)$~',$rawPath,$matches)) {
             $page='case_study';
             $_GET['slug']=urldecode((string)$matches[1]);
@@ -141,13 +134,24 @@ try {
         }
     }
 
-    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'solutions', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
-
-    // Preserve any previously linked Gansell URLs without a second landing page.
-    if ($page === 'gansell') {
-        header('Location: ' . public_url('solutions') . '#gansell', true, 301);
+    // Prelaunch embargo: do not expose the unfinished Gansell promotion on iWorks.
+    // Keep its source and CMS data for later approval, but return HTTP 410 to visitors.
+    if (in_array($page, ['solutions', 'gansell'], true)) {
+        http_response_code(410);
+        header('X-Robots-Tag: noindex, nofollow');
+        $title = 'Page unavailable - ' . app_name();
+        $pageSeo = [];
+        $publicPageSlug = 'not_found';
+        $publicFooterData = get_public_footer_data('home');
+        $publicHeaderConfig = get_public_header_config();
+        require __DIR__ . '/views/partials/public-header.php';
+        require __DIR__ . '/views/public-404.php';
+        require __DIR__ . '/views/partials/public-footer.php';
         exit;
     }
+
+    $publicPageSlugs = ['home', 'management', 'about', 'case-studies', 'solutions', 'services', 'pricing', 'track', 'faq', 'contact', 'terms', 'privacy', 'cookies', 'register-company-nigeria-from-abroad', 'us-llc-formation-from-nigeria', 'service', 'blog', 'blog_post', 'case_study', 'live_chat', 'brand_icon'];
+
 
     // "blog" and "services" are intentionally shared URL names: pretty URLs
     // on the public host show published content, whereas ?page=blog and
