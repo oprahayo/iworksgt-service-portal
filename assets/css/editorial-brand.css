@@ -237,7 +237,7 @@ body.page-public .public-navbar .public-logo{max-height:38px;width:auto;max-widt
  .iw-insights-feature-media{min-height:260px}
  .iw-insights-feature-body{padding:26px}
  .iw-article-comments-grid,.iw-cases-grid,.iw-home-case-slide{grid-template-columns:1fr}
- .iw-home-case-visual{display:none}
+ /* Keep the graphical case-study preview visible on mobile. */
  .iw-home-benefits-grid{gap:10px}
  .iw-cases-bottom-cta{flex-direction:column;align-items:flex-start}
  .iw-insights-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
