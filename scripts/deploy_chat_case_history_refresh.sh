@@ -37,6 +37,7 @@ views/live-inbox.php
 views/public-home-clean.php
 views/public-legal-pages.php
 scripts/cron_support_chat.php
+scripts/run_scheduled_operations.php
 scripts/publish_all_launch_case_studies.php
 EOF
 cat > "$WORK/assets" <<'EOF'
