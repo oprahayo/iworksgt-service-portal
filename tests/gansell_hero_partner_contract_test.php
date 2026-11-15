@@ -50,15 +50,17 @@ $GLOBALS['mockEditorialRows']=array_map(static fn(array $c):array=>[
     'outcome'=>$c['outcome'],'story_html'=>$c['story_html'],
 ],iworks_launch_case_studies());
 $cases=iworks_editorial_cases(true,6);
-$must(count($cases)===6,'Gansell must appear alongside all five existing published cases.');
-$must(count(array_filter($cases,static fn(array $r):bool => $r['slug']==='gansell-website-project'))===1,
-    'The Gansell entry must appear exactly once.');
-$gansell=iworks_editorial_case_slug('gansell-website-project');
+$must(count($cases)===5,'All five published client cases remain visible during Gansell prelaunch.');
+$must(count(array_filter($cases,static fn(array $r):bool => $r['slug']==='gansell-website-project'))===0,
+    'Gansell must be hidden from the public case-study feed.');
+$must(iworks_editorial_case_slug('gansell-website-project')===null,
+    'Gansell public detail URL must be unavailable before launch.');
+$gansell=iworks_editorial_gansell_case();
 $must((string)$gansell['client_name']==='Gansell'
     && (string)$gansell['website']==='https://gansell.com/'
     && str_contains((string)$gansell['image_url'],'gansell-website-project.webp')
     && iworks_editorial_case_site('gansell-website-project')==='https://gansell.com/',
-    'Gansell must have a public detail page, approved website and genuine image.');
+    'Keep Gansell source material intact and private during prelaunch.');
 $must(iworks_editorial_case_tags($gansell)===['web'],
     'Gansell belongs under digital/website services, not a fabricated industry.');
 $GLOBALS['mockEditorialRows']=array_merge([[
@@ -67,6 +69,6 @@ $GLOBALS['mockEditorialRows']=array_merge([[
     'summary'=>'CMS copy','outcome'=>'CMS outcome','story_html'=>'<p>CMS copy</p>'
 ]],$GLOBALS['mockEditorialRows']);
 $cases=iworks_editorial_cases(true,6);
-$must(count(array_filter($cases,static fn(array $r):bool => $r['slug']==='gansell-website-project'))===1,
-    'A future CMS-published Gansell record must supersede the source fallback, not duplicate it.');
+$must(count(array_filter($cases,static fn(array $r):bool => $r['slug']==='gansell-website-project'))===0,
+    'Future CMS-published Gansell records must remain hidden until launch approval.');
 echo "gansell_hero_partner_contract_test passed\n";
