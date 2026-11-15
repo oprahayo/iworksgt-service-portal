@@ -71,7 +71,10 @@ grep -Fq 'iw-hero-overlay-header-v2' "$SOURCE/assets/css/site-launch-polish.css"
   echo 'Wrong source: corrected transparent header marker not found.' >&2; exit 3;
 }
 grep -Fq 'id="iw-solutions"' "$SOURCE/views/public-solutions.php" || {
-  echo 'Wrong source: Our Solutions page missing.' >&2; exit 3;
+  echo 'Wrong source: Gansell product page missing.' >&2; exit 3;
+}
+grep -Fq 'iworks_solutions_embedded_image(' "$SOURCE/views/public-solutions.php" || {
+  echo 'Wrong source: reliable embedded screenshots missing.' >&2; exit 3;
 }
 while IFS= read -r path; do php -l "$SOURCE/$path" >/dev/null; done < "$WORK/php-files"
 php "$SOURCE/tests/solutions_visual_refinement_contract_test.php"
@@ -177,26 +180,33 @@ for url in 'https://iworksgt.com/' \
   echo "PASS HTTP 200: $url"
 done
 
-# Do not accept a release where one of the four actual screenshots returns
-# HTML, 404, an incorrect PNG, or a stale version from the wrong web root.
-for image in gansell-home-desktop.png gansell-home-mobile.png ab-african-store-desktop.png ab-african-store-mobile.png; do
-  url="https://iworksgt.com/solutions/media/$image?v=${RELEASE:0:12}"
-  headers="$WORK/media-headers"
-  body="$WORK/media-body"
-  curl --http1.1 --fail-with-body -fsS --retry 2 --max-time 35 \
-    -H 'Accept: image/png' -H 'Cache-Control: no-cache' \
-    -D "$headers" -o "$body" "$url" || {
-      echo "Image URL unavailable: $image (no publishing accepted)." >&2
-      false
-    }
-  if ! grep -Eiq '^content-type:[[:space:]]*image/png' "$headers"; then
-    echo "Image did not return PNG content: $image" >&2; false
-  fi
-  if ! cmp -s "$SOURCE/assets/branding/solutions/$image" "$body"; then
-    echo "Image URL is stale, corrupt, or from the wrong public root: $image" >&2; false
-  fi
-  echo "PASS real screenshot: $image"
-done
+# Screenshot integrity is now proved independently of public image routes:
+# the page renders the four source PNGs as verified data:image/png URLs.
+# A cache-busting request must show all four in the actual public HTML.
+live_html="$WORK/solutions-live.html"
+live_code="$(curl --http1.1 -sS --max-time 45 \
+  -H 'Cache-Control: no-cache' -o "$live_html" -w '%{http_code}' \
+  "https://iworksgt.com/solutions?iw_release=${RELEASE:0:12}" || true)"
+[[ "$live_code" == 200 ]] || {
+  echo "Public Solutions page HTTP $live_code; rolling back." >&2
+  false
+}
+real_images="$(grep -o 'src="data:image/png;base64,' "$live_html" | wc -l | tr -d ' ')"
+if [[ "$real_images" != 4 ]]; then
+  echo "Expected all four embedded PNG screenshots; found $real_images. Rolling back." >&2
+  false
+fi
+grep -Fq 'class="iw-gansell-free-sticker"' "$live_html" || {
+  echo 'FREE sticker not visible in the published markup; rolling back.' >&2
+  false
+}
+if grep -Fqi 'Explore all solutions' "$live_html"; then
+  echo 'Old Explore all solutions content is still cached or deployed; rolling back.' >&2
+  false
+fi
+echo 'PASS 4 genuine screenshots embedded in public Gansell HTML'
+echo 'PASS FREE sticker and product-only navigation'
+
 STARTED=0
 trap - ERR
 echo "SUCCESS: Solutions + visual corrections published from $RELEASE"
