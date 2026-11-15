@@ -443,7 +443,9 @@ function process_otp_dispatch_queue(int $limit = 5): array
         'failed' => 0,
     ];
 
-    if (!otp_queue_table_available()) {
+    // A disabled mail transport is an operational outage, not a failed OTP.
+    // Preserve queued codes and attempt budgets until delivery is configured.
+    if (!otp_queue_table_available() || !email_enabled()) {
         return $summary;
     }
 
