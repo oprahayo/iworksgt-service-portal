@@ -27,8 +27,16 @@ if ($GLOBALS['otpSelects'] !== 1) {
 }
 $main=(string) file_get_contents(__DIR__.'/../scripts/run_scheduled_operations.php');
 $fallback=(string) file_get_contents(__DIR__.'/../scripts/cron_support_chat.php');
+// The primary worker builds the filename dynamically from task='queue';
+// the fallback uses the equivalent literal filename.
+if (!str_contains($main, "'/cron-' . $task . '.lock'")) {
+    throw new RuntimeException('Main scheduler must retain the queue-specific private lock.');
+}
+if (!str_contains($fallback,'/cron-queue.lock')) {
+    throw new RuntimeException('Fallback must reuse the main queue lock.');
+}
 foreach ([$main,$fallback] as $worker) {
-    if (!str_contains($worker,'cron-queue.lock') || !str_contains($worker,'LOCK_EX | LOCK_NB')
+    if (!str_contains($worker,'LOCK_EX | LOCK_NB')
         || !str_contains($worker,'process_otp_dispatch_queue(')
         || !str_contains($worker,'iworks_process_notification_email_outbox(')
         || !str_contains($worker,'iw_chat_process_email_outbox(')
