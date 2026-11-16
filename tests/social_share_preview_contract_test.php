@@ -39,6 +39,10 @@ $assert(!str_contains($header,'$ogImage = $logo ?: $favicon'),
     'Old uploaded logo must never be used as default social preview.');
 $assert(str_contains($deployer,'assets/branding/iworks-social-share.png')
     && str_contains($deployer,'views/partials/public-header.php')
+    && str_contains($deployer,'views/payments.php')
+    && str_contains($deployer,'views/partials/header.php')
+    && str_contains($deployer,'assets/css/payment-review-mobile.css')
+    && str_contains($deployer,'assets/branding/iworks-desktop.svg')
     && str_contains($deployer,'scuml_single_title_contract_test.php')
     && str_contains($deployer,'social_share_preview_contract_test.php')
     && str_contains($launcher,'scripts/deploy_invoice_payment_layout.sh'),
