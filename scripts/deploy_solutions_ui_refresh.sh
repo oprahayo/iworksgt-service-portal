@@ -78,6 +78,7 @@ grep -Fq 'iworks_solutions_embedded_image(' "$SOURCE/views/public-solutions.php"
 }
 while IFS= read -r path; do php -l "$SOURCE/$path" >/dev/null; done < "$WORK/php-files"
 php "$SOURCE/tests/solutions_visual_refinement_contract_test.php"
+php "$SOURCE/tests/public_godaddy_ssl_seal_contract_test.php"
 php "$SOURCE/tests/public_solutions_media_contract_test.php"
 php "$SOURCE/tests/gansell_hero_partner_contract_test.php"
 php "$SOURCE/tests/home_case_showcase_contract_test.php"
@@ -214,6 +215,27 @@ if grep -Fqi 'Explore all solutions' "$live_html"; then
 fi
 echo 'PASS 4 genuine screenshots embedded in public Gansell HTML'
 echo 'PASS full-width product gallery, feature list, FREE sticker and product navigation'
+
+# Confirm the provided seal is present on the live apex website's footer.
+# GoDaddy alone determines whether its issued certificate validates the badge.
+ssl_live_html="$WORK/ssl-seal-live.html"
+ssl_live_code="$(curl --http1.1 -sS --max-time 35 \
+  -H 'Cache-Control: no-cache' -o "$ssl_live_html" -w '%{http_code}' \
+  "https://iworksgt.com/?iw_ssl_seal_release=${RELEASE:0:12}" || true)"
+[[ "$ssl_live_code" == 200 ]] || {
+  echo "Public homepage HTTP $ssl_live_code during SSL seal validation; rolling back." >&2
+  false
+}
+grep -Fq 'id="siteseal"' "$ssl_live_html" || {
+  echo 'GoDaddy SSL site seal missing from live public footer; rolling back.' >&2
+  false
+}
+grep -Fq 'https://seal.godaddy.com/getSealBasic?sealID=A5oMK5nZAZkvd3jSvzwT3oEd8fDjJjUipTnwExIj2h3fKve5G9Wks8KQdZHy' "$ssl_live_html" || {
+  echo 'GoDaddy SSL site seal missing approved provider script; rolling back.' >&2
+  false
+}
+echo 'PASS exact GoDaddy SSL site seal embedded in public homepage footer'
+
 
 STARTED=0
 trap - ERR
