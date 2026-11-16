@@ -73,7 +73,7 @@ $assert(str_contains($header,'assets/css/payment-review-mobile.css')
 $assert(str_contains($checkout,'@media print')
   && str_contains($deployer,'invoice_payment_layout_contract_test.php')
   && str_contains($deployer,'check_remediation_release.php')
-  && str_contains($deployer,'rollback()')
+  && str_contains($deployer,'cleanup_and_restore()')
   && str_contains($deployer,'--check')
   && str_contains($deployer,'--apply'),
   'Guarded publisher must validate, backup and roll back source-only updates.');
