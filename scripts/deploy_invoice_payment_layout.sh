@@ -25,7 +25,7 @@ BACKUP=''
 cleanup_and_restore() {
   code=$?
   if [[ "$APPLY_STARTED" == 1 && "$code" -ne 0 ]]; then
-    echo 'Release failed: rolling back original invoice and mobile review files.' >&2
+    echo 'Release failed: restoring original invoice and SCUML presentation files.' >&2
     if [[ -f "$BACKUP/portal.tgz" ]]; then
       tar -xzf "$BACKUP/portal.tgz" -C "$PORTAL" || true
     fi
@@ -45,11 +45,10 @@ tar -xzf "$WORK/release.tgz" -C "$WORK/source" --strip-components=1
 SOURCE="$WORK/source"
 cat > "$WORK/manifest" <<'FILES'
 invoice.php
-views/payments.php
-views/partials/header.php
-assets/css/invoice-clean.css
-assets/css/payment-review-mobile.css
-assets/branding/iworks-desktop.svg
+views/partials/invoice-wave-sheet.php
+views/public-service-detail.php
+assets/css/invoice-wave.css
+assets/css/scuml-service.css
 FILES
 : > "$WORK/existing"
 : > "$WORK/new"
@@ -69,11 +68,12 @@ while IFS= read -r path; do
   fi
 done < "$WORK/manifest"
 php "$SOURCE/tests/invoice_payment_layout_contract_test.php"
+php "$SOURCE/tests/scuml_single_title_contract_test.php"
 php "$SOURCE/scripts/check_remediation_release.php" "$PORTAL/app/config.php" "$PORTAL" "$PUBLIC" || {
   echo 'Required production readiness preflight BLOCKED; no changes applied.' >&2
   exit 3
 }
-echo "Invoice/payment UI files to update: $(wc -l < "$WORK/changed" | tr -d ' ')"
+echo "Invoice/SCUML presentation files to update: $(wc -l < "$WORK/changed" | tr -d ' ')"
 if [[ "$MODE" == --check ]]; then
   echo 'CHECK PASSED. Existing invoices, payment records and source files were untouched.'
   exit 0
@@ -110,8 +110,23 @@ status="$(curl --http1.1 -sS -L --retry 1 --max-time 35 \
   echo "Portal login health check returned HTTP $status; rolling back." >&2
   false
 }
+# Verify SCUML's public page when the service is live. If the catalogue
+# record is not yet published, the source-only release still succeeds and
+# reports that separate product activation is required.
+scuml_status="$(curl --http1.1 -sS -L --max-time 35   -o "$WORK/scuml-public.html" -w '%{http_code}'   "https://iworksgt.com/services/scuml-document-support?iw_ui_release=${RELEASE:0:12}" || true)"
+if [[ "$scuml_status" == 200 ]]; then
+  grep -Fq 'Apply for support' "$WORK/scuml-public.html" || {
+    echo 'SCUML Apply for support button missing after update; rolling back.' >&2; false;
+  }
+  if grep -Fq 'Check official requirements' "$WORK/scuml-public.html"; then
+    echo 'Old SCUML official requirements link still visible; rolling back.' >&2; false;
+  fi
+  echo 'PASS SCUML public application UI.'
+else
+  echo "NOTICE: SCUML public product page returned HTTP $scuml_status. Check whether the catalogue service has been activated."
+fi
 APPLY_STARTED=0
-echo "SUCCESS: invoice and mobile payment reviews updated from $RELEASE."
+echo "SUCCESS: Wave-style iWORKS invoice and simpler SCUML product updated from $RELEASE."
 echo "Private source rollback: $BACKUP"
 echo 'No database migrations, customer jobs, invoices, payment records, or payment statuses changed.'
 echo 'Open an authenticated invoice preview and a staff payment-review page to verify visual layout.'
