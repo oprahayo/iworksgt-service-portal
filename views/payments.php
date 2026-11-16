@@ -38,7 +38,8 @@ $hasPaymentFilters = (string) ($paymentFilters['status'] ?? '') !== ''
     || $paymentPerPageCurrent !== 10;
 $paymentMethodOptions = is_array($paymentMethodOptions ?? null) ? $paymentMethodOptions : [];
 ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="iw-payments-page">
+<div class="d-flex justify-content-between align-items-center mb-3 iw-payments-heading">
   <h1 class="h4 mb-0">Payment Reviews</h1>
   <button class="btn btn-sm btn-outline-secondary mobile-filter-toggle" type="button" id="paymentFilterToggle" aria-label="Open payment filters">
     <i class="bi bi-list"></i>
@@ -91,9 +92,9 @@ $paymentMethodOptions = is_array($paymentMethodOptions ?? null) ? $paymentMethod
   </div>
 </div>
 
-<div class="card">
+<div class="card iw-payment-table-shell">
   <div class="table-responsive">
-    <table class="table table-mobile-cards table-hover align-middle mb-0">
+    <table class="table table-mobile-cards iw-payment-table table-hover align-middle mb-0">
       <thead>
       <tr>
         <th>Invoice</th>
@@ -116,14 +117,14 @@ $paymentMethodOptions = is_array($paymentMethodOptions ?? null) ? $paymentMethod
           </td>
           <td data-label="Client"><?= e($payment['client_name']) ?></td>
           <td data-label="Method"><?= e($payment['method_name']) ?></td>
-          <td data-label="Reference">
+          <td data-label="Reference" class="iw-payment-reference">
             <?= e($payment['reference']) ?>
             <?php if (!empty($payment['note'])): ?>
               <div class="small text-muted"><?= e($payment['note']) ?></div>
             <?php endif; ?>
           </td>
-          <td data-label="Amount"><?= e(money((float) $payment['amount'], $payment['invoice_currency'] ?? default_currency())) ?></td>
-          <td data-label="Status">
+          <td data-label="Amount" class="iw-payment-amount"><?= e(money((float) $payment['amount'], $payment['invoice_currency'] ?? default_currency())) ?></td>
+          <td data-label="Status" class="iw-payment-status">
             <?= status_badge($payment['status']) ?>
             <?php if (!empty($payment['rejection_reason'])): ?>
               <div class="small text-danger mt-1"><?= e($payment['rejection_reason']) ?></div>
@@ -136,14 +137,14 @@ $paymentMethodOptions = is_array($paymentMethodOptions ?? null) ? $paymentMethod
               <span class="text-muted">-</span>
             <?php endif; ?>
           </td>
-          <td data-label="Submitted">
+          <td data-label="Submitted" class="iw-payment-submitted">
             <div><?= e($payment['created_at']) ?></div>
             <?php if (!empty($payment['reviewer_name'])): ?>
               <small class="text-muted">By <?= e($payment['reviewer_name']) ?></small>
             <?php endif; ?>
           </td>
           <td data-label="Review" class="cell-form">
-            <form method="post" action="<?= e($paymentActionUrl) ?>" class="d-flex flex-column gap-2">
+            <form method="post" action="<?= e($paymentActionUrl) ?>" class="iw-payment-review-form">
               <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
               <input type="hidden" name="form_action" value="review_payment">
               <input type="hidden" name="payment_id" value="<?= (int) $payment['id'] ?>">
@@ -217,3 +218,4 @@ $paymentMethodOptions = is_array($paymentMethodOptions ?? null) ? $paymentMethod
   }
 })();
 </script>
+</div><!-- /iw-payments-page -->
