@@ -630,3 +630,29 @@ body.page-public .public-nav-center .dropdown-menu .dropdown-item {
 @media(prefers-reduced-motion:reduce){
   body.page-public-home .public-navbar{transition:none!important}
 }
+
+/* GoDaddy's own certificate seal in the public iWORKS footer.
+   Reserve a quiet, centered row without a mock badge or decorative box. */
+body.page-public .public-footer-ssl-seal {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:12px 0 9px;
+  min-width:0;
+  max-width:100%;
+}
+body.page-public .public-footer-ssl-seal #siteseal {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  max-width:100%;
+}
+body.page-public .public-footer-ssl-seal :is(img,iframe) {
+  max-width:100%;
+}
+@media (max-width:767.98px) {
+  body.page-public .public-footer-ssl-seal {
+    justify-content:center;
+    padding:16px 0 10px;
+  }
+}
