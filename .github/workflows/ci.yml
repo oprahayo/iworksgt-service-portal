@@ -48,6 +48,8 @@ jobs:
           bash -n scripts/deploy_home_hero_overlay.sh
           bash -n scripts/deploy_solutions_ui_refresh.sh
           bash -n g.sh
+          bash -n t.sh
+          bash -n scripts/deploy_transaction_dashboard.sh
           bash -n scripts/deploy_launch_products.sh
           php -l scripts/activate_launch_prices.php
           bash -n scripts/deploy_businesshub_home.sh
@@ -99,6 +101,7 @@ jobs:
           php tests/hide_home_seo_links_legal_audit_test.php
           php tests/mobile_header_footer_restore_contract_test.php
           php tests/public_godaddy_ssl_seal_contract_test.php
+          php tests/transaction_dashboard_contract_test.php
           php tests/home_transparent_sticky_header_contract_test.php
           php tests/solutions_visual_refinement_contract_test.php
           php tests/public_solutions_media_contract_test.php
