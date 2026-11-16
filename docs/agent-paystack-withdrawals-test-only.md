@@ -54,7 +54,7 @@ Before live activation, confirm inside Paystack: Registered Business approval, l
    
        php scripts/configure_agent_paystack.php --disable
 
-   Disabling does not reverse transfers already submitted or stop Paystack webhooks from arriving.
+   Disabling prevents new transfer submissions but retains the private live signing key exclusively to verify final Paystack webhooks for already submitted transfers. Disabling never reverses a submitted transfer.
 
 ## Validation and outstanding production work
 
