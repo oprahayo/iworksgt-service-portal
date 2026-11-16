@@ -3396,16 +3396,12 @@ try {
                     }
 
                     if ($action === 'save_rules') {
-                        $minimum = max((float) ($_POST['withdrawal_minimum'] ?? 20000), 1);
-                        $cooldown = max((int) ($_POST['withdrawal_cooldown_days'] ?? 14), 1);
                         $cryptoRefresh = max(5, min(30, (int) ($_POST['crypto_rates_refresh_minutes'] ?? 10)));
 
                         $trademarkPrice = filter_var($_POST['trademark_price_usd_per_class'] ?? null, FILTER_VALIDATE_FLOAT);
                         if ($trademarkPrice === false || $trademarkPrice < 1 || $trademarkPrice > 100000) {
                             throw new RuntimeException('Trademark price per class must be between USD 1 and USD 100,000.');
                         }
-                        set_setting('withdrawal_minimum', (string) $minimum);
-                        set_setting('withdrawal_cooldown_days', (string) $cooldown);
                         set_setting('crypto_rates_refresh_minutes', (string) $cryptoRefresh);
                         set_setting('trademark_price_usd_per_class', number_format((float) $trademarkPrice, 2, '.', ''));
 
