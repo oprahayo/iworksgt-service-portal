@@ -149,6 +149,14 @@ $isLaunchHome = $currentPublicSlug === 'home';
     <?php endif;
   endif; ?>
   <?php if ($currentPublicSlug === 'services'): ?><link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/services-list.css')) ?>?v=20261112c"><?php endif; ?>
+  <?php if ($currentPublicSlug === 'service' && isset($service) && in_array((string)($service['slug'] ?? ''), ['scuml-business-name-document-support','scuml-company-document-support'], true)): ?>
+    <?php $iwScumlCss = dirname(__DIR__, 2) . '/assets/css/scuml-service.css'; ?>
+    <?php if (is_readable($iwScumlCss)): ?>
+      <style id="iw-scuml-service-css"><?= (string)file_get_contents($iwScumlCss) ?></style>
+    <?php else: ?>
+      <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/scuml-service.css')) ?>?v=20261116">
+    <?php endif; ?>
+  <?php endif; ?>
   <link rel="stylesheet" href="<?= e(public_absolute_url('assets/css/public-mobile-audit.css')) ?>?v=20261112launch1">
   <?php
   // The public site delegates to the portal PHP app, but on some cPanel

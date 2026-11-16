@@ -1,0 +1,29 @@
+/* SCUML guidance product — aligns with iWORKS editorial service detail. */
+body.page-public .iw-scuml-service{margin:0 0 32px;border:1px solid #e8ebe9;border-radius:14px;overflow:hidden;background:#fff;color:#26313a}
+body.page-public .iw-scuml-service-explainer{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(20px,3vw,44px);align-items:center;padding:clamp(23px,3.3vw,43px);background:#f9faf8}
+body.page-public .iw-scuml-eyebrow{display:block;margin:0 0 10px;color:#ce5e1c;font-size:11px;font-weight:800;letter-spacing:.09em}
+body.page-public .iw-scuml-service-copy h2{font-size:clamp(25px,2.8vw,38px);font-weight:770;letter-spacing:-.045em;line-height:1.17;margin:0 0 15px}
+body.page-public .iw-scuml-service-copy>p{color:#657078;font-size:13px;line-height:1.73;margin:0 0 15px}
+body.page-public .iw-scuml-service-copy>p strong{color:#202930}
+body.page-public .iw-scuml-government-note{display:flex;align-items:start;gap:10px;font-size:12px;line-height:1.65;background:#fff4eb;border-left:3px solid #f56613;border-radius:4px;padding:13px;color:#624733}
+body.page-public .iw-scuml-government-note i{font-size:17px;line-height:1.4;color:#db5d15}
+body.page-public .iw-scuml-document-example{margin:0;min-width:0}
+body.page-public .iw-scuml-document-example img{display:block;width:100%;height:auto;border-radius:9px;box-shadow:0 14px 27px rgba(38,57,49,.095);background:#fff}
+body.page-public .iw-scuml-document-example figcaption{margin:10px 0 0;color:#7f8b88;font-size:10.5px;line-height:1.5;text-align:center}
+body.page-public .iw-scuml-structure{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:25px;align-items:start;padding:clamp(23px,3.3vw,43px);border-top:1px solid #e9ecea}
+body.page-public .iw-scuml-structure h3,body.page-public .iw-scuml-checklist h3{font-size:18px;font-weight:770;letter-spacing:-.027em;margin:0 0 9px}
+body.page-public .iw-scuml-structure p{margin:0;max-width:330px;font-size:12.5px;line-height:1.7;color:#69757e}
+body.page-public .iw-scuml-structure-list{display:grid;gap:9px}
+body.page-public .iw-scuml-structure-list a{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:7px;border:1px solid #e0e5e4;text-decoration:none;color:#303c44!important}
+body.page-public .iw-scuml-structure-list a[aria-current=page]{border-color:#ed965e;background:#fff8f1}
+body.page-public .iw-scuml-structure-list strong{font-size:13px;font-weight:770}
+body.page-public .iw-scuml-structure-list span{display:inline-flex;align-items:center;gap:8px;color:#c15b1d;font-size:12px;font-weight:660}
+body.page-public .iw-scuml-checklist{border-top:1px solid #e9ecea;padding:clamp(23px,3.3vw,43px)}
+body.page-public .iw-scuml-checklist ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 26px;list-style:none;padding:0;margin:17px 0}
+body.page-public .iw-scuml-checklist li{position:relative;padding-left:26px;font-size:13px;color:#47545e;line-height:1.65}
+body.page-public .iw-scuml-checklist li::before{content:"✓";position:absolute;top:0;left:0;font-size:17px;font-weight:800;color:#e4671e}
+body.page-public .iw-scuml-checklist p{font-size:12px;color:#75808b;line-height:1.72;margin:12px 0 0}
+body.page-public .iw-scuml-checklist a{color:#ba541b!important;font-weight:670;text-decoration:underline;text-underline-offset:3px}
+body.page-public .iw-scuml-service a:focus-visible{outline:2px solid #e86f25;outline-offset:3px}
+@media(max-width:860px){body.page-public .iw-scuml-service-explainer{grid-template-columns:1fr}body.page-public .iw-scuml-document-example{max-width:650px;margin:0 auto}body.page-public .iw-scuml-structure{grid-template-columns:1fr;gap:16px}}
+@media(max-width:560px){body.page-public .iw-scuml-service{border-radius:10px}body.page-public .iw-scuml-service-explainer,body.page-public .iw-scuml-structure,body.page-public .iw-scuml-checklist{padding:20px}body.page-public .iw-scuml-checklist ul{grid-template-columns:1fr}body.page-public .iw-scuml-structure-list a{align-items:start}body.page-public .iw-scuml-document-example img{border-radius:6px}}

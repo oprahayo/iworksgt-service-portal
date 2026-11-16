@@ -49,6 +49,9 @@ jobs:
           bash -n scripts/deploy_solutions_ui_refresh.sh
           bash -n g.sh
           bash -n t.sh
+          bash -n s.sh
+          bash -n scripts/deploy_scuml_guidance.sh
+          php -l scripts/publish_scuml_guidance.php
           bash -n scripts/deploy_transaction_dashboard.sh
           bash -n scripts/deploy_launch_products.sh
           php -l scripts/activate_launch_prices.php
@@ -91,6 +94,7 @@ jobs:
           php tests/public_clean_home_test.php
           php tests/public_inner_forms_test.php
           php tests/public_service_detail_clean_test.php
+          php tests/scuml_guidance_contract_test.php
           php tests/public_auth_modal_contract_test.php
           php tests/public_assistance_contract_test.php
           php tests/streamlined_live_chat_history_contract_test.php

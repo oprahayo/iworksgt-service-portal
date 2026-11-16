@@ -11,6 +11,7 @@ if (!function_exists('iworks_catalog_service_icon')) {
     {
         $search = strtolower((string) ($service['name'] ?? '') . ' ' . (string) ($service['category'] ?? ''));
         foreach ([
+            'scuml' => 'bi-file-earmark-check',
             'incorporated trustee' => 'bi-people-fill',
             'limited by guarantee' => 'bi-shield-check',
             'business name' => 'bi-file-earmark-check',
