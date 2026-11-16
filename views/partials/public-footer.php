@@ -170,6 +170,19 @@ $socialIcons = [
           </div>
         </div>
 
+        <?php
+          // GoDaddy's supplied SSL certificate seal is for the public company
+          // website. Do not imply certificate coverage on the separate portal
+          // hostname, nor place a duplicated seal inside payment/auth forms.
+          $iwPublicSealHost = request_host();
+          $iwPublicSealEnabled = in_array($iwPublicSealHost, ['iworksgt.com', 'www.iworksgt.com'], true);
+        ?>
+        <?php if ($iwPublicSealEnabled): ?>
+          <div class="public-footer-ssl-seal" aria-label="GoDaddy SSL certificate site seal">
+            <span id="siteseal"><script async type="text/javascript" src="https://seal.godaddy.com/getSealBasic?sealID=A5oMK5nZAZkvd3jSvzwT3oEd8fDjJjUipTnwExIj2h3fKve5G9Wks8KQdZHy"></script></span>
+          </div>
+        <?php endif; ?>
+
         <div class="public-footer-divider"></div>
 
         <div class="public-footer-bottom">
