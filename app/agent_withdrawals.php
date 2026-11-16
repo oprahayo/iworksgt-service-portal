@@ -325,6 +325,11 @@ function iworks_agent_submit_transfer(int $withdrawalId): void
             || (string)($data['domain'] ?? '') !== (string)$transfer['environment']) {
             throw new RuntimeException('Unexpected Paystack transfer acknowledgement.');
         }
+        // An OTP-required response is not automatic. Never report it as pending
+        // settlement or attempt to repeat the transfer.
+        if (strtolower((string)($data['status'] ?? '')) === 'otp') {
+            throw new RuntimeException('Paystack transfer OTP is enabled; Finance must reconcile this transfer.');
+        }
         // A transfer initiation response is NOT proof of settlement.
         db_execute("UPDATE agent_withdrawal_transfers SET state = 'pending',
            provider_transfer_id = :provider_id, updated_at = :at
