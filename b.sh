@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# iWORKS invoice/payment-review cPanel update: one command, no file upload.
+# iWORKS invoice, SCUML and official social-sharing logo update — no uploads.
 set -Eeuo pipefail
 for cmd in curl php bash mktemp; do
   command -v "$cmd" >/dev/null || { echo "Missing $cmd" >&2; exit 2; }
@@ -16,7 +16,7 @@ curl -fsSL --retry 2 --connect-timeout 15 --max-time 60 \
   "https://raw.githubusercontent.com/oprahayo/iworksgt-service-portal/$SHA/scripts/deploy_invoice_payment_layout.sh" \
   -o "$TMP"
 PORTAL="$HOME/public_html/portal.iworksgt.com"
-echo "Checking iWORKS invoice/mobile review update at $SHA..."
+echo "Checking invoice, SCUML and social preview release at $SHA..."
 bash "$TMP" --check "$SHA" "$PORTAL"
 if [[ "${1:-}" == --check ]]; then
   echo 'Read-only check completed. No changes applied.'
@@ -26,9 +26,9 @@ fi
   echo 'No interactive terminal. Release NOT applied.' >&2; exit 4;
 }
 echo
-echo 'This update changes only invoice and payment-review presentation.'
+echo 'This update changes invoice layout, SCUML text and public share image metadata, not payments.'
 echo 'Before proceeding, confirm your normal private backup is available.'
-echo 'Type DEPLOY to update the invoice and mobile admin review screens.'
+echo 'Type DEPLOY to publish the invoice, SCUML and new iWORKS social preview.'
 read -r confirmation </dev/tty || exit 4
 if [[ "$confirmation" != DEPLOY ]]; then
   echo 'Cancelled. No files changed.'

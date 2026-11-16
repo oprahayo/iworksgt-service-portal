@@ -8,7 +8,8 @@ $publicHeaderConfig = is_array($publicHeaderConfig ?? null) ? $publicHeaderConfi
 $publicServiceCategories = is_array($publicServiceCategories ?? null) ? $publicServiceCategories : list_public_service_categories();
 $metaTitle = trim((string) ($pageSeo['metaTitle'] ?? ''));
 $metaDescription = trim((string) ($pageSeo['metaDescription'] ?? ''));
-$ogImage = normalize_public_asset_path((string) ($pageSeo['ogImage'] ?? ''));
+$pageOgImage = normalize_public_asset_path((string) ($pageSeo['ogImage'] ?? ''));
+$officialShareImage = public_absolute_url('assets/branding/iworks-social-share.png') . '?v=20261116-iworks-official-share1';
 $publicTitle = $title ?: app_name();
 if ($metaTitle !== '') {
     $publicTitle = $metaTitle;
@@ -16,10 +17,15 @@ if ($metaTitle !== '') {
 if ($metaDescription === '') {
     $metaDescription = $seoDescriptionText;
 }
-if ($ogImage === '') {
-    $ogImage = $logo ?: $favicon;
-}
 $seoPageType = (string) ($publicPageSlug ?? $page ?? 'home');
+// Public pages must never inherit the outdated CMS-uploaded logo as their
+// social preview. Only editorial articles and individual case studies retain
+// their own intentionally supplied artwork; every other page uses the current
+// approved iWORKS logo in a social-media-ready 1200×630 PNG.
+$hasEditorialShareImage = in_array($seoPageType, ['blog_post','case_study'], true)
+    && $pageOgImage !== '';
+$ogImage = $hasEditorialShareImage ? $pageOgImage : $officialShareImage;
+$ogImageIsBrandCard = !$hasEditorialShareImage;
 if ($seoPageType === 'service' && is_array($service ?? null)) {
     $metaDescription = iworks_seo_excerpt((string) ($service['short_description'] ?? $service['description'] ?? ''));
 } elseif ($seoPageType === 'blog_post' && is_array($blogPost ?? null)) {
@@ -59,7 +65,7 @@ $seoJsonLd = $seoIndexable
     ? iworks_seo_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl, $metaDescription)
     : '';
 $seoBreadcrumb = $seoIndexable ? iworks_seo_breadcrumb_jsonld($seoPageType, $seoRecord, $seoCanonicalUrl) : '';
-$seoOgImage = $ogImage !== '' ? public_absolute_url($ogImage) : '';
+$seoOgImage = $ogImage; // Already a fully qualified public-origin URL.
 $bodyClass = 'portal-guest page-public' . ((string) ($publicPageSlug ?? $page ?? '') === 'home' ? ' page-public-home' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'services' ? ' page-public-services' : '') . ((string) ($publicPageSlug ?? $page ?? '') === 'blog_post' ? ' page-public-article' : '');
 $headerAnnouncement = trim((string) ($publicHeaderConfig['announcement'] ?? ''));
 $aboutLabel = trim((string) ($publicHeaderConfig['aboutLabel'] ?? 'About'));
@@ -114,8 +120,19 @@ $isLaunchHome = $currentPublicSlug === 'home';
   <meta property="og:description" content="<?= e($metaDescription) ?>">
   <meta property="og:type" content="<?= $seoPageType === 'blog_post' ? 'article' : 'website' ?>">
   <?php if ($seoCanonicalUrl !== ''): ?><meta property="og:url" content="<?= e($seoCanonicalUrl) ?>"><?php endif; ?>
-  <?php if ($seoOgImage !== ''): ?><meta property="og:image" content="<?= e($seoOgImage) ?>"><?php endif; ?>
+  <meta property="og:site_name" content="iWORKS GLOBAL">
+  <?php if ($seoOgImage !== ''): ?>
+    <meta property="og:image" content="<?= e($seoOgImage) ?>">
+    <meta property="og:image:secure_url" content="<?= e($seoOgImage) ?>">
+    <?php if ($ogImageIsBrandCard): ?>
+      <meta property="og:image:type" content="image/png">
+      <meta property="og:image:width" content="1200">
+      <meta property="og:image:height" content="630">
+      <meta property="og:image:alt" content="iWORKS GLOBAL — business registration, websites and compliance">
+    <?php endif; ?>
+  <?php endif; ?>
   <meta name="twitter:card" content="<?= $seoOgImage !== '' ? 'summary_large_image' : 'summary' ?>">
+  <?php if ($seoOgImage !== ''): ?><meta name="twitter:image" content="<?= e($seoOgImage) ?>"><?php endif; ?>
   <meta name="twitter:title" content="<?= e($publicTitle) ?>">
   <meta name="twitter:description" content="<?= e($metaDescription) ?>">
   <?php if ($seoJsonLd !== ''): ?><script type="application/ld+json"><?= $seoJsonLd ?></script><?php endif; ?>
