@@ -1,0 +1,211 @@
+/* iWORKS payment review — dense, purposeful admin layout.
+   Does not change payment-review actions or confirmation rules. */
+.iw-payments-page .iw-payments-heading h1{
+  font-size:clamp(21px,2.4vw,27px);
+  letter-spacing:-.03em;
+}
+.iw-payments-page .iw-payment-table-shell{
+  border:1px solid #e3e8ed;
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+}
+.iw-payments-page .iw-payment-table{
+  font-size:12px;
+}
+.iw-payments-page .iw-payment-table th{
+  font-size:11px;
+  color:#667687;
+  font-weight:740;
+}
+.iw-payments-page .iw-payment-table td{
+  color:#293644;
+  vertical-align:middle;
+  font-size:12px;
+}
+.iw-payments-page .iw-payment-table td.iw-payment-reference{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  font-size:11px;
+  line-height:1.5;
+}
+.iw-payments-page .iw-payment-review-form{
+  display:grid;
+  gap:8px;
+  grid-template-columns:1fr;
+}
+.iw-payments-page .iw-payment-review-form :is(input,select,button){
+  width:100%;
+  max-width:100%;
+}
+.iw-payments-page .iw-payment-review-form button{
+  font-weight:750;
+  border-color:#e76621;
+  color:#bd5016;
+}
+.iw-payments-page .iw-payment-review-form button:hover{
+  background:#e76621;
+  color:#fff;
+}
+@media(max-width:767.98px){
+  .iw-payments-page .iw-payments-heading{margin-bottom:11px!important}
+  .iw-payments-page .iw-payment-table-shell{
+    border:0;
+    box-shadow:none;
+    background:transparent;
+    overflow:visible;
+  }
+  .iw-payments-page .iw-payment-table-shell>.table-responsive{
+    overflow:visible;
+  }
+  .iw-payments-page .iw-payment-table,
+  .iw-payments-page .iw-payment-table tbody{
+    display:block;
+    width:100%;
+  }
+  .iw-payments-page .iw-payment-table tbody tr{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:
+      "invoice amount"
+      "client client"
+      "method status"
+      "reference reference"
+      "submitted proof"
+      "review review";
+    gap:11px 14px;
+    width:100%;
+    margin:0 0 13px;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid #e3e8ee;
+    box-shadow:0 3px 12px rgba(35,49,66,.045);
+    background:#fff;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td{
+    display:block!important;
+    width:auto!important;
+    min-width:0;
+    margin:0;
+    padding:0!important;
+    border:0;
+    font-size:12px;
+    line-height:1.43;
+    overflow-wrap:anywhere;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Invoice"]{grid-area:invoice}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Client"]{grid-area:client}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Method"]{grid-area:method}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Reference"]{grid-area:reference}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Amount"]{grid-area:amount;text-align:right}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Status"]{grid-area:status}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Proof"]{grid-area:proof}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Submitted"]{grid-area:submitted}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Review"]{grid-area:review}
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Invoice"]>div{
+    font-size:15px;
+    font-weight:780;
+    letter-spacing:-.02em;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Amount"]{
+    font-size:15px;
+    font-weight:770;
+    color:#24323e;
+    font-variant-numeric:tabular-nums;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Invoice"]::before,
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Amount"]::before{
+    display:none;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Client"]{
+    font-size:12.5px;
+    font-weight:630;
+    padding-top:10px!important;
+    border-top:1px solid #edf0f2;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Reference"]{
+    font-size:11px;
+    color:#596777;
+    padding-top:8px!important;
+    border-top:1px solid #edf0f2;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Submitted"]{
+    font-size:11px;
+    color:#56636f;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td::before{
+    display:block;
+    content:attr(data-label);
+    margin:0 0 3px;
+    font-size:9.5px;
+    letter-spacing:.055em;
+    color:#748397;
+    font-weight:760;
+    text-transform:uppercase;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Proof"].cell-actions{
+    padding:0!important;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Proof"] .btn{
+    display:inline-flex;
+    width:auto;
+    min-width:0;
+    padding:5px 10px;
+    font-size:11px;
+  }
+  .iw-payments-page .iw-payment-table tbody tr td[data-label="Review"]{
+    margin-top:3px;
+    padding:12px 0 0!important;
+    border-top:1px solid #e9edf0;
+  }
+  .iw-payments-page .iw-payment-review-form{
+    display:grid;
+    grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr);
+    align-items:center;
+    gap:9px;
+    margin:0;
+  }
+  .iw-payments-page .iw-payment-review-form select,
+  .iw-payments-page .iw-payment-review-form input{
+    height:40px;
+    min-height:40px;
+    font-size:14px;
+    border-radius:7px;
+  }
+  .iw-payments-page .iw-payment-review-form button{
+    grid-column:1/-1;
+    min-height:42px;
+    font-size:13px;
+    font-weight:760;
+    color:#fff;
+    background:#ef681d;
+    border:1px solid #ef681d;
+    border-radius:7px;
+  }
+  .iw-payments-page .iw-payment-review-form button:hover{
+    color:#fff;
+    background:#d95411;
+  }
+  .iw-payments-page .iw-payment-table tbody tr.table-empty-row{
+    display:block!important;
+    border:0;
+    box-shadow:none;
+    padding:8px;
+  }
+  .iw-payments-page .iw-payment-table tbody tr.table-empty-row td{
+    display:block!important;
+    width:100%!important;
+    text-align:center;
+  }
+  .iw-payments-page .iw-payment-table tbody tr.table-empty-row td::before{display:none}
+}
+@media(max-width:360px){
+  .iw-payments-page .iw-payment-table tbody tr{
+    gap:8px 11px;
+    padding:12px;
+  }
+  .iw-payments-page .iw-payment-review-form{
+    grid-template-columns:1fr;
+  }
+  .iw-payments-page .iw-payment-review-form button{grid-column:auto}
+}
