@@ -397,6 +397,7 @@ CREATE TABLE IF NOT EXISTS agent_payout_beneficiaries (
 CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
     withdrawal_id INT UNSIGNED PRIMARY KEY,
     reference VARCHAR(50) NOT NULL UNIQUE,
+    request_key CHAR(64) NULL UNIQUE,
     amount_kobo BIGINT UNSIGNED NOT NULL,
     recipient_code VARCHAR(100) NOT NULL,
     bank_code VARCHAR(12) NOT NULL,
@@ -408,6 +409,7 @@ CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
     provider_transfer_id VARCHAR(80) NULL,
     last_error_code VARCHAR(50) NULL,
     attempted_at DATETIME NULL,
+    last_checked_at DATETIME NULL,
     settled_at DATETIME NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,

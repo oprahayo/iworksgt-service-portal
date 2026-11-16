@@ -24,7 +24,8 @@ function iworks_payout_schema_ready(): bool
             return false;
         }
     }
-    return true;
+    return schema_column_exists('agent_withdrawal_transfers', 'request_key')
+        && schema_column_exists('agent_withdrawal_transfers', 'last_checked_at');
 }
 function iworks_payout_write_runtime(array $config): void
 {
@@ -53,6 +54,9 @@ try {
             // Keep validating terminal events for transfers already submitted.
             $disabled['live_secret_key'] = $liveSecret;
             $disabled['accept_live_webhooks'] = true;
+        }
+        foreach (['test_secret_key','test_webhook_secret','live_webhook_secret'] as $retained) {
+            if (!empty($previous[$retained])) { $disabled[$retained] = $previous[$retained]; }
         }
         iworks_payout_write_runtime($disabled);
         echo "New LIVE payouts DISABLED; signed in-flight settlement notifications remain enabled.\n";
@@ -87,6 +91,10 @@ try {
     }
 
     $key = trim((string) getenv('IWORKS_PAYSTACK_LIVE_KEY'));
+    if ($key === '' && in_array('--use-existing-checkout-key', $argv, true)) {
+        $method = get_payment_method_by_code('paystack');
+        $key = trim((string)($method['secret_key'] ?? ''));
+    }
     if (!preg_match('/^sk_live_[A-Za-z0-9_-]+$/', $key)) {
         throw new RuntimeException('Missing live Paystack key in private environment input.');
     }
@@ -103,19 +111,26 @@ try {
     $hasNgn = false;
     foreach ($balance['data'] as $currencyBalance) {
         if (($currencyBalance['currency'] ?? '') === 'NGN') {
-            $hasNgn = true;
+            $hasNgn = (int)($currencyBalance['balance'] ?? 0) >= iworks_agent_payout_policy()['minimum_kobo'];
             break;
         }
     }
     if (!$hasNgn) {
-        throw new RuntimeException('No NGN balance exists on this Paystack business account.');
+        throw new RuntimeException('Paystack NGN balance is below the minimum withdrawal. Fund payouts and fees first.');
     }
 
-    iworks_payout_write_runtime([
+    $config = iworks_agent_payout_config();
+    $method = get_payment_method_by_code('paystack');
+    $signingSecret = trim((string)(getenv('IWORKS_PAYSTACK_LIVE_WEBHOOK_SECRET') ?: ($config['live_webhook_secret'] ?? $method['private_key'] ?? '')));
+    if ($signingSecret !== '' && !str_starts_with($signingSecret, 'whsec_')) {
+        throw new RuntimeException('Invalid webhook signing secret configuration.');
+    }
+    iworks_payout_write_runtime(array_merge($config, [
         'mode' => 'live',
         'live_enabled' => 'I_ACCEPT_REAL_MONEY_PAYOUTS',
         'live_secret_key' => $key,
-    ]);
+        'live_webhook_secret' => $signingSecret,
+    ]));
     // The process did not transfer money or run any queued payouts.
     echo "LIVE payout configuration saved. No transfer initiated.\n";
     echo "New verified LIVE beneficiaries have a 24-hour security hold.\n";

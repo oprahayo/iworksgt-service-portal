@@ -51,19 +51,18 @@ function iworks_agent_payout_secret(): string
     return $key;
 }
 
-function iworks_agent_payout_webhook_secret(): string
+function iworks_agent_payout_environment_secret(string $environment): string
 {
-    // Disabling NEW payouts must not discard signed settlement events for
-    // transfers already sent by Paystack. Previously activated LIVE credentials
-    // are retained only for incoming webhook validation.
-    $mode = iworks_agent_payout_mode();
-    if ($mode !== 'off') { return iworks_agent_payout_secret(); }
-    $config = iworks_agent_payout_config();
-    if (($config['accept_live_webhooks'] ?? false) === true) {
-        $key = trim((string)($config['live_secret_key'] ?? ''));
-        if (preg_match('/^sk_live_[A-Za-z0-9_-]+$/', $key)) { return $key; }
+    if (!in_array($environment, ['test', 'live'], true)) {
+        throw new RuntimeException('Invalid payout environment.');
     }
-    throw new RuntimeException('Agent payout webhooks are not configured.');
+    $config = iworks_agent_payout_config();
+    $key = trim((string)($config[$environment . '_secret_key'] ??
+        ($environment === 'test' ? getenv('IWORKS_PAYSTACK_PAYOUT_TEST_SECRET') : '')));
+    if (preg_match('/^sk_' . $environment . '_[A-Za-z0-9_-]+$/D', $key)) {
+        return $key;
+    }
+    throw new RuntimeException('Payout credentials are not configured for this environment.');
 }
 
 function iworks_agent_payout_enabled(): bool
@@ -93,13 +92,20 @@ function iworks_agent_payout_kobo(float $amount): int
     return (int) round($amount * 100);
 }
 
-/** Agent bank verification must be performed server-side using the test key. */
+/** Resolve and freeze the beneficiary in the active environment. */
 function iworks_agent_verify_payout_bank(int $agentId, string $bankCode, string $accountNumber, string $password): void
 {
     $user = find_user_by_id($agentId);
-    if (!$user || ($user['role'] ?? '') !== 'agent' || ($user['status'] ?? '') !== 'active') {
+    if (!$user || ($user['role'] ?? '') !== 'agent' || ($user['status'] ?? '') !== 'active'
+        || ($user['account_state'] ?? '') !== 'active' || !empty($user['deleted_at'])) {
         throw new RuntimeException('Active agent account required.');
     }
+    if (!iworks_auth_limit_allows('payout_bank_actor', (string)$agentId, 5, 900)
+        || !iworks_auth_limit_allows('payout_bank_ip', iworks_auth_ip(), 20, 900)) {
+        throw new RuntimeException('Too many bank verification attempts. Try again in 15 minutes.');
+    }
+    iworks_auth_limit_record('payout_bank_actor', (string)$agentId, 900);
+    iworks_auth_limit_record('payout_bank_ip', iworks_auth_ip(), 900);
     if (empty($user['password_hash']) || !password_verify($password, (string)$user['password_hash'])) {
         throw new RuntimeException('Enter your current account password to change your payout bank.');
     }
@@ -118,14 +124,14 @@ function iworks_agent_verify_payout_bank(int $agentId, string $bankCode, string 
     }
     $url = 'https://api.paystack.co/bank/resolve?account_number='
         . rawurlencode($accountNumber) . '&bank_code=' . rawurlencode($bankCode);
-    $verified = gateway_json_get($url, $secret);
+    $verified = iworks_agent_paystack_get($url, $secret);
     $name = trim((string) ($verified['data']['account_name'] ?? ''));
     if (($verified['status'] ?? false) !== true
         || (string) ($verified['data']['account_number'] ?? '') !== $accountNumber
         || $name === '') {
         throw new RuntimeException('Paystack could not verify that bank account.');
     }
-    $recipient = gateway_json_post('https://api.paystack.co/transferrecipient', [
+    $recipient = iworks_agent_paystack_post('https://api.paystack.co/transferrecipient', [
         'type' => 'nuban',
         'name' => $name,
         'account_number' => $accountNumber,
@@ -133,7 +139,14 @@ function iworks_agent_verify_payout_bank(int $agentId, string $bankCode, string 
         'currency' => 'NGN',
     ], $secret);
     $code = trim((string) ($recipient['data']['recipient_code'] ?? ''));
-    if (($recipient['status'] ?? false) !== true || $code === '') {
+    $recipientData = $recipient['data'] ?? [];
+    if (($recipient['status'] ?? false) !== true || !preg_match('/^RCP_[A-Za-z0-9]+$/D', $code)
+        || ($recipientData['active'] ?? false) !== true
+        || ($recipientData['domain'] ?? '') !== $environment
+        || ($recipientData['type'] ?? '') !== 'nuban'
+        || ($recipientData['currency'] ?? '') !== 'NGN'
+        || (string)($recipientData['details']['account_number'] ?? '') !== $accountNumber
+        || (string)($recipientData['details']['bank_code'] ?? '') !== $bankCode) {
         throw new RuntimeException('Unable to register the bank beneficiary.');
     }
     $bankName = trim((string) ($recipient['data']['details']['bank_name'] ?? ''));
@@ -141,7 +154,12 @@ function iworks_agent_verify_payout_bank(int $agentId, string $bankCode, string 
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        db_one('SELECT id FROM users WHERE id = :id FOR UPDATE', ['id' => $agentId]);
+        $lockedUser = db_one('SELECT * FROM users WHERE id = :id FOR UPDATE', ['id' => $agentId]);
+        if (!$lockedUser || $lockedUser['status'] !== 'active' || $lockedUser['account_state'] !== 'active'
+            || $lockedUser['role'] !== 'agent' || !empty($lockedUser['deleted_at'])
+            || !hash_equals((string)$user['password_hash'], (string)$lockedUser['password_hash'])) {
+            throw new RuntimeException('Account changed during bank verification. Sign in again.');
+        }
         $active = (int) (db_one(
             "SELECT COUNT(*) AS c FROM withdrawal_requests
               WHERE agent_id = :agent_id AND status IN ('pending', 'approved')",
@@ -171,8 +189,10 @@ function iworks_agent_verify_payout_bank(int $agentId, string $bankCode, string 
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
         throw $e;
     }
-    notify_roles(['admin', 'finance'], 'Agent payout bank changed',
-        'An agent verified payout bank details. Review changes before production activation.', url('withdrawals'));
+    try {
+        notify_roles(['admin', 'finance'], 'Agent payout bank changed',
+            'An agent verified payout bank details. Live withdrawals have a 24-hour hold.', url('withdrawals'));
+    } catch (Throwable $e) { /* Bank verification is already committed. */ }
 }
 
 function iworks_agent_payout_beneficiary(int $agentId): ?array
@@ -184,7 +204,7 @@ function iworks_agent_payout_banks(): array
 {
     if (!iworks_agent_payout_enabled()) { return []; }
     try {
-        $r = gateway_json_get('https://api.paystack.co/bank?country=nigeria&perPage=200',
+        $r = iworks_agent_paystack_get('https://api.paystack.co/bank?country=nigeria&perPage=200',
             iworks_agent_payout_secret());
         $banks = is_array($r['data'] ?? null) ? $r['data'] : [];
         usort($banks, static fn(array $a, array $b): int =>
@@ -197,7 +217,7 @@ function iworks_agent_payout_banks(): array
  * One withdrawal per committed balance reservation, serialized per agent.
  * API calls are outside the SQL transaction so network latency cannot hold a lock.
  */
-function iworks_agent_create_withdrawal(int $agentId, float $amount, string $note = ''): int
+function iworks_agent_create_withdrawal(int $agentId, float $amount, string $note = '', string $requestKey = ''): int
 {
     // Disabled systems must not create live-bound queued records.
     $environment = iworks_agent_payout_mode();
@@ -205,6 +225,10 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
         throw new RuntimeException('Agent payouts are not configured on this server.');
     }
     $kobo = iworks_agent_payout_kobo($amount);
+    if (!preg_match('/^[a-f0-9]{64}$/D', $requestKey)) {
+        throw new RuntimeException('Reload the withdrawal page before submitting.');
+    }
+    $requestKey = hash('sha256', $agentId . ':' . $requestKey);
     $policy = iworks_agent_payout_policy();
     if ($kobo < $policy['minimum_kobo']) {
         throw new RuntimeException('Minimum withdrawal is NGN 5,000.');
@@ -212,22 +236,34 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        $agent = db_one('SELECT id, role, status, account_state FROM users WHERE id = :id FOR UPDATE',
+        $agent = db_one('SELECT id, role, status, account_state, deleted_at FROM users WHERE id = :id FOR UPDATE',
             ['id' => $agentId]);
         if (!$agent || $agent['role'] !== 'agent' || $agent['status'] !== 'active'
-            || $agent['account_state'] !== 'active') {
+            || $agent['account_state'] !== 'active' || !empty($agent['deleted_at'])) {
             throw new RuntimeException('Active agent account required.');
         }
         if (!schema_table_exists('agent_payout_beneficiaries')
-            || !schema_table_exists('agent_withdrawal_transfers')) {
+            || !schema_table_exists('agent_withdrawal_transfers')
+            || !schema_column_exists('agent_withdrawal_transfers', 'request_key')) {
             throw new RuntimeException('Withdrawal migration not yet applied.');
+        }
+        $existing = db_one('SELECT t.withdrawal_id, t.amount_kobo FROM agent_withdrawal_transfers t
+            JOIN withdrawal_requests w ON w.id=t.withdrawal_id
+            WHERE t.request_key=:request_key AND w.agent_id=:agent_id',
+            ['request_key'=>$requestKey,'agent_id'=>$agentId]);
+        if ($existing) {
+            if ((int)$existing['amount_kobo'] !== $kobo) {
+                throw new RuntimeException('This withdrawal request was already used for a different amount.');
+            }
+            $pdo->commit();
+            return (int)$existing['withdrawal_id'];
         }
         $beneficiary = iworks_agent_payout_beneficiary($agentId);
         if (!$beneficiary || (string)($beneficiary['environment'] ?? '') !== $environment) {
             throw new RuntimeException('Verify a bank account in the active Paystack environment first.');
         }
-        if ($environment === 'live' &&
-            strtotime((string)$beneficiary['verified_at']) > time() - iworks_agent_payout_hold_seconds()) {
+        $verifiedAt = strtotime((string)$beneficiary['verified_at']);
+        if ($verifiedAt === false || $verifiedAt > time() - iworks_agent_payout_hold_seconds()) {
             throw new RuntimeException('For security, live withdrawals open 24 hours after bank verification.');
         }
         $summary = agent_withdrawal_summary($agentId);
@@ -256,11 +292,11 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
         $id = db_last_id();
         db_execute(
             'INSERT INTO agent_withdrawal_transfers
-             (withdrawal_id, reference, amount_kobo, recipient_code, bank_code,
+             (withdrawal_id, reference, request_key, amount_kobo, recipient_code, bank_code,
               account_last4, environment, state, created_at, updated_at)
-             VALUES (:withdrawal_id, :reference, :amount_kobo, :recipient_code, :bank_code,
+             VALUES (:withdrawal_id, :reference, :request_key, :amount_kobo, :recipient_code, :bank_code,
               :account_last4, :environment, :state, :created_at, :updated_at)',
-            ['withdrawal_id'=>$id,'reference'=>$reference,'amount_kobo'=>$kobo,
+            ['withdrawal_id'=>$id,'reference'=>$reference,'request_key'=>$requestKey,'amount_kobo'=>$kobo,
              'recipient_code'=>$beneficiary['recipient_code'],'bank_code'=>$beneficiary['bank_code'],
              'account_last4'=>substr((string)$beneficiary['account_number'],-4),
              'environment'=>$environment,'state'=>$manual?'awaiting_review':'queued','created_at'=>now(),'updated_at'=>now()]
@@ -292,9 +328,17 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
 function iworks_agent_submit_transfer(int $withdrawalId): void
 {
     $secret = iworks_agent_payout_secret();
+    $owner = db_one('SELECT agent_id FROM withdrawal_requests WHERE id=:id', ['id'=>$withdrawalId]);
+    if (!$owner) { throw new RuntimeException('Withdrawal not found.'); }
     $pdo = db();
     $pdo->beginTransaction();
     try {
+        $agent = db_one('SELECT role, status, account_state, deleted_at FROM users WHERE id=:id FOR UPDATE',
+            ['id'=>$owner['agent_id']]);
+        if (!$agent || $agent['role'] !== 'agent' || $agent['status'] !== 'active'
+            || $agent['account_state'] !== 'active' || !empty($agent['deleted_at'])) {
+            throw new RuntimeException('Payout blocked: agent account is not active.');
+        }
         $transfer = db_one(
             'SELECT t.*, w.status AS withdrawal_status, w.amount, w.currency
              FROM agent_withdrawal_transfers t
@@ -308,8 +352,12 @@ function iworks_agent_submit_transfer(int $withdrawalId): void
         }
         if (!in_array($transfer['withdrawal_status'], ['pending','approved'], true)
             || $transfer['currency'] !== 'NGN'
+            || iworks_agent_payout_kobo((float)$transfer['amount']) !== (int)$transfer['amount_kobo']
             || (string)$transfer['environment'] !== iworks_agent_payout_mode()) {
             throw new RuntimeException('Withdrawal cannot be transferred.');
+        }
+        if (agent_withdrawal_summary((int)$owner['agent_id'])['balance_shortfall'] > 0) {
+            throw new RuntimeException('Commission balance changed; Finance must reconcile before payout.');
         }
         if ($transfer['state'] === 'awaiting_review'
             || (!empty($transfer['reviewed_by']) && $transfer['withdrawal_status'] !== 'approved')
@@ -327,7 +375,7 @@ function iworks_agent_submit_transfer(int $withdrawalId): void
         throw $e;
     }
     try {
-        $r = gateway_json_post('https://api.paystack.co/transfer', [
+        $r = iworks_agent_paystack_post('https://api.paystack.co/transfer', [
             'source'=>'balance','amount'=>(int)$transfer['amount_kobo'],
             'recipient'=>$transfer['recipient_code'],'reference'=>$transfer['reference'],
             'currency'=>'NGN','reason'=>'iWORKS agent commission withdrawal #' . $withdrawalId,
@@ -342,7 +390,7 @@ function iworks_agent_submit_transfer(int $withdrawalId): void
         }
         // An OTP-required response is not automatic. Never report it as pending
         // settlement or attempt to repeat the transfer.
-        if (strtolower((string)($data['status'] ?? '')) === 'otp') {
+        if (!in_array(strtolower((string)($data['status'] ?? '')), ['pending','received','success'], true)) {
             throw new RuntimeException('Paystack transfer OTP is enabled; Finance must reconcile this transfer.');
         }
         // A transfer initiation response is NOT proof of settlement.
@@ -363,6 +411,12 @@ function iworks_agent_submit_transfer(int $withdrawalId): void
 /** Manual approval permitted only for requests above the review threshold. */
 function iworks_agent_review_withdrawal(int $withdrawalId, string $decision, int $reviewerId, string $note = ''): void
 {
+    $reviewer = find_user_by_id($reviewerId);
+    if (!$reviewer || !in_array($reviewer['role'], ['admin','finance'], true)
+        || $reviewer['status'] !== 'active' || $reviewer['account_state'] !== 'active'
+        || !empty($reviewer['deleted_at'])) {
+        throw new RuntimeException('Active Finance or administrator account required.');
+    }
     if (!in_array($decision, ['approved','rejected'], true)) {
         throw new RuntimeException('Choose approve or reject.');
     }
@@ -374,7 +428,8 @@ function iworks_agent_review_withdrawal(int $withdrawalId, string $decision, int
              FROM agent_withdrawal_transfers t JOIN withdrawal_requests w ON w.id=t.withdrawal_id
              WHERE t.withdrawal_id=:id FOR UPDATE', ['id'=>$withdrawalId]
         );
-        if (!$row || $row['state'] !== 'awaiting_review' || $row['status'] !== 'pending') {
+        if (!$row || $row['state'] !== 'awaiting_review' || $row['status'] !== 'pending'
+            || (int)$row['agent_id'] === $reviewerId) {
             throw new RuntimeException('Request is not awaiting manual approval.');
         }
         db_execute('UPDATE withdrawal_requests SET status=:status, admin_note=:note,
@@ -400,10 +455,37 @@ function iworks_agent_review_withdrawal(int $withdrawalId, string $decision, int
     }
 }
 
+/** Settlement and reconciliation must match the entire immutable transfer. */
+function iworks_agent_transfer_matches(array $row, array $data): bool
+{
+    $recipient = $data['recipient'] ?? null;
+    $code = is_array($recipient) ? ($recipient['recipient_code'] ?? '') : $recipient;
+    if (!is_string($code) || !hash_equals((string)$row['recipient_code'], $code)
+        || (string)($data['reference'] ?? '') !== (string)$row['reference']
+        || !is_numeric($data['amount'] ?? null)
+        || (float)$data['amount'] !== (float)(int)$data['amount']
+        || (int)$data['amount'] !== (int)$row['amount_kobo']
+        || ($data['currency'] ?? '') !== 'NGN'
+        || ($data['domain'] ?? '') !== $row['environment']
+        || !preg_match('/^[1-9][0-9]*$/D', (string)($data['id'] ?? ''))
+        || (!empty($row['provider_transfer_id']) && (string)$row['provider_transfer_id'] !== (string)$data['id'])) {
+        return false;
+    }
+    if (is_array($recipient) && isset($recipient['details'])) {
+        if ((string)($recipient['details']['bank_code'] ?? '') !== (string)$row['bank_code']
+            || substr((string)($recipient['details']['account_number'] ?? ''), -4) !== (string)$row['account_last4']) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /** Verified transfer event or verification response; idempotent and reversible. */
 function iworks_agent_record_transfer_result(string $reference, string $state, array $data): bool
 {
-    if (!in_array($state, ['success','failed','reversed'], true)) { return false; }
+    if (!in_array($state, ['success','failed','reversed','abandoned','blocked','rejected'], true)) { return false; }
+    $providerState = $state;
+    $state = in_array($state, ['abandoned','blocked','rejected'], true) ? 'failed' : $state;
     $pdo = db();
     $pdo->beginTransaction();
     try {
@@ -414,10 +496,8 @@ function iworks_agent_record_transfer_result(string $reference, string $state, a
              WHERE t.reference=:reference FOR UPDATE', ['reference'=>$reference]
         );
         if (!$row) { $pdo->commit(); return false; }
-        if ((int)($data['amount'] ?? -1) !== (int)$row['amount_kobo']
-            || strtoupper((string)($data['currency'] ?? '')) !== 'NGN'
-            || (string)($data['domain'] ?? '') !== (string)$row['environment']) {
-            throw new RuntimeException('Transfer event amount, currency, or environment mismatch.');
+        if (!iworks_agent_transfer_matches($row, $data) || ($data['status'] ?? '') !== $providerState) {
+            throw new RuntimeException('Transfer identity or status mismatch.');
         }
         if (!in_array($row['state'], ['submitting','pending','exception','success','failed','reversed'], true)) {
             throw new RuntimeException('Transfer event not allowed for unsubmitted request.');
@@ -429,8 +509,11 @@ function iworks_agent_record_transfer_result(string $reference, string $state, a
         }
         if ($current === $state) { $pdo->commit(); return true; }
         db_execute('UPDATE agent_withdrawal_transfers SET state=:state,
+            provider_transfer_id=:provider_id, last_error_code=:error,
             settled_at=:at, updated_at=:updated WHERE withdrawal_id=:id',
-            ['state'=>$state,'at'=>now(),'updated'=>now(),'id'=>$row['withdrawal_id']]);
+            ['state'=>$state,'provider_id'=>(string)$data['id'],
+             'error'=>$state==='success'?null:$providerState,
+             'at'=>now(),'updated'=>now(),'id'=>$row['withdrawal_id']]);
         db_execute('UPDATE withdrawal_requests SET status=:status,
             paid_at=:paid_at WHERE id=:id',
             ['status'=>$state==='success'?'paid':'rejected',
@@ -440,18 +523,22 @@ function iworks_agent_record_transfer_result(string $reference, string $state, a
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
         throw $e;
     }
-    create_notification((int)$row['agent_id'],'Withdrawal transfer update',
-        'Withdrawal #' . $row['withdrawal_id'] . ' transfer status: ' . $state . '.',url('withdrawals'));
+    try {
+        create_notification((int)$row['agent_id'],'Withdrawal transfer update',
+            'Withdrawal #' . $row['withdrawal_id'] . ' transfer status: ' . $state . '.',url('withdrawals'));
+    } catch (Throwable $e) { /* Settlement is committed; mail failure must not fail the webhook. */ }
     return true;
 }
 
 function iworks_agent_handle_transfer_webhook(string $raw, array $headers, array $event): array
 {
-    // Use the separately armed payout secret for the active Paystack environment.
-    try { $secret = iworks_agent_payout_webhook_secret(); }
+    // Environment selects a verification key only; the signature authenticates it.
+    // Disabling initiation must not disable settlement or reconciliation.
+    $environment = (string)($event['data']['domain'] ?? '');
+    try { $secret = iworks_agent_payout_environment_secret($environment); }
     catch (Throwable $e) { return ['success'=>false,'status_code'=>503,'message'=>'Payout webhook signing not configured.']; }
-    $signature = header_value($headers, 'x-paystack-signature');
-    if ($signature === '' || !hash_equals(hash_hmac('sha512', $raw, $secret), $signature)) {
+    $signingSecret = (string)(iworks_agent_payout_config()[$environment . '_webhook_secret'] ?? '');
+    if (!iworks_paystack_signature_valid($raw, $headers, $secret, $signingSecret)) {
         return ['success'=>false,'status_code'=>403,'message'=>'Invalid payout webhook signature.'];
     }
     $type = strtolower((string)($event['event'] ?? ''));
@@ -464,7 +551,10 @@ function iworks_agent_handle_transfer_webhook(string $raw, array $headers, array
         return ['success'=>false,'status_code'=>400,'message'=>'Transfer reference missing.'];
     }
     try {
-        iworks_agent_record_transfer_result($reference, substr($type,9), $data);
+        $matched = iworks_agent_record_transfer_result($reference, substr($type,9), $data);
+        if (!$matched) {
+            return ['success'=>true,'status_code'=>200,'message'=>'No matching agent transfer.'];
+        }
         return ['success'=>true,'status_code'=>200,'message'=>'Transfer event processed.'];
     } catch (Throwable $e) {
         return ['success'=>false,'status_code'=>422,'message'=>'Transfer event could not be matched.'];
@@ -474,19 +564,23 @@ function iworks_agent_handle_transfer_webhook(string $raw, array $headers, array
 /** Read-only remote status check; never retries a POST transfer request. */
 function iworks_agent_reconcile_transfer(int $withdrawalId): string
 {
-    $secret = iworks_agent_payout_secret();
     $transfer = db_one('SELECT * FROM agent_withdrawal_transfers WHERE withdrawal_id=:id',
         ['id'=>$withdrawalId]);
-    if (!$transfer || (string)$transfer['environment'] !== iworks_agent_payout_mode()
-        || !in_array($transfer['state'], ['submitting','exception','pending','success'], true)) {
+    if (!$transfer || !in_array($transfer['state'], ['submitting','exception','pending','success'], true)) {
         throw new RuntimeException('Transfer is not eligible for reconciliation.');
     }
-    $r = gateway_json_get('https://api.paystack.co/transfer/verify/'
+    $secret = iworks_agent_payout_environment_secret((string)$transfer['environment']);
+    $r = iworks_agent_paystack_get('https://api.paystack.co/transfer/verify/'
         . rawurlencode((string)$transfer['reference']), $secret);
-    $data = $r['data'] ?? [];
+    $data = is_array($r['data'] ?? null) ? $r['data'] : [];
+    if (($r['status'] ?? false) !== true || !iworks_agent_transfer_matches($transfer, $data)) {
+        throw new RuntimeException('Paystack verification did not match the saved transfer.');
+    }
     $state = strtolower((string)($data['status'] ?? ''));
-    if (in_array($state,['success','failed','reversed'],true)) {
+    if (in_array($state,['success','failed','reversed','abandoned','blocked','rejected'],true)) {
         iworks_agent_record_transfer_result((string)$transfer['reference'],$state,$data);
     }
+    db_execute('UPDATE agent_withdrawal_transfers SET last_checked_at=:at WHERE withdrawal_id=:id',
+        ['at'=>now(),'id'=>$withdrawalId]);
     return $state !== '' ? $state : 'unconfirmed';
 }

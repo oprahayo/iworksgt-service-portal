@@ -67,3 +67,24 @@ Before live activation, confirm inside Paystack: Registered Business approval, l
 - PR #160: https://github.com/oprahayo/iworksgt-service-portal/pull/160
 - Paystack transfers: https://paystack.com/docs/transfers/single-transfers/
 - Paystack webhook requirements: https://paystack.com/docs/payments/webhooks/
+
+## Continuation audit — 16 November 2026
+
+The existing implementation was continued on PR #160; no replacement architecture was introduced.
+
+Implemented in the continuation:
+
+- Request tokens are persisted under a unique index, scoped to the agent. Retrying the same form returns the original withdrawal; changing its amount is rejected.
+- Actual database tests exercise concurrent reservations, concurrent dispatch, duplicate callbacks, reversals, split withdrawals, timeouts, manual approval and bank verification. Network behavior is simulated at a dedicated Paystack client boundary; these are **not Paystack sandbox results**.
+- Verification matches reference, integer kobo amount, currency, environment, recipient, bank/account suffix and provider transfer ID. `abandoned`, `blocked` and `rejected` terminal statuses release the reservation after verified reconciliation.
+- New/changed banks require rate-limited password verification; inactive/suspended/deleted agents cannot receive queued payouts. Profile editing can no longer bypass bank verification.
+- Finance identity is checked in the service layer. Legacy NGN commission controls cannot mark payments paid or reopen paid commissions after migration; settlement uses the withdrawal ledger.
+- Reconciliation continues while new payouts are OFF. `scripts/process_agent_payouts.php --run` recovers only never-submitted queued transfers and verifies ambiguous transfers without repeating POST requests. Install with a private cron log and `flock` after deployment; `--check` is read only.
+- The existing webhook route requires POST and limits payloads to 1 MiB. Legacy HMAC-SHA512 remains supported; configured `whsec_` signing secrets require timestamped signatures with a 300-second replay window and support rotation overlap. Checkout uses the Paystack method's Private/Extra Key for a `whsec_` secret; payout runtime uses `live_webhook_secret`/`test_webhook_secret`. Keep them consistent for the shared endpoint.
+- Migration checks now fail when columns, unique indexes or transactional engines are missing. Fresh installation, upgrade and repeated application are tested.
+- `scripts/backup_agent_payout_release.sh --prepare PORTAL_PATH` creates encrypted SQL and full portal-file backups outside document roots, restores the SQL in an isolated cPanel database, verifies key table counts and removes the rehearsal database. It never changes production source, schema or payout mode. Keep the backup key separately; copy encrypted backups to the operator's approved off-server storage before rollout.
+- Live activation can reuse the existing server-side checkout key with `--use-existing-checkout-key`; secrets need not be copied through chat. The live balance gate now rejects funding below the minimum withdrawal. Fees and account approval readiness still need independent verification.
+
+Verified production observations (read only): PHP 8.3.36; Paystack checkout enabled with a live credential; live `GET /balance` successful; **NGN transfer funding below the minimum withdrawal before fees**; no unsettled legacy withdrawals; new payout source/tables absent. Paystack dashboard presents a sign-in screen.
+
+Outstanding release gates: authenticated Paystack dashboard; Registered Business/Transfers and approval configuration; test-mode transfer + actual provider webhook delivery; sufficient live NGN funding plus fees; reviewed deployment from the merged commit; production migration, HTTP signature probes, Finance/agent dashboard and scheduler acceptance. No live transfer has been initiated. Do not merge or arm live payouts until these gates pass.

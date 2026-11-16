@@ -77,6 +77,7 @@ jobs:
           bash tests/f12_schedule_fixture_test.sh
           bash -n scripts/prepare_private_migration_stage.sh
           bash -n scripts/cpanel_finalize_release.sh
+          bash -n scripts/backup_agent_payout_release.sh
           bash tests/f22_private_migration_stage_fixture_test.sh
           bash -n scripts/audit_public_seo_live.sh
           bash -n scripts/audit_launch_public.sh
@@ -86,6 +87,7 @@ jobs:
         run: |
           php tests/crypto_conversion_test.php
           php tests/agent_paystack_withdrawals_contract_test.php
+          php tests/agent_paystack_security_test.php
           php tests/public_cms_layout_test.php
           php tests/public_services_template_test.php
           php tests/public_about_template_test.php
@@ -182,3 +184,31 @@ jobs:
           node --check assets/js/dashboard-live-visitors.js
           node --check assets/js/admin-transition.js
           node tests/admin_transition_behavior_test.js
+
+  payout-database:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: payout-test-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -ppayout-test-only"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Exercise payout migrations, concurrency and settlement
+        env:
+          IWORKS_TEST_MYSQL_DSN: mysql:host=127.0.0.1;port=3306
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: payout-test-only
+        run: php tests/agent_paystack_database_test.php

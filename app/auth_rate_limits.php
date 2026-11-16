@@ -13,7 +13,7 @@ function iworks_auth_ip(): string
 
 function iworks_auth_bucket(string $scope, string $actor, int $seconds): array
 {
-    $allowed = ['password_actor', 'password_ip', 'otp_ip', 'otp_request', 'reset_actor', 'reset_ip'];
+    $allowed = ['password_actor', 'password_ip', 'otp_ip', 'otp_request', 'reset_actor', 'reset_ip', 'payout_bank_actor', 'payout_bank_ip'];
     if (!in_array($scope, $allowed, true)) {
         throw new InvalidArgumentException('Unrecognized authorization limit.');
     }

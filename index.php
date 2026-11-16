@@ -1278,6 +1278,17 @@ try {
             break;
 
         case 'payment_webhook':
+            if (!method_is('POST')) {
+                http_response_code(405);
+                header('Allow: POST');
+                header('Content-Type: application/json');
+                echo json_encode(['success'=>false,'message'=>'POST required.']);
+                break;
+            }
+            if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 1048576) {
+                http_response_code(413);
+                break;
+            }
             $provider = strtolower(trim((string) ($_GET['provider'] ?? '')));
             if ($provider === '') {
                 http_response_code(400);
@@ -1289,7 +1300,11 @@ try {
                 break;
             }
 
-            $rawPayload = file_get_contents('php://input');
+            $rawPayload = file_get_contents('php://input', false, null, 0, 1048577);
+            if (is_string($rawPayload) && strlen($rawPayload) > 1048576) {
+                http_response_code(413);
+                break;
+            }
             if (!is_string($rawPayload)) {
                 $rawPayload = '';
             }
@@ -3013,7 +3028,8 @@ try {
 
                     if ($action === 'request_withdrawal' && $user['role'] === 'agent') {
                         $amount = (float) ($_POST['amount'] ?? 0);
-                        create_withdrawal_request((int) $user['id'], $amount, $_POST['note'] ?? '');
+                        create_withdrawal_request((int) $user['id'], $amount, (string)($_POST['note'] ?? ''),
+                            (string)($_POST['request_key'] ?? ''));
                         flash('success', 'Withdrawal request submitted.');
                     }
 
@@ -3609,16 +3625,8 @@ try {
                     }
 
                     if ($action === 'update_bank' && $user['role'] !== 'client') {
-                        if ($user['role'] === 'agent' && schema_table_exists('agent_payout_beneficiaries')) {
-                            $open = (int) (db_one(
-                                "SELECT COUNT(*) AS c FROM withdrawal_requests WHERE agent_id=:id AND status IN ('pending','approved')",
-                                ['id'=>(int)$user['id']]
-                            )['c'] ?? 0);
-                            if ($open > 0) {
-                                throw new RuntimeException('Cannot edit payout bank details while a withdrawal is unsettled.');
-                            }
-                            db_execute('DELETE FROM agent_payout_beneficiaries WHERE agent_id=:id',
-                                ['id'=>(int)$user['id']]);
+                        if ($user['role'] === 'agent') {
+                            throw new RuntimeException('Verify or change your payout bank from Agent Withdrawals.');
                         }
                         db_execute(
                             'UPDATE users SET bank_name = :bank_name, bank_account_name = :bank_account_name,

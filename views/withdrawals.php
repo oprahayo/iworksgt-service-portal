@@ -94,6 +94,7 @@ $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request
     <form method="post" action="<?= e(url('withdrawals')) ?>" class="row g-3 align-items-end">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="form_action" value="request_withdrawal">
+      <input type="hidden" name="request_key" value="<?= e(bin2hex(random_bytes(32))) ?>">
       <div class="col-md-4">
         <label class="form-label" for="withdrawalAmount">Amount (NGN)</label>
         <input id="withdrawalAmount" class="form-control" name="amount" type="number" min="5000" step="0.01" required>

@@ -7740,9 +7740,13 @@ function update_payout_status(int $payoutId, string $status, int $adminId): void
         throw new RuntimeException('Invalid payout status.');
     }
 
-    $payout = db_one('SELECT * FROM commission_payouts WHERE id = :id LIMIT 1', ['id' => $payoutId]);
+    $payout = db_one('SELECT p.*, j.currency FROM commission_payouts p JOIN jobs j ON j.id=p.job_id WHERE p.id = :id LIMIT 1', ['id' => $payoutId]);
     if (!$payout) {
         throw new RuntimeException('Payout record not found.');
+    }
+    if ($payout['currency'] === 'NGN' && schema_table_exists('agent_withdrawal_transfers')
+        && ($status === 'paid' || $payout['status'] === 'paid') && $status !== $payout['status']) {
+        throw new RuntimeException('Use Agent Withdrawals for NGN payments. Paid legacy commissions cannot be reopened.');
     }
 
     db_execute(
@@ -7787,13 +7791,22 @@ function bulk_update_payout_status(array $payoutIds, string $status, int $adminI
     }
 
     $rows = db_all(
-        'SELECT id, agent_id
-         FROM commission_payouts
-         WHERE id IN (' . implode(',', $idPlaceholders) . ')',
+        'SELECT p.id, p.agent_id, p.status, j.currency
+         FROM commission_payouts p JOIN jobs j ON j.id=p.job_id
+         WHERE p.id IN (' . implode(',', $idPlaceholders) . ')',
         $idParams
     );
     if (!$rows) {
         throw new RuntimeException('Selected payout records were not found.');
+    }
+
+    if (schema_table_exists('agent_withdrawal_transfers')) {
+        foreach ($rows as $row) {
+            if ($row['currency'] === 'NGN' && ($status === 'paid' || $row['status'] === 'paid')
+                && $status !== $row['status']) {
+                throw new RuntimeException('Use Agent Withdrawals for NGN payments. Paid legacy commissions cannot be reopened.');
+            }
+        }
     }
 
     $updateParams = $idParams + [
@@ -8921,7 +8934,7 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
         return ['success' => false, 'status_code' => 400, 'message' => 'Invalid webhook payload.'];
     }
 
-    // Transfer callbacks have separate TEST credentials and a separate ledger.
+    // Transfers have environment-specific credentials and a separate ledger.
     if ($provider === 'paystack'
         && str_starts_with(strtolower((string) ($payload['event'] ?? '')), 'transfer.')) {
         return iworks_agent_handle_transfer_webhook($rawPayload, $headers, $payload);
@@ -8938,9 +8951,9 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
     }
 
     if ($provider === 'paystack') {
-        $signature = header_value($headers, 'x-paystack-signature');
-        $expected = hash_hmac('sha512', $rawPayload, $secret);
-        if ($signature === '' || !hash_equals($expected, $signature)) {
+        $signingSecret = trim((string)($method['private_key'] ?? ''));
+        if (!str_starts_with($signingSecret, 'whsec_')) { $signingSecret = ''; }
+        if (!iworks_paystack_signature_valid($rawPayload, $headers, $secret, $signingSecret)) {
             return ['success' => false, 'status_code' => 403, 'message' => 'Invalid Paystack signature.'];
         }
 
@@ -10422,16 +10435,17 @@ function agent_withdrawal_summary(int $agentId): array
     )['total'] ?? 0);
 
     $totalWithdrawn = (float) (db_one(
-        "SELECT COALESCE(SUM(amount), 0) AS total FROM withdrawal_requests WHERE agent_id = :agent_id AND status IN ('approved', 'paid')",
+        "SELECT COALESCE(SUM(amount), 0) AS total FROM withdrawal_requests WHERE agent_id = :agent_id AND currency = 'NGN' AND status IN ('approved', 'paid')",
         ['agent_id' => $agentId]
     )['total'] ?? 0);
 
     $pendingWithdrawal = (float) (db_one(
-        "SELECT COALESCE(SUM(amount), 0) AS total FROM withdrawal_requests WHERE agent_id = :agent_id AND status = 'pending'",
+        "SELECT COALESCE(SUM(amount), 0) AS total FROM withdrawal_requests WHERE agent_id = :agent_id AND currency = 'NGN' AND status = 'pending'",
         ['agent_id' => $agentId]
     )['total'] ?? 0);
 
-    $available = max($totalEarned - $legacyPaidCommissions - $totalWithdrawn - $pendingWithdrawal, 0);
+    $netBalance = $totalEarned - $legacyPaidCommissions - $totalWithdrawn - $pendingWithdrawal;
+    $available = max($netBalance, 0);
 
     $lastRequest = db_one(
         'SELECT requested_at FROM withdrawal_requests WHERE agent_id = :agent_id ORDER BY requested_at DESC LIMIT 1',
@@ -10455,6 +10469,7 @@ function agent_withdrawal_summary(int $agentId): array
         'total_withdrawn' => round($totalWithdrawn, 2),
         'pending_withdrawal' => round($pendingWithdrawal, 2),
         'available_balance' => round($available, 2),
+        'balance_shortfall' => round(max(-$netBalance, 0), 2),
         'minimum_threshold' => round($minimum, 2),
         'cooldown_days' => $cooldownDays,
         'next_request_at' => $nextRequestAt,
@@ -10491,9 +10506,9 @@ function list_withdrawal_requests_for_user(array $user): array
     );
 }
 
-function create_withdrawal_request(int $agentId, float $amount, string $note = ''): void
+function create_withdrawal_request(int $agentId, float $amount, string $note = '', string $requestKey = ''): void
 {
-    iworks_agent_create_withdrawal($agentId, $amount, $note);
+    iworks_agent_create_withdrawal($agentId, $amount, $note, $requestKey);
 }
 function update_withdrawal_request_status(int $requestId, string $status, int $reviewedBy, string $adminNote = ''): void
 {
