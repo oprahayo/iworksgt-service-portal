@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * CLI-only backup-gated migration for TEST-ONLY agent payout groundwork.
+ * CLI-only backup-gated migration for Paystack agent payout groundwork (live gated off by default).
  * php scripts/migrate_agent_paystack_withdrawals.php --check
  * php scripts/migrate_agent_paystack_withdrawals.php --apply --backup-confirmed
  *
@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS agent_payout_beneficiaries (
     account_number VARCHAR(10) NOT NULL,
     account_name VARCHAR(140) NOT NULL,
     recipient_code VARCHAR(100) NOT NULL,
+    environment ENUM('test','live') NOT NULL DEFAULT 'test',
     verified_at DATETIME NOT NULL,
     CONSTRAINT fk_agent_payout_beneficiary FOREIGN KEY (agent_id)
         REFERENCES users(id) ON DELETE RESTRICT
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
     recipient_code VARCHAR(100) NOT NULL,
     bank_code VARCHAR(12) NOT NULL,
     account_last4 VARCHAR(4) NOT NULL,
+    environment ENUM('test','live') NOT NULL DEFAULT 'test',
     state ENUM('awaiting_review','queued','submitting','pending','success','failed','reversed','exception')
         NOT NULL DEFAULT 'queued',
     reviewed_by INT UNSIGNED NULL,
@@ -65,9 +67,16 @@ try {
         }
     }
     if ($mode === '--apply') {
+        // Forward-compatible upgrade for a previously installed TEST-only draft.
+        foreach (['agent_payout_beneficiaries', 'agent_withdrawal_transfers'] as $table) {
+            if (!schema_column_exists($table, 'environment')) {
+                db_execute("ALTER TABLE " . $table .
+                    " ADD COLUMN environment ENUM('test','live') NOT NULL DEFAULT 'test'");
+            }
+        }
         set_setting('withdrawal_minimum', '5000');
         set_setting('withdrawal_cooldown_days', '0');
-        echo "Approved withdrawal defaults saved. Paystack transfers remain disabled.\n";
+        echo "Approved withdrawal defaults saved. Schema prepared. Payout mode remains whatever private runtime configuration explicitly selects.\n";
     } else {
         echo "CHECK ONLY; no changes applied.\n";
     }
