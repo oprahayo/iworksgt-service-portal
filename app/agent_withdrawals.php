@@ -296,9 +296,9 @@ function iworks_agent_review_withdrawal(int $withdrawalId, string $decision, int
             ['status'=>$decision,'note'=>substr(trim($note),0,500),
              'at'=>now(),'id'=>$withdrawalId]);
         db_execute('UPDATE agent_withdrawal_transfers SET state=:state,
-            updated_at=:at WHERE withdrawal_id=:id',
+            reviewed_by=:reviewer_id, updated_at=:at WHERE withdrawal_id=:id',
             ['state'=>$decision === 'approved'?'queued':'failed',
-             'at'=>now(),'id'=>$withdrawalId]);
+             'reviewer_id'=>$reviewerId,'at'=>now(),'id'=>$withdrawalId]);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
