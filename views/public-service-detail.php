@@ -42,10 +42,7 @@ $actionUrl = $isEnquiry
     : portal_url('login', ['service' => $serviceSlug]);
 $actionHelp = $isEnquiry;
 $isWebsiteBuild = $serviceSlug === 'website-design-development';
-$isScumlSupport = in_array($serviceSlug, [
-    'scuml-business-name-document-support',
-    'scuml-company-document-support',
-], true);
+$isScumlSupport = $serviceSlug === 'scuml-document-support';
 if ($isWebsiteBuild) {
     $actionText = 'Choose a website package';
     $actionUrl = '#iwWebsitePackagesTitle';
@@ -65,21 +62,6 @@ if ($isWebsiteBuild) {
         ? (iworks_client_country_currency($customer) ?: 'NGN')
         : ($countryHint !== '' && $countryHint !== 'NG' && $countryHint !== 'XX' ? 'USD' : 'NGN');
     $websitePackages = iworks_website_package_options($hintCurrency);
-}
-$scumlChoices = [];
-if ($isScumlSupport) {
-    foreach ([
-        'scuml-business-name-document-support' => ['Business Name', '35,000'],
-        'scuml-company-document-support' => ['Limited Company (Ltd)', '45,000'],
-    ] as $slug => $definition) {
-        $record = function_exists('get_service_by_slug') ? get_service_by_slug($slug) : null;
-        if ($record && (int)($record['is_public'] ?? 0) === 1 && (int)($record['is_active'] ?? 0) === 1) {
-            $scumlChoices[] = [
-                'slug' => $slug, 'name' => $definition[0],
-                'display' => money((float)$record['price'], (string)$record['currency']),
-            ];
-        }
-    }
 }
 $scumlExampleData = '';
 if ($isScumlSupport) {
@@ -226,48 +208,48 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
 
 
     <?php if ($isScumlSupport): ?>
-    <section class="iw-scuml-service" aria-label="SCUML registration document support">
-      <div class="iw-scuml-service-explainer">
-        <div class="iw-scuml-service-copy">
-          <span class="iw-scuml-eyebrow">INDEPENDENT DOCUMENT SUPPORT</span>
-          <h2>Prepare your documents for SCUML registration.</h2>
-          <p>SCUML is the EFCC's Special Control Unit Against Money Laundering. Some designated non-financial businesses and professions must register. The EFCC application and certificate are <strong>free</strong>.</p>
-          <p>iWORKS can independently check your CAC and tax records, help organise the required documents and guide you through the official process. You submit through the government portal using your own working business contact details.</p>
-          <div class="iw-scuml-government-note"><i class="bi bi-info-circle" aria-hidden="true"></i><span><strong>Government fee: ₦0.</strong> Our published price covers iWORKS document review and guidance only. We are not affiliated with or authorised by EFCC/SCUML, and approval cannot be guaranteed.</span></div>
+    <section class="iw-scuml-service" aria-label="SCUML compliance document guidance">
+      <div class="iw-scuml-feature">
+        <div class="iw-scuml-feature-copy">
+          <span class="iw-scuml-eyebrow">SCUML · COMPLIANCE SUPPORT</span>
+          <h2>Review your documents. Know what to submit.</h2>
+          <p>iWORKS provides independent document checks and guidance for businesses preparing for SCUML registration. The certificate is issued by EFCC after its own review—not by iWORKS.</p>
+          <div class="iw-scuml-price-block">
+            <span>iWORKS standard guidance fee</span>
+            <strong><?= e((string)$pricing['display']) ?></strong>
+            <?php if ($pricing['tax_note'] !== ''): ?><small><?= e((string)$pricing['tax_note']) ?></small><?php endif; ?>
+            <a class="iw-product-cta" href="<?= e($actionUrl) ?>">Start SCUML document support <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+            <small>EFCC application &amp; certificate: <strong>FREE</strong>. The iWORKS fee is independent of government registration.</small>
+          </div>
+          <p class="iw-scuml-independence">iWORKS is not an EFCC/SCUML agent or representative. Customers submit the official application with their own valid business contact details. Approval is not guaranteed.</p>
         </div>
         <?php if ($scumlExampleData !== ''): ?>
           <figure class="iw-scuml-document-example">
-            <img src="<?= e($scumlExampleData) ?>" width="900" height="635" decoding="async" loading="eager" alt="Illustrative SCUML document layout, business details masked; large NOT AN OFFICIAL CERTIFICATE watermark">
-            <figcaption>Illustrative, masked document example — not issued by EFCC or valid for any purpose.</figcaption>
+            <img src="<?= e($scumlExampleData) ?>" width="900" height="635" decoding="async" loading="eager" alt="SCUML registration certificate format illustration with redacted details and prominent SAMPLE NOT VALID watermark">
+            <figcaption>Illustrative redacted certificate layout based on a supplied reference. Not an issued or usable document.</figcaption>
           </figure>
         <?php endif; ?>
       </div>
-      <div class="iw-scuml-structure">
+      <div class="iw-scuml-guidance">
         <div>
-          <h3>Choose the business type</h3>
-          <p>These are independent iWORKS preparation and guidance fees, not different EFCC certificate charges.</p>
+          <h3>Documents for review</h3>
+          <ul>
+            <li>CAC registration or incorporation certificate</li>
+            <li>CAC status report (BN-01 for Business Names; CAC 1.1 or equivalent for companies)</li>
+            <li>TIN printout; company Memorandum &amp; Articles where applicable</li>
+            <li>Relevant business-sector licence or professional evidence, if required</li>
+          </ul>
+          <a href="https://scuml.efcc.gov.ng/registration-guideline/" target="_blank" rel="noopener noreferrer">Check official requirements <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
         </div>
-        <div class="iw-scuml-structure-list">
-          <?php foreach ($scumlChoices as $scumlChoice): ?>
-            <a href="<?= e(public_url('service', ['slug' => $scumlChoice['slug']])) ?>"<?= $serviceSlug===$scumlChoice['slug'] ? ' aria-current="page"' : '' ?>>
-              <strong><?= e($scumlChoice['name']) ?></strong>
-              <span><?= e($scumlChoice['display']) ?> iWORKS service fee <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-            </a>
-          <?php endforeach; ?>
+        <div>
+          <h3>Special business sectors</h3>
+          <p>Required documents depend on what your business actually does, not simply whether it is a Business Name or Ltd.</p>
+          <p><strong>Power / energy work:</strong> Enhanced review can be quoted at <strong>₦80,000</strong> (2× the standard iWORKS service fee) if the additional scope is confirmed. Contact iWORKS before ordering. This is not an EFCC fee or an official SCUML price category.</p>
+          <a href="<?= e(public_url('contact')) ?>">Discuss a special-sector case <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
         </div>
-      </div>
-      <div class="iw-scuml-checklist">
-        <h3>Documents you should prepare</h3>
-        <?php if ($serviceSlug==='scuml-business-name-document-support'): ?>
-          <ul><li>CAC Business Name registration certificate</li><li>CAC status report / Form BN-01</li><li>Business Tax Identification Number (TIN) printout</li><li>Sector-specific professional licence or association evidence, if applicable</li></ul>
-        <?php else: ?>
-          <ul><li>CAC Certificate of Incorporation</li><li>Memorandum and Articles of Association</li><li>CAC status report / Form CAC 1.1 or legacy CAC 2 and CAC 7</li><li>Business Tax Identification Number (TIN) printout</li><li>Sector-specific professional licence or association evidence, if applicable</li></ul>
-        <?php endif; ?>
-        <p>NGOs and at-risk nonprofit organisations may require trustees documentation, constitution and tax exemption records. Check the official sector-specific requirements first.</p>
-        <p><a href="https://scuml.efcc.gov.ng/registration-guideline/" target="_blank" rel="noopener noreferrer">EFCC/SCUML requirements <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a> · <a href="https://scuml.efcc.gov.ng/" target="_blank" rel="noopener noreferrer">Official free registration portal <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></p>
       </div>
     </section>
-    <?php endif; ?>
+    <?php else: ?>
 
     <div class="iw-product-layout">
       <aside class="iw-product-side" aria-label="Service pricing and next step">
@@ -368,6 +350,8 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
         <?php endif; ?>
       </article>
     </div>
+
+    <?php endif; // End generic service layout; SCUML uses the iWORKS product showcase. ?>
 
     <?php if ($relatedServices !== []): ?>
       <nav class="iw-product-related" aria-label="Related services">

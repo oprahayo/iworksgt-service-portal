@@ -47,6 +47,10 @@ function iworks_customer_published_service(array $service): ?array
         'business-name-registration-cac-nigeria',
         'custom-service-system',
         'launch-a-company-package',
+        // Legacy SCUML variants stay in the database for historical orders,
+        // but the only customer-facing offer is scuml-document-support.
+        'scuml-business-name-document-support',
+        'scuml-company-document-support',
     ], true)) return null;
 
     $normalized = strtolower($name);
@@ -75,6 +79,12 @@ function iworks_customer_published_service(array $service): ?array
             if ($service === null) return null;
         }
         $service['_iworks_checkout_mode'] = 'cac';
+        return $service;
+    }
+    // A single Nigerian SCUML guidance service; no fabricated jurisdiction FX
+    // product variant or Business Name/Ltd price split in the public catalogue.
+    if ($slug === 'scuml-document-support') {
+        $service['_iworks_checkout_mode'] = 'standard';
         return $service;
     }
     if ($slug === 'trademark') {

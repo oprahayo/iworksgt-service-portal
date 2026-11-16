@@ -95,6 +95,7 @@ jobs:
           php tests/public_inner_forms_test.php
           php tests/public_service_detail_clean_test.php
           php tests/scuml_guidance_contract_test.php
+          php tests/scuml_customer_catalogue_test.php
           php tests/public_auth_modal_contract_test.php
           php tests/public_assistance_contract_test.php
           php tests/streamlined_live_chat_history_contract_test.php
