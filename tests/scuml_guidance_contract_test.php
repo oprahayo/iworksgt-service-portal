@@ -50,7 +50,7 @@ $ok(str_contains($detail,'$isScumlSupport') &&
     str_contains($detail,'scuml-document-example.svg') &&
     str_contains($detail,'data:image/svg+xml;base64,') &&
     str_contains($detail,'$scumlChoices') &&
-    str_contains($detail,"get_service_by_slug($slug)") &&
+    str_contains($detail,'get_service_by_slug($slug)') &&
     str_contains($detail,'EFCC/SCUML') &&
     str_contains($detail,'we are not affiliated') === false,
     'Product detail must use actual database offer prices and display illustrative document and accurate disclaimers.');
