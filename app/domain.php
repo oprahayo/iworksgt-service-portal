@@ -8921,6 +8921,12 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
         return ['success' => false, 'status_code' => 400, 'message' => 'Invalid webhook payload.'];
     }
 
+    // Transfer callbacks have separate TEST credentials and a separate ledger.
+    if ($provider === 'paystack'
+        && str_starts_with(strtolower((string) ($payload['event'] ?? '')), 'transfer.')) {
+        return iworks_agent_handle_transfer_webhook($rawPayload, $headers, $payload);
+    }
+
     $method = get_payment_method_by_code($provider);
     if (!$method || (int) ($method['is_active'] ?? 0) !== 1) {
         return ['success' => false, 'status_code' => 400, 'message' => 'Payment method is disabled or missing.'];
@@ -10387,20 +10393,21 @@ function get_chat_message(int $messageId): ?array
 
 function withdrawal_minimum(): float
 {
-    $value = setting('withdrawal_minimum', '20000');
-    return (float) ($value !== '' ? $value : '20000');
+    // Fixed approved NGN policy; older database settings may still say 20,000.
+    return iworks_agent_payout_policy()['minimum_kobo'] / 100;
 }
-
 function withdrawal_cooldown_days(): int
 {
-    $days = int_setting('withdrawal_cooldown_days', 14);
-    return $days > 0 ? $days : 14;
+    // Immediate withdrawal request processing; no legacy 14-day interval.
+    return 0;
 }
-
 function agent_withdrawal_summary(int $agentId): array
 {
     $totalEarned = (float) (db_one(
-        'SELECT COALESCE(SUM(commission_amount), 0) AS total FROM commission_payouts WHERE agent_id = :agent_id',
+        "SELECT COALESCE(SUM(p.commission_amount), 0) AS total
+          FROM commission_payouts p JOIN jobs j ON j.id = p.job_id
+          WHERE p.agent_id = :agent_id AND j.currency = 'NGN'
+            AND j.payment_status = 'paid' AND j.status IN ('delivered', 'closed')",
         ['agent_id' => $agentId]
     )['total'] ?? 0);
 
@@ -10466,46 +10473,19 @@ function list_withdrawal_requests_for_user(array $user): array
 
 function create_withdrawal_request(int $agentId, float $amount, string $note = ''): void
 {
-    $summary = agent_withdrawal_summary($agentId);
-
-    if ($amount <= 0) {
-        throw new RuntimeException('Withdrawal amount must be greater than zero.');
-    }
-
-    if ($amount < $summary['minimum_threshold']) {
-        throw new RuntimeException('Amount is below minimum threshold of ' . money($summary['minimum_threshold']) . '.');
-    }
-
-    if ($amount > $summary['available_balance']) {
-        throw new RuntimeException('Amount exceeds available balance.');
-    }
-
-    if (!$summary['can_request']) {
-        if ($summary['next_request_at']) {
-            throw new RuntimeException('You can request withdrawal after ' . $summary['next_request_at'] . '.');
-        }
-
-        throw new RuntimeException('Withdrawal request is currently not available.');
-    }
-
-    db_execute(
-        'INSERT INTO withdrawal_requests (agent_id, amount, currency, note, status, requested_at)
-         VALUES (:agent_id, :amount, :currency, :note, :status, :requested_at)',
-        [
-            'agent_id' => $agentId,
-            'amount' => $amount,
-            'currency' => default_currency(),
-            'note' => trim($note),
-            'status' => 'pending',
-            'requested_at' => now(),
-        ]
-    );
-
-    notify_roles(['admin', 'finance'], 'New withdrawal request', 'An agent requested a commission withdrawal.', url('withdrawals'));
+    iworks_agent_create_withdrawal($agentId, $amount, $note);
 }
-
 function update_withdrawal_request_status(int $requestId, string $status, int $reviewedBy, string $adminNote = ''): void
 {
+    // New Paystack payout records cannot be marked paid by a human;
+    // only a verified transfer webhook or read-only reconciliation can settle them.
+    if (schema_table_exists('agent_withdrawal_transfers')
+        && db_one('SELECT withdrawal_id FROM agent_withdrawal_transfers WHERE withdrawal_id = :id',
+            ['id' => $requestId])) {
+        iworks_agent_review_withdrawal($requestId, $status, $reviewedBy, $adminNote);
+        return;
+    }
+
     $allowed = ['pending', 'approved', 'paid', 'rejected'];
 
     if (!in_array($status, $allowed, true)) {
