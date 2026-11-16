@@ -387,11 +387,16 @@ body.iw-invoice .iw-wave-with-checkout .iw-invoice-checkout h3{font-size:18px;co
   body.iw-invoice .iw-wave-invoice-meta>div{grid-template-columns:45% 55%}
   body.iw-invoice .iw-wave-banner-title{font-size:21px}
   body.iw-invoice .iw-wave-banner-due strong{font-size:15px}
-  body.iw-invoice .iw-wave-items .iw-wave-col-item{width:43%}
+  /* Three visible columns on very narrow phones: quantity is usually 1,
+     so do not squeeze two identical money values until digits wrap. The
+     printable A4 document retains all four accounting columns. */
+  body.iw-invoice .iw-wave-items .iw-wave-col-item{width:52%}
   body.iw-invoice .iw-wave-items .iw-wave-col-qty{width:12%}
-  body.iw-invoice .iw-wave-items .iw-wave-col-price{width:22.5%}
-  body.iw-invoice .iw-wave-items .iw-wave-col-amount{width:22.5%}
-  body.iw-invoice .iw-wave-items .iw-wave-numeric{white-space:normal;overflow-wrap:anywhere}
+  body.iw-invoice .iw-wave-items .iw-wave-col-price{display:none}
+  body.iw-invoice .iw-wave-items .iw-wave-col-amount{width:36%}
+  body.iw-invoice .iw-wave-items thead th:nth-child(3),
+  body.iw-invoice .iw-wave-items tbody td:nth-child(3){display:none}
+  body.iw-invoice .iw-wave-items .iw-wave-numeric{white-space:nowrap}
 }
 @media print{
   @page{size:A4;margin:0}
