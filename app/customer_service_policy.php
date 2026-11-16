@@ -47,6 +47,10 @@ function iworks_customer_published_service(array $service): ?array
         'business-name-registration-cac-nigeria',
         'custom-service-system',
         'launch-a-company-package',
+        // Legacy SCUML variants stay in the database for historical orders,
+        // but the only customer-facing offer is scuml-document-support.
+        'scuml-business-name-document-support',
+        'scuml-company-document-support',
     ], true)) return null;
 
     $normalized = strtolower($name);
