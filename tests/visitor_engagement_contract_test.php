@@ -130,12 +130,13 @@ $ok(str_contains($client,"pageSuggestion()") && str_contains($widget,'AUTOMATED 
     && str_contains($client,'nudge-dismissed')
     && str_contains($client,'120000 -'),
     'Context-aware prompts must be disclosed, dismissible and not overly frequent.');
-$ok(str_contains($dashboard,'live-visitor-overview.php')
+$ok(!str_contains($dashboard,'live-visitor-overview.php')
+    && str_contains($dashboard,'transaction-overview.php')
     && str_contains($dashboard,'has_role([')
     && str_contains($summary,'data-live-metric="online"')
-    && str_contains($summary,'iwLiveOverviewBars')
-    && str_contains($dashboardJs,"fields.set('action','summary')"),
-    'Authorized staff dashboard must show graphical live chat activity near the top.');
+    && str_contains($dashboardJs,"fields.set('action','summary')")
+    && str_contains($inbox,'iwLiveActivityBars'),
+    'Keep live chat activity in the dedicated inbox, not in financial dashboard analytics.');
 $ok(str_contains($staff,'thread.current_page')
     && str_contains($staff,'Offline reply and closure emails')
     && str_contains($inbox,'iwLiveActivityBars'),
