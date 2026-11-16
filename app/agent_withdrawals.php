@@ -2,35 +2,71 @@
 declare(strict_types=1);
 
 /**
- * iWORKS agent withdrawals. The transfer engine is intentionally TEST ONLY.
- * No "live" mode exists; a future production rollout requires a separate
- * security review, approval, and code change.
+ * iWORKS Paystack agent withdrawals.
+ *
+ * Test mode is sandbox only. Live requires an explicitly armed, untracked
+ * server-side secret file AND a live Paystack secret. Default is OFF.
  */
 function iworks_agent_payout_policy(): array
 {
     return ['minimum_kobo' => 500000, 'review_above_kobo' => 10000000, 'currency' => 'NGN'];
 }
 
+function iworks_agent_payout_config(): array
+{
+    // This file is .gitignored and must be readable only by the application
+    // owner. HTTP access to /app is denied by the root .htaccess.
+    $path = __DIR__ . '/agent_payout_runtime.php';
+    if (!is_file($path)) { return []; }
+    if (is_link($path)) { throw new RuntimeException('Payout configuration cannot be a symlink.'); }
+    $cfg = require $path;
+    if (!is_array($cfg)) { throw new RuntimeException('Invalid payout runtime configuration.'); }
+    return $cfg;
+}
+
 function iworks_agent_payout_mode(): string
 {
-    return getenv('IWORKS_PAYSTACK_PAYOUT_MODE') === 'test' ? 'test' : 'off';
+    $config = iworks_agent_payout_config();
+    $mode = strtolower(trim((string)($config['mode'] ?? getenv('IWORKS_PAYSTACK_PAYOUT_MODE') ?: 'off')));
+    if ($mode === 'test') { return 'test'; }
+    if ($mode === 'live' && ($config['live_enabled'] ?? '') === 'I_ACCEPT_REAL_MONEY_PAYOUTS') {
+        return 'live';
+    }
+    return 'off';
 }
 
 function iworks_agent_payout_secret(): string
 {
-    if (iworks_agent_payout_mode() !== 'test') {
-        throw new RuntimeException('Automatic transfers are disabled.');
+    $mode = iworks_agent_payout_mode();
+    if ($mode === 'off') {
+        throw new RuntimeException('Paystack agent transfers are disabled.');
     }
-    $key = trim((string) getenv('IWORKS_PAYSTACK_PAYOUT_TEST_SECRET'));
-    if (!preg_match('/^sk_test_[A-Za-z0-9]+$/', $key)) {
-        throw new RuntimeException('A Paystack TEST secret key is required; live keys are prohibited.');
+    $config = iworks_agent_payout_config();
+    $key = trim((string)($mode === 'live'
+        ? ($config['live_secret_key'] ?? '')
+        : ($config['test_secret_key'] ?? getenv('IWORKS_PAYSTACK_PAYOUT_TEST_SECRET') ?: '')));
+    if (!preg_match('/^sk_' . preg_quote($mode, '/') . '_[A-Za-z0-9_-]+$/', $key)) {
+        throw new RuntimeException('Missing or mismatched Paystack ' . strtoupper($mode) . ' secret.');
     }
     return $key;
 }
 
 function iworks_agent_payout_enabled(): bool
 {
-    return iworks_agent_payout_mode() === 'test';
+    return iworks_agent_payout_mode() !== 'off';
+}
+
+function iworks_agent_payout_hold_seconds(): int
+{
+    // A bank account must remain unchanged and verified for 24h before live
+    // automatic transfers can use it; repeated verification resets the hold.
+    return iworks_agent_payout_mode() === 'live' ? 86400 : 0;
+}
+
+function iworks_agent_payout_review_required(int $amountKobo, int $recentKobo): bool
+{
+    $threshold = iworks_agent_payout_policy()['review_above_kobo'];
+    return $amountKobo > $threshold || $recentKobo + $amountKobo > $threshold;
 }
 
 function iworks_agent_payout_kobo(float $amount): int
