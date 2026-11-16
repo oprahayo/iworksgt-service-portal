@@ -53,12 +53,12 @@ try {
     if (!iworks_payout_schema_ready()) {
         throw new RuntimeException('Missing payout schema. Apply the backup-gated migration first.');
     }
-    $pendingTest = (int)(db_one(
+    $testHistory = (int)(db_one(
         "SELECT COUNT(*) AS c FROM agent_withdrawal_transfers
-         WHERE environment='test' AND state NOT IN ('success','failed','reversed')"
+         WHERE environment='test'"
     )['c'] ?? 0);
-    if ($pendingTest !== 0) {
-        throw new RuntimeException('Unsettled TEST transfers exist. Reconcile them before enabling LIVE.');
+    if ($testHistory !== 0) {
+        throw new RuntimeException('Existing TEST withdrawal history exists in this database. Finance must explicitly segregate it before LIVE activation.');
     }
     $pendingUnknown = (int)(db_one(
         "SELECT COUNT(*) AS c FROM withdrawal_requests w
@@ -73,7 +73,7 @@ try {
         echo "Payout schema: ready\n";
         echo "Paystack environment: " . strtoupper(iworks_agent_payout_mode()) . "\n";
         echo "Agent payout policy: min NGN 5,000; automatic <= NGN 100,000; manual review above.\n";
-        echo "Unsettled test/legacy transfers: none\n";
+        echo "Test transfer records / unsettled legacy withdrawals: none\n";
         echo "Live activation requires a Registered Paystack Business, live webhook, funding, and transfer approvals configured.\n";
         exit(0);
     }
