@@ -36,6 +36,13 @@ body.page-public .iw-scuml-feature-copy>p{
   line-height:1.76;
   max-width:480px;
 }
+body.page-public .iw-scuml-feature-copy .iw-scuml-brief{
+  margin:0 0 16px;
+  max-width:475px;
+  color:#596875;
+  font-size:14px;
+  line-height:1.7;
+}
 body.page-public .iw-scuml-price-block{
   display:flex;
   flex-direction:column;
@@ -148,17 +155,26 @@ body.page-public .iw-scuml-guidance p{
   margin:0 0 14px;
 }
 body.page-public .iw-scuml-guidance p strong{color:#36424d}
-body.page-public .iw-scuml-guidance a{
+body.page-public .iw-scuml-guidance .iw-scuml-sector-button{
   display:inline-flex;
+  justify-content:center;
   align-items:center;
-  gap:9px;
-  color:#bf5519!important;
-  font-size:12px;
-  font-weight:730;
-  border-bottom:1px solid currentColor;
+  min-height:35px;
+  padding:8px 13px;
+  border:1px solid #d86425;
+  border-radius:6px;
+  background:transparent;
+  color:#b95217!important;
+  font-size:11.5px;
+  font-weight:700;
+  line-height:1.2;
   text-decoration:none;
-  padding-bottom:4px;
+  transition:background-color .15s ease;
 }
+body.page-public .iw-scuml-guidance .iw-scuml-sector-button:hover{
+  background:#fff4ec;
+}
+
 body.page-public .iw-scuml-service a:focus-visible {
   outline:2px solid #f56613;
   outline-offset:4px;
