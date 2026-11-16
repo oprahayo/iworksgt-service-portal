@@ -170,6 +170,17 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
         if ($kobo > (int) round((float) $summary['available_balance'] * 100)) {
             throw new RuntimeException('Withdrawal exceeds available NGN commission balance.');
         }
+        // Prevent an agent bypassing the review threshold via split withdrawals.
+        // The per-agent user lock serializes concurrent checks and reservations.
+        $recent = (float) (db_one(
+            "SELECT COALESCE(SUM(amount), 0) AS total FROM withdrawal_requests
+              WHERE agent_id=:agent_id AND currency='NGN'
+                AND status IN ('pending','approved','paid')
+                AND requested_at >= :cutoff",
+            ['agent_id'=>$agentId,'cutoff'=>date('Y-m-d H:i:s', time()-86400)]
+        )['total'] ?? 0);
+        $manual = ($kobo > $policy['review_above_kobo'])
+            || (((int)round($recent*100))+$kobo > $policy['review_above_kobo']);
         // UUID-derived reference: 16-50 chars, Paystack idempotency/reconciliation key.
         $reference = 'iwagent_' . bin2hex(random_bytes(16));
         db_execute(
@@ -180,7 +191,6 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
              'note'=>substr(trim($note),0,500),'requested_at'=>now()]
         );
         $id = db_last_id();
-        $manual = $kobo > $policy['review_above_kobo'];
         db_execute(
             'INSERT INTO agent_withdrawal_transfers
              (withdrawal_id, reference, amount_kobo, recipient_code, bank_code,
@@ -197,11 +207,17 @@ function iworks_agent_create_withdrawal(int $agentId, float $amount, string $not
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
         throw $e;
     }
-    notify_roles(['admin', 'finance'], 'Agent withdrawal created',
-        $manual ? 'Withdrawal above NGN 100,000 requires manual review.' :
-            'An agent payout is queued for automatic TEST transfer.', url('withdrawals'));
+    try {
+        notify_roles(['admin', 'finance'], 'Agent withdrawal created',
+            $manual ? 'Withdrawal requires manual review (amount or 24-hour limit).' :
+                'An agent payout is queued for automatic TEST transfer.', url('withdrawals'));
+    } catch (Throwable $e) { /* Already committed; notification failure must not induce duplicate withdrawals. */ }
     if (!$manual && iworks_agent_payout_enabled()) {
-        iworks_agent_submit_test_transfer($id);
+        try {
+            iworks_agent_submit_test_transfer($id);
+        } catch (Throwable $e) {
+            // Request and unique reference already exist; Finance can reconcile.
+        }
     }
     return $id;
 }
@@ -287,8 +303,7 @@ function iworks_agent_review_withdrawal(int $withdrawalId, string $decision, int
              FROM agent_withdrawal_transfers t JOIN withdrawal_requests w ON w.id=t.withdrawal_id
              WHERE t.withdrawal_id=:id FOR UPDATE', ['id'=>$withdrawalId]
         );
-        if (!$row || $row['state'] !== 'awaiting_review' || $row['status'] !== 'pending'
-            || (int)$row['amount_kobo'] <= iworks_agent_payout_policy()['review_above_kobo']) {
+        if (!$row || $row['state'] !== 'awaiting_review' || $row['status'] !== 'pending') {
             throw new RuntimeException('Request is not awaiting manual approval.');
         }
         db_execute('UPDATE withdrawal_requests SET status=:status, admin_note=:note,
@@ -304,10 +319,13 @@ function iworks_agent_review_withdrawal(int $withdrawalId, string $decision, int
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
         throw $e;
     }
-    create_notification((int)$row['agent_id'],'Withdrawal reviewed',
-        'Your withdrawal request #' . $withdrawalId . ' was ' . $decision . '.', url('withdrawals'));
+    try {
+        create_notification((int)$row['agent_id'],'Withdrawal reviewed',
+            'Your withdrawal request #' . $withdrawalId . ' was ' . $decision . '.', url('withdrawals'));
+    } catch (Throwable $e) { /* Approval is committed, do not re-submit. */ }
     if ($decision === 'approved' && iworks_agent_payout_enabled()) {
-        iworks_agent_submit_test_transfer($withdrawalId);
+        try { iworks_agent_submit_test_transfer($withdrawalId); }
+        catch (Throwable $e) { /* Queued reference remains for reconciliation. */ }
     }
 }
 
