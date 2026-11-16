@@ -42,6 +42,8 @@ jobs:
           path: |
             docs/visual-qa/invoice-desktop.png
             docs/visual-qa/invoice-one-job.pdf
+            docs/visual-qa/invoice-390.png
+            docs/visual-qa/invoice-320.png
             docs/visual-qa/payments-390.png
             docs/visual-qa/payments-320.png
           if-no-files-found: ignore
