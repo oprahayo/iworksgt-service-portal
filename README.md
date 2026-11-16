@@ -6,6 +6,8 @@ A production-oriented service operations platform built with PHP and MySQL. It b
 
 ## Portfolio case study
 
+**Full engineering write-up:** [How I Built a Multi-Role Business Operations Platform with PHP and MySQL](docs/engineering-case-study-php-mysql-service-platform.md)
+
 **Role:** Full-stack developer
 
 **Focus:** Product engineering, backend workflows, payments, authentication, responsive UI, deployment, and operations
