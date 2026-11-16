@@ -294,7 +294,7 @@ $favicon = favicon_path();
 
     <?php if ($user['role'] === 'client'): ?></details><?php endif; ?>
 
-    <div class="iw-invoice-main-grid">
+    <div class="iw-invoice-main-grid<?= ($user['role'] === 'client' && $invoice['status'] !== 'paid') ? '' : ' iw-invoice-no-checkout' ?>">
     <section class="iw-invoice-order">
     <h3>Service summary</h3>
     <?php if (count($invoiceJobs) > 1): ?>
