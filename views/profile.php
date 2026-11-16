@@ -132,6 +132,10 @@ $forcePasswordResetMode = (int) ($user['must_change_password'] ?? 0) === 1 || !e
       <div class="card-body">
         <h2 class="h5">Bank payout details</h2>
         <p class="small text-muted">Used for agent commissions. Finance/Admin can view full details.</p>
+        <?php if ($user['role'] === 'agent'): ?>
+          <p class="small text-warning">Automatic NGN payouts use the separately verified account under Withdrawals.
+          Editing these profile bank details will invalidate existing Paystack beneficiary verification.</p>
+        <?php endif; ?>
         <form method="post" action="<?= e(url('profile')) ?>">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
           <input type="hidden" name="form_action" value="update_bank">
