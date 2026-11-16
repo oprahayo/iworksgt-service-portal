@@ -29,6 +29,8 @@ mkdir "$WORK/source"
 tar -xzf "$WORK/source.tgz" -C "$WORK/source" --strip-components=1
 SOURCE="$WORK/source"
 cat > "$WORK/manifest" <<'FILES'
+index.php
+app/customer_service_policy.php
 views/public-service-detail.php
 views/public-services-refined.php
 views/partials/public-header.php
@@ -98,7 +100,7 @@ while IFS= read -r path; do
 done < "$WORK/manifest"
 IWORKS_PORTAL_ROOT="$PORTAL" php "$PORTAL/scripts/publish_scuml_guidance.php" --apply --backup-confirmed
 
-for slug in scuml-business-name-document-support scuml-company-document-support; do
+for slug in scuml-document-support; do
   html="$WORK/$slug.html"
   status="$(curl --http1.1 -sS -L --max-time 40 \
     -H 'Cache-Control: no-cache' -o "$html" -w '%{http_code}' \
@@ -112,6 +114,9 @@ for slug in scuml-business-name-document-support scuml-company-document-support;
   grep -Fq 'data:image/svg+xml;base64,' "$html" || {
     echo "SCUML example document not embedded for $slug." >&2; false;
   }
+  grep -Fq 'iWORKS standard guidance fee' "$html" || {
+    echo "Wrong SCUML guidance fee presentation on $slug." >&2; false;
+  }
   grep -Fq 'EFCC/SCUML' "$html" || {
     echo "Official free registration disclosure missing for $slug." >&2; false;
   }
@@ -121,4 +126,6 @@ STARTED=0
 trap - ERR
 echo "SUCCESS: SCUML guidance services published from $RELEASE."
 echo "Private source backup: $BACKUP"
-echo 'Customer onboarding uses the existing iWORKS portal. Do not present iWORKS as an EFCC agent.'
+echo 'Customer onboarding uses the existing portal; full requirements/intake form will be tailored from the user's supplied checklist.'
+echo 'Old Business Name and Ltd catalogue variants are hidden, not deleted; no historical orders were changed.'
+echo 'Never present iWORKS as an EFCC agent.'
