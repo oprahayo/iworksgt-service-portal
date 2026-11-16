@@ -388,6 +388,7 @@ CREATE TABLE IF NOT EXISTS agent_payout_beneficiaries (
     account_number VARCHAR(10) NOT NULL,
     account_name VARCHAR(140) NOT NULL,
     recipient_code VARCHAR(100) NOT NULL,
+    environment ENUM('test','live') NOT NULL DEFAULT 'test',
     verified_at DATETIME NOT NULL,
     CONSTRAINT fk_agent_payout_beneficiary FOREIGN KEY (agent_id)
         REFERENCES users(id) ON DELETE RESTRICT
@@ -400,6 +401,7 @@ CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
     recipient_code VARCHAR(100) NOT NULL,
     bank_code VARCHAR(12) NOT NULL,
     account_last4 VARCHAR(4) NOT NULL,
+    environment ENUM('test','live') NOT NULL DEFAULT 'test',
     state ENUM('awaiting_review','queued','submitting','pending','success','failed','reversed','exception')
         NOT NULL DEFAULT 'queued',
     reviewed_by INT UNSIGNED NULL,
