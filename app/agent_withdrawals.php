@@ -51,6 +51,21 @@ function iworks_agent_payout_secret(): string
     return $key;
 }
 
+function iworks_agent_payout_webhook_secret(): string
+{
+    // Disabling NEW payouts must not discard signed settlement events for
+    // transfers already sent by Paystack. Previously activated LIVE credentials
+    // are retained only for incoming webhook validation.
+    $mode = iworks_agent_payout_mode();
+    if ($mode !== 'off') { return iworks_agent_payout_secret(); }
+    $config = iworks_agent_payout_config();
+    if (($config['accept_live_webhooks'] ?? false) === true) {
+        $key = trim((string)($config['live_secret_key'] ?? ''));
+        if (preg_match('/^sk_live_[A-Za-z0-9_-]+$/', $key)) { return $key; }
+    }
+    throw new RuntimeException('Agent payout webhooks are not configured.');
+}
+
 function iworks_agent_payout_enabled(): bool
 {
     return iworks_agent_payout_mode() !== 'off';
@@ -433,8 +448,8 @@ function iworks_agent_record_transfer_result(string $reference, string $state, a
 function iworks_agent_handle_transfer_webhook(string $raw, array $headers, array $event): array
 {
     // Use the separately armed payout secret for the active Paystack environment.
-    try { $secret = iworks_agent_payout_secret(); }
-    catch (Throwable $e) { return ['success'=>false,'status_code'=>503,'message'=>'Payout mode disabled.']; }
+    try { $secret = iworks_agent_payout_webhook_secret(); }
+    catch (Throwable $e) { return ['success'=>false,'status_code'=>503,'message'=>'Payout webhook signing not configured.']; }
     $signature = header_value($headers, 'x-paystack-signature');
     if ($signature === '' || !hash_equals(hash_hmac('sha512', $raw, $secret), $signature)) {
         return ['success'=>false,'status_code'=>403,'message'=>'Invalid payout webhook signature.'];
