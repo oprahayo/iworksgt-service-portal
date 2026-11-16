@@ -48,6 +48,13 @@ Database changes are CLI-only and require a verified private backup:
 
 The migration creates agent_payout_beneficiaries and agent_withdrawal_transfers and writes the approved business-rule defaults. It does not enable transfers.
 
+The optional CLI-only queue drain handles queued TEST transfers when test mode is configured. It is not installed as a cron task:
+
+    php scripts/process_agent_payout_test_queue.php --check
+    php scripts/process_agent_payout_test_queue.php --run-test
+
+It never contacts Paystack from check mode and rejects live credentials. A real-money queue scheduler is a separate future project.
+
 ## Existing webhook destination
 
 Paystack webhook endpoint is routed through:
