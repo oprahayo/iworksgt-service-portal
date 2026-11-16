@@ -85,6 +85,7 @@ jobs:
       - name: Run smoke tests
         run: |
           php tests/crypto_conversion_test.php
+          php tests/agent_paystack_withdrawals_contract_test.php
           php tests/public_cms_layout_test.php
           php tests/public_services_template_test.php
           php tests/public_about_template_test.php
