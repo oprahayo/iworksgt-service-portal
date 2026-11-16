@@ -126,6 +126,6 @@ STARTED=0
 trap - ERR
 echo "SUCCESS: SCUML guidance services published from $RELEASE."
 echo "Private source backup: $BACKUP"
-echo 'Customer onboarding uses the existing portal; full requirements/intake form will be tailored from the user's supplied checklist.'
+echo 'Customer onboarding uses the existing portal; requirements intake will be tailored when the user supplies the checklist.'
 echo 'Old Business Name and Ltd catalogue variants are hidden, not deleted; no historical orders were changed.'
 echo 'Never present iWORKS as an EFCC agent.'
