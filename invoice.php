@@ -256,8 +256,7 @@ $favicon = favicon_path();
       </div>
     </div>
 
-    <?php if ($user['role'] === 'client'): ?>
-      <div class="iw-invoice-hero">
+    <div class="iw-invoice-hero">
         <div><span class="iw-invoice-eyebrow">iWORKS · BILLING</span>
           <h1><?= (string)($invoice['status'] ?? '') === 'paid' ? 'Payment receipt' : 'Invoice' ?></h1>
           <p><?= e((string) ($invoice['service_name'] ?? 'iWORKS service')) ?></p>
@@ -267,7 +266,6 @@ $favicon = favicon_path();
           <small><?= e(ucfirst((string) ($invoice['status'] ?? 'issued'))) ?></small>
         </div>
       </div>
-    <?php endif; ?>
     <?php if ($msg = flash('success')): ?><div class="alert alert-success"><?= e($msg) ?></div><?php endif; ?>
     <?php if ($msg = flash('error')): ?><div class="alert alert-danger"><?= e($msg) ?></div><?php endif; ?>
 
