@@ -236,7 +236,7 @@ $favicon = favicon_path();
   <link rel="stylesheet" href="assets/css/client-checkout.css?v=20261112a">
   <link rel="stylesheet" href="assets/css/invoice-clean.css?v=20261116-compact1">
 </head>
-<body class="<?= $user['role'] === 'client' ? 'iw-invoice-client' : '' ?>">
+<body class="iw-invoice<?= $user['role'] === 'client' ? ' iw-invoice-client' : '' ?>">
   <div class="wrap">
     <div class="head">
       <div>
