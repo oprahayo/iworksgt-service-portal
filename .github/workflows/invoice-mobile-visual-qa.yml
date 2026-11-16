@@ -3,8 +3,11 @@ on:
   pull_request:
     paths:
       - 'invoice.php'
+      - 'views/partials/invoice-wave-sheet.php'
+      - 'views/public-service-detail.php'
+      - 'assets/css/invoice-wave.css'
+      - 'assets/css/scuml-service.css'
       - 'views/payments.php'
-      - 'assets/css/invoice-clean.css'
       - 'assets/css/payment-review-mobile.css'
       - 'tests/invoice_mobile_visual_preview.php'
       - 'tests/invoice_mobile_visual_qa.mjs'
