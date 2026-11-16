@@ -3,19 +3,31 @@ $user = current_user();
 $isAgent = ($user['role'] ?? '') === 'agent';
 $isFinance = has_role(['admin', 'finance']);
 $payoutPolicy = iworks_agent_payout_policy();
-$bankReady = !empty($agentPayoutBeneficiary);
-$canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request'] && $bankReady;
+$payoutMode = iworks_agent_payout_mode();
+$bankReady = !empty($agentPayoutBeneficiary)
+    && (string)($agentPayoutBeneficiary['environment'] ?? '') === $payoutMode;
+$bankHoldUntil = ($bankReady && $payoutMode === 'live')
+    ? strtotime((string)$agentPayoutBeneficiary['verified_at']) + iworks_agent_payout_hold_seconds()
+    : 0;
+$canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request'] && $bankReady
+    && $payoutMode !== 'off' && (!$bankHoldUntil || time() >= $bankHoldUntil);
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Agent Withdrawals</h1>
-  <span class="badge bg-secondary">Paystack live payouts disabled</span>
+  <span class="badge bg-secondary">Paystack agent payouts: <?= e(strtoupper($payoutMode)) ?></span>
 </div>
 
 <?php if ($isAgent): ?>
   <div class="alert alert-info small">
-    Withdrawals are in TEST-ONLY preparation. A request does not send real money.
-    Verified Nigerian bank details are required before requesting a test payout.
-    Amounts above ₦100,000 always require Finance approval.
+    <?php if ($payoutMode === 'live'): ?>
+      LIVE PAYOUT MODE: eligible requests can transfer real money to verified Nigerian banks.
+    <?php elseif ($payoutMode === 'test'): ?>
+      TEST MODE: requests use the Paystack sandbox and do not transfer real money.
+    <?php else: ?>
+      Paystack payouts are OFF until the private server configuration is activated.
+    <?php endif; ?>
+    Bank verification and current password are required. Live bank changes have a 24-hour hold.
+    Requests above ₦100,000 (including rolling 24-hour cumulative withdrawals) require Finance approval.
   </div>
 
   <div class="card mb-3"><div class="card-body">
@@ -25,13 +37,14 @@ $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request
         Verified: <?= e($agentPayoutBeneficiary['bank_name'] ?: 'Nigerian bank') ?>
         · <?= e($agentPayoutBeneficiary['account_name']) ?>
         · ****<?= e(substr($agentPayoutBeneficiary['account_number'], -4)) ?>
+        (<?= e(strtoupper((string)$agentPayoutBeneficiary['environment'])) ?>)
       </p>
     <?php else: ?>
       <p class="small text-muted mb-2">No verified payout account is currently saved.</p>
     <?php endif; ?>
     <?php if (!iworks_agent_payout_enabled()): ?>
       <div class="alert alert-warning small mb-0">
-        Paystack TEST payouts are not configured. Finance must complete the test-only setup before verification.
+        Paystack agent payouts are not configured. A server administrator must complete private setup.
       </div>
     <?php else: ?>
       <form method="post" action="<?= e(url('withdrawals')) ?>" class="row g-2 align-items-end">
@@ -59,10 +72,12 @@ $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request
                  inputmode="numeric" pattern="[0-9]{10}" maxlength="10" autocomplete="off" required>
         </div>
         <div class="col-md-3">
-          <button class="btn btn-outline-primary w-100" type="submit">Verify account</button>
+          <label class="form-label" for="bankReauthPassword">Current password</label>
+          <input class="form-control" id="bankReauthPassword" type="password" name="current_password" autocomplete="current-password" required>
+          <button class="btn btn-outline-primary w-100 mt-2" type="submit">Verify account</button>
         </div>
       </form>
-      <p class="small text-muted mt-2 mb-0">Paystack resolves the account holder name and creates a TEST recipient. Editing bank details later requires re-verification.</p>
+      <p class="small text-muted mt-2 mb-0">Paystack resolves the account holder name and creates a recipient for the active environment. Editing bank details invalidates verification.</p>
     <?php endif; ?>
   </div></div>
 
@@ -73,6 +88,9 @@ $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request
       <div class="col-md-4"><small class="kicker">Available balance</small><div class="fw-semibold"><?= e(money((float) $withdrawalSummary['available_balance'], 'NGN')) ?></div></div>
       <div class="col-md-4"><small class="kicker">Minimum withdrawal</small><div class="fw-semibold">₦5,000</div></div>
     </div>
+    <?php if ($bankHoldUntil && time() < $bankHoldUntil): ?>
+      <div class="alert alert-warning small">Live bank account security hold: withdrawals available after <?= e(date('Y-m-d H:i', $bankHoldUntil)) ?>.</div>
+    <?php endif; ?>
     <form method="post" action="<?= e(url('withdrawals')) ?>" class="row g-3 align-items-end">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="form_action" value="request_withdrawal">
@@ -89,8 +107,8 @@ $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request
       </div>
     </form>
     <p class="small text-muted mb-0 mt-2">
-      ₦5,000–₦100,000: queued automatically for test transfers. Above ₦100,000: manual Finance review.
-      If test processing is disabled, a submitted request is held without contacting Paystack.
+      ₦5,000–₦100,000: automatic processing in the selected environment; split requests may require review.
+      Above ₦100,000: manual Finance review. A Paystack acknowledgement does not mean the bank transfer is settled.
     </p>
   </div></div>
 <?php endif; ?>
