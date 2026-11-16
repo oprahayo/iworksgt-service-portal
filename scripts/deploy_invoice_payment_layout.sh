@@ -61,8 +61,12 @@ invoice.php
 views/partials/invoice-wave-sheet.php
 views/public-service-detail.php
 views/partials/public-header.php
+views/payments.php
+views/partials/header.php
 assets/css/invoice-wave.css
 assets/css/scuml-service.css
+assets/css/payment-review-mobile.css
+assets/branding/iworks-desktop.svg
 assets/branding/iworks-social-share.png
 FILES
 : > "$WORK/existing"
