@@ -20,6 +20,9 @@ if (!schema_table_exists('agent_withdrawal_transfers')) {
 }
 if ($mode === '--run-test') {
     try {
+        if (iworks_agent_payout_mode() !== 'test') {
+            throw new RuntimeException('Only TEST mode is allowed.');
+        }
         iworks_agent_payout_secret(); // Explicitly rejects all live keys/modes.
     } catch (Throwable $e) {
         fwrite(STDERR, "Only Paystack TEST payout mode with a test key is allowed.\n");
@@ -43,7 +46,7 @@ foreach ($rows as $row) {
         continue;
     }
     try {
-        iworks_agent_submit_test_transfer($id);
+        iworks_agent_submit_transfer($id);
         echo "Request #{$id} checked for TEST transfer; reconcile status in Finance.\n";
     } catch (Throwable $e) {
         fwrite(STDERR, "Request #{$id} requires Finance follow-up.\n");
