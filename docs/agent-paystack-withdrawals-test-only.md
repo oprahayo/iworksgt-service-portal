@@ -58,7 +58,7 @@ Before live activation, confirm inside Paystack: Registered Business approval, l
 
 ## Validation and outstanding production work
 
-- CI PHP lint and contract checks passed; **no connected test database, real-bank integration, or live transfer has been verified through ChatGPT**.
+- GitHub CI run 43935055378 passed PHP 8.2/8.3 and MySQL 8 database/concurrency tests at code commit 47120a8e24ae0a045bdf811fa9b34c7933cd0f99. Local MariaDB and signature tests also passed. **Actual Paystack sandbox, provider webhook delivery and real-bank settlement remain unverified.**
 - Production readiness also requires independent fraud and access review, monitoring and alerting, secure backup restore rehearsal, transfer ledger audit, and refund/chargeback handling.
 - Do not set production mode simply by shell `export`; Apache/PHP-FPM does not automatically inherit an interactive terminal session environment. The protected CLI-generated runtime file is used specifically to avoid that problem.
 
@@ -88,3 +88,15 @@ Implemented in the continuation:
 Verified production observations (read only): PHP 8.3.36; Paystack checkout enabled with a live credential; live `GET /balance` successful; **NGN transfer funding below the minimum withdrawal before fees**; no unsettled legacy withdrawals; new payout source/tables absent. Paystack dashboard presents a sign-in screen.
 
 Outstanding release gates: authenticated Paystack dashboard; Registered Business/Transfers and approval configuration; test-mode transfer + actual provider webhook delivery; sufficient live NGN funding plus fees; reviewed deployment from the merged commit; production migration, HTTP signature probes, Finance/agent dashboard and scheduler acceptance. No live transfer has been initiated. Do not merge or arm live payouts until these gates pass.
+
+
+## Latest operator handoff — 17 November 2026 (Europe/Madrid)
+
+- Code saved on the existing PR branch at `47120a8e24ae0a045bdf811fa9b34c7933cd0f99`; all three GitHub CI jobs passed: https://github.com/oprahayo/iworksgt-service-portal/actions/runs/43935055378.
+- The production cPanel session is available. Actual portal path: `$HOME/public_html/portal.iworksgt.com`. Private source checkout: `$HOME/iworks-paystack-stage`, fast-forwarded to that commit.
+- `backup_agent_payout_release.sh --prepare` completed on the production host. Encrypted SQL and full portal-file archive are in the private `$HOME/iworks-release-operations/agent-payout-backup-20261116T234844Z-*` directory. `RESTORE_VERIFIED` and `SHA256SUMS` record successful completion. SQL was restored to an isolated cPanel database and the users, jobs, invoices, job_payments, commission_payouts and withdrawal_requests table counts matched. The rehearsal database was removed. The encryption key remains separately protected under `$HOME/iworks-release-keys`; no key was exposed or committed. Off-server replication has not been performed.
+- No production source was installed, no migration was applied, no cron was installed, and no payout mode was enabled. PR remains draft/unmerged because the requested provider integration gates are not yet satisfied.
+- Blocking next action: owner signs into the open Paystack dashboard. Then verify Registered Business/Transfers readiness, obtain test credentials through the authorized private server workflow, exercise sandbox transfers and provider-signed webhook delivery, configure the exact LIVE webhook URL, and confirm live funding covers withdrawals plus fees. The last successful live `/balance` query showed funding below the minimum withdrawal.
+- After those gates, merge only the verified PR revision, deploy only its portal changes with a rollback copy and maintenance window, apply the additive migration, verify private HTTP denial and valid/invalid signed callbacks, install the serialized recovery worker, and arm live payouts using the existing server-held live credential. Never claim live activation from successful code tests alone.
+
+- Deployment compatibility: all nine existing portal files changed by this PR match the repository main baseline. Direct HTTP access to `/app/config.php`, `/app/agent_payout_runtime.php` and `/database.sql` returned 403. The Paystack login page was confirmed again and left open for the owner.
