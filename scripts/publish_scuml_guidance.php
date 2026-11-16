@@ -30,7 +30,7 @@ $oldSlugs=[
     'scuml-company-document-support',
 ];
 $record=[
-    'name'=>'SCUML Registration Document Support',
+    'name'=>'SCUML Registration Support',
     'slug'=>$canonical,
     'description'=>'<p>iWORKS GLOBAL provides independent SCUML document-checking and compliance guidance to eligible businesses and organisations. We review your existing CAC documents, business tax evidence and applicable professional or sector records, helping you understand what to prepare before you apply through the official EFCC portal.</p>'
         .'<p><strong>SCUML registration and certificate are free of charge.</strong> ₦40,000 is the independent iWORKS standard service fee, not a government filing fee. iWORKS is not an authorised agent or representative of EFCC/SCUML. The business itself must submit its official application using its own genuine email and phone number. We cannot issue a certificate or guarantee approval.</p>'
