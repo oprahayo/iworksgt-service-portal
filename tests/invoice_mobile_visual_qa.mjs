@@ -57,10 +57,19 @@ try {
       viewport:innerWidth,scroll:document.documentElement.scrollWidth,
       header:!!document.querySelector('.iw-wave-banner'),
       footer:!!document.querySelector('.iw-wave-footer'),
-      balance:document.querySelector('.iw-wave-balance strong')?.textContent.trim()
+      balance:document.querySelector('.iw-wave-balance strong')?.textContent.trim(),
+      priceColumn:getComputedStyle(document.querySelector('.iw-wave-items thead th:nth-child(3)')).display,
+      amountCell:(()=>{
+        const e=document.querySelector('.iw-wave-items tbody td:nth-child(4)');
+        const r=e.getBoundingClientRect();
+        const range=document.createRange();range.selectNodeContents(e);
+        const textRange=range.getBoundingClientRect();
+        return {width:r.width,textWidth:textRange.width,lines:Math.round(textRange.height/parseFloat(getComputedStyle(e).lineHeight||"15"))};
+      })()
     }));
     console.log(JSON.stringify({mode:'mobile-invoice',width,...invoiceMetrics}));
-    if(invoiceMetrics.scroll>width+2||!invoiceMetrics.header||!invoiceMetrics.footer||invoiceMetrics.balance!=='₦0.00')
+    if(invoiceMetrics.scroll>width+2||!invoiceMetrics.header||!invoiceMetrics.footer||invoiceMetrics.balance!=='₦0.00'
+      ||(width===320 && invoiceMetrics.priceColumn!=='none'))
       throw Error('Mobile invoice overflow or missing key sections at '+width);
     await mobileInvoice.screenshot({path:'docs/visual-qa/invoice-'+width+'.png',fullPage:true,animations:'disabled'});
 
