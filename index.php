@@ -1821,7 +1821,11 @@ try {
             }
 
             $stats = counts_for_dashboard($user);
-            $liveOverview = has_role(['admin','agent']) ? iw_chat_dashboard_summary() : null;
+            $transactionOverview = null;
+            if (has_role(['admin', 'finance'])) {
+                require_once __DIR__ . '/app/transaction_dashboard.php';
+                $transactionOverview = iworks_transaction_dashboard_summary();
+            }
             $banners = $user['role'] === 'client' ? list_active_banners() : [];
             $agentSummary = $user['role'] === 'agent' ? agent_withdrawal_summary((int) $user['id']) : null;
             $blockingAnnouncement = get_blocking_announcement_for_user((int) $user['id']);
