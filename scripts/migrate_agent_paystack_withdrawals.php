@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
     account_last4 VARCHAR(4) NOT NULL,
     state ENUM('awaiting_review','queued','submitting','pending','success','failed','reversed','exception')
         NOT NULL DEFAULT 'queued',
+    reviewed_by INT UNSIGNED NULL,
     provider_transfer_id VARCHAR(80) NULL,
     last_error_code VARCHAR(50) NULL,
     attempted_at DATETIME NULL,
@@ -46,7 +47,9 @@ CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     CONSTRAINT fk_agent_withdrawal_transfer FOREIGN KEY (withdrawal_id)
-        REFERENCES withdrawal_requests(id) ON DELETE RESTRICT
+        REFERENCES withdrawal_requests(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_agent_payout_reviewer FOREIGN KEY (reviewed_by)
+        REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 SQL
 ];
