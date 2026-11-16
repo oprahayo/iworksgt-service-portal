@@ -66,6 +66,21 @@ if ($isWebsiteBuild) {
         : ($countryHint !== '' && $countryHint !== 'NG' && $countryHint !== 'XX' ? 'USD' : 'NGN');
     $websitePackages = iworks_website_package_options($hintCurrency);
 }
+$scumlChoices = [];
+if ($isScumlSupport) {
+    foreach ([
+        'scuml-business-name-document-support' => ['Business Name', '35,000'],
+        'scuml-company-document-support' => ['Limited Company (Ltd)', '45,000'],
+    ] as $slug => $definition) {
+        $record = function_exists('get_service_by_slug') ? get_service_by_slug($slug) : null;
+        if ($record && (int)($record['is_public'] ?? 0) === 1 && (int)($record['is_active'] ?? 0) === 1) {
+            $scumlChoices[] = [
+                'slug' => $slug, 'name' => $definition[0],
+                'display' => money((float)$record['price'], (string)$record['currency']),
+            ];
+        }
+    }
+}
 $scumlExampleData = '';
 if ($isScumlSupport) {
     $examplePath = dirname(__DIR__) . '/assets/branding/services/scuml-document-example.svg';
@@ -233,12 +248,12 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
           <p>These are independent iWORKS preparation and guidance fees, not different EFCC certificate charges.</p>
         </div>
         <div class="iw-scuml-structure-list">
-          <a href="<?= e(public_url('service', ['slug'=>'scuml-business-name-document-support'])) ?>"<?= $serviceSlug==='scuml-business-name-document-support' ? ' aria-current="page"' : '' ?>>
-            <strong>Business Name</strong><span>₦35,000 iWORKS service fee <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-          </a>
-          <a href="<?= e(public_url('service', ['slug'=>'scuml-company-document-support'])) ?>"<?= $serviceSlug==='scuml-company-document-support' ? ' aria-current="page"' : '' ?>>
-            <strong>Limited Company (Ltd)</strong><span>₦45,000 iWORKS service fee <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-          </a>
+          <?php foreach ($scumlChoices as $scumlChoice): ?>
+            <a href="<?= e(public_url('service', ['slug' => $scumlChoice['slug']])) ?>"<?= $serviceSlug===$scumlChoice['slug'] ? ' aria-current="page"' : '' ?>>
+              <strong><?= e($scumlChoice['name']) ?></strong>
+              <span><?= e($scumlChoice['display']) ?> iWORKS service fee <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+            </a>
+          <?php endforeach; ?>
         </div>
       </div>
       <div class="iw-scuml-checklist">
