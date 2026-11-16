@@ -1,97 +1,69 @@
-# iWORKS agent withdrawals — TEST ONLY
+# iWORKS agent commission withdrawals — live rollout runbook
 
-Status: Draft branch. NOT merged, deployed or enabled for real money.
+**Status: Draft pull request #160, not merged or deployed. Live transfers are not currently activated.**
 
-## Owner-approved rules
+## Approved business policy
 
-| Rule | Implementation |
-| --- | --- |
-| Currency | NGN, in integer kobo for transfers |
-| Minimum | ₦5,000 inclusive |
-| Automatically eligible | ₦5,000–₦100,000 inclusive |
-| Manual finance review | Individual request above ₦100,000 |
-| Anti-splitting | Cumulative withdrawals exceeding ₦100,000 in a rolling 24h window require review |
-| Timing | Validate, reserve and initiate eligible TEST transfer on request |
-| Old 14-day cooldown | Removed |
-| Live transfer | **No live mode in this branch** |
+- NGN payouts from verified and cleared earned agent commissions only.
+- Minimum withdrawal: NGN 5,000 inclusive.
+- Automatic processing upon request for NGN 5,000–100,000, after validation.
+- Requests above NGN 100,000 and split requests above the rolling 24-hour NGN 100,000 threshold require Finance approval.
+- New or changed LIVE payout banks require the agent's current password, successful Paystack bank resolution, and a 24-hour hold.
+- Agent ledger reservations are serialized per account; each transfer has a permanent unique reference.
+- Transfer-success webhooks/verification, not a POST response, mark a request as paid.
 
-## Code changes
+## Integration and security
 
-The original PHP/MySQL agent, commission and withdrawal functionality is preserved.
+The system defaults to OFF. Sandbox keys cannot send live funds. Live mode is allowed only via a protected, untracked application file:
 
-- Separate verified Paystack TEST beneficiary table; account ownership resolved by Paystack.
-- Existing profile-bank edits invalidate beneficiary verification.
-- Agent-row SQL lock and reserved withdrawal balance prevent concurrent overspending.
-- Every withdrawal has one immutable, unique transfer reference and ledger record.
-- Finance approves/rejects high-value or split requests; reviewer is recorded.
-- Test-only POST transfer initiation. Never automatically repeat ambiguous POST requests.
-- Verified signed transfer webhooks set final state. Read-only finance reconciliation uses Verify Transfer.
-- Transfer success marks the request paid; failure/reversal releases reserved balance.
-- Existing charge.success payment webhooks are unaffected by transfer.* delegation.
-- Only earned commission from delivered, paid NGN jobs is currently withdrawable.
+    app/agent_payout_runtime.php
 
-## Protecting money movement
+That file is created by the private CLI and is excluded from Git. It must have 0600 permissions and must never be served by HTTP. The app/.htaccess protection must be verified on the target server.
 
-Server defaults to OFF. Only one nonproduction setting is accepted:
+**Paystack LIVE webhook (not a public key):**
 
-    IWORKS_PAYSTACK_PAYOUT_MODE=test
-    IWORKS_PAYSTACK_PAYOUT_TEST_SECRET=sk_test_...
+    https://portal.iworksgt.com/index.php?page=payment_webhook&provider=paystack
 
-Place the value in a protected environment, not the repository. The code rejects sk_live_ keys and does not expose a live mode. A future live launch requires separate explicit authorization, further security work, and a new code review.
+Use the exact configured public portal URL if different. Paystack sends transfer.success, transfer.failed and transfer.reversed events. Existing charge.success events continue through the existing checkout handler. The webhook signature is verified with the active payout secret, and amount/currency/domain/reference are cross-checked.
 
-## Schema migration
+Before live activation, confirm inside Paystack: Registered Business approval, live Transfers access, NGN balance sufficient for payouts **and fees**, live webhook signing/delivery, and approval settings/OTP appropriately configured. Live transfer requires an sk_live_ secret; never paste it in ChatGPT or GitHub.
 
-Database changes are CLI-only and require a verified private backup:
+## Deployment procedure
 
-    php scripts/migrate_agent_paystack_withdrawals.php --check
-    php scripts/migrate_agent_paystack_withdrawals.php --apply --backup-confirmed
+1. Deploy the reviewed PR through the established cPanel release process. Avoid overwriting unrelated public or portal changes. A draft branch should not be copied into a production directory blindly.
+2. Make, restore-test and retain a secure off-server backup of the live MySQL database. Confirm all jobs/commissions/withdrawals are included.
+3. Run the backup-gated migration from the **actual portal installation**:
+   
+       php scripts/migrate_agent_paystack_withdrawals.php --check
+       php scripts/migrate_agent_paystack_withdrawals.php --apply --backup-confirmed
 
-The migration creates agent_payout_beneficiaries and agent_withdrawal_transfers and writes the approved business-rule defaults. It does not enable transfers.
+4. Run syntax and contract tests and the read-only preflight:
+   
+       php tests/agent_paystack_withdrawals_contract_test.php
+       php scripts/configure_agent_paystack.php --check
 
-The optional CLI-only queue drain handles queued TEST transfers when test mode is configured. It is not installed as a cron task:
+5. Reconcile all existing sandbox history or legacy pending requests in this database. The preflight blocks activation while those exist.
+6. After confirming Paystack readiness, invoke the CLI with a live secret provided through a protected environment variable (not a command argument). This executes GET /balance only, writes private runtime config and **does not initiate a transfer**:
 
-    php scripts/process_agent_payout_test_queue.php --check
-    php scripts/process_agent_payout_test_queue.php --run-test
+       IWORKS_PAYSTACK_LIVE_KEY=... IWORKS_PAYSTACK_LIVE_APPROVAL=I_HAVE_VERIFIED_REGISTERED_BUSINESS_WEBHOOK_AND_TRANSFER_APPROVALS php scripts/configure_agent_paystack.php --activate-live
 
-It never contacts Paystack from check mode and rejects live credentials. A real-money queue scheduler is a separate future project.
+   For shell history safety, use `read -rs` to input the key; do not type the value literally into the command.
+7. Check LIVE display in the Withdrawals dashboard. Each agent must verify their own LIVE bank account; previous TEST recipient codes cannot be reused.
+8. Validate a tightly supervised first real withdrawal, webhook delivery, fee debit, bank receipt, and finance reconciliation. Stop immediately if a transfer is ambiguous; verify by reference, never repeat the POST.
+9. Disable further new live transfer initiation if anomalies appear:
+   
+       php scripts/configure_agent_paystack.php --disable
 
-## Existing webhook destination
+   Disabling does not reverse transfers already submitted or stop Paystack webhooks from arriving.
 
-Paystack webhook endpoint is routed through:
+## Validation and outstanding production work
 
-    index.php?page=payment_webhook&provider=paystack
+- CI PHP lint and contract checks passed; **no connected test database, real-bank integration, or live transfer has been verified through ChatGPT**.
+- Production readiness also requires independent fraud and access review, monitoring and alerting, secure backup restore rehearsal, transfer ledger audit, and refund/chargeback handling.
+- Do not set production mode simply by shell `export`; Apache/PHP-FPM does not automatically inherit an interactive terminal session environment. The protected CLI-generated runtime file is used specifically to avoid that problem.
 
-Transfer webhooks are signed separately using the test payout key, with reference, amount, currency and test environment verification. Existing checkout events retain normal logic.
+## Release references
 
-## Minimum test checklist
-
-1. Test ₦4,999, ₦5,000, ₦100,000 and ₦100,000.01.
-2. Test two overlapping withdrawals against the same agent balance.
-3. Test ₦60,000 followed by ₦50,000 within 24 hours.
-4. Reject missing/changed beneficiary and non-NGN earnings.
-5. Test invalid bank code, bank account, suspended agent and missing migration.
-6. Replay success webhook twice, then simulate failed/reversed and out-of-order events.
-7. Simulate API timeouts and ensure only the original reference is reconciled.
-8. Confirm sk_live_ never initiates transfers and OFF never calls Paystack payouts.
-9. Check existing customer charge.success behavior and legacy manual records.
-
-Smoke commands:
-
-    php tests/agent_paystack_withdrawals_contract_test.php
-    php -l app/agent_withdrawals.php
-    php -l app/domain.php
-    php -l index.php
-    php -l scripts/migrate_agent_paystack_withdrawals.php
-    php -l views/withdrawals.php
-
-## Outstanding before any live rollout
-
-- Test database and Paystack test-account integration verification, including production-like concurrency.
-- Secure reauthentication/hold after payout-bank changes, risk controls, fraud checks and payouts rate limits.
-- Encryption and retention policy for bank account numbers, audit trail and finance alerting.
-- Automated queue and reconciliation jobs for interrupted requests and settlement delays.
-- Commission reversal/refund handling, immutable accounting ledger and funding-source safeguards.
-- Registered Paystack business account, transfer approval settings, sufficient balance and production webhook review.
-- Independent security review and explicit separate authorization before enabling any real-money transfers.
-
-This draft must not be described as live, deployed or production-ready.
+- PR #160: https://github.com/oprahayo/iworksgt-service-portal/pull/160
+- Paystack transfers: https://paystack.com/docs/transfers/single-transfers/
+- Paystack webhook requirements: https://paystack.com/docs/payments/webhooks/
