@@ -81,6 +81,12 @@ function iworks_customer_published_service(array $service): ?array
         $service['_iworks_checkout_mode'] = 'cac';
         return $service;
     }
+    // A single Nigerian SCUML guidance service; no fabricated jurisdiction FX
+    // product variant or Business Name/Ltd price split in the public catalogue.
+    if ($slug === 'scuml-document-support') {
+        $service['_iworks_checkout_mode'] = 'standard';
+        return $service;
+    }
     if ($slug === 'trademark') {
         $service['_iworks_checkout_mode'] = 'trademark';
         return $service;
