@@ -10454,10 +10454,19 @@ function agent_withdrawal_summary(int $agentId): array
 
 function list_withdrawal_requests_for_user(array $user): array
 {
+    $hasTransfers = schema_table_exists('agent_withdrawal_transfers');
+    $transferColumns = $hasTransfers
+        ? 't.state AS transfer_state, t.reference AS transfer_reference'
+        : 'NULL AS transfer_state, NULL AS transfer_reference';
+    $transferJoin = $hasTransfers
+        ? 'LEFT JOIN agent_withdrawal_transfers t ON t.withdrawal_id = w.id'
+        : '';
+
     if ($user['role'] === 'agent') {
         return db_all(
-            'SELECT w.*, u.full_name AS agent_name FROM withdrawal_requests w
-             JOIN users u ON u.id = w.agent_id
+            'SELECT w.*, u.full_name AS agent_name, ' . $transferColumns . '
+             FROM withdrawal_requests w
+             JOIN users u ON u.id = w.agent_id ' . $transferJoin . '
              WHERE w.agent_id = :agent_id
              ORDER BY w.requested_at DESC',
             ['agent_id' => $user['id']]
@@ -10465,8 +10474,9 @@ function list_withdrawal_requests_for_user(array $user): array
     }
 
     return db_all(
-        'SELECT w.*, u.full_name AS agent_name FROM withdrawal_requests w
-         JOIN users u ON u.id = w.agent_id
+        'SELECT w.*, u.full_name AS agent_name, ' . $transferColumns . '
+         FROM withdrawal_requests w
+         JOIN users u ON u.id = w.agent_id ' . $transferJoin . '
          ORDER BY w.requested_at DESC'
     );
 }
