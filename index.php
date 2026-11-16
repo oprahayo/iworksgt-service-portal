@@ -3001,10 +3001,24 @@ try {
                 try {
                     $action = $_POST['form_action'] ?? '';
 
+                    if ($action === 'verify_payout_bank' && $user['role'] === 'agent') {
+                        iworks_agent_verify_payout_bank(
+                            (int) $user['id'],
+                            trim((string) ($_POST['bank_code'] ?? '')),
+                            trim((string) ($_POST['account_number'] ?? ''))
+                        );
+                        flash('success', 'Paystack TEST payout bank verified and saved.');
+                    }
+
                     if ($action === 'request_withdrawal' && $user['role'] === 'agent') {
                         $amount = (float) ($_POST['amount'] ?? 0);
                         create_withdrawal_request((int) $user['id'], $amount, $_POST['note'] ?? '');
                         flash('success', 'Withdrawal request submitted.');
+                    }
+
+                    if ($action === 'reconcile_payout' && has_role(['admin', 'finance'])) {
+                        $result = iworks_agent_reconcile_test_transfer((int) ($_POST['request_id'] ?? 0));
+                        flash('success', 'Read-only Paystack verification result: ' . $result);
                     }
 
                     if ($action === 'update_withdrawal_status' && has_role(['admin', 'finance'])) {
@@ -3025,6 +3039,10 @@ try {
 
             $withdrawals = list_withdrawal_requests_for_user($user);
             $withdrawalSummary = $user['role'] === 'agent' ? agent_withdrawal_summary((int) $user['id']) : null;
+            $agentPayoutBeneficiary = ($user['role'] === 'agent' && schema_table_exists('agent_payout_beneficiaries'))
+                ? iworks_agent_payout_beneficiary((int) $user['id']) : null;
+            $agentPayoutBanks = $user['role'] === 'agent' ? iworks_agent_payout_banks() : [];
+
 
             $title = 'Withdrawals - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
@@ -3594,6 +3612,17 @@ try {
                     }
 
                     if ($action === 'update_bank' && $user['role'] !== 'client') {
+                        if ($user['role'] === 'agent' && schema_table_exists('agent_payout_beneficiaries')) {
+                            $open = (int) (db_one(
+                                "SELECT COUNT(*) AS c FROM withdrawal_requests WHERE agent_id=:id AND status IN ('pending','approved')",
+                                ['id'=>(int)$user['id']]
+                            )['c'] ?? 0);
+                            if ($open > 0) {
+                                throw new RuntimeException('Cannot edit payout bank details while a withdrawal is unsettled.');
+                            }
+                            db_execute('DELETE FROM agent_payout_beneficiaries WHERE agent_id=:id',
+                                ['id'=>(int)$user['id']]);
+                        }
                         db_execute(
                             'UPDATE users SET bank_name = :bank_name, bank_account_name = :bank_account_name,
                              bank_account_number = :bank_account_number, bank_swift = :bank_swift, bank_currency = :bank_currency
