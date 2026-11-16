@@ -12,7 +12,9 @@
 $iwCurrency = (string)($invoice['currency'] ?? default_currency());
 $iwTotal = max(0.0, (float)($invoice['amount'] ?? 0));
 $iwMoney = static function (float $amount) use ($iwCurrency): string {
-    $prefix = $iwCurrency === 'NGN' ? '₦' : ($iwCurrency === 'USD' ? '
+    $prefix = $iwCurrency === 'NGN' ? '₦' : ($iwCurrency === 'USD' ? chr(36) : null);
+    return $prefix !== null ? $prefix . number_format($amount, 2) : money($amount, $iwCurrency);
+};
 $iwSubtotal = (float)($invoice['subtotal_amount'] ?? $iwTotal);
 $iwTax = (float)($invoice['tax_amount'] ?? 0);
 $iwConfirmed = [];
