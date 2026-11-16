@@ -3005,9 +3005,10 @@ try {
                         iworks_agent_verify_payout_bank(
                             (int) $user['id'],
                             trim((string) ($_POST['bank_code'] ?? '')),
-                            trim((string) ($_POST['account_number'] ?? ''))
+                            trim((string) ($_POST['account_number'] ?? '')),
+                            (string) ($_POST['current_password'] ?? '')
                         );
-                        flash('success', 'Paystack TEST payout bank verified and saved.');
+                        flash('success', 'Paystack payout bank verified and saved. A 24-hour hold applies in live mode.');
                     }
 
                     if ($action === 'request_withdrawal' && $user['role'] === 'agent') {
@@ -3017,7 +3018,7 @@ try {
                     }
 
                     if ($action === 'reconcile_payout' && has_role(['admin', 'finance'])) {
-                        $result = iworks_agent_reconcile_test_transfer((int) ($_POST['request_id'] ?? 0));
+                        $result = iworks_agent_reconcile_transfer((int) ($_POST['request_id'] ?? 0));
                         flash('success', 'Read-only Paystack verification result: ' . $result);
                     }
 
