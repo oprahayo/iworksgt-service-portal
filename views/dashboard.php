@@ -59,8 +59,8 @@ if (($user['role'] ?? '') === 'super_admin') {
   <p class="mb-0 text-white-50"><?= e($heroMessage) ?></p>
 </div>
 
-<?php if (has_role(['admin','agent'])): ?>
-  <?php require __DIR__ . '/partials/live-visitor-overview.php'; ?>
+<?php if (has_role(['admin','finance'])): ?>
+  <?php require __DIR__ . '/partials/transaction-overview.php'; ?>
 <?php endif; ?>
 
 <?php if (in_array((string)($user['role'] ?? ''), ['admin','agent','finance'], true)): ?>
