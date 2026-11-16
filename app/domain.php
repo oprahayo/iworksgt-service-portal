@@ -7900,7 +7900,6 @@ function counts_for_dashboard(array $user): array
         'clients' => (int) (db_one("SELECT COUNT(*) AS c FROM users WHERE role = 'client' AND deleted_at IS NULL")['c'] ?? 0),
         'agents' => (int) (db_one("SELECT COUNT(*) AS c FROM users WHERE role = 'agent' AND deleted_at IS NULL")['c'] ?? 0),
         'jobs_open' => (int) (db_one("SELECT COUNT(*) AS c FROM jobs WHERE status NOT IN ('closed', 'cancelled')")['c'] ?? 0),
-        'revenue_paid' => (float) (db_one("SELECT COALESCE(SUM(amount), 0) AS total FROM jobs WHERE payment_status = 'paid'")['total'] ?? 0),
     ];
 }
 
@@ -7961,15 +7960,6 @@ function portal_next_step_hint(array $user, string $currentPage): ?array
             'message' => 'Use Community to ask questions and share delivery tips with other agents.',
             'url' => url('community'),
             'button' => 'Open community',
-        ];
-    }
-
-    if (in_array($role, ['admin', 'finance'], true)) {
-        return [
-            'title' => 'Operations Guide',
-            'message' => 'Monitor payments, assign agents, and keep announcement/support channels updated.',
-            'url' => url('dashboard'),
-            'button' => 'Open dashboard',
         ];
     }
 
