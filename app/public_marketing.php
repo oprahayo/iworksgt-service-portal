@@ -41,6 +41,8 @@ function iworks_search_service_meta(array $service): array
     $slug = strtolower(trim((string) ($service['slug'] ?? '')));
     $map = [
         'business-name-registration-cac-nigeria' => ['Register a Business Name in Nigeria | CAC Support | iWorks', 'Want to register a business name in Nigeria? iWorks helps with CAC name search, online filing preparation, documents and remote tracking.'],
+        'scuml-business-name-document-support' => ['SCUML Business Name Document Review &amp; Guidance | iWORKS', 'Independent SCUML documentation guidance for Nigerian Business Names. EFCC registration is free; iWORKS separately charges for preparing and checking documents.'],
+        'scuml-company-document-support' => ['SCUML Company Document Review &amp; Guidance | iWORKS', 'Independent SCUML documentation guidance for Nigerian limited companies. EFCC registration and certificate are free; iWORKS charges only for document checking and advice.'],
         'cac-business-name' => ['Register a Business Name in Nigeria | CAC Support | iWorks', 'Review Business Name / Enterprise filing support and requirements with iWorks, including name checks, documents and remote tracking.'],
         'company-registration' => ['Register a Company in Nigeria from Abroad | CAC | iWorks', 'Prepare Nigerian CAC company incorporation remotely from the UK, US, Canada, Germany, Australia or Nigeria. Review documents and official filing requirements.'],
         'website-design-development' => ['Website Design in Nigeria | Remote Web Development | iWorks', 'Need a professional website designed in Nigeria? iWorks builds and supports business websites remotely, with responsive design and technical support.'],
