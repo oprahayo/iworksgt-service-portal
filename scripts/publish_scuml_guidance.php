@@ -21,7 +21,13 @@ if (!in_array($mode, ['--check','--apply'], true)
     fwrite(STDERR, "Usage: php scripts/publish_scuml_guidance.php --check|--apply --backup-confirmed\n");
     exit(2);
 }
-require_once dirname(__DIR__) . '/app/bootstrap.php';
+$appRoot = trim((string)(getenv('IWORKS_PORTAL_ROOT') ?: dirname(__DIR__)));
+$appRoot = realpath($appRoot) ?: '';
+if ($appRoot === '' || !is_file($appRoot.'/app/config.php') || !is_file($appRoot.'/app/bootstrap.php')) {
+    fwrite(STDERR,"Cannot inspect the configured existing iWORKS portal.\n");
+    exit(3);
+}
+require_once $appRoot . '/app/bootstrap.php';
 if (!is_configured() || !schema_table_exists('services')) {
     fwrite(STDERR, "BLOCK: existing iWORKS service catalogue/database is unavailable.\n");
     exit(3);
