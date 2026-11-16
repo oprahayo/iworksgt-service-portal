@@ -24,7 +24,7 @@ $ok(str_contains($publisher, '$canonical='."'scuml-document-support'")
     && !str_contains($publisher,"'price' => 35000.00")
     && !str_contains($publisher,"'price' => 45000.00"),
     'Only one canonical customer product at NGN 40,000.');
-$ok(str_contains($publisher,'EFCC/SCUML registration and certificate are free')
+$ok(str_contains($publisher,'SCUML registration and certificate are free of charge')
     && str_contains($publisher,'not an authorised agent or representative')
     && str_contains($publisher,'the official EFCC portal')
     && str_contains($publisher,'scuml.efcc.gov.ng/registration-guideline/'),
