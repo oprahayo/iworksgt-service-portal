@@ -10411,6 +10411,16 @@ function agent_withdrawal_summary(int $agentId): array
         ['agent_id' => $agentId]
     )['total'] ?? 0);
 
+    // Existing admin-marked paid commission records must not be withdrawn again.
+    $legacyPaidCommissions = (float) (db_one(
+        "SELECT COALESCE(SUM(p.commission_amount), 0) AS total
+          FROM commission_payouts p JOIN jobs j ON j.id = p.job_id
+          WHERE p.agent_id = :agent_id AND p.status = 'paid'
+            AND j.currency = 'NGN' AND j.payment_status = 'paid'
+            AND j.status IN ('delivered', 'closed')",
+        ['agent_id' => $agentId]
+    )['total'] ?? 0);
+
     $totalWithdrawn = (float) (db_one(
         "SELECT COALESCE(SUM(amount), 0) AS total FROM withdrawal_requests WHERE agent_id = :agent_id AND status IN ('approved', 'paid')",
         ['agent_id' => $agentId]
@@ -10421,7 +10431,7 @@ function agent_withdrawal_summary(int $agentId): array
         ['agent_id' => $agentId]
     )['total'] ?? 0);
 
-    $available = max($totalEarned - $totalWithdrawn - $pendingWithdrawal, 0);
+    $available = max($totalEarned - $legacyPaidCommissions - $totalWithdrawn - $pendingWithdrawal, 0);
 
     $lastRequest = db_one(
         'SELECT requested_at FROM withdrawal_requests WHERE agent_id = :agent_id ORDER BY requested_at DESC LIMIT 1',
