@@ -46,8 +46,16 @@ function iworks_payout_write_runtime(array $config): void
 
 try {
     if ($action === '--disable') {
-        iworks_payout_write_runtime(['mode' => 'off']);
-        echo "Live automatic agent payouts DISABLED. Existing transfers still need reconciliation.\n";
+        $previous = iworks_agent_payout_config();
+        $disabled = ['mode' => 'off'];
+        $liveSecret = trim((string)($previous['live_secret_key'] ?? ''));
+        if (preg_match('/^sk_live_[A-Za-z0-9_-]+$/', $liveSecret)) {
+            // Keep validating terminal events for transfers already submitted.
+            $disabled['live_secret_key'] = $liveSecret;
+            $disabled['accept_live_webhooks'] = true;
+        }
+        iworks_payout_write_runtime($disabled);
+        echo "New LIVE payouts DISABLED; signed in-flight settlement notifications remain enabled.\n";
         exit(0);
     }
     if (!iworks_payout_schema_ready()) {
