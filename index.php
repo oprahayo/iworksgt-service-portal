@@ -256,6 +256,13 @@ try {
                 header('Location: ' . public_url('service',['slug'=>'cac-business-name']), true, 301);
                 return;
             }
+            if (in_array($publicSlug, [
+                'scuml-business-name-document-support',
+                'scuml-company-document-support',
+            ], true)) {
+                header('Location: '.public_url('service',['slug'=>'scuml-document-support']), true, 301);
+                return;
+            }
             $rawService = get_service_by_slug($publicSlug === 'cac-business-name'
                 ? 'company-registration' : $publicSlug);
             $service = $rawService;
