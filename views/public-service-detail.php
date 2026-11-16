@@ -91,6 +91,7 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
 ?>
 <main class="public-main iw-detail iw-product" id="main-content">
   <div class="container public-container iw-product-shell">
+    <?php if (!$isScumlSupport): ?>
     <nav class="iw-product-breadcrumb" aria-label="Breadcrumb">
       <a href="<?= e(public_url('home')) ?>">Home</a>
       <i class="bi bi-chevron-right" aria-hidden="true"></i>
@@ -98,11 +99,12 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
       <i class="bi bi-chevron-right" aria-hidden="true"></i>
       <span aria-current="page"><?= e($serviceName) ?></span>
     </nav>
+    <?php endif; ?>
 
     <header class="iw-product-heading">
       <span class="iw-product-category"><?= e($categoryName) ?></span>
       <h1><?= e($serviceName) ?></h1>
-      <?php if ($shortDescription !== ''): ?>
+      <?php if (!$isScumlSupport && $shortDescription !== ''): ?>
         <p class="iw-product-lead"><?= e($shortDescription) ?></p>
       <?php endif; ?>
     </header>
@@ -211,14 +213,12 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
     <section class="iw-scuml-service" aria-label="SCUML compliance document guidance">
       <div class="iw-scuml-feature">
         <div class="iw-scuml-feature-copy">
-          <span class="iw-scuml-eyebrow">SCUML · COMPLIANCE SUPPORT</span>
-          <h2>Review your documents. Know what to submit.</h2>
-          <p>iWORKS provides independent document checks and guidance for businesses preparing for SCUML registration. The certificate is issued by EFCC after its own review—not by iWORKS.</p>
+          <p class="iw-scuml-brief">Document review and application guidance for businesses preparing for SCUML registration. The certificate is issued by EFCC, not iWORKS.</p>
           <div class="iw-scuml-price-block">
             <span>iWORKS standard guidance fee</span>
             <strong><?= e((string)$pricing['display']) ?></strong>
             <?php if ($pricing['tax_note'] !== ''): ?><small><?= e((string)$pricing['tax_note']) ?></small><?php endif; ?>
-            <a class="iw-product-cta" href="<?= e($actionUrl) ?>">Start SCUML document support <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+            <a class="iw-product-cta" href="<?= e($actionUrl) ?>">Apply for support</a>
             <small>EFCC application &amp; certificate: <strong>FREE</strong>. The iWORKS fee is independent of government registration.</small>
           </div>
           <p class="iw-scuml-independence">iWORKS is not an EFCC/SCUML agent or representative. Customers submit the official application with their own valid business contact details. Approval is not guaranteed.</p>
@@ -239,13 +239,12 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
             <li>TIN printout; company Memorandum &amp; Articles where applicable</li>
             <li>Relevant business-sector licence or professional evidence, if required</li>
           </ul>
-          <a href="https://scuml.efcc.gov.ng/registration-guideline/" target="_blank" rel="noopener noreferrer">Check official requirements <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
         </div>
         <div>
           <h3>Special business sectors</h3>
           <p>Required documents depend on what your business actually does, not simply whether it is a Business Name or Ltd.</p>
           <p><strong>Power / energy work:</strong> Enhanced review can be quoted at <strong>₦80,000</strong> (2× the standard iWORKS service fee) if the additional scope is confirmed. Contact iWORKS before ordering. This is not an EFCC fee or an official SCUML price category.</p>
-          <a href="<?= e(public_url('contact')) ?>">Discuss a special-sector case <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+          <a class="iw-scuml-sector-button" href="<?= e(public_url('contact')) ?>">Discuss your requirements</a>
         </div>
       </div>
     </section>
@@ -353,7 +352,7 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
 
     <?php endif; // End generic service layout; SCUML uses the iWORKS product showcase. ?>
 
-    <?php if ($relatedServices !== []): ?>
+    <?php if (!$isScumlSupport && $relatedServices !== []): ?>
       <nav class="iw-product-related" aria-label="Related services">
         <div class="iw-product-related-heading">
           <h2>Explore related services</h2>

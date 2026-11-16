@@ -234,110 +234,26 @@ $favicon = favicon_path();
     }
   </style>
   <link rel="stylesheet" href="assets/css/client-checkout.css?v=20261112a">
-  <link rel="stylesheet" href="assets/css/invoice-clean.css?v=20261116-compact1">
+  <link rel="stylesheet" href="assets/css/invoice-wave.css?v=20261116-wave3">
 </head>
 <body class="iw-invoice<?= $user['role'] === 'client' ? ' iw-invoice-client' : '' ?>">
   <div class="wrap">
-    <div class="head">
-      <div>
-        <div class="brand">
-          <img src="<?= e($logo) ?>" width="268" height="25" alt="iWORKS GLOBAL">
-        </div>
-        <div class="muted iw-invoice-brand-note">Invoice · <?= e((string) $invoice['invoice_number']) ?></div>
-      </div>
-      <div class="print-hide head-actions">
-        <button
-          class="btn btn-secondary"
-          type="button"
-          id="invoiceBackBtn"
-          data-fallback-url="<?= e($user['role'] === 'client' ? url('applications') : url('invoices')) ?>"
-        >Back</button>
-        <button class="btn btn-secondary" onclick="window.print()">Print</button>
+    <div class="iw-wave-toolbar print-hide">
+      <strong>iWORKS Billing</strong>
+      <div class="head-actions">
+        <button class="btn btn-secondary" type="button" id="invoiceBackBtn"
+          data-fallback-url="<?= e($user['role'] === 'client' ? url('applications') : url('invoices')) ?>">Back</button>
+        <button class="btn btn-secondary" type="button" onclick="window.print()">Print / PDF</button>
       </div>
     </div>
-
-    <div class="iw-invoice-hero">
-        <div><span class="iw-invoice-eyebrow">iWORKS · BILLING</span>
-          <h1><?= (string)($invoice['status'] ?? '') === 'paid' ? 'Payment receipt' : 'Invoice' ?></h1>
-          <p><?= e((string) ($invoice['service_name'] ?? 'iWORKS service')) ?></p>
-        </div>
-        <div class="iw-invoice-hero-amount">
-          <span><?= (string)($invoice['status'] ?? '') === 'paid' ? 'Total paid' : 'Total payable' ?></span><strong><?= e(money((float) ($invoice['amount'] ?? 0), (string) ($invoice['currency'] ?? default_currency()))) ?></strong>
-          <small><?= e(ucfirst((string) ($invoice['status'] ?? 'issued'))) ?></small>
-        </div>
-      </div>
     <?php if ($msg = flash('success')): ?><div class="alert alert-success"><?= e($msg) ?></div><?php endif; ?>
     <?php if ($msg = flash('error')): ?><div class="alert alert-danger"><?= e($msg) ?></div><?php endif; ?>
 
-    <?php if ($user['role'] === 'client'): ?>
-      <details class="iw-invoice-customer-details"><summary>Invoice details <span>Reference, dates and billing contact</span></summary>
-    <?php endif; ?>
-    <div class="grid mb-3">
-      <div>
-        <table>
-          <tr><th>Invoice</th><td><?= e($invoice['invoice_number']) ?></td></tr>
-          <tr><th>Issued at</th><td><?= e($invoice['issued_at']) ?></td></tr>
-          <tr><th>Due at</th><td><?= e($invoice['due_at']) ?></td></tr>
-          <tr><th>Status</th><td><span class="badge"><?= e(strtoupper($invoice['status'])) ?></span></td></tr>
-        </table>
+    <div class="iw-wave-billing-layout<?= $user['role'] === 'client' && (string)$invoice['status'] !== 'paid' ? ' iw-wave-with-checkout' : '' ?>">
+      <div class="iw-wave-invoice-column">
+        <?php require __DIR__ . '/views/partials/invoice-wave-sheet.php'; ?>
       </div>
-      <div>
-        <table>
-          <tr><th>Client</th><td><?= e($invoice['client_name']) ?></td></tr>
-          <tr><th>Email</th><td><?= e($invoice['client_email']) ?></td></tr>
-          <tr><th>Phone</th><td><?= e($invoice['client_phone']) ?></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <?php if ($user['role'] === 'client'): ?></details><?php endif; ?>
-
-    <div class="iw-invoice-main-grid<?= ($user['role'] === 'client' && $invoice['status'] !== 'paid') ? '' : ' iw-invoice-no-checkout' ?>">
-    <section class="iw-invoice-order">
-    <h3>Service summary</h3>
-    <?php if (count($invoiceJobs) > 1): ?>
-      <table class="mb-3">
-        <thead>
-          <tr><th>Job</th><th>Service</th><th>Subtotal</th><th>Tax</th><th>Total</th></tr>
-        </thead>
-        <tbody>
-          <?php foreach ($invoiceJobs as $line): ?>
-            <tr>
-              <td><?= e((string) $line['job_code']) ?></td>
-              <td><?= e((string) $line['service_name']) ?></td>
-              <td><?= e(money((float) ($line['subtotal_amount'] ?? 0), $invoice['currency'] ?? default_currency())) ?></td>
-              <td><?= e(money((float) ($line['tax_amount'] ?? 0), $invoice['currency'] ?? default_currency())) ?> (<?= e(number_format((float) ($line['tax_percent'] ?? 0), 2)) ?>%)</td>
-              <td><?= e(money((float) ($line['amount'] ?? 0), $invoice['currency'] ?? default_currency())) ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php else: ?>
-      <table class="mb-3">
-        <tr><th>Job</th><td><?= e($invoice['job_code']) ?></td></tr>
-        <tr><th>Service</th><td><?= e($invoice['service_name']) ?></td></tr>
-        <?php if (trim((string) ($invoice['job_description'] ?? '')) !== ''): ?>
-        <tr><th>Description</th><td><?= e((string) $invoice['job_description']) ?></td></tr>
-        <?php endif; ?>
-      </table>
-    <?php endif; ?>
-    <table class="mb-3">
-      <tr><th>Subtotal</th><td><?= e(money((float) ($invoice['subtotal_amount'] ?? $invoice['amount']), $invoice['currency'] ?? default_currency())) ?></td></tr>
-      <tr><th>Tax</th><td><?= e(money((float) ($invoice['tax_amount'] ?? 0), $invoice['currency'] ?? default_currency())) ?></td></tr>
-      <tr><th>Total</th><td class="total"><?= e(money((float) $invoice['amount'], $invoice['currency'] ?? default_currency())) ?></td></tr>
-    </table>
-
-    <?php if ((string) ($invoice['pay_method'] ?? '') === 'crypto' && (float) ($invoice['crypto_amount_due'] ?? 0) > 0): ?>
-      <table class="mb-3">
-        <tr><th>Locked payment mode</th><td>Crypto</td></tr>
-        <tr><th>Send amount</th><td><?= e(number_format((float) $invoice['crypto_amount_due'], crypto_asset_precision((string) ($invoice['crypto_asset'] ?? 'USDT'), true), '.', '')) ?> <?= e((string) ($invoice['crypto_asset'] ?? 'USDT')) ?></td></tr>
-        <tr><th>Network</th><td><?= e((string) ($invoice['crypto_network'] ?? '-')) ?></td></tr>
-        <tr><th>Rate used</th><td>1 <?= e((string) ($invoice['crypto_asset'] ?? 'CRYPTO')) ?> = USD <?= e(number_format((float) ($invoice['crypto_rate_used'] ?? 0), 8)) ?></td></tr>
-        <tr><th>Locked at</th><td><?= e((string) ($invoice['rate_locked_at'] ?? '')) ?></td></tr>
-      </table>
-    <?php endif; ?>
-
-    </section>
+      <?php if ($user['role'] === 'client' && (string)$invoice['status'] !== 'paid'): ?>
     <section class="iw-invoice-checkout">
     <?php if ($user['role'] === 'client' && $invoice['status'] !== 'paid'): ?>
       <h3>Choose how to pay</h3>
@@ -461,33 +377,8 @@ $favicon = favicon_path();
     <?php endif; ?>
 
     </section>
+      <?php endif; ?>
     </div>
-    <?php if ($paymentHistory): ?>
-      <section class="iw-invoice-payment-history" aria-label="Payment transaction history">
-        <h3>Payment records</h3>
-        <div class="iw-invoice-payments-list">
-          <?php foreach ($paymentHistory as $payment): ?>
-            <div class="iw-invoice-payment-record">
-              <div class="iw-invoice-payment-record-id">
-                <strong><?= e((string)($payment['method_name'] ?? 'Payment')) ?></strong>
-                <small class="iw-invoice-payment-reference"><?= e((string)($payment['reference'] ?? '')) ?></small>
-              </div>
-              <div class="iw-invoice-payment-record-meta">
-                <strong><?= e(money((float)($payment['amount'] ?? 0), (string)($invoice['currency'] ?? default_currency()))) ?></strong>
-                <span class="iw-invoice-payment-status"><?= e(ucfirst((string)($payment['status'] ?? 'submitted'))) ?></span>
-                <small><?= e((string)($payment['created_at'] ?? '')) ?></small>
-              </div>
-              <?php if (!empty($payment['proof_path'])): ?>
-                <a class="iw-invoice-payment-proof print-hide" href="download.php?payment_id=<?= (int)$payment['id'] ?>">View proof</a>
-              <?php endif; ?>
-            </div>
-          <?php endforeach; ?>
-        </div>
-        <?php if (count($paymentHistory) > 1): ?>
-          <p class="iw-invoice-payment-help">Payment attempts are listed for reference. Pending submissions are not additional charges.</p>
-        <?php endif; ?>
-      </section>
-    <?php endif; ?>
   </div>
   <script>
     (function () {

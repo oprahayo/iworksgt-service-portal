@@ -92,4 +92,9 @@ $markup=strpos($source,'<!doctype html>');
 if($markup===false){http_response_code(500);exit('Invoice markup missing');}
 $source=substr($source,$markup);
 $source=str_replace('<head>','<head><base href="/">',$source);
+$source=str_replace(
+  "require __DIR__ . '/views/partials/invoice-wave-sheet.php';",
+  "require dirname(__DIR__) . '/views/partials/invoice-wave-sheet.php';",
+  $source
+);
 eval('?>'.$source);

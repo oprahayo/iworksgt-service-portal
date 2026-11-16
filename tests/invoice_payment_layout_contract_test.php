@@ -10,7 +10,8 @@ $assert=static function(bool $yes,string $message):void{
   if(!$yes)throw new RuntimeException($message);
 };
 $invoice=$get('invoice.php');
-$styles=$get('assets/css/invoice-clean.css');
+$sheet=$get('views/partials/invoice-wave-sheet.php');
+$styles=$get('assets/css/invoice-wave.css');
 $checkout=$get('assets/css/client-checkout.css');
 $payments=$get('views/payments.php');
 $paymentCss=$get('assets/css/payment-review-mobile.css');
@@ -19,37 +20,57 @@ $deployer=$get('scripts/deploy_invoice_payment_layout.sh');
 $logo=$get('assets/branding/iworks-desktop.svg');
 
 $assert(str_contains($invoice,"portal_absolute_url('assets/branding/iworks-desktop.svg')")
-  && str_contains($invoice,'assets/css/invoice-clean.css')
+  && str_contains($invoice,"require __DIR__ . '/views/partials/invoice-wave-sheet.php'")
+  && str_contains($invoice,'assets/css/invoice-wave.css')
   && str_contains($invoice,'class="iw-invoice')
-  && str_contains($invoice,'alt="iWORKS GLOBAL"')
+  && str_contains($sheet,'alt="iWORKS GLOBAL"')
   && str_contains($logo,'viewBox="0 0 1338 123"'),
-  'Use the verified current iWORKS header logo, including on printable receipts.');
-$assert(str_contains($invoice,'Payment receipt')
-  && str_contains($invoice,'Total paid')
-  && str_contains($invoice,'Total payable')
-  && str_contains($invoice,'Payment records')
-  && str_contains($invoice,'iw-invoice-payment-record')
-  && !str_contains($invoice,'<th>Reference</th><th>Amount</th><th>Status</th><th>Proof</th><th>Date</th>'),
-  'Replace awkward wide payment-history print table with compact labelled records.');
-$assert(str_contains($invoice,'iw-invoice-no-checkout')
-  && str_contains($styles,'.iw-invoice-no-checkout .iw-invoice-checkout')
-  && str_contains($styles,'display:none')
-  && str_contains($styles,'@media print')
-  && str_contains($styles,'@page{size:A4;margin:10mm}')
-  && str_contains($styles,'break-inside:avoid')
-  && str_contains($styles,'overflow-wrap:anywhere'),
-  'Paid or staff invoices must fit A4 and prevent long references/dates breaking every character.');
-$assert(str_contains($styles,'max-width:830px')
-  && str_contains($styles,'.iw-invoice-payment-reference')
-  && str_contains($styles,'font-variant-numeric:tabular-nums'),
-  'One-job invoice and transaction dates must have restrained spacing and clear numerals.');
-$assert(str_contains($invoice,"if ($"."user['role'] === 'client' && $"."invoice['status'] !== 'paid'):"),
-  'Do not offer duplicate checkout on paid receipts.');
+  'Use current iWORKS logo in the Wave-reference bill, without a Wave-branded image.');
+$assert(str_contains($sheet,'iw-wave-banner')
+  && str_contains($sheet,'iw-wave-banner-title')
+  && str_contains($sheet,'>INVOICE</div>')
+  && str_contains($sheet,'iw-wave-banner-due')
+  && str_contains($sheet,'BILL TO')
+  && str_contains($sheet,'Invoice Number:')
+  && str_contains($sheet,'Invoice Date:')
+  && str_contains($sheet,'Payment Due:')
+  && str_contains($sheet,'<th scope="col">ITEMS</th>')
+  && str_contains($sheet,'<th scope="col">QUANTITY</th>')
+  && str_contains($sheet,'<th scope="col">PRICE</th>')
+  && str_contains($sheet,'<th scope="col">AMOUNT</th>')
+  && str_contains($sheet,'iw-wave-totals')
+  && str_contains($sheet,'iw-wave-balance')
+  && str_contains($sheet,'iw-wave-footer'),
+  'Match both provided Wave invoice references: orange band, two-column bill-to/meta, four-column items, totals and footer.');
+$assert(str_contains($sheet,'$iwConfirmedSum')
+  && str_contains($sheet,"=== 'paid'")
+  && str_contains($sheet,"!== 'confirmed'")
+  && str_contains($sheet,'max(0.0, $iwTotal - $iwConfirmedSum)')
+  && str_contains($sheet,'iw-wave-payment-line')
+  && str_contains($sheet,'iw-wave-transaction-records'),
+  'Paid invoices show zero balance while unconfirmed attempts are not counted as payments; staff can still inspect all attempts.');
+$assert(str_contains($styles,'.iw-wave-sheet')
+  && str_contains($styles,'grid-template-columns:minmax(0,65%) minmax(0,35%)')
+  && str_contains($styles,'background:#f56613')
+  && str_contains($styles,'background:#cb4e1e')
+  && str_contains($styles,'.iw-wave-items tbody{background:#f0f1f1}')
+  && str_contains($styles,'@page{size:A4;margin:0}')
+  && str_contains($styles,'.iw-wave-footer')
+  && str_contains($styles,'.print-hide{display:none!important}')
+  && str_contains($styles,'@media(max-width:370px)'),
+  'Wave-style one-page A4 PDF and phone layout must be explicit; checkout cannot be printed.');
+$assert(!str_contains($sheet,'Powered by Wave')
+  && !str_contains($sheet,'waveapps.com')
+  && !str_contains($sheet,'logo-wave')
+  && str_contains($sheet,'www.iworksgt.com'),
+  'Use the iWORKS-owned invoice, not provider branding.');
 $assert(str_contains($invoice,'require_csrf()')
   && str_contains($invoice,'start_gateway_checkout(')
   && str_contains($invoice,'submit_invoice_payment(')
-  && str_contains($invoice,'get_invoice('),
-  'Checkout and authorisation must retain existing trusted payment functions.');
+  && str_contains($invoice,'get_invoice(')
+  && str_contains($invoice,'id="invoicePaymentForm"')
+  && str_contains($invoice,'iw-wave-with-checkout'),
+  'Existing secure payment flow must be unchanged and visible on unpaid invoices.');
 
 $assert(str_contains($payments,'iw-payment-table')
   && str_contains($payments,'iw-payments-page')
