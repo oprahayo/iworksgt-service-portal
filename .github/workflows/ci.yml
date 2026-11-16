@@ -98,6 +98,7 @@ jobs:
           php tests/international_legal_seo_contract_test.php
           php tests/hide_home_seo_links_legal_audit_test.php
           php tests/mobile_header_footer_restore_contract_test.php
+          php tests/public_godaddy_ssl_seal_contract_test.php
           php tests/home_transparent_sticky_header_contract_test.php
           php tests/solutions_visual_refinement_contract_test.php
           php tests/public_solutions_media_contract_test.php
