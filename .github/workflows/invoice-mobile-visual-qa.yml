@@ -1,0 +1,44 @@
+name: Invoice and mobile payment review visual QA
+on:
+  pull_request:
+    paths:
+      - 'invoice.php'
+      - 'views/payments.php'
+      - 'assets/css/invoice-clean.css'
+      - 'assets/css/payment-review-mobile.css'
+      - 'tests/invoice_mobile_visual_preview.php'
+      - 'tests/invoice_mobile_visual_qa.mjs'
+      - '.github/workflows/invoice-mobile-visual-qa.yml'
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium for actual PDF and phone layout
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+      - name: Start PHP visual fixture (no customer database)
+        run: |
+          php -S 127.0.0.1:8011 -t . >/tmp/iworks-invoice-qa.log 2>&1 &
+          sleep 2
+      - name: Render receipt to A4 PDF and test mobile approval cards
+        run: node tests/invoice_mobile_visual_qa.mjs
+      - name: Save non-sensitive synthetic screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iworks-invoice-mobile-qa
+          path: |
+            docs/visual-qa/invoice-desktop.png
+            docs/visual-qa/invoice-one-job.pdf
+            docs/visual-qa/payments-390.png
+            docs/visual-qa/payments-320.png
+          if-no-files-found: ignore

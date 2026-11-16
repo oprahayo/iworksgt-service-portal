@@ -236,6 +236,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <?php if ($currentPage === 'jobs'): ?><link rel="stylesheet" href="assets/css/customer-focused-checkout.css?v=20261113-catalog1"><?php endif; ?>
   <?php if ($currentPage === 'live_inbox'): ?><link rel="stylesheet" href="assets/css/live-inbox.css?v=20261114-visit1"><?php endif; ?>
   <?php if ($currentPage === 'dashboard' && $user && in_array((string)($user['role'] ?? ''),['admin','finance'],true)): ?><link rel="stylesheet" href="assets/css/dashboard-transactions.css?v=20261116-transactions1"><?php endif; ?>
+  <?php if ($currentPage === 'payments' && $user && in_array((string)($user['role'] ?? ''),['admin','finance'],true)): ?><link rel="stylesheet" href="assets/css/payment-review-mobile.css?v=20261116-payment2"><?php endif; ?>
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
   <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
   <?php if ($user && $currentPage === 'job'): ?><link rel="stylesheet" href="assets/css/job-workspace.css?v=20261113b"><?php endif; ?>

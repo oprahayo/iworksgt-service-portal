@@ -1,0 +1,311 @@
+/* iWORKS billing: compact, Wave-style accounting hierarchy, not a Wave document.
+   Current iWORKS identity, invoice metadata, a single service summary, and readable receipts. */
+body.iw-invoice{
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#26313a;
+  line-height:1.4;
+  background:#f5f6f8;
+}
+body.iw-invoice .wrap{
+  max-width:830px;
+  margin:19px auto;
+  padding:20px 25px;
+  background:#fff;
+  border:1px solid #e9ecef;
+  box-shadow:0 5px 21px rgba(32,43,53,.045);
+  border-radius:9px;
+}
+body.iw-invoice .head{
+  margin:0 0 14px;
+  padding:0 0 12px;
+  border-color:#e8ebed;
+  align-items:center;
+}
+body.iw-invoice .brand{display:flex;max-width:280px}
+body.iw-invoice .brand img{
+  display:block;
+  width:min(250px,100%);
+  height:auto;
+  max-width:250px;
+  aspect-ratio:1338/123;
+  object-fit:contain;
+  border:0;
+  border-radius:0;
+}
+body.iw-invoice .iw-invoice-brand-note{
+  font-size:10px;
+  line-height:1.35;
+  margin-top:3px;
+  color:#77818a;
+}
+body.iw-invoice .iw-invoice-hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  margin:0 0 13px;
+  padding:13px 16px;
+  border:1px solid #e9ecef;
+  background:#fafbfb;
+  border-radius:7px;
+}
+body.iw-invoice .iw-invoice-eyebrow{
+  font-size:9px;letter-spacing:.08em;
+  color:#d45d17;font-weight:780;
+}
+body.iw-invoice .iw-invoice-hero h1{
+  font-size:21px;
+  color:#202c34;
+  font-weight:760;
+  margin:3px 0 4px;
+  line-height:1.16;
+}
+body.iw-invoice .iw-invoice-hero p{
+  font-size:11px;
+  line-height:1.35;
+  color:#68747c;
+  margin:0;
+}
+body.iw-invoice .iw-invoice-hero-amount strong{
+  font-size:22px;line-height:1.14;
+  font-weight:800;color:#e8621c;
+  letter-spacing:-.025em;
+  font-variant-numeric:tabular-nums;
+}
+body.iw-invoice .iw-invoice-hero-amount span{
+  font-size:10px;
+  color:#677680;
+}
+body.iw-invoice .iw-invoice-hero-amount small{
+  padding:3px 8px;
+  font-size:10px;
+  font-weight:760;
+  color:#2e7252;
+  background:#eaf5ee;
+}
+body.iw-invoice .iw-invoice-customer-details{
+  margin:0 0 13px;
+  border:1px solid #e9ecee;
+  border-radius:7px;
+}
+body.iw-invoice .iw-invoice-customer-details summary{
+  min-height:33px;
+  padding:7px 11px;
+  gap:7px;
+  font-size:11.5px;
+}
+body.iw-invoice .iw-invoice-customer-details summary span{
+  font-size:10px;
+}
+body.iw-invoice .iw-invoice-customer-details .grid,
+body.iw-invoice .grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+body.iw-invoice .iw-invoice-customer-details .grid{
+  margin:0;padding:0 12px 10px;
+}
+body.iw-invoice .grid table,
+body.iw-invoice .iw-invoice-order table{
+  width:100%;
+  table-layout:fixed;
+  border-collapse:collapse;
+}
+body.iw-invoice .grid th,
+body.iw-invoice .grid td,
+body.iw-invoice .iw-invoice-order th,
+body.iw-invoice .iw-invoice-order td{
+  border-color:#edf0f2;
+  padding:6px 8px;
+  font-size:11px;
+  line-height:1.38;
+  vertical-align:top;
+  overflow-wrap:anywhere;
+}
+body.iw-invoice .grid th,
+body.iw-invoice .iw-invoice-order th{
+  width:35%;
+  font-weight:650;
+  color:#67747f;
+}
+body.iw-invoice .iw-invoice-order th{width:29%}
+body.iw-invoice .iw-invoice-no-checkout{
+  display:block;
+}
+body.iw-invoice .iw-invoice-no-checkout .iw-invoice-checkout{
+  display:none;
+}
+body.iw-invoice .iw-invoice-no-checkout .iw-invoice-order{
+  padding:0;
+  border:0;
+  border-radius:0;
+}
+body.iw-invoice .iw-invoice-main-grid{
+  margin:0;
+  gap:14px;
+}
+body.iw-invoice .iw-invoice-order h3,
+body.iw-invoice .iw-invoice-payment-history h3{
+  font-size:12.5px;
+  font-weight:770;
+  margin:0 0 6px;
+  letter-spacing:-.015em;
+}
+body.iw-invoice .iw-invoice-order>table.mb-3{margin-bottom:7px!important}
+body.iw-invoice .iw-invoice-order td.total{
+  font-size:16px;
+  color:#202b35;
+  font-weight:800;
+}
+body.iw-invoice .iw-invoice-payment-history{
+  margin-top:12px;
+  padding-top:11px;
+  border-top:1px solid #e6e9eb;
+}
+body.iw-invoice .iw-invoice-payments-list{
+  border-top:1px solid #eef0f1;
+}
+body.iw-invoice .iw-invoice-payment-record{
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) auto;
+  align-items:center;
+  gap:10px 16px;
+  padding:9px 1px;
+  border-bottom:1px solid #eef0f1;
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+body.iw-invoice .iw-invoice-payment-record-id,
+body.iw-invoice .iw-invoice-payment-record-meta{
+  display:flex;min-width:0;flex-direction:column;gap:2px;
+}
+body.iw-invoice .iw-invoice-payment-record-id>strong{
+  font-size:11px;font-weight:750;
+}
+body.iw-invoice .iw-invoice-payment-reference{
+  font-size:9.5px;line-height:1.4;
+  color:#63717c;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+body.iw-invoice .iw-invoice-payment-record-meta>strong{
+  font-size:11px;font-weight:750;
+  font-variant-numeric:tabular-nums;
+}
+body.iw-invoice .iw-invoice-payment-record-meta small{
+  font-size:10px;color:#7d8993;
+  overflow-wrap:normal;
+}
+body.iw-invoice .iw-invoice-payment-status{
+  font-size:10px;
+  color:#5c6872;
+  font-weight:650;
+}
+body.iw-invoice .iw-invoice-payment-proof{
+  align-self:center;
+  color:#bd581f;text-decoration:none;
+  font-size:10px;font-weight:650;
+}
+body.iw-invoice .iw-invoice-payment-help{
+  font-size:10px;
+  margin:7px 0 0;
+  color:#818d97;
+  line-height:1.4;
+}
+@media(max-width:860px){
+  body.iw-invoice .wrap{margin:10px}
+}
+@media(max-width:590px){
+  body.iw-invoice .wrap{
+    margin:0;
+    padding:14px 12px 20px;
+    border-radius:0;
+    border:0;
+  }
+  body.iw-invoice .head{align-items:center;gap:9px}
+  body.iw-invoice .brand img{max-width:200px}
+  body.iw-invoice .head-actions{width:auto;gap:5px}
+  body.iw-invoice .iw-invoice-hero{
+    flex-direction:column;align-items:flex-start;gap:10px;
+    padding:13px;
+  }
+  body.iw-invoice .iw-invoice-hero-amount{
+    align-self:flex-start;
+    text-align:left;
+    align-items:flex-start;
+  }
+  body.iw-invoice .iw-invoice-hero-amount small{align-self:flex-start}
+  body.iw-invoice .iw-invoice-customer-details .grid,
+  body.iw-invoice .grid{
+    grid-template-columns:1fr;gap:2px;
+  }
+  body.iw-invoice .iw-invoice-payment-record{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:6px 10px;
+  }
+  body.iw-invoice .iw-invoice-payment-proof{
+    grid-column:1/-1;justify-self:start;
+  }
+}
+@media print{
+  @page{size:A4;margin:10mm}
+  html,body.iw-invoice{background:#fff!important}
+  body.iw-invoice{
+    font-size:9pt;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  body.iw-invoice .wrap{
+    width:auto;max-width:none;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    box-shadow:none!important;
+    border-radius:0;
+  }
+  body.iw-invoice .head{
+    padding:0 0 7px;margin:0 0 9px;
+  }
+  body.iw-invoice .brand img{width:58mm;max-width:58mm;height:auto}
+  body.iw-invoice .iw-invoice-hero{
+    display:flex!important;
+    flex-direction:row!important;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;margin-bottom:9px;
+    border:1px solid #eceeed;
+  }
+  body.iw-invoice .iw-invoice-hero h1{font-size:14pt}
+  body.iw-invoice .iw-invoice-hero-amount{align-self:center;text-align:right;align-items:flex-end}
+  body.iw-invoice .iw-invoice-hero-amount strong{font-size:15pt}
+  body.iw-invoice .iw-invoice-customer-details,
+  body.iw-invoice .iw-invoice-order,
+  body.iw-invoice .iw-invoice-payment-history{break-inside:avoid-page;page-break-inside:avoid}
+  body.iw-invoice .iw-invoice-customer-details{margin-bottom:9px}
+  body.iw-invoice .iw-invoice-customer-details .grid{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    padding:0 10px 7px;
+  }
+  body.iw-invoice .iw-invoice-customer-details summary{padding:6px 10px;min-height:0}
+  body.iw-invoice .iw-invoice-customer-details summary span{display:none}
+  body.iw-invoice .iw-invoice-main-grid{display:block!important}
+  body.iw-invoice .iw-invoice-order{padding:0!important;border:0!important}
+  body.iw-invoice .iw-invoice-checkout{display:none!important}
+  body.iw-invoice .grid th,body.iw-invoice .grid td,
+  body.iw-invoice .iw-invoice-order th,body.iw-invoice .iw-invoice-order td{
+    padding:4px 6px!important;font-size:8pt;
+  }
+  body.iw-invoice .iw-invoice-order h3,
+  body.iw-invoice .iw-invoice-payment-history h3{font-size:10pt}
+  body.iw-invoice .iw-invoice-payment-history{padding-top:8px;margin-top:9px}
+  body.iw-invoice .iw-invoice-payment-record{padding:5px 0;gap:7px;grid-template-columns:minmax(0,1.4fr) minmax(0,.85fr)}
+  body.iw-invoice .iw-invoice-payment-record-id>strong,
+  body.iw-invoice .iw-invoice-payment-record-meta>strong{font-size:8pt}
+  body.iw-invoice .iw-invoice-payment-reference,
+  body.iw-invoice .iw-invoice-payment-record-meta small,
+  body.iw-invoice .iw-invoice-payment-status{font-size:7.5pt}
+  body.iw-invoice .print-hide{display:none!important}
+}
