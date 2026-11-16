@@ -28,7 +28,7 @@ $ok(str_contains($publisher,'EFCC/SCUML registration and certification are compl
     && str_contains($publisher,'The customer applies through the official government portal')
     && str_contains($publisher,'scuml.efcc.gov.ng/registration-guideline/'),
     'Government zero-fee and no-official-agency disclaimers must be unambiguous.');
-$ok(str_contains($publisher,'Certificate') && str_contains($publisher,'BN-01')
+$ok(str_contains($publisher,'CAC Business Name certificate') && str_contains($publisher,'BN-01')
     && str_contains($publisher,'MEMART') && str_contains($publisher,'TIN printout')
     && str_contains($publisher,'sector licence'),
     'Publish EFCC core CAC, tax and sector-specific document guidance.');
