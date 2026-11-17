@@ -12,7 +12,7 @@ $bankHoldUntil = ($bankReady && $payoutMode === 'live')
 $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request'] && $bankReady
     && $payoutMode !== 'off' && (!$bankHoldUntil || time() >= $bankHoldUntil);
 ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Withdrawals</h1>
   <span class="badge <?= $payoutMode === 'live' ? 'bg-success' : 'bg-secondary' ?>">
     <?= $payoutMode === 'live' ? 'Automatic payouts available' : ($payoutMode === 'test' ? 'Test environment' : 'Payouts temporarily paused') ?>
@@ -98,6 +98,26 @@ $canWithdraw = $isAgent && $withdrawalSummary && $withdrawalSummary['can_request
       <div class="col-md-4"><small class="kicker">Available balance</small><div class="fw-semibold"><?= e(money((float) $withdrawalSummary['available_balance'], 'NGN')) ?></div></div>
       <div class="col-md-4"><small class="kicker">Pending requests</small><div class="fw-semibold"><?= e(money((float) $withdrawalSummary['pending_withdrawal'], 'NGN')) ?></div></div>
     </div>
+    <p class="small text-muted mb-3">
+      Withdrawals paid or approved: <?= e(money((float)$withdrawalSummary['total_withdrawn'], 'NGN')) ?>.
+      Commissions previously marked paid: <?= e(money((float)$withdrawalSummary['legacy_paid_commissions'], 'NGN')) ?>.
+      These amounts are excluded from your available balance.
+    </p>
+    <?php if ((float)$withdrawalSummary['legacy_paid_commissions'] > 0): ?>
+      <div class="alert alert-info small">
+        Your history includes commissions marked paid separately from withdrawal requests.
+        Finance must confirm whether these overlap with any previous withdrawal before an adjustment can be made.
+      </div>
+    <?php endif; ?>
+    <?php if (!empty($withdrawalSummary['other_currency_commissions'])): ?>
+      <p class="small text-muted">
+        Other-currency commissions:
+        <?php foreach ($withdrawalSummary['other_currency_commissions'] as $other): ?>
+          <span class="text-nowrap"><?= e(money((float)$other['amount'], (string)$other['currency'])) ?></span>
+        <?php endforeach; ?>
+        — kept separate from your NGN withdrawal balance.
+      </p>
+    <?php endif; ?>
     <?php if ($bankHoldUntil && time() < $bankHoldUntil): ?>
       <div class="alert alert-warning small">Live bank account security hold: withdrawals available after <?= e(date('Y-m-d H:i', $bankHoldUntil)) ?>.</div>
     <?php endif; ?>

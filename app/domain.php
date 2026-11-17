@@ -10446,6 +10446,12 @@ function agent_withdrawal_summary(int $agentId): array
 
     $netBalance = $totalEarned - $legacyPaidCommissions - $totalWithdrawn - $pendingWithdrawal;
     $available = max($netBalance, 0);
+    $otherCurrencies = db_all(
+        "SELECT j.currency, SUM(p.commission_amount) AS amount
+         FROM commission_payouts p JOIN jobs j ON j.id=p.job_id
+         WHERE p.agent_id=:agent_id AND j.currency <> 'NGN'
+         GROUP BY j.currency ORDER BY j.currency", ['agent_id'=>$agentId]
+    );
 
     $lastRequest = db_one(
         'SELECT requested_at FROM withdrawal_requests WHERE agent_id = :agent_id ORDER BY requested_at DESC LIMIT 1',
@@ -10469,6 +10475,8 @@ function agent_withdrawal_summary(int $agentId): array
         'total_withdrawn' => round($totalWithdrawn, 2),
         'pending_withdrawal' => round($pendingWithdrawal, 2),
         'available_balance' => round($available, 2),
+        'legacy_paid_commissions' => round($legacyPaidCommissions, 2),
+        'other_currency_commissions' => $otherCurrencies,
         'balance_shortfall' => round(max(-$netBalance, 0), 2),
         'minimum_threshold' => round($minimum, 2),
         'cooldown_days' => $cooldownDays,

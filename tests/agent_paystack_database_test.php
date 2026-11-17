@@ -164,5 +164,27 @@ try {
     for($i=0;$i<4;$i++) { reject_payout(fn()=>iworks_agent_verify_payout_bank($bankAgent,'058','0000000000','bad'),'Wrong password accepted'); }
     reject_payout(fn()=>iworks_agent_verify_payout_bank($bankAgent,'058','0000000000','fixture-password'),'Bank verification not rate limited');
     echo "PASS beneficiary verification and password attempt limits\n";
+
+    $mixedAgent=fixture_agent(23840);
+    $template=db_one('SELECT service_id FROM jobs WHERE agent_id=:id LIMIT 1',['id'=>$mixedAgent]);
+    foreach ([['NGN',5000,'paid'],['USD',3.25,'accrued']] as [$currency,$amount,$status]) {
+        $tag=bin2hex(random_bytes(8));
+        db_execute("INSERT INTO jobs (job_code,client_id,service_id,agent_id,title,status,payment_status,currency,invoice_number,created_at,updated_at)
+            VALUES (:code,:client,:service,:agent,'Currency fixture','delivered','paid',:currency,:invoice,:at,:updated)",
+            ['code'=>$tag,'client'=>$mixedAgent,'service'=>$template['service_id'],'agent'=>$mixedAgent,
+             'currency'=>$currency,'invoice'=>$tag,'at'=>now(),'updated'=>now()]);
+        db_execute('INSERT INTO commission_payouts (agent_id,job_id,commission_amount,status,created_at) VALUES (:agent,:job,:amount,:status,:at)',
+            ['agent'=>$mixedAgent,'job'=>db_last_id(),'amount'=>$amount,'status'=>$status,'at'=>now()]);
+    }
+    $mixedWithdrawal=iworks_agent_create_withdrawal($mixedAgent,20000,'',bin2hex(random_bytes(32)));
+    $mixedEvent=transfer_event($mixedWithdrawal);
+    iworks_agent_record_transfer_result($mixedEvent['reference'],'success',$mixedEvent);
+    $mixed=agent_withdrawal_summary($mixedAgent);
+    expect_payout($mixed['total_earned']===28840.0 && $mixed['available_balance']===3840.0,'Currencies or previous payments corrupted available NGN');
+    expect_payout($mixed['legacy_paid_commissions']===5000.0,'Previous commission payment not explained');
+    expect_payout(count($mixed['other_currency_commissions'])===1 && $mixed['other_currency_commissions'][0]['currency']==='USD'
+        && (float)$mixed['other_currency_commissions'][0]['amount']===3.25,'Other currency commission not separately reported');
+    expect_payout(!$mixed['can_request'],'Below-minimum corrected balance accepted');
+    echo "PASS separate currencies, previous paid commissions and transparent balance breakdown\n";
 } finally { $admin->exec("DROP DATABASE `$database`"); }
 echo "All payout database integration tests passed. No external API was called.\n";

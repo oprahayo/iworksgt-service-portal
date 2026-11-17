@@ -58,9 +58,14 @@ file_put_contents($argv[2],json_encode($out,JSON_THROW_ON_ERROR));
 PHP
 php "$RUN/snapshot.php" "$PORTAL" "$RUN/before.json"
 php "$RUN/snapshot.php" "$RUN/candidate" "$RUN/candidate.json"
-cmp -s "$RUN/before.json" "$RUN/candidate.json" || {
-  echo 'Candidate changes existing financial balances or records; review required.' >&2; exit 4;
-}
+php -r '$a=json_decode(file_get_contents($argv[1]),true);$b=json_decode(file_get_contents($argv[2]),true);if($a["tables"]!==$b["tables"]){exit(4);}' "$RUN/before.json" "$RUN/candidate.json"
+if ! cmp -s "$RUN/before.json" "$RUN/candidate.json"; then
+  [[ "${4:-}" == --reviewed-balance-correction ]] || {
+    echo 'Candidate changes calculated balances; inspect the private snapshots before using --reviewed-balance-correction.' >&2; exit 4;
+  }
+  echo 'Reviewed currency/previous-payment calculation correction; underlying ledger records unchanged.'
+  touch "$RUN/REVIEWED_BALANCE_CORRECTION"
+fi
 php "$ROOT/tests/agent_paystack_security_test.php"
 php "$ROOT/tests/agent_paystack_withdrawals_contract_test.php"
 CHANGING=0
@@ -100,7 +105,7 @@ if [[ ! -e "$PORTAL/app/agent_payout_runtime.php" ]]; then
   chmod 0600 "$PORTAL/app/agent_payout_runtime.php"
 fi
 php "$RUN/snapshot.php" "$PORTAL" "$RUN/after.json"
-cmp -s "$RUN/before.json" "$RUN/after.json"
+cmp -s "$RUN/candidate.json" "$RUN/after.json"
 php -r 'require $argv[1]."/app/bootstrap.php"; if(iworks_agent_payout_mode()!=="off" || withdrawal_minimum()!==5000.0 || withdrawal_cooldown_days()!==0){exit(5);} echo "PASS minimum NGN 5,000; no withdrawal interval; payout initiation OFF\n";' "$PORTAL"
 for f in "${FILES[@]}"; do cmp -s "$RUN/candidate/$f" "$PORTAL/$f"; done
 cp -p "$RUN/rollback/.htaccess" "$PORTAL/.htaccess"
@@ -109,7 +114,7 @@ STATUS=$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' 'https://portal.i
 printf '%s\n' "$SHA" > "$RUN/DEPLOYED_SHA"
 date -u +%FT%TZ > "$RUN/CODE_DEPLOYED"
 SUCCESS=1
-echo 'PASS existing agent balances and user/job/commission/withdrawal records unchanged'
+echo 'PASS reviewed balance calculations; user/job/commission/withdrawal records unchanged'
 echo "Dashboard code deployed with payouts OFF: $SHA"
 echo "Rollback and verification evidence: $RUN"
 echo 'No schema migration or money movement was performed.'
