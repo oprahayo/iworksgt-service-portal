@@ -1278,6 +1278,17 @@ try {
             break;
 
         case 'payment_webhook':
+            if (!method_is('POST')) {
+                http_response_code(405);
+                header('Allow: POST');
+                header('Content-Type: application/json');
+                echo json_encode(['success'=>false,'message'=>'POST required.']);
+                break;
+            }
+            if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 1048576) {
+                http_response_code(413);
+                break;
+            }
             $provider = strtolower(trim((string) ($_GET['provider'] ?? '')));
             if ($provider === '') {
                 http_response_code(400);
@@ -1289,7 +1300,11 @@ try {
                 break;
             }
 
-            $rawPayload = file_get_contents('php://input');
+            $rawPayload = file_get_contents('php://input', false, null, 0, 1048577);
+            if (is_string($rawPayload) && strlen($rawPayload) > 1048576) {
+                http_response_code(413);
+                break;
+            }
             if (!is_string($rawPayload)) {
                 $rawPayload = '';
             }
@@ -3001,10 +3016,26 @@ try {
                 try {
                     $action = $_POST['form_action'] ?? '';
 
+                    if ($action === 'verify_payout_bank' && $user['role'] === 'agent') {
+                        iworks_agent_verify_payout_bank(
+                            (int) $user['id'],
+                            trim((string) ($_POST['bank_code'] ?? '')),
+                            trim((string) ($_POST['account_number'] ?? '')),
+                            (string) ($_POST['current_password'] ?? '')
+                        );
+                        flash('success', 'Paystack payout bank verified and saved. A 24-hour hold applies in live mode.');
+                    }
+
                     if ($action === 'request_withdrawal' && $user['role'] === 'agent') {
                         $amount = (float) ($_POST['amount'] ?? 0);
-                        create_withdrawal_request((int) $user['id'], $amount, $_POST['note'] ?? '');
+                        create_withdrawal_request((int) $user['id'], $amount, (string)($_POST['note'] ?? ''),
+                            (string)($_POST['request_key'] ?? ''));
                         flash('success', 'Withdrawal request submitted.');
+                    }
+
+                    if ($action === 'reconcile_payout' && has_role(['admin', 'finance'])) {
+                        $result = iworks_agent_reconcile_transfer((int) ($_POST['request_id'] ?? 0));
+                        flash('success', 'Read-only Paystack verification result: ' . $result);
                     }
 
                     if ($action === 'update_withdrawal_status' && has_role(['admin', 'finance'])) {
@@ -3025,6 +3056,10 @@ try {
 
             $withdrawals = list_withdrawal_requests_for_user($user);
             $withdrawalSummary = $user['role'] === 'agent' ? agent_withdrawal_summary((int) $user['id']) : null;
+            $agentPayoutBeneficiary = ($user['role'] === 'agent' && schema_table_exists('agent_payout_beneficiaries'))
+                ? iworks_agent_payout_beneficiary((int) $user['id']) : null;
+            $agentPayoutBanks = $user['role'] === 'agent' ? iworks_agent_payout_banks() : [];
+
 
             $title = 'Withdrawals - ' . app_name();
             require __DIR__ . '/views/partials/header.php';
@@ -3378,16 +3413,12 @@ try {
                     }
 
                     if ($action === 'save_rules') {
-                        $minimum = max((float) ($_POST['withdrawal_minimum'] ?? 20000), 1);
-                        $cooldown = max((int) ($_POST['withdrawal_cooldown_days'] ?? 14), 1);
                         $cryptoRefresh = max(5, min(30, (int) ($_POST['crypto_rates_refresh_minutes'] ?? 10)));
 
                         $trademarkPrice = filter_var($_POST['trademark_price_usd_per_class'] ?? null, FILTER_VALIDATE_FLOAT);
                         if ($trademarkPrice === false || $trademarkPrice < 1 || $trademarkPrice > 100000) {
                             throw new RuntimeException('Trademark price per class must be between USD 1 and USD 100,000.');
                         }
-                        set_setting('withdrawal_minimum', (string) $minimum);
-                        set_setting('withdrawal_cooldown_days', (string) $cooldown);
                         set_setting('crypto_rates_refresh_minutes', (string) $cryptoRefresh);
                         set_setting('trademark_price_usd_per_class', number_format((float) $trademarkPrice, 2, '.', ''));
 
@@ -3594,6 +3625,9 @@ try {
                     }
 
                     if ($action === 'update_bank' && $user['role'] !== 'client') {
+                        if ($user['role'] === 'agent') {
+                            throw new RuntimeException('Verify or change your payout bank from Agent Withdrawals.');
+                        }
                         db_execute(
                             'UPDATE users SET bank_name = :bank_name, bank_account_name = :bank_account_name,
                              bank_account_number = :bank_account_number, bank_swift = :bank_swift, bank_currency = :bank_currency

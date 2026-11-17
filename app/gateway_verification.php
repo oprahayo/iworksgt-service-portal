@@ -1,6 +1,38 @@
 <?php
 declare(strict_types=1);
 
+/** Paystack raw-body signatures, including timestamped signing-secret rotation. */
+function iworks_paystack_signature_valid(string $raw, array $headers, string $apiSecret, string $signingSecret = ''): bool
+{
+    $normalized = array_change_key_case($headers, CASE_LOWER);
+    $modern = (string)($normalized['paystack-signature'] ?? '');
+    if ($signingSecret !== '') {
+        if (!str_starts_with($signingSecret, 'whsec_') || $modern === '') { return false; }
+        $timestamp = null;
+        $signatures = [];
+        foreach (explode(',', $modern) as $part) {
+            $pair = explode('=', trim($part), 2);
+            if (count($pair) !== 2) { continue; }
+            if ($pair[0] === 't') {
+                if ($timestamp !== null || !ctype_digit($pair[1])) { return false; }
+                $timestamp = $pair[1];
+            } elseif ($pair[0] === 'v1' && preg_match('/^whk_[A-Za-z0-9]+:([a-f0-9]{128})$/D', $pair[1], $m)) {
+                $signatures[] = $m[1];
+            }
+        }
+        if ($timestamp === null || abs(time() - (int)$timestamp) > 300) { return false; }
+        $expected = hash_hmac('sha512', $timestamp . '.' . $raw, $signingSecret);
+        foreach ($signatures as $signature) {
+            if (hash_equals($expected, $signature)) { return true; }
+        }
+        return false;
+    }
+    // Existing integrations retain legacy verification until a signing secret is provisioned.
+    $legacy = (string)($normalized['x-paystack-signature'] ?? '');
+    return $apiSecret !== '' && preg_match('/^[a-f0-9]{128}$/D', $legacy) === 1
+        && hash_equals(hash_hmac('sha512', $raw, $apiSecret), $legacy);
+}
+
 /**
  * Compare independent provider verification with immutable payment values
  * stored when the server created the checkout. Never trust callback query

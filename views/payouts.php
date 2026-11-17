@@ -41,6 +41,11 @@ $hasPayoutFilters = (string) ($payoutFilters['status'] ?? '') !== ''
   </button>
 </div>
 
+<?php if (schema_table_exists('agent_withdrawal_transfers')): ?>
+<p class="small text-muted">NGN payments are settled through <a href="<?= e(url('withdrawals')) ?>">Agent Withdrawals</a>.
+Use this page to review accrued commissions. Paid legacy NGN commissions cannot be reopened.</p>
+<?php endif; ?>
+
 <div class="card mb-3 mobile-filter-panel <?= $hasPayoutFilters ? 'open' : '' ?>" id="payoutFilterPanel">
   <div class="card-body py-3">
     <form class="row g-2 align-items-end" method="get" action="index.php">

@@ -1,5 +1,6 @@
 # Local configuration and secrets
 /app/config.php
+/app/agent_payout_runtime.php
 .env
 .env.*
 !.env.example

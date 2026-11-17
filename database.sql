@@ -381,6 +381,44 @@ CREATE TABLE IF NOT EXISTS withdrawal_requests (
     CONSTRAINT fk_withdrawal_agent FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS agent_payout_beneficiaries (
+    agent_id INT UNSIGNED PRIMARY KEY,
+    bank_code VARCHAR(12) NOT NULL,
+    bank_name VARCHAR(120) NOT NULL,
+    account_number VARCHAR(10) NOT NULL,
+    account_name VARCHAR(140) NOT NULL,
+    recipient_code VARCHAR(100) NOT NULL,
+    environment ENUM('test','live') NOT NULL DEFAULT 'test',
+    verified_at DATETIME NOT NULL,
+    CONSTRAINT fk_agent_payout_beneficiary FOREIGN KEY (agent_id)
+        REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS agent_withdrawal_transfers (
+    withdrawal_id INT UNSIGNED PRIMARY KEY,
+    reference VARCHAR(50) NOT NULL UNIQUE,
+    request_key CHAR(64) NULL UNIQUE,
+    amount_kobo BIGINT UNSIGNED NOT NULL,
+    recipient_code VARCHAR(100) NOT NULL,
+    bank_code VARCHAR(12) NOT NULL,
+    account_last4 VARCHAR(4) NOT NULL,
+    environment ENUM('test','live') NOT NULL DEFAULT 'test',
+    state ENUM('awaiting_review','queued','submitting','pending','success','failed','reversed','exception')
+        NOT NULL DEFAULT 'queued',
+    reviewed_by INT UNSIGNED NULL,
+    provider_transfer_id VARCHAR(80) NULL,
+    last_error_code VARCHAR(50) NULL,
+    attempted_at DATETIME NULL,
+    last_checked_at DATETIME NULL,
+    settled_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    CONSTRAINT fk_agent_withdrawal_transfer FOREIGN KEY (withdrawal_id)
+        REFERENCES withdrawal_requests(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_agent_payout_reviewer FOREIGN KEY (reviewed_by)
+        REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS otp_codes (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
@@ -880,8 +918,8 @@ VALUES
 ('business_support_summary', 'Business support tools to help entrepreneurs scale their business with our services.', NOW()),
 ('default_currency', 'NGN', NOW()),
 ('brand_footer_text', 'iWorks Global Limited', NOW()),
-('withdrawal_minimum', '20000', NOW()),
-('withdrawal_cooldown_days', '14', NOW()),
+('withdrawal_minimum', '5000', NOW()),
+('withdrawal_cooldown_days', '0', NOW()),
 ('fx_ngn_per_usd', '1600', NOW()),
 ('crypto_rates_refresh_minutes', '10', NOW()),
 ('logo_path', '', NOW()),

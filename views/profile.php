@@ -132,6 +132,10 @@ $forcePasswordResetMode = (int) ($user['must_change_password'] ?? 0) === 1 || !e
       <div class="card-body">
         <h2 class="h5">Bank payout details</h2>
         <p class="small text-muted">Used for agent commissions. Finance/Admin can view full details.</p>
+        <?php if ($user['role'] === 'agent'): ?>
+          <p class="small">Verify or change your Nigerian bank account from Withdrawals. Your current password is required.</p>
+          <a class="btn btn-outline-primary" href="<?= e(url('withdrawals')) ?>">Manage withdrawal account</a>
+        <?php else: ?>
         <form method="post" action="<?= e(url('profile')) ?>">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
           <input type="hidden" name="form_action" value="update_bank">
@@ -142,6 +146,7 @@ $forcePasswordResetMode = (int) ($user['must_change_password'] ?? 0) === 1 || !e
           <div class="mb-2"><label class="form-label">Currency</label><input class="form-control" name="bank_currency" value="<?= e($user['bank_currency'] ?? default_currency()) ?>"></div>
           <button class="btn btn-outline-primary" type="submit">Save bank details</button>
         </form>
+        <?php endif; ?>
       </div>
     </div>
   </div>
