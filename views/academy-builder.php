@@ -15,6 +15,7 @@ function ac_build_lesson(int $course,int $module,array $lesson=[]):void{
     ac_input('position','Display order',(string)($lesson['position']??10),'number');
     echo '<label>Lesson text<textarea name="body" rows="6" maxlength="50000">'.e((string)($lesson['body']??'')).'</textarea></label><label>Video link (HTTPS)<input type="url" name="video_url" maxlength="1000" value="'.e((string)($lesson['video_url']??'')).'"></label><label>Learning material link (HTTPS)<input type="url" name="material_url" maxlength="1000" value="'.e((string)($lesson['material_url']??'')).'"></label>';
     ac_build_publish(!empty($lesson['published']));echo '<button>Save lesson</button></form></details>';
+    if($id)ac_assessment_admin($course,$id);
 }
 $cid=(int)$course['id'];
 $config=db_one('SELECT * FROM academy_learning_courses WHERE course_id=:course',['course'=>$cid])??[];
