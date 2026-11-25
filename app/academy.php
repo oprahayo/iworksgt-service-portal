@@ -136,6 +136,16 @@ function academy_verified_payment_matches(array $cert,array $verified): bool {
         && is_int($amount) && $amount===(int)$cert['amount_minor'] && $amount>0
         && (is_int($tx)||is_string($tx)) && preg_match('/^[0-9]{1,80}$/D',(string)$tx)===1;
 }
+/** Notifications are supplementary: never reverse a saved payment or enrollment on mail failure. */
+function academy_notice(int $studentId,string $title,string $message,string $page='courses',bool $admins=false):void{
+    try{
+        if($studentId>0)create_notification($studentId,$title,$message,'/academy.php?action='.$page);
+    }catch(Throwable $e){error_log('Academy student notification deferred: '.get_class($e));}
+    if($admins){
+        try{notify_roles(['admin'],$title,$message,'/academy.php?action=admin&tab=student&id='.$studentId);}
+        catch(Throwable $e){error_log('Academy admin notification deferred: '.get_class($e));}
+    }
+}
 function academy_confirm(string $reference): bool {
     if (!preg_match('/^IWGA-[a-f0-9]{32}$/D',$reference)) return false;
     $cert = db_one('SELECT * FROM academy_certificates WHERE payment_reference=:ref',['ref'=>$reference]);
@@ -158,6 +168,7 @@ function academy_confirm(string $reference): bool {
         }
         db()->commit();
     } catch (Throwable $e) { if(db()->inTransaction()) db()->rollBack(); throw $e; }
+    if($row['status']==='pending')academy_notice((int)$row['student_id'],'Certificate issued','Payment verified for '.$row['course_title'].'. Your certificate is available in My Certificates.','certificates',true);
     return in_array($row['status'],['pending','issued'],true);
 }
 /** Recheck only existing pending references, never create a new charge.
