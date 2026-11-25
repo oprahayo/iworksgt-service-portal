@@ -67,7 +67,7 @@ try{
     $csrf=qa_hidden($html,'csrf_token');
     $stage='registration form submission';
     $attempted=true;
-    [$status,$html]=qa_http($ch,'/academy.php?action=register',['csrf_token'=>$csrf,'name'=>$name,'email'=>$email,'phone'=>'00000000000','password'=>$password]);
+    [$status,$html]=qa_http($ch,'/academy.php?action=register',['csrf_token'=>$csrf,'name'=>$name,'email'=>$email,'phone'=>'00000000000','password'=>$password,'confirm_password'=>$password]);
     $stage='registered account lookup';
     $user=find_user_by_email($email);
     qa_assert($user!==null&&$user['role']==='student'&&$user['full_name']===$name&&password_verify($password,$user['password_hash']),'Real HTTP student registration');
