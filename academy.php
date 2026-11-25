@@ -19,11 +19,9 @@ function ac_head(string $title): void {
 }
 function ac_end(): void { echo '</main></html>'; }
 function ac_notify(array $cert,array $user): void {
-    if (!empty($cert['email_sent_at']) || !email_enabled()) return;
-    if (send_email((string)$user['email'],'Your iWorks certificate is ready',
-        "Your certificate ".$cert['certificate_number']." is available at https://portal.iworksgt.com/academy.php?action=download&id=".$cert['id']." . Sign in to download it.")) {
-        db_execute('UPDATE academy_certificates SET email_sent_at=:sent WHERE id=:id AND email_sent_at IS NULL',['sent'=>now(),'id'=>$cert['id']]);
-    }
+    if ((int)$cert['student_id']!==(int)$user['id'] || !empty($cert['email_sent_at'])) return;
+    try { academy_deliver_email((int)$cert['id']); }
+    catch(Throwable $e) { error_log('Academy email queued for retry: '.get_class($e)); }
 }
 try {
     if ($action==='verify') {
