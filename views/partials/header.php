@@ -253,7 +253,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
-  <?php if (in_array($currentPage, ['academy','academy_courses','academy_certificates','academy_profile'], true)): ?><link rel="stylesheet" href="/assets/css/academy.css?v=8"><?php endif; ?>
+  <?php if (in_array($currentPage, ['academy','academy_courses','academy_certificates','academy_profile'], true)): ?><link rel="stylesheet" href="/assets/css/academy.css?v=9"><?php endif; ?>
   <?php require __DIR__ . '/portal-transition-head.php'; ?>
   <style>
     :root {
@@ -345,7 +345,6 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         <?php if (($user['role']??'') !== 'student'): ?>
         <a class="btn btn-sm btn-outline-secondary iw-ops-preview-link" href="<?= e(public_url($publicPreviewPage)) ?>" title="Open corresponding public website page in this tab"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-md-inline">View website</span></a>
         <?php endif; ?>
-        <?php if (($user['role']??'') !== 'student'): ?>
         <a class="btn btn-sm btn-outline-secondary position-relative" id="topbarNotificationBtn" href="<?= e(url('notifications')) ?>" title="Notifications">
           <i class="bi bi-bell"></i>
           <span
@@ -357,7 +356,6 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
             <?= (int) $unreadCount ?>
           </span>
         </a>
-        <?php endif; ?>
         <a class="btn btn-sm btn-outline-secondary" href="<?= e(($user['role']??'')==='student'?'/academy.php?action=profile':url('profile')) ?>"><?= e($user['full_name']) ?></a>
         <a class="btn btn-sm btn-primary" href="logout.php">Logout</a>
       </div>
