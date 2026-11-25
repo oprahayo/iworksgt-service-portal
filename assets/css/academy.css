@@ -203,3 +203,41 @@
 
 /* Sprint 6: materials and assessments */
 .ac-lms-video{width:100%;aspect-ratio:16/9;background:#111;border-radius:8px;overflow:hidden;margin:12px 0}.ac-lms-video iframe{width:100%;height:100%;border:0}.ac-lms-question{min-width:0;border:0;border-bottom:1px solid var(--ac-line);padding:12px 0;margin:0}.ac-lms-question legend{font-size:14px;font-weight:600;overflow-wrap:anywhere}.ac-lms-question label{font-size:14px;overflow-wrap:anywhere}.ac-lms-question input[type=radio]{flex-shrink:0;width:auto;min-height:0}.ac-lms-submission{border-top:1px solid var(--ac-line);padding:12px 0}.ac-lms input[type=file]{max-width:100%;min-width:0;font-size:13px}.ac-lms h4{font-size:14px;margin-top:12px}.ac-lms details p{overflow-wrap:anywhere}
+
+/* Certification request workspace: compact, purpose-built white surfaces. */
+.academy-workspace .ac-request-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:0}
+.academy-workspace .ac-request-heading h1,.academy-workspace .ac-request-heading h2{font-size:clamp(19px,2vw,24px);font-weight:650;letter-spacing:-.025em;margin:0 0 4px;color:var(--ac-ink)}
+.academy-workspace .ac-request-heading p{margin:0;color:var(--ac-muted);font-size:13px}
+.academy-workspace .ac-request-shell,.academy-workspace .ac-cert-workspace{min-width:0}
+.academy-workspace .ac-request-shell{padding:18px 20px;background:#fff;border:1px solid var(--ac-line);border-radius:10px}
+.academy-workspace .ac-request-list{margin-top:12px}
+.academy-workspace .ac-request-row{padding:15px 0;border-bottom:1px solid var(--ac-line);min-width:0;overflow-wrap:anywhere}
+.academy-workspace .ac-request-row:last-child{border-bottom:0}
+.academy-workspace .ac-request-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.academy-workspace .ac-request-top>div{min-width:0}
+.academy-workspace .ac-request-top h3{font-size:15px;font-weight:650;line-height:1.4;margin:0 0 3px}
+.academy-workspace .ac-request-top p{font-size:13px;line-height:1.4;margin:0;color:var(--ac-muted)}
+.academy-workspace .ac-request-state{flex:0 0 auto;font-size:11px;line-height:1.4;font-weight:600;border-radius:5px;padding:4px 8px;color:#475569;background:#f1f5f9}
+.academy-workspace .ac-request-state.state-pending{background:#fff7ed;color:#9a3412}
+.academy-workspace .ac-request-state.state-approved{background:#ecfdf5;color:#166534}
+.academy-workspace .ac-request-state.state-declined{background:#fef2f2;color:#991b1b}
+.academy-workspace .ac-request-meta{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:10px;margin:12px 0}
+.academy-workspace .ac-request-meta small{display:block;font-size:11px;color:var(--ac-muted);margin-bottom:3px}
+.academy-workspace .ac-request-meta strong{font-size:13px;font-weight:550;display:block;overflow-wrap:anywhere}
+.academy-workspace .ac-query-reason{border-left:3px solid #c2410c;background:#fff7ed;padding:10px 12px;margin:10px 0;font-size:13px;border-radius:0 5px 5px 0;overflow-wrap:anywhere}
+.academy-workspace .ac-query-reason strong{font-size:12px;color:#9a3412}
+.academy-workspace .ac-query-reason p{margin:4px 0 0;color:var(--ac-ink)}
+.academy-workspace .ac-review-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start;margin:8px 0}
+.academy-workspace .ac-review-actions details{border:1px solid var(--ac-line);border-radius:7px;padding:9px 12px;margin:0}
+.academy-workspace .ac-review-actions summary{font-size:13px;min-height:26px;line-height:26px}
+.academy-workspace .ac-review-actions details:nth-child(2) summary{color:#991b1b}
+.academy-workspace .ac-review-actions form{display:grid;gap:8px;max-width:100%}
+.academy-workspace .ac-review-actions textarea,.academy-workspace .ac-review-actions input{max-width:100%;min-width:0}
+.academy-workspace .ac-cert-request-form form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end;margin-top:12px}
+.academy-workspace .ac-cert-request-form form label{min-width:0;margin:0}
+.academy-workspace .ac-cert-request-form form select,.academy-workspace .ac-cert-request-form form input{max-width:100%;min-width:0}
+.academy-workspace .ac-request-submit{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.academy-workspace .ac-request-submit small{font-size:12px;color:var(--ac-muted)}
+.academy-workspace .ac-cert-history .ac-cert-card{padding:14px 0;border:0;border-bottom:1px solid var(--ac-line);border-radius:0;background:transparent;box-shadow:none}
+.academy-workspace .ac-cert-history .ac-cert-card:last-child{border-bottom:0}
+@media(max-width:600px){.academy-workspace .ac-request-shell{padding:12px}.academy-workspace .ac-request-heading{margin-bottom:10px}.academy-workspace .ac-request-meta{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.academy-workspace .ac-request-meta>div:first-child{grid-column:1/-1}.academy-workspace .ac-review-actions,.academy-workspace .ac-cert-request-form form{grid-template-columns:minmax(0,1fr);gap:8px}.academy-workspace .ac-request-top{gap:8px}.academy-workspace .ac-request-top h3{font-size:14px}.academy-workspace .ac-request-state{font-size:10px;padding:4px 6px}.academy-workspace .ac-request-submit{gap:6px}.academy-workspace .ac-request-row{padding:12px 0}}
