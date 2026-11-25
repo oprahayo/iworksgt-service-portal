@@ -171,9 +171,9 @@ try {
             ac_head('Preview your certificate');echo '<img class="preview" alt="Certificate preview" src="data:image/svg+xml;base64,'.base64_encode($svg).'">';ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the payment amount before authorizing payment. Any additional provider charge, if applicable, will be shown at checkout.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'">Back</a>';ac_end();exit;
         }
     }
-    ac_head('Welcome, '.(string)$user['full_name']);echo '<nav><a href="#certificates">My Certificates</a><a href="#courses">My Courses</a><a href="#profile">My Profile</a></nav><h2 id="profile">Complete your profile</h2>';ac_form('profile');ac_input('name','Full name',$user['full_name']);ac_input('phone','Phone',(string)$user['phone'],'tel');echo '<button>Save profile</button></form><h2 id="certificates">My certificates</h2>';
+    ac_head('Welcome, '.(string)$user['full_name']);echo '<nav class="ac-student-nav"><a href="#certificates">My Certificates</a><a href="#courses">My Courses</a><a href="#profile">My Profile</a></nav><h2 id="certificates">My certificates</h2>';
     $graduates=db_all('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.student_id=:student',['student'=>$user['id']]);
-    if(!$graduates)echo '<section>Awaiting administrator approval of your completed course.</section>';
+    if(!$graduates)echo '<section><h3>Request a certificate</h3><p>If you have already completed training with iWorks, contact your Academy administrator using your registered email address so they can confirm your course and training duration. Once approved, your Get Certificate button will appear here.</p><p>New to the Academy? Choose a course below to request enrollment.</p></section>';
     foreach($graduates as $g){
         echo '<article><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).' · '.e(ucfirst($g['colour'])).' certificate</p>';
         $cert=db_one('SELECT * FROM academy_certificates WHERE graduate_id=:id',['id'=>$g['id']]);
@@ -189,5 +189,6 @@ try {
         else {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><button>Enroll</button></form>';}
         echo '</article>';
     }
+    echo '<section id="profile"><h2>My profile</h2>';ac_form('profile');ac_input('name','Full name',$user['full_name']);ac_input('phone','Phone',(string)$user['phone'],'tel');echo '<button>Save profile</button></form></section>';
     ac_end();
 } catch(Throwable $e){http_response_code(400);ac_head('Academy request unavailable');echo '<p>We could not complete this request. Check your information or contact support.</p><a href="'.$base.'">Return to Academy</a>';ac_end();error_log('Academy request failed: '.get_class($e));}
