@@ -57,13 +57,24 @@ try{
  expect(academy_material_download($oid,$cid,$lid,$file)===null,'Unapproved student cannot download');
  expect(academy_material_download($sid,$cid,$draft,$file)===null,'Wrong lesson cannot download');
  $quiz=academy_assessment_create($cid,$lid,['kind'=>'quiz','title'=>'Knowledge quiz','instructions'=>'Choose one answer.','questions'=>'One plus one? | 2 | 3 | 4 | 5 | 1','pass_percent'=>'60','published'=>'1']);
- $exam=academy_assessment_create($cid,$lid,['kind'=>'exam','title'=>'Final exam','questions'=>'One plus two? | 2 | 3 | 4 | 5 | 2','pass_percent'=>'60','published'=>'1']);
+ $exam=academy_assessment_create($cid,$lid,['kind'=>'exam','duration_minutes'=>'30','title'=>'Final exam','questions'=>'One plus two? | 2 | 3 | 4 | 5 | 2','pass_percent'=>'60','published'=>'1']);
  $assignment=academy_assessment_create($cid,$lid,['kind'=>'assignment','title'=>'Practical work','instructions'=>'Describe your work.','published'=>'1']);
  $hidden=academy_assessment_create($cid,$lid,['kind'=>'quiz','title'=>'Hidden assessment','questions'=>'Q | A | B | C | D | 1']);
  foreach([[$oid,$quiz],[$sid,$hidden]] as [$who,$aid]){$denied=false;try{academy_assessment_submit($who,$cid,$lid,$aid,['answers'=>['0']]);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Reject unauthorized/draft assessment');}
  expect(academy_assessment_submit($sid,$cid,$lid,$quiz,['answers'=>['0']]),'Quiz submission');
  expect(!academy_assessment_submit($sid,$cid,$lid,$quiz,['answers'=>['1']]),'One attempt only');
+ $blocked=false;try{academy_assessment_submit($sid,$cid,$lid,$exam,['answers'=>['0']]);}catch(InvalidArgumentException $e){$blocked=true;}expect($blocked,'Timed exam must be started');
+ $blocked=false;try{academy_exam_start($oid,$cid,$lid,$exam);}catch(InvalidArgumentException $e){$blocked=true;}expect($blocked,'Unapproved student cannot start exam');
+ expect(academy_exam_start($sid,$cid,$lid,$exam),'Timed exam starts');
+ $deadline=(int)db_one('SELECT deadline_epoch FROM academy_exam_starts WHERE assessment_id=:id AND student_id=:student',['id'=>$exam,'student'=>$sid])['deadline_epoch'];
+ expect(academy_exam_start($sid,$cid,$lid,$exam),'Reopen active exam');
+ expect((int)db_one('SELECT deadline_epoch FROM academy_exam_starts WHERE assessment_id=:id AND student_id=:student',['id'=>$exam,'student'=>$sid])['deadline_epoch']===$deadline,'Reopen does not extend timer');
+ db_execute('UPDATE academy_exam_starts SET deadline_epoch=UNIX_TIMESTAMP()-1 WHERE assessment_id=:id AND student_id=:student',['id'=>$exam,'student'=>$sid]);
+ expect(!academy_exam_start($sid,$cid,$lid,$exam),'Expired exam cannot restart');
+ $blocked=false;try{academy_assessment_submit($sid,$cid,$lid,$exam,['answers'=>['0']]);}catch(InvalidArgumentException $e){$blocked=true;}expect($blocked,'Expired exam cannot submit');
+ db_execute('UPDATE academy_exam_starts SET deadline_epoch=:deadline WHERE assessment_id=:id AND student_id=:student',['deadline'=>$deadline,'id'=>$exam,'student'=>$sid]);
  expect(academy_assessment_submit($sid,$cid,$lid,$exam,['answers'=>['0']]),'Exam submission');
+ expect(!academy_exam_start($sid,$cid,$lid,$exam),'Submitted exam cannot restart');
  expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE assessment_id=:id',['id'=>$quiz])['score_percent']===100,'Server graded correct quiz');
  expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE assessment_id=:id',['id'=>$exam])['score_percent']===0,'Server graded incorrect exam');
  expect(academy_assessment_submit($sid,$cid,$lid,$assignment,['response'=>'Student work <script>']), 'Assignment submitted');
@@ -78,10 +89,11 @@ try{
  expect(academy_course_results($sid,0)===[],'Wrong course denied results');
  expect(count(array_filter($results,fn($r)=>$r['score_percent']!==null))===3,'All own graded results visible');
  expect(!array_key_exists('questions_json',$results[0]),'Answer keys not exposed');
+ $practice=academy_assessment_create($cid,$lid,['kind'=>'quiz','title'=>'Practice quiz','questions'=>"One? | A | B | C | D | 1\nTwo? | A | B | C | D | 2",'published'=>'1']);
  $course=academy_learning_access($sid,$cid);$_GET=['lesson'=>$lid];define('IWORKS_ACADEMY_LEARNING_VIEW',true);
  ob_start();require __DIR__.'/../views/academy-learning.php';$html=ob_get_clean();
  expect(str_contains($html,'How to study your course'),'Learning guidance rendered');
- expect(str_contains($html,'Academic results')&&str_contains($html,'3 of 3 submitted')&&str_contains($html,'Good work'),'Own course academic results rendered');
+ expect(str_contains($html,'Academic results')&&str_contains($html,'3 of 4 submitted')&&str_contains($html,'Good work'),'Own course academic results rendered');
  expect(str_contains($html,'1 of 1 lessons completed')&&str_contains($html,'Watch lesson video')&&!str_contains($html,'<script>alert(1)</script>')&&!str_contains($html,'Draft secret'),'Student view renders escaped published content and progress');
  expect(str_contains($html,'Download PDF')&&str_contains($html,'Result: 100%')&&str_contains($html,'Result: 85%')&&!str_contains($html,'Hidden assessment'),'Published assessment results visible; drafts hidden');
  $GLOBALS['fixtureRole']='admin';define('IWORKS_ACADEMY_BUILDER',true);
@@ -90,7 +102,7 @@ try{
  expect(str_contains($builder,'Private PDF materials')&&str_contains($builder,'Add quiz, exam or assignment')&&str_contains($builder,'Save grade'),'Admin authoring and review rendered');
  if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
    $dir=__DIR__.'/../docs/visual-qa/academy';if(!is_dir($dir))mkdir($dir,0755,true);
-   foreach(['student-learning'=>$html,'admin-builder'=>$builder] as $name=>$body)file_put_contents($dir.'/'.$name.'.html','<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace('/assets/js/academy-guide.js?v=3','../../../assets/js/academy-guide.js?v=3',$body).'</div></main></body></html>');
+   foreach(['student-learning'=>$html,'admin-builder'=>$builder] as $name=>$body)file_put_contents($dir.'/'.$name.'.html','<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace(['/assets/js/academy-guide.js?v=4','/assets/js/academy-actions.js?v=1'],['../../../assets/js/academy-guide.js?v=4','../../../assets/js/academy-actions.js?v=1'],$body).'</div></main></body></html>');
  }
  echo "PASS LMS draft isolation, approved access, editing, progress, safe links and both real views.\n";
 }finally{db()->rollBack();}
