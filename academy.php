@@ -69,6 +69,7 @@ try {
         $selectedCourse=(int)($_SESSION['academy_course_intent']??0)>0?db_one('SELECT id,title FROM academy_courses WHERE id=:id AND active=1',['id'=>(int)$_SESSION['academy_course_intent']]):null;
         if (method_is('POST')) {
             require_csrf();
+            try {
             $name=trim((string)($_POST['name']??'')); $email=strtolower(trim((string)($_POST['email']??'')));
             $phone=trim((string)($_POST['phone']??''));$password=(string)($_POST['password']??'');
             if (!academy_valid_name($name)||!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190||strlen($phone)<7||strlen($phone)>40||strlen($password)<12||strlen($password)>72||$password!==(string)($_POST['confirm_password']??'')||!email_enabled()||find_user_by_email($email)) throw new RuntimeException('Check the registration details or sign in if you already have an account.');
@@ -76,6 +77,10 @@ try {
             iworks_auth_limit_record('academy_register_ip',$ip,3600);
             $id=create_user(['full_name'=>$name,'email'=>$email,'phone'=>$phone,'password'=>$password,'role'=>'student']);
             start_otp_challenge($id,'verify_email'); redirect(portal_url('otp'));
+            } catch (Throwable $e) {
+                error_log('Academy registration failed: '.get_class($e));
+                flash('error','Unable to register. Check your details, use a matching password of at least 12 characters, or sign in if you already have an account.');
+            }
         }
         $_GET['page']='register';
         $academyGuestRegistration=true;
