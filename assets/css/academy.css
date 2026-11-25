@@ -180,3 +180,10 @@
  .academy-workspace .ac-admin .ac-table td,.academy-workspace .ac-admin .ac-table th{padding-block:0}
 }
 @media(max-width:360px){.academy-workspace .ac-past-training form{grid-template-columns:minmax(0,1fr)}.academy-workspace .ac-past-training button{max-width:none}.academy-workspace .ac-admin .ac-tabs a{font-size:11px}}
+
+/* Sprint 4: purposeful student surfaces; no nested course or task cards. */
+.academy-workspace .ac-student section.ac-student-panel{background:var(--iw-ops-surface,#fff);border:1px solid var(--ac-line);border-radius:10px;padding:14px 16px;margin:0 0 12px;box-shadow:none}
+.academy-workspace .ac-student section.ac-student-panel:last-child{border:1px solid var(--ac-line);padding:14px 16px;margin-bottom:0}
+.academy-workspace .ac-student .ac-dashboard-actions>section:last-child{border:1px solid var(--ac-line);padding:14px 16px}
+.academy-workspace .ac-student .ac-course-card{background:transparent;border-radius:0;box-shadow:none}
+@media(max-width:600px){.academy-workspace .ac-student section.ac-student-panel,.academy-workspace .ac-student section.ac-student-panel:last-child,.academy-workspace .ac-student .ac-dashboard-actions>section:last-child{padding:10px 11px;margin-bottom:8px}.academy-workspace .ac-dashboard-columns{gap:8px}.academy-workspace .ac-student .ac-student-stats>a{min-width:0}}
