@@ -12,7 +12,7 @@ COMPACT=f0f16aa3b8cef7e52d0c349587f1e39c283959fb
 MOBILE=d7a74ce735f6b40a695280a5e406cf6b2f44947a
 SPRINT3=035353ea0991f7eb07ebea7123ff47d5fc870764
 SPRINT4=47a54dbb3f53314535492ee47ec417e35939aed5
-TARGET=01a688fefc2c736b37be6fe7779505b65771fca3
+TARGET=7e7f48404ba8b0f2ce5fb2b7aa9cf091b25b7c0e
 ROOT="$(readlink -f "$HOME/public_html/portal.iworksgt.com")"
 HTML="$(readlink -f "$HOME/public_html")"
 [[ "$ROOT" == "$HTML/"* && -f "$ROOT/app/config.php" ]] || { echo 'BLOCK unexpected portal root'; exit 3; }
