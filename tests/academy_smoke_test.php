@@ -14,4 +14,6 @@ academy_assert(str_contains($entry,'Get Certificate')&&!str_contains($entry,'Pre
 academy_assert(str_contains($entry,'Pay Now')&&str_contains($entry,'number_format(ACADEMY_FEE_MINOR/100,2)'),'Checkout amount disclosed');
 academy_assert(str_contains($entry,"require_roles(['student'])"),'Student role check');
 academy_assert(str_contains($entry,"require_roles(['admin'])"),'Admin role check');
+require __DIR__.'/../app/auth_rate_limits.php';
+foreach (['academy_register_ip','academy_verify_ip'] as $scope) academy_assert(iworks_auth_bucket($scope,'fixture',900)['scope']===$scope,'Academy auth rate limit scope');
 echo "Academy smoke checks passed.\n";
