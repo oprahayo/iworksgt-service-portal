@@ -97,21 +97,19 @@ if($screen==='dashboard'){
         echo '</select></label><div data-cert-name-step><label>2. Name on certificate<input type="text" name="name" required maxlength="150" value="'.e($user['full_name']).'" data-cert-name autocomplete="name"></label><small>Use the exact spelling and order you want printed.</small></div><div data-cert-confirm-step><div class="ac-cert-warning"><strong>3. Confirm your certificate name</strong><output data-cert-name-output>'.e($user['full_name']).'</output><p>Check the name carefully. After approval, the name cannot be changed by you. Once payment is started, the certificate details are locked. An issued certificate cannot be regenerated with a different name.</p></div><label class="ac-cert-check"><input type="checkbox" name="confirm_name" value="1" required data-cert-confirm> I confirm that this is the exact name I want on my certificate.</label><button>Submit certification request</button><small>Payment is only available after approval.</small></div></div></form>';
     }else echo '<p>No additional courses available for certification requests.</p>';
     echo '</div></details></section>';
-    echo '<section class="ac-student-panel ac-cert-group"><details><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>Request status</strong><small>'.count($waiting).' pending or declined</small></span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded">';
-    if(!$waiting)echo '<p class="ac-student-empty">No pending or declined requests.</p>';
+    echo '<section class="ac-student-panel ac-cert-group ac-cert-activity"><div class="ac-cert-activity-head"><h2>Certificate history</h2><p>'.(count($waiting)+count($graduates)).' activities · '.$ready.' ready · '.$paying.' awaiting payment</p></div>';
+    if(!$waiting&&!$graduates)echo '<p class="ac-student-empty">No certificate activity yet. Submit a certification request above.</p>';
     foreach($waiting as $r){
-        echo '<details class="ac-cert-record"><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($r['title']).'</strong><small>Submitted '.e(date('d M Y',strtotime($r['submitted_at']))).'</small></span><span class="ac-request-state state-'.e($r['status']).'">'.e($r['status']==='pending'?'Awaiting review':'Declined').'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded">';
+        echo '<details class="ac-cert-record" data-cert-record><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($r['title']).'</strong><small>Submitted '.e(date('d M Y',strtotime($r['submitted_at']))).'</small></span><span class="ac-request-state state-'.e($r['status']).'">'.e($r['status']==='pending'?'Awaiting review':'Declined').'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded" data-cert-details>';
         if($r['review_note']!=='')echo '<div class="ac-query-reason"><strong>Administrator query</strong><p>'.nl2br(e($r['review_note'])).'</p></div>';
         if($r['status']==='declined'&&$r['active'])echo '<small>You may submit a fresh request after addressing the administrator query.</small>';
         elseif($r['status']==='pending')echo '<p>Waiting for administrator review. You will be notified of the decision.</p>';
         echo '</div></details>';
     }
-    echo '</div></details></section><section class="ac-student-panel ac-cert-group"><details open><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>My certificates</strong><small>'.count($graduates).' approved · '.$ready.' ready to preview · '.$paying.' payment pending</small></span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded">';
-    if(!$graduates)echo '<p class="ac-student-empty">No approved certificates yet. Submit a certification request above.</p>';
     foreach($graduates as $g){
         $status=$g['certificate_status']??'ready';
         $label=['ready'=>'Ready to certify','pending'=>'Payment pending','issued'=>'Issued','revoked'=>'Revoked'][$status]??'Unavailable';
-        echo '<details class="ac-cert-record"><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($g['title']).'</strong><small>'.e($g['duration']).'</small></span><span class="ac-request-state state-'.e($status==='ready'||$status==='issued'?'approved':($status==='pending'?'pending':'declined')).'">'.e($label).'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded">';
+        echo '<details class="ac-cert-record" data-cert-record><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($g['title']).'</strong><small>'.e($g['duration']).'</small></span><span class="ac-request-state state-'.e($status==='ready'||$status==='issued'?'approved':($status==='pending'?'pending':'declined')).'">'.e($label).'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded" data-cert-details>';
         if(!$g['certificate_id']){
             ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';
             $approvedName=academy_request_name($studentId,(int)$g['id'],'');
@@ -123,7 +121,7 @@ if($screen==='dashboard'){
         else echo '<p>Certificate revoked. Contact support.</p>';
         echo '</div></details>';
     }
-    echo '</div></details></section><script src="/assets/js/academy-certificates.js?v=1" defer></script></div>';
+    echo '</section><dialog class="ac-cert-dialog" id="ac-cert-dialog" aria-labelledby="ac-cert-dialog-title"><div class="ac-cert-dialog-head"><div><h2 id="ac-cert-dialog-title">Certificate details</h2><p id="ac-cert-dialog-meta"></p></div><button type="button" data-cert-close aria-label="Close certificate details">Close</button></div><div data-cert-dialog-body></div></dialog><script src="/assets/js/academy-certificates.js?v=2" defer></script></div>';
 }else{
     ac_guide('profile',$studentId);
     echo '<section class="ac-student-panel ac-profile-panel"><h2>Personal information</h2><p>Keep your name and contact details up to date.</p><label>Email address<input type="email" readonly value="'.e($user['email']).'"></label><small>Email verified. Contact support if you need to change it.</small>';
