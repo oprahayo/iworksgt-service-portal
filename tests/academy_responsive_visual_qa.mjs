@@ -84,6 +84,18 @@ try{
         await dialog.waitFor({state:'hidden'});
         await page.waitForFunction(()=>document.querySelector('#ac-cert-dialog [data-cert-dialog-body]').childElementCount===0);
         if(await approved.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Record not restored after closing');
+        const pending=workspace.locator('details.ac-cert-record').filter({has:page.locator('button').filter({hasText:'Check Payment'})}).first();
+        await pending.locator(':scope > summary').click();
+        await dialog.waitFor({state:'visible'});
+        if(!await dialog.getByRole('button',{name:'Check Payment',exact:true}).isVisible()||!await dialog.getByRole('button',{name:'Continue Payment',exact:true}).isVisible())throw Error('Pending payment actions missing');
+        await dialog.getByRole('button',{name:'Close certificate details'}).click();
+        await page.waitForFunction(()=>document.querySelector('#ac-cert-dialog [data-cert-dialog-body]').childElementCount===0);
+        const issued=workspace.locator('details.ac-cert-record').filter({has:page.locator('a').filter({hasText:'Download Certificate'})}).first();
+        await issued.locator(':scope > summary').click();
+        await dialog.waitFor({state:'visible'});
+        if(!await dialog.getByRole('link',{name:'Download Certificate',exact:true}).isVisible())throw Error('Issued certificate download missing');
+        await dialog.getByRole('button',{name:'Close certificate details'}).click();
+        await page.waitForFunction(()=>document.querySelector('#ac-cert-dialog [data-cert-dialog-body]').childElementCount===0);
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Certificate history overflows viewport');
       }
       const metrics=await page.evaluate(()=>{
