@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__.'/app/bootstrap.php';
 require __DIR__.'/app/academy.php';
+require __DIR__.'/app/academy_learning.php';
 if (!is_configured()) { http_response_code(503); exit('Academy unavailable.'); }
 if (should_enforce_split_domain() && request_host()!==configured_host(portal_base_url())) {
     redirect('https://portal.iworksgt.com/academy.php');
@@ -91,6 +92,20 @@ try {
         require __DIR__.'/views/partials/footer.php';
         exit;
     }
+    if ($action==='builder'){
+        require_roles(['admin']);
+        $cid=(int)(method_is('POST')?($_POST['course']??0):($_GET['course']??0));
+        $course=db_one('SELECT id,title FROM academy_courses WHERE id=:id',['id'=>$cid]);
+        if(!$course){http_response_code(404);exit('Course unavailable.');}
+        if(method_is('POST')){
+            require_csrf();
+            try{academy_learning_save($cid,(string)($_POST['mode']??''),$_POST);flash('academy_admin_notice','Learning content saved.');}
+            catch(InvalidArgumentException $e){flash('academy_admin_error',$e->getMessage());}
+            catch(Throwable $e){error_log('Academy builder save failed: '.get_class($e));flash('academy_admin_error','Unable to save content.');}
+            redirect($base.'?action=builder&course='.$cid);
+        }
+        define('IWORKS_ACADEMY_BUILDER',true);require __DIR__.'/views/academy-builder.php';exit;
+    }
     if ($action==='admin') {
         require_roles(['admin']);
         if(method_is('POST')){
@@ -174,9 +189,17 @@ try {
     require_roles(['student']);$user=current_user();
     if (!is_email_verified($user)) { http_response_code(403);exit('Verify your email first.'); }
     if ($action==='learn'){
-        $course=db_one("SELECT c.title,en.status FROM academy_enrollments en JOIN academy_courses c ON c.id=en.course_id WHERE en.student_id=:student AND en.course_id=:course AND en.status IN ('enrolled','completed') AND c.active=1",['student'=>$user['id'],'course'=>(int)($_GET['course']??0)]);
+        $course=academy_learning_access((int)$user['id'],(int)($_GET['course']??0));
         if(!$course){http_response_code(403);ac_head('Learning access unavailable');echo '<p>Your course application must be approved before you can access the learning area.</p><a href="'.$base.'?action=courses">My courses</a>';ac_end();exit;}
-        ac_head($course['title']);echo '<section><h2>Your learning area</h2><p>Enrollment approved. Course lessons and modules have not been published yet. You will be able to access them here when available.</p><a href="'.$base.'?action=courses">Back to my courses</a></section>';ac_end();exit;
+        define('IWORKS_ACADEMY_LEARNING_VIEW',true);require __DIR__.'/views/academy-learning.php';exit;
+    }
+    if ($action==='lesson_complete'){
+        if(!method_is('POST')){http_response_code(405);exit;}
+        require_csrf();$cid=(int)($_POST['course']??0);$lid=(int)($_POST['lesson']??0);
+        if(!academy_learning_lesson((int)$user['id'],$cid,$lid)){http_response_code(403);exit('Lesson unavailable.');}
+        academy_learning_complete((int)$user['id'],$cid,$lid);
+        flash('academy_student_notice','Lesson progress saved.');
+        redirect($base.'?action=learn&course='.$cid.'&lesson='.$lid);
     }
     if ($action==='callback'){
         $ref=(string)($_GET['reference']??'');
