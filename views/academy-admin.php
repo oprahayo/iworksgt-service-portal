@@ -59,7 +59,7 @@ $status=(string)($_GET['status']??'');
 $page=max(1,min(100000,(int)($_GET['p']??1)));
 $notice=flash('academy_admin_notice');$error=flash('academy_admin_error');
 ac_head('Academy');
-echo '<div class="ac-admin"><div class="ac-intro"><div><h2>Academy</h2><p>Manage students, courses and certificates.</p></div><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
+echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
 foreach(['students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).'</a>';}
 echo '</nav>';
 if($notice)echo '<div class="ac-message" role="status">'.e($notice).'</div>';
@@ -77,7 +77,6 @@ if($tab==='students'){
     $from=" FROM users u WHERE u.role='student' AND u.deleted_at IS NULL".$where;
     $total=ac_admin_count('SELECT COUNT(*) n'.$from,$params);$page=min($page,max(1,(int)ceil($total/25)));$offset=($page-1)*25;
     $rows=db_all("SELECT u.id,u.full_name,u.email,u.status,u.account_state,u.email_verified_at,
-        (SELECT COUNT(*) FROM academy_enrollments en WHERE en.student_id=u.id AND en.status<>'cancelled') AS enrolled_count,
         (SELECT COUNT(*) FROM academy_graduates g WHERE g.student_id=u.id) AS completed_count,
         (SELECT COUNT(*) FROM academy_certificates ce WHERE ce.student_id=u.id AND ce.status='issued') AS certificate_count".$from." ORDER BY u.id DESC LIMIT 25 OFFSET ".$offset,$params);
     if(!$rows)ac_admin_empty('No students match your search. New students appear here after registration.');
@@ -112,7 +111,7 @@ if($tab==='students'){
             LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id
             WHERE en.id IS NOT NULL OR g.id IS NOT NULL ORDER BY c.title",['en_student'=>$id,'g_student'=>$id]);
         echo '<h3>Course and certificate history</h3>';
-        if(!$rows)ac_admin_empty('No course history yet. Approve a completed course below if this student has already graduated.');
+        if(!$rows)ac_admin_empty('No course history yet. Use the approval form above for completed training.');
         else{
             ac_admin_table(['Course','Enrollment','Duration','Certificate','Action']);
             foreach($rows as $r){
