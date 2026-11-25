@@ -36,6 +36,7 @@ function ac_admin_colour_options(string $selected='orange'):void{
 }
 function ac_admin_search(string $tab,string $query,string $status='',array $options=[]):void{
     echo '<form class="ac-filter" method="get" action="/academy.php"><input type="hidden" name="action" value="admin"><input type="hidden" name="tab" value="'.e($tab).'"><label>Search<input type="search" name="q" value="'.e($query).'" placeholder="Name, email or course"></label>';
+    if($tab==='certificates'&&(int)($_GET['student']??0)>0)echo '<input type="hidden" name="student" value="'.(int)$_GET['student'].'">';
     if($options){echo '<label>Status<select name="status"><option value="">All statuses</option>';foreach($options as $value=>$label)echo '<option value="'.e($value).'"'.($value===$status?' selected':'').'>'.e($label).'</option>';echo '</select></label>';}
     echo '<button>Search</button>';ac_admin_link('Reset',$tab,[],'ac-secondary');echo '</form>';
 }
@@ -106,7 +107,7 @@ if($tab==='students'){
             FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student
             LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id
             WHERE en.id IS NOT NULL OR g.id IS NOT NULL ORDER BY c.title",['en_student'=>$id,'g_student'=>$id]);
-        echo '<h3>Course and certificate history</h3>';
+        echo '<div class="ac-panel-title"><h3>Course and certificate history</h3>';if(ac_admin_student_state($u)==='verified')echo '<a class="ac-secondary" href="#approve">Approve completed training</a>';echo '</div>';
         if(!$rows)ac_admin_empty('No course history yet. Approve a completed course below if this student has already graduated.');
         else{
             ac_admin_table(['Course','Enrollment','Duration','Certificate','Action']);
