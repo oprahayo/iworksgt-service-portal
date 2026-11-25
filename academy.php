@@ -94,6 +94,7 @@ try {
             db_execute('UPDATE users SET full_name=:name,phone=:phone WHERE id=:id',['name'=>$name,'phone'=>$phone,'id'=>$user['id']]);redirect($base);
         }
         if ($action==='checkout') redirect(academy_new_checkout($user,(int)($_POST['graduate']??0),trim((string)($_POST['name']??''))));
+        if ($action==='resume') redirect(academy_resume_checkout($user,(int)($_POST['graduate']??0)));
         if ($action==='recheck'){
             $ref=(string)($_POST['reference']??'');
             if(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref AND student_id=:student',['ref'=>$ref,'student'=>$user['id']])) academy_confirm($ref);redirect($base);
@@ -113,7 +114,7 @@ try {
         $cert=db_one('SELECT * FROM academy_certificates WHERE graduate_id=:id',['id'=>$g['id']]);
         if(!$cert){ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';ac_input('name','Name on certificate',$user['full_name']);echo '<button>Get Certificate</button></form>';}
         elseif($cert['status']==='issued'){echo '<p>Issued: '.e($cert['certificate_number']).'</p><a href="?action=download&amp;id='.(int)$cert['id'].'">Download Certificate</a>';ac_notify($cert,$user);}
-        elseif($cert['status']==='pending'){echo '<p>Payment awaiting confirmation. Do not pay twice.</p>';ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($cert['payment_reference']).'"><button>Check Payment</button></form>';}
+        elseif($cert['status']==='pending'){echo '<p>Payment pending. Continue your existing payment or check its status.</p>';if(!empty($cert['checkout_url'])){ac_form('resume');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><button>Continue Payment</button></form>';}ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($cert['payment_reference']).'"><button>Check Payment</button></form>';}
         else echo '<p>Certificate revoked. Contact support.</p>';echo '</article>';
     }
     ac_end();
