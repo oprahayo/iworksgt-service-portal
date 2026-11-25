@@ -433,3 +433,12 @@ body.portal-authenticated.role-student .portal-topbar.ac-student-topbar,.ac-stud
 .academy-workspace .ac-cert-activity .ac-cert-summary-copy strong{font-weight:550;color:#334155;font-size:14px}
 .academy-workspace .ac-cert-activity .ac-cert-summary-copy small{color:#64748b}
 @media(max-width:600px){.academy-workspace .ac-cert-start .ac-cert-summary{padding:12px;gap:8px;flex-wrap:wrap}.academy-workspace .ac-cert-start-cta{margin-left:50px;padding:8px 11px;min-height:40px;display:inline-flex;align-items:center;gap:5px}.academy-workspace .ac-cert-start .ac-cert-summary-copy{flex:1 1 calc(100% - 50px)}.academy-workspace .ac-cert-activity .ac-cert-summary{padding:12px 10px;gap:7px}.academy-workspace .ac-cert-history-icon{width:28px;height:28px;flex-basis:28px;font-size:14px}.academy-workspace .ac-cert-activity .ac-cert-summary-copy strong{font-size:13px}.academy-workspace .ac-cert-activity-head h2{font-size:18px}}
+
+@media(max-width:480px){
+ .academy-workspace .ac-cert-activity .ac-cert-record>.ac-cert-summary{display:grid;grid-template-columns:28px minmax(0,1fr) 10px;column-gap:9px;row-gap:4px;align-items:center}
+ .academy-workspace .ac-cert-activity .ac-cert-history-icon{grid-column:1;grid-row:1/3;align-self:start;margin-top:2px}
+ .academy-workspace .ac-cert-activity .ac-cert-summary-copy{grid-column:2;grid-row:1}
+ .academy-workspace .ac-cert-activity .ac-request-state{grid-column:2;grid-row:2;justify-self:start;max-width:none;text-align:left}
+ .academy-workspace .ac-cert-activity .ac-cert-chevron{grid-column:3;grid-row:1/3;align-self:center}
+ .academy-workspace .ac-cert-activity .ac-cert-next{display:none}
+}
