@@ -84,4 +84,12 @@ $goodStripe=handle_gateway_webhook('stripe',$ignored,['Stripe-Signature'=>"t=$ts
 $badStripe=handle_gateway_webhook('stripe',$ignored,['Stripe-Signature'=>"t=".($ts-600).",v1=$signature"]);
 check_gateway($goodStripe['status_code']===200 && $badStripe['status_code']===403,
     'Stripe signature and replay timestamp validation must both pass.');
+// An Academy checkout reference must pass the same real signature gate
+// as existing service invoices, and a missing local record cannot issue.
+$academyEvent=json_encode(['event'=>'charge.success','data'=>['reference'=>'IWGA-'.str_repeat('a',32)]]);
+$badAcademy=handle_gateway_webhook('paystack',$academyEvent,['x-paystack-signature'=>'bad']);
+check_gateway($badAcademy['status_code']===403,'Reject unsigned Academy charge.');
+$academySignature=hash_hmac('sha512',$academyEvent,$GLOBALS['method']['secret_key']);
+$unknownAcademy=handle_gateway_webhook('paystack',$academyEvent,['x-paystack-signature'=>$academySignature]);
+check_gateway($unknownAcademy['status_code']===503 && !$unknownAcademy['success'],'Signed but unknown Academy charge must not issue a certificate.');
 echo "f07_f08_gateway_validation_test passed\n";
