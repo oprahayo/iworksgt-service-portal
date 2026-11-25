@@ -175,8 +175,10 @@ if($tab==='students'){
     else{
         ac_admin_table(['Student','Course / duration','Status','Payment / email','Action']);
         foreach($rows as $r){$st=ac_admin_certificate_state($r);echo '<tr role="row"><td role="cell"><strong>'.e($r['full_name']).'</strong><small>'.e($r['email']).'</small></td><td role="cell" data-label="Course / duration">'.e($r['title']).'<small>'.e($r['duration']).'</small></td><td role="cell" data-label="Status">';ac_admin_status($st);if($st==='issued'||$st==='revoked')echo '<small>'.e((string)$r['certificate_number']).'</small>';echo '</td><td role="cell" data-label="Payment / email">';
-            if($st==='ready')echo 'Not started';elseif($st==='pending')echo '₦'.number_format((int)$r['amount_minor']/100,2).' · Pending';else {echo '₦'.number_format((int)$r['amount_minor']/100,2).' · Verified payment';echo '<small>Email: '.($r['email_sent_at']?'Sent':'Awaiting delivery').'</small>';}
+            if($st==='ready')echo 'Not started';elseif($st==='pending')echo '₦'.number_format((int)$r['amount_minor']/100,2).' · Pending';else {echo '₦'.number_format((int)$r['amount_minor']/100,2).' · Verified payment';echo '<small>Email: '.($r['email_sent_at']?'Accepted by mail server':'Awaiting delivery').'</small>';}
             echo '</td><td role="cell"><div class="ac-actions">';ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');
+            if($st==='pending'){ac_admin_post('verify_payment','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><button>Verify payment</button></form>';}
+            if($st==='issued'&&!$r['email_sent_at']){ac_admin_post('retry_email','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><button class="ac-secondary">Retry email</button></form>';}
             if($st==='issued'){echo '<details class="ac-danger-details"><summary>Revoke</summary>';ac_admin_post('revoke','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><label class="ac-check"><input type="checkbox" name="confirm_revoke" value="1" required> I confirm revocation.</label><button class="ac-danger">Revoke certificate</button></form></details>';}
             echo '</div></td></tr>';
         }
