@@ -28,3 +28,9 @@ All four exact approved SVG hashes were checked and all four variants rendered t
 - /verify
 
 Admin first approves the three students after they register and verify email, assigning course and actual duration. No student details have been fabricated.
+
+## Release controls added
+- Checkout is disabled by default (`academy_checkout_enabled=0`). Only enable after staging, end-to-end Paystack test, mail delivery, private-file denial and backup verification. Existing verified pending transactions can still be confirmed with checkout disabled.
+- `scripts/academy_host_check.sh` downloads a pinned source archive to a temporary private home directory and checks the exact SVGs, PHP, fonts, PDF generation and existing database/mail/payment configuration without modifying production. It is a diagnostic, not a deployment command.
+- CI covers PHP lint, existing portal regression tests, Academy validation and a simulated payment lifecycle; a separate isolated MySQL job exercises baseline schema, repeated migration, enrollment, ownership, unique graduate certificate constraint and revocation. This does not represent real Paystack or production delivery.
+- Retain current `b.sh` for its prior invoice release; do not use it to deploy Academy.
