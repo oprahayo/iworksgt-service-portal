@@ -53,18 +53,28 @@ function academy_assessment_create(int $course,int $lesson,array $d):int{
  $instructions=academy_learning_text($d['instructions']??'',10000,$kind==='assignment');
  $pass=filter_var($d['pass_percent']??'60',FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>100]]);
  if($pass===false)throw new InvalidArgumentException('Pass mark must be 1–100.');
+ $minutes=$kind==='exam'?filter_var($d['duration_minutes']??'0',FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>240]]):0;
+ if($minutes===false||($minutes!==0&&$minutes<1))throw new InvalidArgumentException('Exam time must be 0–240 minutes.');
  $questions=$kind==='assignment'?[]:academy_assessment_questions(academy_learning_text($d['questions']??'',60000,true));
- db_execute('INSERT INTO academy_assessments(lesson_id,kind,title,instructions,questions_json,pass_percent,published,created_at) VALUES(:lesson,:kind,:title,:instructions,:questions,:pass,:published,:at)',['lesson'=>$lesson,'kind'=>$kind,'title'=>$title,'instructions'=>$instructions,'questions'=>json_encode($questions,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE),'pass'=>$pass,'published'=>($d['published']??'')==='1'?1:0,'at'=>now()]);
+ db_execute('INSERT INTO academy_assessments(lesson_id,kind,title,instructions,questions_json,pass_percent,published,created_at,duration_minutes) VALUES(:lesson,:kind,:title,:instructions,:questions,:pass,:published,:at,:minutes)',['lesson'=>$lesson,'kind'=>$kind,'title'=>$title,'instructions'=>$instructions,'questions'=>json_encode($questions,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE),'pass'=>$pass,'minutes'=>$minutes,'published'=>($d['published']??'')==='1'?1:0,'at'=>now()]);
  return db_last_id();
 }
 function academy_assessment_publish(int $course,int $lesson,int $id,bool $published):void{
  if(!academy_lesson_in_course($course,$lesson))throw new InvalidArgumentException('Lesson unavailable.');
  db_execute('UPDATE academy_assessments SET published=:published WHERE id=:id AND lesson_id=:lesson',['published'=>$published?1:0,'id'=>$id,'lesson'=>$lesson]);
 }
+function academy_exam_start(int $student,int $course,int $lesson,int $id):bool{
+ if(!academy_learning_lesson($student,$course,$lesson))throw new InvalidArgumentException('Exam unavailable.');
+ // Atomic authorization and INSERT IGNORE ensure refreshes never extend a deadline.
+ db_query("INSERT IGNORE INTO academy_exam_starts(assessment_id,student_id,started_epoch,deadline_epoch) SELECT a.id,en.student_id,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()+a.duration_minutes*60 FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id JOIN academy_courses c ON c.id=m.course_id JOIN academy_enrollments en ON en.course_id=c.id JOIN users u ON u.id=en.student_id LEFT JOIN academy_assessment_submissions s ON s.assessment_id=a.id AND s.student_id=en.student_id WHERE a.id=:id AND l.id=:lesson AND c.id=:course AND en.student_id=:student AND a.kind='exam' AND a.duration_minutes>0 AND a.published=1 AND l.published=1 AND m.published=1 AND lc.published=1 AND c.active=1 AND en.status IN ('enrolled','completed') AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL AND s.id IS NULL",compact('id','lesson','course','student'));
+ $r=db_one("SELECT t.deadline_epoch,UNIX_TIMESTAMP() server_epoch FROM academy_exam_starts t JOIN academy_assessments a ON a.id=t.assessment_id WHERE t.assessment_id=:id AND t.student_id=:student AND a.lesson_id=:lesson AND a.published=1 AND a.duration_minutes>0 AND NOT EXISTS(SELECT 1 FROM academy_assessment_submissions s WHERE s.assessment_id=t.assessment_id AND s.student_id=t.student_id)",compact('id','student','lesson'));
+ return $r!==null&&(int)$r['deadline_epoch']>(int)$r['server_epoch'];
+}
 function academy_assessment_submit(int $student,int $course,int $lesson,int $id,array $data):bool{
  if(!academy_learning_lesson($student,$course,$lesson))throw new InvalidArgumentException('Assessment unavailable.');
  $a=db_one('SELECT * FROM academy_assessments WHERE id=:id AND lesson_id=:lesson AND published=1',compact('id','lesson'));
  if(!$a)throw new InvalidArgumentException('Assessment unavailable.');
+ if((int)$a['duration_minutes']>0){$timer=db_one('SELECT deadline_epoch,UNIX_TIMESTAMP() server_epoch FROM academy_exam_starts WHERE assessment_id=:id AND student_id=:student',compact('id','student'));if(!$timer||(int)$timer['deadline_epoch']<=(int)$timer['server_epoch'])throw new InvalidArgumentException('Start the exam first, or the allotted time has expired.');}
  $score=null;
  if($a['kind']==='assignment')$response=academy_learning_text($data['response']??'',20000,true);
  else{
@@ -75,7 +85,7 @@ function academy_assessment_submit(int $student,int $course,int $lesson,int $id,
   $score=(int)floor(100*$correct/count($questions));
  }
  // Unique constraint prevents duplicate attempts; the SELECT rechecks publication and enrollment atomically.
- $count=db_query("INSERT IGNORE INTO academy_assessment_submissions(assessment_id,student_id,response_json,score_percent,feedback,submitted_at,graded_at) SELECT a.id,en.student_id,:response,:score,'',:submitted,:graded FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id JOIN academy_courses c ON c.id=m.course_id JOIN academy_enrollments en ON en.course_id=c.id JOIN users u ON u.id=en.student_id WHERE a.id=:id AND l.id=:lesson AND c.id=:course AND en.student_id=:student AND a.published=1 AND l.published=1 AND m.published=1 AND lc.published=1 AND c.active=1 AND en.status IN ('enrolled','completed') AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL",['response'=>json_encode($response,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE),'score'=>$score,'submitted'=>now(),'graded'=>$score===null?null:now(),'id'=>$id,'lesson'=>$lesson,'course'=>$course,'student'=>$student])->rowCount();
+ $count=db_query("INSERT IGNORE INTO academy_assessment_submissions(assessment_id,student_id,response_json,score_percent,feedback,submitted_at,graded_at) SELECT a.id,en.student_id,:response,:score,'',:submitted,:graded FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id JOIN academy_courses c ON c.id=m.course_id JOIN academy_enrollments en ON en.course_id=c.id JOIN users u ON u.id=en.student_id WHERE a.id=:id AND l.id=:lesson AND c.id=:course AND en.student_id=:student AND a.published=1 AND l.published=1 AND m.published=1 AND lc.published=1 AND c.active=1 AND en.status IN ('enrolled','completed') AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL AND (a.duration_minutes=0 OR EXISTS(SELECT 1 FROM academy_exam_starts t WHERE t.assessment_id=a.id AND t.student_id=en.student_id AND t.deadline_epoch>UNIX_TIMESTAMP()))",['response'=>json_encode($response,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE),'score'=>$score,'submitted'=>now(),'graded'=>$score===null?null:now(),'id'=>$id,'lesson'=>$lesson,'course'=>$course,'student'=>$student])->rowCount();
  return $count===1;
 }
 function academy_assignment_grade(int $admin,int $course,int $lesson,int $submission,array $data):void{
