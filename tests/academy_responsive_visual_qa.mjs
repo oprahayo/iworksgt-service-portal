@@ -31,7 +31,7 @@ try{
         await page.keyboard.press('Escape');await dlg.waitFor({state:'hidden'});
         if(page.url()!==original)throw Error('Profile save navigated away');
         // Reload fixture to reset its welcome-guide state after testing profile on the dashboard.
-        if(file==='student-dashboard.html')await page.reload({waitUntil:'load'});
+        if(file==='student-dashboard.html'){await page.evaluate(()=>localStorage.removeItem(document.querySelector('#ac-welcome-guide').dataset.guideKey));await page.reload({waitUntil:'load'});}
       }
       if(file==='student-dashboard.html'){
         const dialog=page.locator('#ac-welcome-guide');
@@ -73,13 +73,15 @@ try{
       }
       if(file==='student-certificates.html'){
         const workspace=page.locator('.ac-cert-compact');
+        const gap=await workspace.evaluate(el=>{const a=el.querySelector('.ac-cert-start').getBoundingClientRect(),b=el.querySelector('.ac-cert-activity').getBoundingClientRect();return b.top-a.bottom;});if(gap<20)throw Error('Certificate request and history need distinct spacing');
         const box=await workspace.boundingBox();
         if(!box||box.width>941)throw Error('Certificate workspace too wide');
         const request=page.locator('#ac-new-certificate');
-        const course=request.locator('[data-cert-course]');
-        const name=request.locator('[data-cert-name]');
-        const confirmation=request.locator('[data-cert-confirm]');
-        const output=request.locator('[data-cert-name-output]');
+        const course=workspace.locator('[data-cert-course]');
+        const name=workspace.locator('[data-cert-name]');
+        const confirmation=workspace.locator('[data-cert-confirm]');
+        const output=workspace.locator('[data-cert-name-output]');
+        const requestDialog=page.locator('#ac-cert-dialog');
         if(await course.isVisible()||await name.isVisible())throw Error('Request form must start collapsed');
         await page.evaluate(()=>location.hash='#ac-new-certificate');
         await course.waitFor({state:'visible'});
@@ -88,15 +90,17 @@ try{
         if(!await name.isVisible()||!await confirmation.isVisible())throw Error('Name and confirmation did not reveal after course selection');
         await name.fill('CI Correct Certificate Name');
         if(await output.textContent()!=='CI Correct Certificate Name')throw Error('Name confirmation did not update');
-        if(await confirmation.isChecked()||await request.locator('form').evaluate(form=>form.checkValidity()))throw Error('Unconfirmed name was accepted');
+        if(await confirmation.isChecked()||await course.locator('xpath=ancestor::form').evaluate(form=>form.checkValidity()))throw Error('Unconfirmed name was accepted');
         await confirmation.check();
-        if(!await request.locator('form').evaluate(form=>form.checkValidity()))throw Error('Confirmed form should validate');
+        if(!await course.locator('xpath=ancestor::form').evaluate(form=>form.checkValidity()))throw Error('Confirmed form should validate');
         await name.fill('CI Changed Name');
         if(await confirmation.isChecked()||await output.textContent()!=='CI Changed Name')throw Error('Changing name must clear consent');
         await confirmation.check();
         await course.selectOption({index:0});
         if(await name.isVisible()||await confirmation.isVisible()||await confirmation.isChecked())throw Error('Clearing course must reset later steps');
-        await request.locator(':scope > summary').click();
+        if(!await requestDialog.isVisible())throw Error('Request deep link did not open popup');
+        await page.mouse.click(1,1);await requestDialog.waitFor({state:'hidden'});
+        await page.waitForFunction(()=>document.querySelector('#ac-cert-dialog [data-cert-dialog-body]').childElementCount===0);
         await page.evaluate(()=>location.hash='#ac-certificate-history');
         await page.waitForFunction(()=>document.activeElement?.id==='ac-certificate-history');
         await page.evaluate(()=>{history.replaceState(null,'',location.pathname);document.activeElement.blur();});
@@ -136,9 +140,36 @@ try{
       if(file==='student-learning.html'){
         const results=page.locator('.ac-results-panel details');
         await results.locator('summary').click();
-        if(await results.locator('.ac-result-row').count()!==3||!await results.getByText('100% · Passed',{exact:true}).isVisible())throw Error('Academic results not available');
+        if(await results.locator('.ac-result-row').count()!==4||!await results.getByText('100% · Passed',{exact:true}).isVisible())throw Error('Academic results not available');
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Academic results overflow');
         await results.locator('summary').click();
+        const practice=page.locator('details[data-ac-popup]').filter({has:page.locator('summary').filter({hasText:'Practice quiz'})});
+        await practice.locator('summary').click();
+        const action=page.locator('.ac-action-dialog');await action.waitFor({state:'visible'});
+        if(await action.locator('fieldset:visible').count()!==1)throw Error('Quiz must show one question at a time');
+        await action.getByRole('button',{name:'Next question'}).click();
+        if(!await action.getByText('Question 1 of 2',{exact:true}).isVisible())throw Error('Unanswered question advanced');
+        await action.locator('fieldset:visible input').first().check();await action.getByRole('button',{name:'Next question'}).click();
+        if(!await action.getByText('Question 2 of 2',{exact:true}).isVisible())throw Error('Question did not advance');
+        await action.getByRole('button',{name:'Previous'}).click();
+        if(!await action.locator('fieldset:visible input').first().isChecked())throw Error('Previous answer lost');
+        await page.mouse.click(1,1);await action.waitFor({state:'hidden'});
+      }
+      if(file==='admin-builder.html'){
+        const author=page.locator('details[data-ac-popup]').filter({has:page.locator('summary').filter({hasText:'Add quiz, exam or assignment'})}).first();
+        await author.locator('summary').click();const action=page.locator('.ac-action-dialog');await action.waitFor({state:'visible'});
+        if(await action.locator('input[name=title]').isVisible())throw Error('Authoring starts with type only');
+        await action.locator('select[name=kind]').selectOption('exam');await action.getByRole('button',{name:'Continue',exact:true}).click();
+        if(!await action.locator('input[name=duration_minutes]').isVisible()||!await action.locator('textarea[name=questions]').isVisible())throw Error('Exam fields missing');
+        await action.locator('select[name=kind]').selectOption('assignment');await action.getByRole('button',{name:'Continue',exact:true}).click();
+        if(await action.locator('input[name=duration_minutes]').isVisible()||await action.locator('textarea[name=questions]').isVisible())throw Error('Assignment shows irrelevant fields');
+        await action.getByRole('button',{name:'Close action'}).click();await action.waitFor({state:'hidden'});
+      }
+      if(file==='admin-requests.html'){
+        await page.locator('details[data-ac-popup]').filter({has:page.locator('summary').filter({hasText:'Decline request'})}).first().locator('summary').click();
+        const action=page.locator('.ac-action-dialog');await action.waitFor({state:'visible'});
+        if(!await action.locator('textarea[name=reason]').isVisible()||(await action.locator('textarea[name=reason]').getAttribute('required'))===null)throw Error('Decline reason missing');
+        await page.keyboard.press('Escape');await action.waitFor({state:'hidden'});
       }
       const metrics=await page.evaluate(()=>{
         const root=document.querySelector('.academy-workspace');
