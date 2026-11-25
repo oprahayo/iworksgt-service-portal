@@ -1,0 +1,13 @@
+/* Academy: inherit the established portal typography, tokens and shell. */
+.academy-workspace{max-width:980px;margin:auto}
+.academy-workspace h1{font-size:1.65rem;font-weight:600}
+.academy-workspace h2{font-size:1.25rem;margin-top:1.5rem}
+.academy-workspace h3{font-size:1.05rem}
+.academy-workspace article,.academy-workspace section,.academy-workspace>form{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem;margin:.75rem 0}
+.academy-workspace label{display:block;margin:.75rem 0}
+.academy-workspace input:not([type=hidden]),.academy-workspace select{display:block;width:100%;border:1px solid #cbd5e1;border-radius:.5rem;padding:.7rem;margin-top:.35rem;font:inherit;background:white}
+.academy-workspace button{min-height:44px;background:var(--brand-primary);color:white;border:0;border-radius:.55rem;padding:.65rem 1.1rem;font:inherit;font-weight:500}
+.academy-workspace button:hover{background:var(--brand-primary-dark)}
+.academy-workspace nav{display:flex;flex-wrap:wrap;gap:1rem;margin:1rem 0}
+.academy-workspace .preview{max-width:100%;height:auto}
+@media(max-width:600px){.academy-workspace button{width:100%}.academy-workspace h1{font-size:1.35rem}}
