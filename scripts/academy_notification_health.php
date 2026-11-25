@@ -10,7 +10,7 @@ try{
  echo 'Notification emails: '.(email_notifications_enabled()?'enabled':'disabled')."; mail transport: ".(email_enabled()?'enabled':'disabled')."\n";
  $rows=db_all("SELECT u.role,n.title,COUNT(*) total,SUM(n.is_read=0) unread FROM notifications n JOIN users u ON u.id=n.user_id WHERE n.target_url LIKE '%academy.php%' AND u.role IN ('student','admin') GROUP BY u.role,n.title ORDER BY u.role,n.title");
  // Titles for Academy events are fixed; do not expose messages, account IDs or addresses.
- $allowed=['Course application received','Enrollment accepted.','Enrollment cancelled.','Training approved','Certificate issued','Academy update','Student inquiry'];
+ $allowed=['Course application received','Enrollment accepted.','Enrollment cancelled.','Training approved','Certificate issued','Academy update','Student inquiry','Certification request received','New certification request','Certification approved','Certification declined'];
  $totals=['student'=>0,'admin'=>0];
  foreach($rows as $r){$totals[$r['role']]+=(int)$r['total'];if(in_array($r['title'],$allowed,true))echo $r['role'].' | '.$r['title'].' | total='.$r['total'].' unread='.$r['unread']."\n";}
  foreach($totals as $role=>$n)echo 'Stored Academy notifications for '.$role.': '.$n."\n";
