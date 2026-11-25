@@ -142,8 +142,12 @@ try {
                         if($changed>0){$success=$status==='enrolled'?'Enrollment accepted.':'Enrollment cancelled.';if($enrollment)academy_notice((int)$enrollment['student_id'],$success,$enrollment['title'].': '.$success,'courses');}
                         else $error='This enrollment is no longer available or has already changed.';
                     }
+                }elseif($mode==='edit_duration'){
+                    $graduate=(int)($_POST['graduate']??0);
+                    if(academy_edit_duration($studentId,$graduate,(string)($_POST['duration']??'')))$success='Training duration updated.';
+                    else $error='No change saved. The duration may already match, or a certificate payment has started.';
                 }elseif($mode==='approve'){
-                    $course=(int)($_POST['course']??0);$duration=trim((string)($_POST['duration']??''));
+                    $course=(int)($_POST['course']??0);$weeks=academy_duration_weeks((string)($_POST['duration']??''));$duration=$weeks===null?'':academy_duration_label($weeks);
                     if($studentId<1||$course<1||$duration===''||mb_strlen($duration)>80)$error='Select the completed course and enter its training duration.';
                     else{
                         db()->beginTransaction();
