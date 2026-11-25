@@ -29,6 +29,12 @@ db()->exec("CREATE TABLE IF NOT EXISTS academy_certificates (
 if (!db_one("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='academy_certificates' AND COLUMN_NAME='checkout_url'")) {
     db()->exec('ALTER TABLE academy_certificates ADD COLUMN checkout_url VARCHAR(512) NULL AFTER payment_reference');
 }
+db()->exec("CREATE TABLE IF NOT EXISTS academy_enrollments (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, student_id INT UNSIGNED NOT NULL,
+ course_id INT UNSIGNED NOT NULL, status ENUM('requested','enrolled','completed','cancelled') NOT NULL DEFAULT 'requested',
+ created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, UNIQUE KEY academy_student_course(student_id,course_id),
+ FOREIGN KEY(student_id) REFERENCES users(id), FOREIGN KEY(course_id) REFERENCES academy_courses(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 foreach ([
  ['digital-marketing','Digital Marketing','orange'],
  ['wordpress','WordPress & CMS Web Design','purple'],
