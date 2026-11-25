@@ -12,6 +12,33 @@ try{
     const page=await browser.newPage({viewport:{width,height:900},deviceScaleFactor:1});
     for(const file of files){
       await page.goto(pathToFileURL(resolve(dir,file)).href,{waitUntil:'load'});
+      if(file==='student-dashboard.html'){
+        const dialog=page.locator('#ac-welcome-guide');
+        await dialog.waitFor({state:'visible',timeout:10000});
+        if(await dialog.locator('a[data-guide-link]').count()!==2)throw Error('Welcome paths missing');
+        if(await dialog.locator('a[data-guide-link]').nth(0).getAttribute('href')!=='/academy.php?action=certificates'||await dialog.locator('a[data-guide-link]').nth(1).getAttribute('href')!=='/academy.php?action=courses')throw Error('Guide destinations incorrect');
+        const d=await dialog.boundingBox();
+        if(!d||d.x<0||d.y<0||d.x+d.width>width+1||d.y+d.height>900+1)throw Error('Welcome guide exceeds viewport');
+        if(width===320)await page.keyboard.press('Escape');else await dialog.getByRole('button',{name:'Got it, continue'}).click();
+        await dialog.waitFor({state:'hidden'});
+        await page.reload({waitUntil:'load'});
+        if(await dialog.isVisible())throw Error('Dismissed welcome guide reopened on reload');
+        const help=page.locator('#ac-guide-dashboard');
+        await help.locator('summary').click();
+        await help.getByRole('button',{name:'Open welcome guide'}).click();
+        await dialog.waitFor({state:'visible'});
+        await dialog.getByRole('button',{name:'Close guide'}).click();
+        await dialog.waitFor({state:'hidden'});
+        await help.locator('summary').click();
+      }else if(file.startsWith('student-')){
+        const hint=page.locator('details.ac-guide');
+        if(await hint.count()!==1)throw Error('Contextual guide absent: '+file);
+        await hint.locator('summary').click();
+        if(!await hint.locator('.ac-guide-body').isVisible())throw Error('Hint failed to open: '+file);
+        const wide=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
+        if(wide)throw Error('Expanded hint overflows: '+file);
+        await hint.locator('summary').click();
+      }
       const metrics=await page.evaluate(()=>{
         const root=document.querySelector('.academy-workspace');
         const transparent=el=>getComputedStyle(el).backgroundColor==='rgba(0, 0, 0, 0)';
