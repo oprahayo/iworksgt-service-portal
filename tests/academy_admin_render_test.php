@@ -6,7 +6,8 @@ function app_config():array{return ['db'=>['host'=>getenv('DB_HOST'),'port'=>330
 require __DIR__.'/../app/db.php';
 function has_role(array $roles):bool{return in_array('admin',$roles,true);}
 function is_email_verified(array $u):bool{return !empty($u['email_verified_at']);}
-function academy_checkout_enabled():bool{return false;}
+require __DIR__.'/../app/academy.php';
+function setting(string $key,string $default=''):string{return '0';}
 function flash(string $key):?string{return null;}
 function e(string $s):string{return htmlspecialchars($s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
 function ac_form(string $action):void{echo '<form method="post" action="/academy.php?action='.e($action).'"><input type="hidden" name="csrf_token" value="fixture">';}
@@ -40,7 +41,7 @@ try{
     $html=ob_get_clean();
     $expected=match($tab){
       'students'=>['CI Test student','student@academy.invalid','View student','Verified'],
-      'student'=>['CI Test student','Approve for certification','name="student_id"','Ready to certify','Training duration','Revoked'],
+      'student'=>['CI Test student','Approve for certification','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
       'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started','Verify payment','Retry email'],
