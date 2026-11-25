@@ -10,12 +10,12 @@ header('Cache-Control: private, no-store');
 header('X-Robots-Tag: noindex, nofollow');
 $action=(string)($_GET['action']??'dashboard');
 $base='https://portal.iworksgt.com/academy.php';
-function ac_form(string $action): void { echo '<form method="post" action="?action='.e($action).'"><input type="hidden" name="csrf_token" value="'.e(csrf_token()).'">'; }
+function ac_form(string $action): void { echo '<form method="post" action="/academy.php?action='.e($action).'"><input type="hidden" name="csrf_token" value="'.e(csrf_token()).'">'; }
 function ac_input(string $name,string $label,string $value='',string $type='text'): void {
     echo '<label>'.e($label).'<input required type="'.e($type).'" name="'.e($name).'" value="'.e($value).'"></label>';
 }
 function ac_head(string $title): void {
-    echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.e($title).' | iWorks Global</title><style>*{box-sizing:border-box}body{font:16px system-ui;color:#202b38;background:#f5f6f8;margin:0}header,main{max-width:960px;margin:auto;padding:24px}header{display:flex;align-items:center;justify-content:space-between}header img{width:180px;max-width:45vw}section,article,form{background:white;border:1px solid #e1e4e8;border-radius:12px;padding:20px;margin:16px 0}label{display:block;margin:12px 0}input,select{display:block;width:100%;padding:12px;border:1px solid #bfc5ca;border-radius:6px;font:inherit}button{background:#e95600;color:white;border:0;border-radius:6px;padding:12px 18px;font:inherit;cursor:pointer}a{color:#a43d00}nav a{margin-right:16px}small{color:#555}h1{font-size:28px}img.preview{max-width:100%;height:auto}</style><header><img src="/assets/branding/iworks-desktop.svg" alt="iWorks Global"><a href="/logout.php">Sign out</a></header><main><h1>'.e($title).'</h1>';
+    echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.e($title).' | iWorks Global</title><style>*{box-sizing:border-box}body{font:16px system-ui;color:#202b38;background:#f5f6f8;margin:0}header,main{max-width:960px;margin:auto;padding:24px}header{display:flex;align-items:center;justify-content:space-between}header img{width:180px;max-width:45vw}section,article,form{background:white;border:1px solid #e1e4e8;border-radius:12px;padding:20px;margin:16px 0}label{display:block;margin:12px 0}input,select{display:block;width:100%;padding:12px;border:1px solid #bfc5ca;border-radius:6px;font:inherit}button{min-height:44px;background:#e95600;color:white;border:0;border-radius:6px;padding:12px 18px;font:inherit;cursor:pointer}a{color:#a43d00}nav a{margin-right:16px}small{color:#555}h1{font-size:28px}img.preview{max-width:100%;height:auto}@media(max-width:600px){header,main{padding:16px}button{width:100%}h1{font-size:24px}section,article,form{padding:16px}}</style><header><img src="/assets/branding/iworks-desktop.svg" alt="iWorks Global"><a href="/logout.php">Sign out</a></header><main><h1>'.e($title).'</h1>';
 }
 function ac_end(): void { echo '</main></html>'; }
 function ac_notify(array $cert,array $user): void {
@@ -50,7 +50,7 @@ try {
             $id=create_user(['full_name'=>$name,'email'=>$email,'phone'=>$phone,'password'=>$password,'role'=>'student']);
             start_otp_challenge($id,'verify_email'); redirect(portal_url('otp'));
         }
-        ac_head('Student registration');ac_form('register');ac_input('name','Full name');ac_input('email','Email','','email');ac_input('phone','Phone','','tel');ac_input('password','Password (12 or more characters)','','password');echo '<button>Create student account</button></form><a href="/index.php?page=login">Already registered? Sign in</a>';ac_end();exit;
+        ac_head('Student registration');ac_form('register');ac_input('name','Full name');ac_input('email','Email','','email');ac_input('phone','Phone','','tel');ac_input('password','Password (12 or more characters)','','password');echo '<button>Register</button></form><a href="/index.php?page=login">Already registered? Sign in</a>';ac_end();exit;
     }
     if ($action==='admin') {
         require_roles(['admin']);
@@ -102,7 +102,7 @@ try {
             $g=db_one('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.id=:id AND g.student_id=:student',['id'=>(int)($_POST['graduate']??0),'student'=>$user['id']]);
             $name=trim((string)($_POST['name']??''));if(!$g||!academy_valid_name($name))throw new RuntimeException('Invalid certificate application.');
             $svg=academy_render(['colour'=>$g['colour'],'student_name'=>$name,'course_title'=>$g['title'],'duration'=>$g['duration']],true);
-            ac_head('Confirm your certificate name');echo '<img class="preview" alt="Certificate preview" src="data:image/svg+xml;base64,'.base64_encode($svg).'">';ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Certification fee: ₦100,000</p><button>Confirm and pay with Paystack</button></form><a href="'.$base.'">Back</a>';ac_end();exit;
+            ac_head('Preview your certificate');echo '<img class="preview" alt="Certificate preview" src="data:image/svg+xml;base64,'.base64_encode($svg).'">';ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the payment amount before authorizing payment. Any additional provider charge, if applicable, will be shown at checkout.</small><p><button>Pay Now</button></p></form><a href="'.$base.'">Back</a>';ac_end();exit;
         }
     }
     ac_head('Welcome, '.(string)$user['full_name']);echo '<nav><a href="#profile">My profile</a><a href="#certificates">My certificates</a></nav><h2 id="profile">Complete your profile</h2>';ac_form('profile');ac_input('name','Full name',$user['full_name']);ac_input('phone','Phone',(string)$user['phone'],'tel');echo '<button>Save profile</button></form><h2 id="certificates">My certificates</h2>';
@@ -111,9 +111,9 @@ try {
     foreach($graduates as $g){
         echo '<article><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).' · '.e(ucfirst($g['colour'])).' certificate</p>';
         $cert=db_one('SELECT * FROM academy_certificates WHERE graduate_id=:id',['id'=>$g['id']]);
-        if(!$cert){ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';ac_input('name','Name exactly as it should appear',$user['full_name']);echo '<button>Preview certificate · ₦100,000</button></form>';}
-        elseif($cert['status']==='issued'){echo '<p>Issued: '.e($cert['certificate_number']).'</p><a href="?action=download&amp;id='.(int)$cert['id'].'">Download PDF</a>';ac_notify($cert,$user);}
-        elseif($cert['status']==='pending'){echo '<p>Payment awaiting confirmation. Do not pay twice.</p>';ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($cert['payment_reference']).'"><button>Check payment status</button></form>';}
+        if(!$cert){ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';ac_input('name','Name on certificate',$user['full_name']);echo '<button>Get Certificate</button></form>';}
+        elseif($cert['status']==='issued'){echo '<p>Issued: '.e($cert['certificate_number']).'</p><a href="?action=download&amp;id='.(int)$cert['id'].'">Download Certificate</a>';ac_notify($cert,$user);}
+        elseif($cert['status']==='pending'){echo '<p>Payment awaiting confirmation. Do not pay twice.</p>';ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($cert['payment_reference']).'"><button>Check Payment</button></form>';}
         else echo '<p>Certificate revoked. Contact support.</p>';echo '</article>';
     }
     ac_end();
