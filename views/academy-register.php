@@ -1,3 +1,4 @@
+<?php if (empty($academyGuestRegistration)) { http_response_code(403); exit; } ?>
 <section class="iw-auth-panel iw-auth-register" aria-labelledby="iwRegisterTitle">
   <a class="iw-auth-home" href="<?= e(public_url('home')) ?>" aria-label="Back to iWorks homepage"><i class="bi bi-house-door" aria-hidden="true"></i><span>Home</span></a>
   <div class="iw-auth-header">
