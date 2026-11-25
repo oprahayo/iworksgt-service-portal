@@ -76,6 +76,17 @@ function academy_pdf(array $cert): string {
         return $pdf;
     } finally { @unlink($input); @unlink($svgInput); @unlink($output); }
 }
+function academy_verified_payment_matches(array $cert,array $verified): bool {
+    $data=$verified['data']??null;
+    if (!is_array($data) || ($verified['status']??false)!==true) return false;
+    $amount=$data['amount']??null;
+    $tx=$data['id']??null;
+    return ($data['status']??'')==='success'
+        && ($data['reference']??'')===$cert['payment_reference']
+        && ($data['currency']??'')==='NGN'
+        && is_int($amount) && $amount===(int)$cert['amount_minor'] && $amount>0
+        && (is_int($tx)||is_string($tx)) && preg_match('/^[0-9]{1,80}$/D',(string)$tx)===1;
+}
 function academy_confirm(string $reference): bool {
     if (!preg_match('/^IWGA-[a-f0-9]{32}$/D',$reference)) return false;
     $cert = db_one('SELECT * FROM academy_certificates WHERE payment_reference=:ref',['ref'=>$reference]);
@@ -84,21 +95,21 @@ function academy_confirm(string $reference): bool {
     if ($cert['status']!=='pending') return false;
     $verified = gateway_json_get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference),academy_paystack_key());
     $data = $verified['data'] ?? [];
-    if (empty($verified['status']) || ($data['status']??'')!=='success'
-        || ($data['reference']??'')!==$reference || ($data['currency']??'')!=='NGN'
-        || (int)($data['amount']??0)!==(int)$cert['amount_minor'] || (int)$cert['amount_minor']<=0
-        || empty($data['id'])) return false;
+    if (!academy_verified_payment_matches($cert,$verified)) return false;
     // Only a verified provider transaction can issue a certificate.
     db()->beginTransaction();
     try {
         $row=db_one('SELECT * FROM academy_certificates WHERE id=:id FOR UPDATE',['id'=>$cert['id']]);
+        if (!$row || !academy_verified_payment_matches($row,$verified)) {
+            db()->rollBack(); return false;
+        }
         if ($row['status']==='pending') {
             db_execute("UPDATE academy_certificates SET status='issued',provider_transaction=:tx,issued_at=:issued WHERE id=:id AND status='pending'",
                 ['tx'=>(string)$data['id'],'issued'=>now(),'id'=>$row['id']]);
         }
         db()->commit();
     } catch (Throwable $e) { if(db()->inTransaction()) db()->rollBack(); throw $e; }
-    return $row['status']!=='revoked';
+    return in_array($row['status'],['pending','issued'],true);
 }
 function academy_owned_certificate(int $id,int $student): ?array {
     return db_one("SELECT * FROM academy_certificates WHERE id=:id AND student_id=:student AND status='issued'",
@@ -146,7 +157,7 @@ function academy_new_checkout(array $user,int $graduate,string $name): string {
         'callback_url'=>'https://portal.iworksgt.com/academy.php?action=callback'
     ],$secret);
     $url=(string)($response['data']['authorization_url']??'');
-    if (empty($response['status']) || !academy_checkout_url_valid($url)) {
+    if (($response['status']??false)!==true || ($response['data']['reference']??'')!==$ref || !academy_checkout_url_valid($url)) {
         throw new RuntimeException('Checkout could not be started. Contact support before retrying.');
     }
     db_execute('UPDATE academy_certificates SET checkout_url=:url WHERE payment_reference=:ref',['url'=>$url,'ref'=>$ref]);
