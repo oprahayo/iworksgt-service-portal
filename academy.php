@@ -151,7 +151,8 @@ try {
             $course=(int)($_POST['course']??0);
             if(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course])) throw new RuntimeException('Course unavailable.');
             db_execute("INSERT IGNORE INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'requested',:created,:updated)",['student'=>$user['id'],'course'=>$course,'created'=>now(),'updated'=>now()]);
-            redirect($base.'#courses');
+            flash('academy_student_notice','Course request submitted. The Academy administrator will review your request.');
+            redirect($base.(($_POST['return_to']??'')==='certificates'?'#certificates':'#courses'));
         }
         if ($action==='profile'){
             $name=trim((string)($_POST['name']??''));$phone=trim((string)($_POST['phone']??''));
@@ -173,7 +174,17 @@ try {
     }
     ac_head('Welcome, '.(string)$user['full_name']);echo '<nav class="ac-student-nav"><a href="#certificates">My Certificates</a><a href="#courses">My Courses</a><a href="#profile">My Profile</a></nav><h2 id="certificates">My certificates</h2>';
     $graduates=db_all('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.student_id=:student',['student'=>$user['id']]);
-    if(!$graduates)echo '<section><h3>Request a certificate</h3><p>If you have already completed training with iWorks, contact your Academy administrator using your registered email address so they can confirm your course and training duration. Once approved, your Get Certificate button will appear here.</p><p>New to the Academy? Choose a course below to request enrollment.</p></section>';
+    if($notice=flash('academy_student_notice'))echo '<div class="ac-student-notice" role="status">'.e($notice).'</div>';
+    if(!$graduates){
+        echo '<section><h3>Already completed training?</h3><p>Request a course review. After the administrator confirms your completed training, Get Certificate will appear here.</p>';
+        $available=db_all("SELECT c.id,c.title FROM academy_courses c WHERE c.active=1 AND NOT EXISTS(SELECT 1 FROM academy_enrollments en WHERE en.course_id=c.id AND en.student_id=:student) ORDER BY c.title",['student'=>$user['id']]);
+        if($available){
+            ac_form('enroll');echo '<input type="hidden" name="return_to" value="certificates"><label>Completed course<select name="course" required><option value="">Select your course</option>';
+            foreach($available as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';
+            echo '</select></label><button>Request course review</button></form>';
+        }else echo '<p>Review your existing course requests below or contact the Academy administrator.</p>';
+        echo '<p>New student? <a href="#courses">Explore available courses.</a></p></section>';
+    }
     foreach($graduates as $g){
         echo '<article><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).' · '.e(ucfirst($g['colour'])).' certificate</p>';
         $cert=db_one('SELECT * FROM academy_certificates WHERE graduate_id=:id',['id'=>$g['id']]);
@@ -185,7 +196,7 @@ try {
     echo '<h2 id="courses">Courses</h2>';
     foreach(db_all("SELECT c.*,en.status AS enrollment_status FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:student WHERE c.active=1 ORDER BY c.title",['student'=>$user['id']]) as $c){
         echo '<article><h3>'.e($c['title']).'</h3>';
-        if($c['enrollment_status']) echo '<p>'.e(ucfirst($c['enrollment_status'])).'</p>';
+        if($c['enrollment_status']) echo '<p>'.e(['requested'=>'Awaiting administrator review','enrolled'=>'Enrolled','completed'=>'Completed','cancelled'=>'Cancelled'][$c['enrollment_status']]??ucfirst($c['enrollment_status'])).'</p>';
         else {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><button>Enroll</button></form>';}
         echo '</article>';
     }
