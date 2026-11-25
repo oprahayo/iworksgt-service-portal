@@ -149,6 +149,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
     }
 
     if (has_role(['admin'])) {
+        $sidebarItems[] = ['page'=>'academy','label'=>'Academy','icon'=>'bi-mortarboard','url'=>'/academy.php?action=admin'];
         $sidebarItems[] = [
             'page' => 'forms',
             'label' => 'Forms',
