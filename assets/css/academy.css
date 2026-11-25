@@ -418,3 +418,18 @@ body.portal-authenticated.role-student .portal-topbar.ac-student-topbar,.ac-stud
 .academy-workspace details[data-ac-popup]>summary[aria-haspopup=dialog]::after{content:"›";font-size:19px;color:var(--ac-muted);flex-shrink:0}
 @media(prefers-reduced-motion:no-preference){.academy-workspace .ac-action-dialog[open]{animation:ac-guide-enter .2s ease-out}}
 @media(max-width:600px){.academy-workspace .ac-action-dialog{padding:14px}.academy-workspace .ac-action-head h2{font-size:16px}}
+
+/* Certificate catalogue: clear request action, airy history and lighter hierarchy. */
+.academy-workspace .ac-cert-page-head h1{color:#25364a;font-weight:650}
+.academy-workspace .ac-student .ac-cert-compact .ac-cert-start{margin:12px 0 26px;background:#fff;border:1px solid #f3d4bd;border-radius:10px}
+.academy-workspace .ac-cert-start .ac-cert-summary{gap:12px;padding:16px;min-height:76px}
+.academy-workspace .ac-cert-start-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;background:#fff0e3;color:#e65c00;border-radius:9px;font-size:26px;font-weight:400}
+.academy-workspace .ac-cert-start .ac-cert-summary-copy strong{font-size:16px;font-weight:600;color:#25364a}
+.academy-workspace .ac-cert-start-cta{font-size:13px;font-weight:600;color:#fff;background:#e65c00;padding:11px 13px;border-radius:7px;white-space:nowrap}
+.academy-workspace .ac-cert-activity-head{padding:16px 16px 13px}
+.academy-workspace .ac-cert-activity-head h2{font-size:19px;font-weight:600;color:#25364a}
+.academy-workspace .ac-cert-activity .ac-cert-summary{min-height:70px;gap:10px}
+.academy-workspace .ac-cert-history-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;background:#f1f5f9;color:#64748b;border-radius:8px;font-size:17px}
+.academy-workspace .ac-cert-activity .ac-cert-summary-copy strong{font-weight:550;color:#334155;font-size:14px}
+.academy-workspace .ac-cert-activity .ac-cert-summary-copy small{color:#64748b}
+@media(max-width:600px){.academy-workspace .ac-cert-start .ac-cert-summary{padding:12px;gap:8px;flex-wrap:wrap}.academy-workspace .ac-cert-start-cta{margin-left:50px;padding:8px 11px;min-height:40px;display:inline-flex;align-items:center;gap:5px}.academy-workspace .ac-cert-start .ac-cert-summary-copy{flex:1 1 calc(100% - 50px)}.academy-workspace .ac-cert-activity .ac-cert-summary{padding:12px 10px;gap:7px}.academy-workspace .ac-cert-history-icon{width:28px;height:28px;flex-basis:28px;font-size:14px}.academy-workspace .ac-cert-activity .ac-cert-summary-copy strong{font-size:13px}.academy-workspace .ac-cert-activity-head h2{font-size:18px}}
