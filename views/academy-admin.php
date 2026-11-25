@@ -36,7 +36,7 @@ function ac_admin_colour_options(string $selected='orange'):void{
 }
 function ac_admin_search(string $tab,string $query,string $status='',array $options=[]):void{
     echo '<form class="ac-filter" method="get" action="/academy.php"><input type="hidden" name="action" value="admin"><input type="hidden" name="tab" value="'.e($tab).'"><label>Search<input type="search" name="q" value="'.e($query).'" placeholder="Name, email or course"></label>';
-    if($tab==='certificates'&&(int)($_GET['student']??0)>0)echo '<input type="hidden" name="student" value="'.(int)$_GET['student'].'">';
+    if(in_array($tab,['certificates','requests'],true)&&(int)($_GET['student']??0)>0)echo '<input type="hidden" name="student" value="'.(int)$_GET['student'].'">';
     if($options){echo '<label>Status<select name="status"><option value="">All statuses</option>';foreach($options as $value=>$label)echo '<option value="'.e($value).'"'.($value===$status?' selected':'').'>'.e($label).'</option>';echo '</select></label>';}
     echo '<button>Search</button>';ac_admin_link('Reset',$tab,[],'ac-secondary');echo '</form>';
 }
@@ -52,7 +52,7 @@ function ac_admin_student_state(array $u):string{
 }
 function ac_admin_count(string $sql,array $params=[]):int{return (int)(db_one($sql,$params)['n']??0);}
 function ac_admin_certificate_state(array $row):string{return (string)($row['certificate_status']??'ready');}
-$tab=(string)($_GET['tab']??'students');
+$tab=(string)($_GET['tab']??'requests');
 if(!in_array($tab,['students','student','enrollments','courses','certificates','requests'],true))$tab='students';
 $query=mb_substr(trim((string)($_GET['q']??'')),0,100);
 $status=(string)($_GET['status']??'');
@@ -83,8 +83,8 @@ if($tab==='requests'){
         if($r['student_note']!=='')echo '<p>Student note: '.nl2br(e($r['student_note'])).'</p>';
         if($r['review_note']!=='')echo '<p>Review reason / note: '.nl2br(e($r['review_note'])).'</p>';
         if($r['status']==='pending'){
-            echo '<details class="ac-contact"><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><label>Optional review note<textarea name="reason" maxlength="2000" rows="2"></textarea></label><button>Approve for certification</button></form></details>';
-            echo '<details class="ac-contact"><summary>Decline request / ask for clarification</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline or information needed<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details>';
+            echo '<details class="ac-contact"><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><label>Optional review note<textarea name="reason" maxlength="2000" rows="2"></textarea></label><button>Approve for certification</button></form></details>';
+            echo '<details class="ac-contact"><summary>Decline request / ask for clarification</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline or information needed<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details>';
         }
         ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');echo '</article>';
     }
@@ -133,7 +133,7 @@ if($tab==='requests'){
                 echo '</td><td role="cell">';
                 if($r['graduate_id']){
                     ac_admin_link('View certificate','certificates',['student'=>$id],'ac-secondary');
-                    if(!$r['certificate_status']){echo '<details class="ac-contact"><summary>Edit duration</summary>';ac_admin_post('edit_duration','student',$id);echo '<input type="hidden" name="graduate" value="'.(int)$r['graduate_id'].'"><label>Weeks<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_duration_weeks((string)$r['duration'])??'')).'"></label><button>Save duration</button></form></details>';}
+                    if(!$r['certificate_status']){echo '<details class="ac-contact"><summary>Edit duration</summary>';ac_admin_post('edit_duration','student',$id);echo '<input type="hidden" name="graduate" value="'.(int)$r['graduate_id'].'"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_duration_weeks((string)$r['duration'])??'')).'"></label><button>Save duration</button></form></details>';}
                     else echo '<small>Duration locked after checkout starts.</small>';
                 }
                 elseif($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
