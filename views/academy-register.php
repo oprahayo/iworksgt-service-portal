@@ -21,6 +21,7 @@
     </div>
     <p class="iw-auth-small">Use at least 12 characters. We will verify your email before you access the Academy.</p>
     <p class="iw-auth-small">By creating an account, you agree to the <a href="<?= e(public_url('terms')) ?>" target="_blank" rel="noopener">Terms &amp; Conditions</a> and acknowledge our <a href="<?= e(public_url('privacy')) ?>" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+    <label class="iw-auth-remember"><input type="checkbox" name="remember_30days" value="1"> Trust this private device for 30 days</label>
     <button class="iw-auth-submit" type="submit">Create student account <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
   </form>
   <p class="iw-auth-switch">Already registered? <a href="<?= e(portal_url('login')) ?>">Sign in</a></p>
