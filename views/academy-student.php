@@ -55,11 +55,16 @@ if($screen==='dashboard'){
             ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$selected['id'].'"><input type="hidden" name="return_to" value="courses"><button>Submit application</button></form></section>';
         }else unset($_SESSION['academy_course_intent']);
     }
-    if(trim((string)($user['phone']??''))===''||$ready>0||$pending>0){
+    {
         echo '<section class="ac-student-panel"><h2>Things to do</h2><div class="ac-task-list">';
         if(trim((string)($user['phone']??''))===''){echo '<div><span><strong>Complete your profile</strong><small>Add your phone number.</small></span>';ac_student_link('profile','Edit profile');echo '</div>';}
         if($ready>0){echo '<div><span><strong>Your certificate is ready for the next step</strong><small>Review your approved training and certificate status.</small></span>';ac_student_link('certificates','My Certificates');echo '</div>';}
         if($pending>0){echo '<div><span><strong>'.(int)$pending.' pending application(s)</strong><small>Track your application while the Academy reviews it.</small></span>';ac_student_link('courses','View status');echo '</div>';}
+        if(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning===0){
+            echo '<div><span><strong>Choose your next step</strong><small>Apply for a course or request a review of completed training.</small></span><a class="ac-student-link" href="#available-courses">Explore courses</a></div>';
+        }elseif(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning>0){
+            echo '<div><span><strong>Continue your learning journey</strong><small>Open your approved courses to see availability.</small></span>';ac_student_link('courses','My Courses');echo '</div>';
+        }
         echo '</div></section>';
     }
     echo '<section class="ac-student-panel ac-past-training"><div><h2>Already completed training with iWorks?</h2><p>Trained before this portal upgrade? Select the course you completed and request a review to get your certificate.</p></div>';
@@ -69,7 +74,7 @@ if($screen==='dashboard'){
         foreach($reviewCourses as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';
         echo '</select></label><button>Request course review</button></form>';
     }else{echo '<p>Check your existing applications or approved certificates.</p>';ac_student_link('certificates','My Certificates');}
-    echo '</section><section class="ac-student-panel"><div class="ac-student-heading"><div><h2>Available courses</h2><p>Choose a skill you want to learn.</p></div>';ac_student_link('courses','View my courses');echo '</div>';
+    echo '</section><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2><p>Choose a skill you want to learn.</p></div>';ac_student_link('courses','View my courses');echo '</div>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section>';
 }elseif($screen==='courses'){
     echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
