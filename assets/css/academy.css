@@ -36,15 +36,14 @@
 .ac-past-training form{display:flex;align-items:flex-end;gap:.65rem;flex-wrap:wrap;max-width:780px}
 .ac-past-training label{flex:1 1 250px;margin:0}
 .ac-student .ac-student-link,.ac-admin .ac-link{display:inline-flex;align-items:center;min-height:40px;color:var(--ac-primary);font-size:.85rem;font-weight:500;text-decoration:none}
-.ac-student .ac-course-grid{display:block;margin-top:.25rem}
-.academy-workspace .ac-student .ac-course-card{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,auto);gap:.3rem .7rem;align-items:center;margin:0;padding:.55rem 0;border:0;border-bottom:1px solid var(--ac-line);background:transparent;border-radius:0}
+.ac-student .ac-course-grid{display:block;margin:0}
+.academy-workspace .ac-student .ac-course-card{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin:0;padding:.3rem 0;min-height:48px;border:0;border-bottom:1px solid var(--ac-line);background:transparent;border-radius:0}
 .ac-course-card:last-child{border-bottom:0!important}
-.ac-course-card .ac-course-icon{grid-row:1 / 3;align-self:center}.ac-course-card h3{grid-column:2;grid-row:1;margin:0;font-size:.96rem}
-.ac-course-card .ac-course-status{grid-column:2;grid-row:2;margin:0;color:var(--ac-muted);font-size:.8rem}
-.ac-course-card>form,.ac-course-card>a,.ac-course-card>small{grid-column:3;grid-row:1 / 3;justify-self:end;max-width:100%;font-size:.8rem}
+.ac-course-copy{flex:1;min-width:0}.ac-course-copy h3{margin:0;font-size:.88rem;line-height:1.3;font-weight:500}.ac-course-copy .ac-course-status{margin:.1rem 0 0;font-size:.76rem}
+.ac-course-card>form,.ac-course-card>a,.ac-course-card>small{flex:0 0 auto;max-width:45%;font-size:.76rem}
 .ac-course-card>small{color:var(--ac-muted);text-align:right}
-.ac-course-card button{font-size:.82rem}
-.ac-course-card:has(.ac-course-status:empty) h3{grid-row:1 / 3}
+.academy-workspace .ac-course-card button,.academy-workspace .ac-course-card .ac-student-primary{background:transparent;color:var(--ac-primary);padding:.25rem .35rem;min-height:44px;font-size:.8rem;white-space:nowrap}
+.academy-workspace .ac-course-card button:hover,.academy-workspace .ac-course-card .ac-student-primary:hover{background:rgba(0,0,0,.04);color:var(--ac-primary)}
 .ac-student-empty,.ac-admin .ac-empty{padding:.6rem 0!important;color:var(--ac-muted);font-size:.9rem;margin:.3rem 0!important;background:transparent;border:0}
 .ac-student .ac-cert-card{padding:.8rem 0;border-bottom:1px solid var(--ac-line);margin:0}
 .ac-cert-card:last-child{border-bottom:0}.ac-cert-card form,.ac-profile-panel{max-width:640px}.ac-cert-card form+form{margin-top:.5rem}
@@ -88,18 +87,44 @@
  .ac-admin .ac-table td[data-label]:not(:first-child):not(:last-child)::before{content:attr(data-label);display:block;font-size:.73rem;color:var(--ac-muted);margin-bottom:.08rem}
  .ac-admin .ac-table td:last-child .ac-actions{gap:.45rem}
 }
+/* A single metric strip at every viewport, regardless of shared portal styles. */
+.academy-workspace .ac-student .ac-student-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:0!important;margin:0 0 .8rem;border-block:1px solid var(--ac-line)}
+.academy-workspace .ac-student .ac-student-stats>a{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.1rem;padding:.45rem .75rem;min-width:0;min-height:58px}
+.academy-workspace .ac-student .ac-student-stats>a:first-child{padding-left:0}
+.ac-student-stats strong{font-size:1.4rem;line-height:1.1}.ac-student-stats small{font-size:.76rem;line-height:1.2}
+.academy-workspace .ac-student .ac-student-welcome{padding:0 0 .5rem}
+.ac-student-welcome h1{font-size:1.35rem;margin:0}
+.ac-dashboard-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:1.5rem;align-items:start}
+.ac-dashboard-actions{min-width:0}
+.academy-workspace .ac-student section.ac-student-panel{padding:0 0 .65rem;margin:0 0 .65rem}
+.academy-workspace .ac-student section:last-child{padding-bottom:0;margin-bottom:0;border-bottom:0}
+.academy-workspace .ac-student h2{font-size:1rem;margin:0 0 .35rem}
+.ac-student-heading{margin:0 0 .15rem}
+.ac-student .ac-task-list>div{padding:.1rem 0;gap:.4rem;font-size:.85rem;min-height:44px}
+.ac-task-list strong{font-weight:500}
+.ac-task-list a{font-size:.8rem;text-align:right;max-width:42%;min-height:44px}
+.ac-past-training form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.4rem;align-items:end}
+.ac-past-training label{margin:0}
+.ac-past-training select{margin:0!important;font-size:.82rem!important}
+.academy-workspace .ac-past-training button{font-size:.78rem;padding:.35rem .6rem}
+.ac-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:991px){
+ .ac-dashboard-columns{grid-template-columns:minmax(0,1fr);gap:.65rem}
+ .academy-workspace .ac-student .ac-dashboard-actions>section:last-child{padding-bottom:.65rem;border-bottom:1px solid var(--ac-line)}
+}
 @media(max-width:600px){
- .academy-workspace h1,.ac-student-welcome h1{font-size:1.35rem}
- .ac-student-stats a{display:block;padding:.55rem .4rem}.ac-student-stats i{display:none}.ac-student-stats small{font-size:.72rem;min-height:2.4em}.ac-student-stats strong{font-size:1.4rem}
- .ac-student .ac-task-list>div{align-items:flex-start;flex-wrap:wrap;gap:.15rem .5rem}.ac-task-list a{min-height:36px}
- .ac-past-training label{flex:1 1 100%}.ac-past-training button{width:auto}
- .academy-workspace .ac-student .ac-course-card{grid-template-columns:18px minmax(0,1fr);gap:.2rem .6rem;padding:.65rem 0}
- .ac-course-card .ac-course-icon{grid-column:1;grid-row:1 / 3;font-size:1rem;align-self:start}
- .ac-course-card h3{grid-column:2;grid-row:1}.ac-course-card .ac-course-status{grid-column:2;grid-row:2}
- .ac-course-card>form,.ac-course-card>a,.ac-course-card>small{grid-column:2;grid-row:3;justify-self:start;text-align:left}
- .ac-course-card>form button{min-height:44px}
- .ac-admin .ac-tabs{gap:.55rem .8rem}.ac-admin .ac-tabs a{font-size:.85rem}
- .ac-admin .ac-filter label,.ac-admin .ac-fields label{flex-basis:100%}
+ body.portal-authenticated.role-student .portal-content{padding:10px 12px}
+ .academy-workspace h1,.ac-student-welcome h1{font-size:1.22rem}
+ .academy-workspace .ac-student .ac-student-stats>a{padding:.4rem .4rem;min-height:54px}
+ .ac-student-stats small{font-size:.72rem;line-height:1.2}.ac-student-stats strong{font-size:1.25rem}
+ .ac-student .ac-task-list>div{align-items:center;flex-wrap:nowrap;gap:.4rem}
+ .ac-full-label{display:none}
+ .ac-course-copy h3{font-size:.85rem}
+ .ac-admin .ac-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.15rem}.ac-admin .ac-tabs a{text-align:center;font-size:.78rem}
+ .ac-admin .ac-filter{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:.35rem}
+ .ac-admin .ac-filter label:first-of-type{grid-column:1/-1}
+ .ac-admin .ac-filter label:nth-of-type(2){min-width:0}
  .academy-workspace .ac-admin .ac-inline select{flex:1 1 100px}
 }
+@media(max-width:360px){.ac-past-training form{grid-template-columns:minmax(0,1fr)}.ac-past-training button{justify-self:start}.ac-admin .ac-tabs a{font-size:.73rem}}
 @media(prefers-reduced-motion:reduce){.academy-workspace *{scroll-behavior:auto}}
