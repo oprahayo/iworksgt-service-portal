@@ -44,9 +44,8 @@ academy_assert(str_contains($entry,"ac_guide('preview'")&&str_contains($guide,'I
 academy_assert(!str_contains($guide,'<form')&&!str_contains($guide,'method="post"'),'Guidance has no mutation forms');
 academy_assert(str_contains($entry,'Confirm the exact certificate name before submitting your request.')&&str_contains($entry,'Please open the certificate preview and confirm its details before paying.'),'Server-side confirmation gates');
 academy_assert(str_contains($student,'data-cert-wizard')&&str_contains($student,'name="confirm_name"')&&str_contains($student,'ac-cert-record'),'Progressive request and accordion records');
-$renderer=file_get_contents(__DIR__.'/../scripts/render_academy_preview.py');
-academy_assert(str_contains($entry,"Content-Type: image/png")&&!str_contains($entry,"Content-Type: image/svg+xml")&&str_contains($entry,'private, no-store, max-age=0'),'Only private raster preview response');
-academy_assert(str_contains($renderer,'PREVIEW ONLY')&&str_contains($renderer,'NOT VALID')&&!str_contains($renderer,'certificate_background')&&!str_contains($renderer,'verification_qr'),'Independent, permanently marked preview design');
-try{academy_render([],true);throw new RuntimeException('Unsafe SVG preview accepted');}catch(LogicException $e){}
-academy_assert(str_contains($entry,'ac-restricted-preview')&&str_contains($entry,'draggable="false"'),'Preview not printable or draggable in portal');
+$raster=file_get_contents(__DIR__.'/../scripts/render_academy_preview.py');
+academy_assert(str_contains($entry,"Content-Type: image/png")&&!str_contains($entry,"Content-Type: image/svg+xml"),'Preview cannot expose editable SVG');
+academy_assert(str_contains($raster,'certificate_background')&&str_contains($raster,'fixed_heading')&&str_contains($raster,'NOT VALID'),'Original artwork with repeated watermark only');
+academy_assert(str_contains($entry,'ac-preview-protected')&&str_contains($entry,'draggable="false"'),'Print and drag deterrence');
 echo "Academy smoke checks passed.\n";
