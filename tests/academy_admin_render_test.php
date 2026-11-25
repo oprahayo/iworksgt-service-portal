@@ -24,7 +24,16 @@ try{
     db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'6 weeks',:admin,'2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id'],'admin'=>$admin['id']]);
     $course=db_one("SELECT id FROM academy_courses WHERE slug='hosting'");
     db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'requested','2026-11-25 12:00:00','2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id']]);
-    $_GET=['tab'=>$tab,'id'=>$id,'q'=>$tab==='students'?'CI Test':'','status'=>$tab==='certificates'?'ready':''];
+    if($tab==='certificates'){
+        $other=db_one("SELECT id FROM users WHERE email='other@academy.invalid'");
+        foreach([['backend','pending','B'],['fullstack','issued','C']] as [$slug,$state,$suffix]){
+            $extra=db_one('SELECT id FROM academy_courses WHERE slug=:slug',['slug'=>$slug]);
+            db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'8 weeks',:admin,'2026-11-25 12:00:00')",['student'=>$other['id'],'course'=>$extra['id'],'admin'=>$admin['id']]);
+            $graduate=db_last_id();
+            db_execute("INSERT INTO academy_certificates(graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,status,issued_at,created_at) VALUES(:g,:s,:n,'CI TEST STUDENT',:title,'8 weeks','blue',10200000,:ref,:state,:issued,'2026-11-25 12:00:00')",['g'=>$graduate,'s'=>$other['id'],'n'=>'IWGA-2026-'.str_repeat($suffix,16),'title'=>$slug,'ref'=>'IWGA-'.str_repeat(strtolower($suffix),32),'state'=>$state,'issued'=>$state==='issued'?'2026-11-25 12:00:00':null]);
+        }
+    }
+    $_GET=['tab'=>$tab,'id'=>$id,'q'=>$tab==='students'?'CI Test':'','status'=>''];
     define('IWORKS_ACADEMY_ADMIN_VIEW',true);
     ob_start();
     require __DIR__.'/../views/academy-admin.php';
@@ -34,7 +43,7 @@ try{
       'student'=>['CI Test student','Approve for certification','name="student_id"','Ready to certify','Training duration','Revoked'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
-      'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started'],
+      'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started','Verify payment','Retry email'],
       default=>throw new RuntimeException('Unknown test tab')
     };
     foreach($expected as $needle)if(!str_contains($html,$needle))throw new RuntimeException($tab.' missing '.$needle);
