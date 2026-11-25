@@ -149,7 +149,7 @@ try {
                     else $error='No change saved. The duration may already match, or a certificate payment has started.';
                 }elseif($mode==='review_request'){
                     try{
-                        $changed=academy_request_review((int)current_user()['id'],(int)($_POST['request']??0),(string)($_POST['decision']??''),(string)($_POST['duration']??''),(string)($_POST['reason']??''));
+                        $changed=academy_request_review((int)current_user()['id'],(int)($_POST['request']??0),(string)($_POST['decision']??''),(string)($_POST['duration']??''),(string)($_POST['reason']??''),(int)($_POST['attempt']??0));
                         if($changed)$success='Certification request reviewed. Student notified.';
                         else $error='This request is no longer pending. Refresh the queue.';
                     }catch(InvalidArgumentException $e){$error=$e->getMessage();}
