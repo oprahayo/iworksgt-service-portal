@@ -104,6 +104,21 @@ function academy_owned_certificate(int $id,int $student): ?array {
     return db_one("SELECT * FROM academy_certificates WHERE id=:id AND student_id=:student AND status='issued'",
         ['id'=>$id,'student'=>$student]);
 }
+function academy_checkout_url_valid(string $url): bool {
+    $p = parse_url($url);
+    return is_array($p) && ($p['scheme']??'')==='https' && ($p['host']??'')==='checkout.paystack.com'
+        && !isset($p['user'],$p['pass']) && !isset($p['port']) && !empty($p['path']);
+}
+function academy_resume_checkout(array $user, int $graduate): string {
+    $cert=db_one("SELECT * FROM academy_certificates WHERE graduate_id=:graduate AND student_id=:student AND status='pending'",
+        ['graduate'=>$graduate,'student'=>$user['id']]);
+    if (!$cert) throw new RuntimeException('No pending certificate payment.');
+    // Never allocate a second payment reference while the original can succeed.
+    if (academy_confirm($cert['payment_reference'])) return 'https://portal.iworksgt.com/student';
+    $url=(string)($cert['checkout_url']??'');
+    if (!academy_checkout_url_valid($url)) throw new RuntimeException('Contact support to recover this payment.');
+    return $url;
+}
 function academy_new_checkout(array $user,int $graduate,string $name): string {
     if (!is_email_verified($user) || !academy_valid_name($name) || trim((string)$user['phone'])==='') {
         throw new RuntimeException('Complete your verified profile and enter a valid certificate name.');
@@ -111,6 +126,11 @@ function academy_new_checkout(array $user,int $graduate,string $name): string {
     $g = db_one('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.id=:id AND g.student_id=:student',
         ['id'=>$graduate,'student'=>$user['id']]);
     if (!$g) throw new RuntimeException('Course completion must be approved by an administrator.');
+    $previous=db_one('SELECT status FROM academy_certificates WHERE graduate_id=:graduate AND student_id=:student',['graduate'=>$graduate,'student'=>$user['id']]);
+    if ($previous) {
+        if ($previous['status']==='pending') return academy_resume_checkout($user,$graduate);
+        throw new RuntimeException('A certificate already exists.');
+    }
     $secret=academy_paystack_key();
     $ref='IWGA-'.bin2hex(random_bytes(16));
     $certno='IWGA-'.date('Y').'-'.strtoupper(bin2hex(random_bytes(8)));
@@ -126,8 +146,9 @@ function academy_new_checkout(array $user,int $graduate,string $name): string {
         'callback_url'=>'https://portal.iworksgt.com/academy.php?action=callback'
     ],$secret);
     $url=(string)($response['data']['authorization_url']??'');
-    if (empty($response['status']) || parse_url($url,PHP_URL_SCHEME)!=='https' || parse_url($url,PHP_URL_HOST)!=='checkout.paystack.com') {
+    if (empty($response['status']) || !academy_checkout_url_valid($url)) {
         throw new RuntimeException('Checkout could not be started. Contact support before retrying.');
     }
+    db_execute('UPDATE academy_certificates SET checkout_url=:url WHERE payment_reference=:ref',['url'=>$url,'ref'=>$ref]);
     return $url;
 }
