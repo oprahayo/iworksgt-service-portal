@@ -16,7 +16,8 @@ try{
         const dialog=page.locator('#ac-welcome-guide');
         await dialog.waitFor({state:'visible',timeout:10000});
         if(await dialog.locator('a[data-guide-link]').count()!==2)throw Error('Welcome paths missing');
-        if(await dialog.locator('a[data-guide-link]').nth(0).getAttribute('href')!=='/academy.php?action=certificates'||await dialog.locator('a[data-guide-link]').nth(1).getAttribute('href')!=='/academy.php?action=courses')throw Error('Guide destinations incorrect');
+        if(await dialog.locator('a[data-guide-link]').nth(0).getAttribute('href')!=='/academy.php?action=certificates#ac-new-certificate'||await dialog.locator('a[data-guide-link]').nth(1).getAttribute('href')!=='/academy.php?action=courses#ac-explore-courses')throw Error('Guide destinations incorrect');
+        if(await dialog.evaluate(el=>el.matches(':modal')))throw Error('Welcome guide must not block the workspace');
         const d=await dialog.boundingBox();
         if(!d||d.x<0||d.y<0||d.x+d.width>width+1||d.y+d.height>900+1)throw Error('Welcome guide exceeds viewport');
         if(width===320)await page.keyboard.press('Escape');else await dialog.getByRole('button',{name:'Got it, continue'}).click();
@@ -40,6 +41,11 @@ try{
         if(wide)throw Error('Expanded hint overflows: '+file);
         await hint.locator('summary').click();
       }
+      if(file==='student-courses.html'){
+        await page.evaluate(()=>location.hash='#ac-explore-courses');
+        await page.waitForFunction(()=>document.activeElement?.id==='ac-explore-courses');
+        await page.evaluate(()=>{history.replaceState(null,'',location.pathname);document.activeElement.blur();});
+      }
       if(file==='student-certificates.html'){
         const workspace=page.locator('.ac-cert-compact');
         const box=await workspace.boundingBox();
@@ -50,7 +56,8 @@ try{
         const confirmation=request.locator('[data-cert-confirm]');
         const output=request.locator('[data-cert-name-output]');
         if(await course.isVisible()||await name.isVisible())throw Error('Request form must start collapsed');
-        await request.locator(':scope > summary').click();
+        await page.evaluate(()=>location.hash='#ac-new-certificate');
+        await course.waitFor({state:'visible'});
         if(!await course.isVisible()||await name.isVisible()||await confirmation.isVisible())throw Error('Only course selection should be shown initially');
         await course.selectOption({index:1});
         if(!await name.isVisible()||!await confirmation.isVisible())throw Error('Name and confirmation did not reveal after course selection');
@@ -65,6 +72,9 @@ try{
         await course.selectOption({index:0});
         if(await name.isVisible()||await confirmation.isVisible()||await confirmation.isChecked())throw Error('Clearing course must reset later steps');
         await request.locator(':scope > summary').click();
+        await page.evaluate(()=>location.hash='#ac-certificate-history');
+        await page.waitForFunction(()=>document.activeElement?.id==='ac-certificate-history');
+        await page.evaluate(()=>{history.replaceState(null,'',location.pathname);document.activeElement.blur();});
         const dialog=page.locator('#ac-cert-dialog');
         const declined=workspace.locator('details.ac-cert-record').filter({hasText:'Training could not be verified.'});
         if(await declined.locator('.ac-query-reason').isVisible())throw Error('Decline reason should start hidden');
@@ -97,6 +107,13 @@ try{
         await dialog.getByRole('button',{name:'Close certificate details'}).click();
         await page.waitForFunction(()=>document.querySelector('#ac-cert-dialog [data-cert-dialog-body]').childElementCount===0);
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Certificate history overflows viewport');
+      }
+      if(file==='student-learning.html'){
+        const results=page.locator('.ac-results-panel details');
+        await results.locator('summary').click();
+        if(await results.locator('.ac-result-row').count()!==3||!await results.getByText('100% · Passed',{exact:true}).isVisible())throw Error('Academic results not available');
+        if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Academic results overflow');
+        await results.locator('summary').click();
       }
       const metrics=await page.evaluate(()=>{
         const root=document.querySelector('.academy-workspace');
