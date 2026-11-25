@@ -53,19 +53,43 @@ function ac_admin_student_state(array $u):string{
 function ac_admin_count(string $sql,array $params=[]):int{return (int)(db_one($sql,$params)['n']??0);}
 function ac_admin_certificate_state(array $row):string{return (string)($row['certificate_status']??'ready');}
 $tab=(string)($_GET['tab']??'students');
-if(!in_array($tab,['students','student','enrollments','courses','certificates'],true))$tab='students';
+if(!in_array($tab,['students','student','enrollments','courses','certificates','requests'],true))$tab='students';
 $query=mb_substr(trim((string)($_GET['q']??'')),0,100);
 $status=(string)($_GET['status']??'');
 $page=max(1,min(100000,(int)($_GET['p']??1)));
 $notice=flash('academy_admin_notice');$error=flash('academy_admin_error');
 ac_head('Academy');
 echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
-foreach(['students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).'</a>';}
+foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
 echo '</nav>';
 if($notice)echo '<div class="ac-message" role="status">'.e($notice).'</div>';
 if($error)echo '<div class="ac-message ac-error" role="alert">'.e($error).'</div>';
 if(!academy_checkout_enabled()&&in_array($tab,['students','student','certificates'],true))echo '<div class="ac-callout">Payments are off. Student approvals are available.</div>';
-if($tab==='students'){
+if($tab==='requests'){
+    echo '<section class="ac-panel"><h2>Certification requests</h2><p>Review student-submitted certification requests. Approval unlocks preview and payment; decline requires a reason.</p>';
+    $options=['pending'=>'Awaiting review','approved'=>'Approved','declined'=>'Declined'];
+    if(!isset($options[$status]))$status='pending';
+    ac_admin_search('requests',$query,$status,$options);
+    [$where,$params]=ac_admin_search_params($query,['u.full_name','u.email','c.title']);
+    $where.=' AND r.status=:status';$params['status']=$status;
+    $student=(int)($_GET['student']??0);if($student>0){$where.=' AND r.student_id=:student';$params['student']=$student;}
+    $from=" FROM academy_certification_requests r JOIN users u ON u.id=r.student_id JOIN academy_courses c ON c.id=r.course_id WHERE u.role='student' AND u.deleted_at IS NULL".$where;
+    $total=ac_admin_count('SELECT COUNT(*) n'.$from,$params);$page=min($page,max(1,(int)ceil($total/25)));$offset=($page-1)*25;
+    $rows=db_all('SELECT r.*,u.full_name,u.email,c.title,c.slug'.$from.' ORDER BY r.submitted_at DESC,r.id DESC LIMIT 25 OFFSET '.$offset,$params);
+    if(!$rows)ac_admin_empty('No certification requests in this view.');
+    foreach($rows as $r){
+        echo '<article class="ac-request-row"><h3>'.e($r['title']).'</h3><p>'.e($r['full_name']).' · '.e($r['email']).'</p><p>Certificate name: <strong>'.e($r['student_name']).'</strong> · Attempt '.(int)$r['attempts'].'</p><p>Submitted: '.e($r['submitted_at']).'</p>';
+        ac_admin_status($r['status']==='pending'?'requested':$r['status']);
+        if($r['student_note']!=='')echo '<p>Student note: '.nl2br(e($r['student_note'])).'</p>';
+        if($r['review_note']!=='')echo '<p>Review reason / note: '.nl2br(e($r['review_note'])).'</p>';
+        if($r['status']==='pending'){
+            echo '<details class="ac-contact"><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><label>Optional review note<textarea name="reason" maxlength="2000" rows="2"></textarea></label><button>Approve for certification</button></form></details>';
+            echo '<details class="ac-contact"><summary>Decline request / ask for clarification</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline or information needed<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details>';
+        }
+        ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');echo '</article>';
+    }
+    ac_admin_pager('requests',$page,$total,['q'=>$query,'status'=>$status,'student'=>$student]);echo '</section>';
+}elseif($tab==='students'){
     echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>Students</h2><p>Registered Academy students and their progress.</p></div></div>';
     $options=['verified'=>'Verified','unverified'=>'Email unverified','inactive'=>'Inactive'];
     if(!isset($options[$status]))$status='';
@@ -93,19 +117,8 @@ if($tab==='students'){
     if(!$u)ac_admin_empty('Student not found.');
     else{
         echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>'.e($u['full_name']).'</h2><p>'.e($u['email']).' · '.e((string)($u['phone']??'')).'</p></div>';ac_admin_status(ac_admin_student_state($u));echo '</div>';
-        echo '<div id="approve" class="ac-approval"><h3>Approve completed training</h3><p>Select the completed course and duration. The student can then request a certificate.</p>';
-        if(ac_admin_student_state($u)!=='verified')ac_admin_empty('The student must have an active, email-verified account before approval.');
-        else{
-            $available=db_all("SELECT c.id,c.title,c.colour,c.slug FROM academy_courses c WHERE c.active=1 AND NOT EXISTS(SELECT 1 FROM academy_graduates g WHERE g.course_id=c.id AND g.student_id=:student) ORDER BY c.title",['student'=>$id]);
-            if(!$available)ac_admin_empty('All available courses are already approved for this student.');
-            else{
-                ac_admin_post('approve','student',$id);
-                echo '<div class="ac-fields"><label>Completed course<select required name="course"><option value="">Select course</option>';
-                foreach($available as $c)echo '<option data-weeks="'.e((string)(academy_recommended_weeks($c['slug'])??'')).'" value="'.(int)$c['id'].'"'.((int)($_GET['course']??0)===(int)$c['id']?' selected':'').'>'.e($c['title']).' · '.(academy_recommended_weeks($c['slug'])?academy_recommended_weeks($c['slug']).' weeks':'Set duration').'</option>';
-                echo '</select></label><label>Training duration (weeks)<input name="duration" type="number" min="1" max="104" required placeholder="e.g. 12"></label></div><button>Approve for certification</button></form>';
-            }
-        }
-        echo '</div><script>(function(){var form=document.querySelector("#approve form");if(!form)return;var course=form.querySelector("select[name=course]"),duration=form.querySelector("input[name=duration]");if(!course||!duration)return;function suggest(){duration.value=course.options[course.selectedIndex].dataset.weeks||"";}course.addEventListener("change",suggest);if(!duration.value)suggest();})();</script>';if(ac_admin_student_state($u)==='verified'){echo '<details class="ac-contact"><summary>Send an update to this student</summary>';ac_admin_post('send_update','student',$id);echo '<label>Message<textarea name="message" maxlength="1000" rows="3" required></textarea></label><button>Send update</button></form></details>';}echo '</section><section class="ac-panel">';
+        echo '<div class="ac-approval"><h3>Certification requests</h3><p>Students submit their own requests. Review and approve or decline from the request queue.</p>';ac_admin_link('Review student requests','requests',['student'=>$id],'ac-primary');echo '</div>';
+        if(ac_admin_student_state($u)==='verified'){echo '<details class="ac-contact"><summary>Send an update to this student</summary>';ac_admin_post('send_update','student',$id);echo '<label>Message<textarea name="message" maxlength="1000" rows="3" required></textarea></label><button>Send update</button></form></details>';}echo '</section><section class="ac-panel">';
         $rows=db_all("SELECT c.id,c.title,c.colour,c.active,en.id AS enrollment_id,en.status AS enrollment_status,g.id AS graduate_id,g.duration,ce.status AS certificate_status,ce.certificate_number
             FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student
             LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id
@@ -123,7 +136,7 @@ if($tab==='students'){
                     if(!$r['certificate_status']){echo '<details class="ac-contact"><summary>Edit duration</summary>';ac_admin_post('edit_duration','student',$id);echo '<input type="hidden" name="graduate" value="'.(int)$r['graduate_id'].'"><label>Weeks<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_duration_weeks((string)$r['duration'])??'')).'"></label><button>Save duration</button></form></details>';}
                     else echo '<small>Duration locked after checkout starts.</small>';
                 }
-                elseif($r['active']&&ac_admin_student_state($u)==='verified'&&$r['enrollment_status']!=='cancelled')echo '<a class="ac-secondary" href="'.e(ac_admin_url('student',['id'=>$id,'course'=>(int)$r['id']])).'#approve">Mark completed</a>';
+                elseif($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
                 else echo '—';
                 echo '</td></tr>';
             }
