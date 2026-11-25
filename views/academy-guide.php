@@ -1,0 +1,20 @@
+<?php
+declare(strict_types=1);
+// Rendered only from the authenticated student views.
+function ac_guide(string $screen,int $student,bool $welcome=false):void{
+    $guides=[
+        'dashboard'=>['Getting started','Choose the right path for your goal.','Open My Certificates for completed training, or My Courses to apply for new training.','certificates'],
+        'courses'=>['How to apply for a course','Find a course under Explore courses and select Apply for course.','Wait for administrator approval. Once approved, select Open course to begin learning.','courses'],
+        'certificates'=>['How to get your certificate','Choose a completed course, confirm your certificate name and submit your request.','Check Request status. Once approved, select Get Certificate, review the preview, then pay. After verified payment, download your certificate here. If declined, read the administrator query.','certificates'],
+        'profile'=>['How to update your profile','Check your full name and phone number.','Select Save profile. Your verified email cannot be changed here.','profile'],
+        'learn'=>['How to study your course','Choose a published lesson, read the content and use the video or materials if available.','Complete any available assessments, select Mark as complete and move to the next lesson. Certification requires separate approval.','courses'],
+        'preview'=>['Before you pay','Check your name, course title and training duration on the watermarked preview.','If the details are correct, review the fee and select Pay Now when available. After payment, return to My Certificates. If already paid, use Check Payment instead of paying again.','certificates'],
+    ];
+    [$title,$one,$two,$dest]=$guides[$screen]??$guides['dashboard'];
+    $id='ac-guide-'.$screen;
+    echo '<details class="ac-guide" id="'.e($id).'"><summary><span class="ac-guide-icon" aria-hidden="true"><i class="bi bi-question-circle"></i></span><span>'.e($title).'</span><span class="ac-guide-label">View guide</span></summary><div class="ac-guide-body"><ol><li>'.e($one).'</li><li>'.e($two).'</li></ol>';
+    if($screen==='dashboard')echo '<div class="ac-guide-links"><a href="/academy.php?action=certificates">My Certificates</a><a href="/academy.php?action=courses">My Courses</a><a href="/academy.php?action=profile">My Profile</a></div>';
+    echo '<p class="ac-guide-note">Check the notification bell for administrator decisions.</p></div></details>';
+    if($screen!=='dashboard')return;
+    echo '<dialog class="ac-welcome-guide" id="ac-welcome-guide" aria-labelledby="ac-guide-title" data-guide-key="iworks-academy-guide-v1-'.max(0,$student).'" data-guide-auto="'.($welcome?'1':'0').'"><div class="ac-welcome-head"><span class="ac-guide-kicker">STUDENT GUIDE</span><button type="button" class="ac-guide-close" data-guide-close aria-label="Close guide"><i class="bi bi-x-lg" aria-hidden="true"></i><span>Close</span></button></div><h2 id="ac-guide-title">Welcome to iWorks Global Academy</h2><p>What would you like to do?</p><div class="ac-welcome-path"><h3>Get a certificate</h3><ol><li>Open My Certificates and select your completed course.</li><li>Confirm your name and submit the request. Wait for administrator approval.</li><li>Open Get Certificate, preview and pay. Download once payment is verified.</li></ol><a href="/academy.php?action=certificates" data-guide-link>Go to My Certificates</a></div><div class="ac-welcome-path"><h3>Start a new course</h3><ol><li>Open My Courses and find a course under Explore courses.</li><li>Select Apply for course and wait for administrator approval.</li><li>Open the approved course to study lessons and track your progress.</li></ol><a href="/academy.php?action=courses" data-guide-link>Go to My Courses</a></div><button type="button" class="ac-guide-dismiss" data-guide-close>Got it, continue</button><p class="ac-guide-note">You can reopen the guide anytime from your dashboard.</p></dialog><script src="/assets/js/academy-guide.js?v=1" defer></script>';
+}
