@@ -1,0 +1,44 @@
+<?php
+declare(strict_types=1);
+if(PHP_SAPI!=='cli'||getenv('ACADEMY_CI_DATABASE')!=='1'||getenv('DB_NAME')!=='academy_ci')exit(2);
+function app_config():array{return ['db'=>['host'=>getenv('DB_HOST'),'port'=>3306,'name'=>getenv('DB_NAME'),'user'=>getenv('DB_USER'),'pass'=>getenv('DB_PASS'),'charset'=>'utf8mb4']];}
+require __DIR__.'/../app/db.php';
+function has_role(array $roles):bool{return in_array('student',$roles,true);}
+function flash(string $key):?string{return null;}
+function e(string $s):string{return htmlspecialchars($s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
+function ac_form(string $action):void{echo '<form method="post" action="/academy.php?action='.e($action).'"><input type="hidden" name="csrf_token" value="fixture">';}
+function ac_input(string $name,string $label,string $value='',string $type='text'):void{echo '<label>'.e($label).'<input name="'.e($name).'" value="'.e($value).'"></label>';}
+function ac_head(string $title):void{echo '<header>'.e($title).'</header>';}
+function ac_end():void{}
+function academy_checkout_enabled():bool{return false;}
+$action=$argv[1]??'dashboard';
+$user=db_one("SELECT * FROM users WHERE email='student@academy.invalid'");
+$admin=db_one("SELECT id FROM users WHERE email='admin@academy.invalid'");
+if(!$user||!$admin)throw new RuntimeException('Missing integration fixtures');
+db()->beginTransaction();
+try{
+    $course=db_one("SELECT id FROM academy_courses WHERE slug='digital-marketing'");
+    db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'6 weeks',:admin,'2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id'],'admin'=>$admin['id']]);
+    $course=db_one("SELECT id FROM academy_courses WHERE slug='hosting'");
+    db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'requested','2026-11-25 12:00:00','2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id']]);
+    $_SESSION=[];
+    define('IWORKS_ACADEMY_STUDENT_VIEW',true);
+    ob_start();require __DIR__.'/../views/academy-student.php';$html=ob_get_clean();
+    $expected=match($action){
+        'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request course review'],
+        'courses'=>['My courses &amp; applications','Pending application','Explore courses','Apply for course'],
+        'certificates'=>['My certificates','Get Certificate','Digital Marketing','Certificate revoked'],
+        'profile'=>['Personal information','student@academy.invalid','Save profile'],
+        default=>throw new RuntimeException('Unknown screen')
+    };
+    $excluded=match($action){
+        'dashboard'=>['name="graduate"','name="phone"'],
+        'courses'=>['Request course review','Save profile','Get Certificate'],
+        'certificates'=>['Apply for course','Save profile'],
+        'profile'=>['Apply for course','Get Certificate']
+    };
+    foreach($expected as $needle)if(!str_contains($html,$needle))throw new RuntimeException($action.' missing '.$needle);
+    foreach($excluded as $needle)if(str_contains($html,$needle))throw new RuntimeException($action.' incorrectly contains '.$needle);
+    if(str_contains($html,'admin@academy.invalid'))throw new RuntimeException('Other user exposed');
+    echo 'Student '.$action." rendered using isolated MySQL fixtures.\n";
+}finally{if(db()->inTransaction())db()->rollBack();}
