@@ -33,7 +33,7 @@ academy_assert(str_contains($entry,'do not pay twice')&&str_contains($student,'C
 $reg=file_get_contents(__DIR__.'/../views/academy-register.php');$router=file_get_contents(__DIR__.'/../index.php');
 academy_assert(str_contains($reg,'data-iw-password="iwAcademyPassword"')&&str_contains($reg,'data-iw-password="iwAcademyConfirm"'),'Inline password toggles');
 academy_assert(str_contains($router,"['public_auth_status','notifications','realtime']")&&str_contains($router,"\$scope !== 'notifications'"),'Student notifications only');
-academy_assert(str_contains($student,"ac_form('inquiry')")&&str_contains($adminView,"ac_admin_post('send_update','student',"),'Two-way inquiry and update forms');
+academy_assert(!str_contains($student,"ac_form('inquiry')")&&!str_contains($student,'name="note"')&&!str_contains($adminView,"ac_admin_post('send_update','student',")&&str_contains($entry,'Student messaging is unavailable.'),'No student messaging or generic admin update forms');
 academy_assert(academy_duration_weeks('12')===12&&academy_duration_weeks('16 Weeks')===16&&academy_duration_weeks('3 months')===null&&academy_duration_weeks('0')===null,'Weeks validation');
 academy_assert(academy_duration_label(1)==='1 Week'&&academy_duration_label(16)==='16 Weeks','Canonical duration');
 academy_assert(academy_recommended_weeks('fullstack')===32&&academy_recommended_weeks('unknown')===null,'Course recommendations');
