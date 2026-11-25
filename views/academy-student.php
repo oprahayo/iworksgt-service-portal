@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 if (!defined('IWORKS_ACADEMY_STUDENT_VIEW') || !has_role(['student'])) { http_response_code(403); exit; }
+require_once __DIR__.'/academy-guide.php';
 function ac_student_link(string $action,string $label,string $class='ac-student-link'):void{
     echo '<a class="'.e($class).'" href="/academy.php?action='.e($action).'">'.e($label).'</a>';
 }
@@ -43,6 +44,7 @@ if($screen==='dashboard'){
     $issued=count(array_filter($graduates,fn($g)=>$g['certificate_status']==='issued'));
     $ready=count(array_filter($graduates,fn($g)=>$g['certificate_status']===null||$g['certificate_status']==='pending'));
     echo '<header class="iw-ops-page-head ac-student-welcome"><div><h1>Welcome, '.e($first?:'student').'</h1><p>Manage your learning and certification.</p></div></header>';
+    ac_guide('dashboard',$studentId,empty($_SESSION['academy_course_intent']));
     echo '<div class="ac-student-stats" aria-label="Your Academy progress">';
     foreach([['Pending applications',$pending,'courses','bi-hourglass-split'],['My active courses',$learning,'courses','bi-book'],['Certificates issued',$issued,'certificates','bi-award']] as [$label,$count,$dest,$icon]){
         echo '<a href="/academy.php?action='.$dest.'" aria-label="'.e($label).': '.$count.'"><strong>'.$count.'</strong><small>'.e(['Pending applications'=>'Pending applications','My active courses'=>'Active courses','Certificates issued'=>'Certificates'][$label]).'</small></a>';
@@ -76,12 +78,13 @@ if($screen==='dashboard'){
     echo '</section></div><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div>';
 }elseif($screen==='courses'){
+    ac_guide('courses',$studentId);
     echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['enrollment_status']!==null)));
     echo '</section><section class="ac-student-panel"><h2>Explore courses</h2>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])));echo '</section>';
 }elseif($screen==='certificates'){
-    echo '<div class="ac-cert-workspace"><header class="ac-request-heading"><div><h1>My Certificates</h1><p>Request, track and download your certificates in one place.</p></div></header><section class="ac-student-panel ac-cert-request-form"><h2>Request certification</h2><p>Select a completed course and confirm your certificate name.</p>';
+    echo '<div class="ac-cert-workspace"><header class="ac-request-heading"><div><h1>My Certificates</h1><p>Request, track and download your certificates in one place.</p></div></header>';ac_guide('certificates',$studentId);echo '<section class="ac-student-panel ac-cert-request-form"><h2>Request certification</h2><p>Select a completed course and confirm your certificate name.</p>';
     $available=db_all("SELECT c.id,c.title FROM academy_courses c LEFT JOIN academy_certification_requests r ON r.course_id=c.id AND r.student_id=:request_student WHERE c.active=1 AND (r.id IS NULL OR r.status='declined') AND NOT EXISTS(SELECT 1 FROM academy_graduates g WHERE g.course_id=c.id AND g.student_id=:graduate_student) ORDER BY c.title",['request_student'=>$studentId,'graduate_student'=>$studentId]);
     if($available){ac_form('request_certificate');echo '<label>Completed course<select name="course" required><option value="">Select your completed course</option>';foreach($available as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';echo '</select></label>';ac_input('name','Name on certificate',$user['full_name']);echo '<div class="ac-request-submit"><button>Submit certification request</button><small>Payment is only available after approval.</small></div></form>';}else echo '<p>No additional courses available for certification requests.</p>';
     echo '</section>';
@@ -106,6 +109,7 @@ if($screen==='dashboard'){
     }
     echo '</section></div>';
 }else{
+    ac_guide('profile',$studentId);
     echo '<section class="ac-student-panel ac-profile-panel"><h2>Personal information</h2><p>Keep your name and contact details up to date.</p><label>Email address<input type="email" readonly value="'.e($user['email']).'"></label><small>Email verified. Contact support if you need to change it.</small>';
     ac_form('profile');ac_input('name','Full name',$user['full_name']);ac_input('phone','Phone',(string)$user['phone'],'tel');echo '<button>Save profile</button></form></section>';
 }
