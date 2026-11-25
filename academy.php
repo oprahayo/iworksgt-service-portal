@@ -201,7 +201,7 @@ try {
         ac_head('Preview your certificate');
         require_once __DIR__.'/views/academy-guide.php';
         echo '<div class="ac-student">';ac_guide('preview',(int)$user['id']);echo '<section class="ac-student-panel"><h2>Review your certificate</h2><img class="preview" style="max-width:100%;height:auto" alt="Watermarked certificate preview" src="/academy.php?action=preview_image"><p>'.e($name).' · '.e($g['title']).' · '.e($g['duration']).'</p>';
-        ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the amount before authorizing payment.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'?action=certificates">Back to certificates</a></section></div>';ac_end();exit;
+        ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><div class="ac-cert-warning"><strong>Final confirmation</strong><p>Check the exact name above. Starting payment locks your certificate details. Once issued, you cannot regenerate it with a different name.</p></div><label class="ac-cert-check"><input type="checkbox" name="confirm_name" value="1" required> I confirm the certificate details are correct.</label><small>Review the amount before authorizing payment.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'?action=certificates">Back to certificates</a></section></div>';ac_end();exit;
     }
     if ($action==='learn'){
         $course=academy_learning_access((int)$user['id'],(int)($_GET['course']??0));
@@ -247,6 +247,7 @@ try {
         require_csrf();
         if ($action==='request_certificate'){
             try{
+                if(($_POST['confirm_name']??'')!=='1')throw new InvalidArgumentException('Confirm the exact certificate name before submitting your request.');
                 $created=academy_request_submit((int)$user['id'],(int)($_POST['course']??0),(string)($_POST['name']??''));
                 flash('academy_student_notice',$created?'Certification request submitted. You will be notified after review.':'Your request is already submitted.');
             }catch(InvalidArgumentException $e){flash('academy_student_notice',$e->getMessage());}
@@ -267,7 +268,15 @@ try {
             if(!academy_valid_name($name)||strlen($phone)<7||strlen($phone)>40)throw new RuntimeException('Enter a valid name and phone.');
             db_execute('UPDATE users SET full_name=:name,phone=:phone WHERE id=:id',['name'=>$name,'phone'=>$phone,'id'=>$user['id']]);flash('academy_student_notice','Profile updated.');redirect($base.'?action=profile');
         }
-        if ($action==='checkout') {$graduate=(int)($_POST['graduate']??0);redirect(academy_new_checkout($user,$graduate,academy_request_name((int)$user['id'],$graduate,trim((string)($_POST['name']??'')))));}
+        if ($action==='checkout') {
+            $graduate=(int)($_POST['graduate']??0);
+            $p=$_SESSION['academy_preview']??[];
+            $name=academy_request_name((int)$user['id'],$graduate,trim((string)($_POST['name']??'')));
+            if(($_POST['confirm_name']??'')!=='1'||($p['student']??0)!==(int)$user['id']||($p['graduate']??0)!==$graduate||($p['expires']??0)<time()||($p['name']??'')!==$name){
+                flash('academy_student_notice','Please open the certificate preview and confirm its details before paying.');redirect($base.'?action=certificates');
+            }
+            redirect(academy_new_checkout($user,$graduate,$name));
+        }
         if ($action==='resume') redirect(academy_resume_checkout($user,(int)($_POST['graduate']??0)));
         if ($action==='recheck'){
             $ref=(string)($_POST['reference']??'');
