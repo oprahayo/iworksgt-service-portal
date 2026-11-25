@@ -189,3 +189,14 @@
 @media(max-width:600px){.academy-workspace .ac-student section.ac-student-panel,.academy-workspace .ac-student section.ac-student-panel:last-child,.academy-workspace .ac-student .ac-dashboard-actions>section:last-child{padding:10px 11px;margin-bottom:8px}.academy-workspace .ac-dashboard-columns{gap:8px}.academy-workspace .ac-student .ac-student-stats>a{min-width:0}}
 
 .academy-workspace .ac-contact{margin:10px 0;padding:8px 0;min-width:0}.academy-workspace .ac-contact summary{cursor:pointer;color:var(--ac-primary);font-weight:600;font-size:14px}.academy-workspace .ac-contact form{max-width:580px;padding-top:6px}.academy-workspace .ac-contact textarea{display:block;width:100%;min-width:0;resize:vertical;border:1px solid #cbd5e1;border-radius:6px;padding:8px;font:inherit;margin:5px 0 8px;background:#fff}
+
+/* Sprint 5: course builder and learning workspace. */
+.ac-lms{min-width:0}.ac-lms h1{font-size:clamp(20px,2vw,26px);margin:8px 0}.ac-lms h3{font-size:15px}
+.ac-lms-editor{border-bottom:1px solid var(--ac-line);padding:10px 0}.ac-lms-editor summary{cursor:pointer;font-weight:600;color:var(--ac-primary);padding:5px 0}
+.ac-lms-editor form{max-width:760px;margin:8px 0}.ac-lms textarea{display:block;width:100%;max-width:100%;resize:vertical;border:1px solid #cbd5e1;border-radius:6px;padding:10px;font:inherit;background:#fff}
+.ac-lms-module{margin:12px 0!important;padding:12px 0!important;border-top:1px solid var(--ac-line)!important}.ac-lms-module small{font-size:12px;color:var(--ac-muted)}
+.ac-lms-progress{display:flex;align-items:center;gap:12px;margin:12px 0;font-size:13px;flex-wrap:wrap}.ac-lms-progress progress{width:min(240px,100%);accent-color:var(--ac-primary)}
+.ac-lms-layout{display:grid;grid-template-columns:minmax(200px,1fr) minmax(0,2fr);gap:14px;align-items:start}
+.ac-lms-lesson{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ac-line);text-decoration:none;color:var(--ac-ink);font-size:14px;overflow-wrap:anywhere}.ac-lms-lesson span{font-size:11px;color:var(--ac-muted);flex-shrink:0}.ac-lms-lesson.active{color:var(--ac-primary);font-weight:600}
+.ac-lesson-body{font-size:14px;line-height:1.75;overflow-wrap:anywhere;white-space:normal;margin:10px 0}.ac-lms .ac-check{display:flex;align-items:center;gap:8px}.ac-lms .ac-check input{width:auto}
+@media(max-width:760px){.ac-lms-layout{grid-template-columns:minmax(0,1fr);gap:8px}.ac-lms-layout section:nth-child(2){grid-row:1}.ac-lms-editor form{max-width:100%}}
