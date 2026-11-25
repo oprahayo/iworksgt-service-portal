@@ -10,10 +10,10 @@ function ac_student_status(string $status):string{
 }
 function ac_student_courses(array $courses,bool $dashboard=false):void{
     if(!$courses){echo '<p class="ac-student-empty">No courses to display yet.</p>';return;}
-    echo '<div class="ac-course-grid">';
+    echo '<div class="ac-course-grid'.($dashboard?'':' ac-catalogue-grid').'">';
     foreach($courses as $c){
         $status=(string)($c['enrollment_status']??'');
-        echo '<article class="ac-course-card"><div class="ac-course-copy"><h3>'.e($c['title']).'</h3>';if($status!=='')echo '<p class="ac-course-status">'.e(ac_student_status($status)).'</p>';echo '</div>';
+        echo '<article class="ac-course-card">'.($dashboard?'':'<span class="ac-catalogue-icon" aria-hidden="true"><i class="bi bi-book"></i></span>').'<div class="ac-course-copy"><h3>'.e($c['title']).'</h3>';if($status!=='')echo '<p class="ac-course-status">'.e(ac_student_status($status)).'</p>';echo '</div>';
         if(in_array($status,['enrolled','completed'],true)&&$c['active'])echo '<a class="btn btn-sm btn-outline-primary ac-course-action" href="/academy.php?action=learn&amp;course='.(int)$c['id'].'">Open course</a>';
         elseif($status==='') {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><input type="hidden" name="return_to" value="'.($dashboard?'dashboard':'courses').'"><button class="btn btn-sm btn-outline-primary ac-course-action" aria-label="Apply for course: '.e($c['title']).'">Apply<span class="ac-full-label"> for course</span></button></form>';}
         elseif($status==='requested')echo '<small>In review</small>';
@@ -78,11 +78,11 @@ if($screen==='dashboard'){
     echo '</section></div><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div>';
 }elseif($screen==='courses'){
-    ac_guide('courses',$studentId);
-    echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
+    echo '<div class="ac-course-workspace"><header class="ac-course-page-head"><h1>My courses &amp; applications</h1><p>Track your applications, continue learning or find your next course.</p></header>';ac_guide('courses',$studentId);
+    echo '<section class="ac-course-section"><h2>My learning</h2><p>Track submitted applications and open approved courses.</p>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['enrollment_status']!==null)));
-    echo '</section><section class="ac-student-panel" id="ac-explore-courses" tabindex="-1"><h2>Explore courses</h2>';
-    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])));echo '</section>';
+    echo '</section><section class="ac-course-section" id="ac-explore-courses" tabindex="-1"><h2>Explore courses</h2><p>Choose a course to start your next training.</p>';
+    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])));echo '</section></div>';
 }elseif($screen==='certificates'){
     echo '<div class="ac-cert-workspace ac-cert-compact"><header class="ac-request-heading"><div><h1>My Certificates</h1><p>Request, track and download your certificates.</p></div></header>';ac_guide('certificates',$studentId);
     $available=db_all("SELECT c.id,c.title FROM academy_courses c LEFT JOIN academy_certification_requests r ON r.course_id=c.id AND r.student_id=:request_student WHERE c.active=1 AND (r.id IS NULL OR r.status='declined') AND NOT EXISTS(SELECT 1 FROM academy_graduates g WHERE g.course_id=c.id AND g.student_id=:graduate_student) ORDER BY c.title",['request_student'=>$studentId,'graduate_student'=>$studentId]);
