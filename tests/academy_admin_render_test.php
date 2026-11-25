@@ -45,11 +45,12 @@ try{
       'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
-      'requests'=>['Certification requests','Completed training','Approve for certification','Decline and notify student'],
+      'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student'],
       'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started','Verify payment','Retry email'],
       default=>throw new RuntimeException('Unknown test tab')
     };
     foreach($expected as $needle)if(!str_contains($html,$needle))throw new RuntimeException($tab.' missing '.$needle);
+    if(str_contains($html,'Send an update to this student')||str_contains($html,'Student note:')||str_contains($html,'Optional review note'))throw new RuntimeException('Messaging control exposed');
     if(str_contains($html,'admin@academy.invalid'))throw new RuntimeException('Nonstudent leaked into Academy roster');
     if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
         $dir=__DIR__.'/../docs/visual-qa/academy';
