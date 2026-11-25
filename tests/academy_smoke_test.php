@@ -42,4 +42,6 @@ academy_assert(str_contains($entry,"\$mode==='review_request'")&&!str_contains($
 $guide=file_get_contents(__DIR__.'/../views/academy-guide.php');
 academy_assert(str_contains($entry,"ac_guide('preview'")&&str_contains($guide,'If already paid, use Check Payment instead of paying again.'),'Payment preview help with duplicate-payment warning');
 academy_assert(!str_contains($guide,'<form')&&!str_contains($guide,'method="post"'),'Guidance has no mutation forms');
+academy_assert(str_contains($entry,'Confirm the exact certificate name before submitting your request.')&&str_contains($entry,'Please open the certificate preview and confirm its details before paying.'),'Server-side confirmation gates');
+academy_assert(str_contains($student,'data-cert-wizard')&&str_contains($student,'name="confirm_name"')&&str_contains($student,'ac-cert-record'),'Progressive request and accordion records');
 echo "Academy smoke checks passed.\n";
