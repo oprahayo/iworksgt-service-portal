@@ -252,7 +252,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
-  <?php if ($currentPage === 'academy'): ?><link rel="stylesheet" href="/assets/css/academy.css?v=3"><?php endif; ?>
+  <?php if ($currentPage === 'academy'): ?><link rel="stylesheet" href="/assets/css/academy.css?v=4"><?php endif; ?>
   <?php require __DIR__ . '/portal-transition-head.php'; ?>
   <style>
     :root {
