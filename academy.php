@@ -214,6 +214,13 @@ try {
         if(!$m){http_response_code(404);exit('Material unavailable.');}
         header('Content-Type: application/pdf');header('Content-Disposition: attachment; filename="'.preg_replace('/[^A-Za-z0-9._-]/','_',$m['filename']).'"');header('Content-Length: '.strlen($m['content']));header('X-Content-Type-Options: nosniff');echo $m['content'];exit;
     }
+    if ($action==='exam_start'){
+        if(!method_is('POST')){http_response_code(405);exit;}
+        require_csrf();$cid=(int)($_POST['course']??0);$lid=(int)($_POST['lesson']??0);$id=(int)($_POST['id']??0);
+        try{if(!academy_exam_start((int)$user['id'],$cid,$lid,$id))flash('academy_student_notice','Exam unavailable, completed or expired.');}
+        catch(InvalidArgumentException $e){flash('academy_student_notice',$e->getMessage());}
+        redirect($base.'?action=learn&course='.$cid.'&lesson='.$lid.'#ac-assessment-'.$id);
+    }
     if ($action==='assessment_submit'){
         if(!method_is('POST')){http_response_code(405);exit;}
         require_csrf();$cid=(int)($_POST['course']??0);$lid=(int)($_POST['lesson']??0);$id=(int)($_POST['id']??0);
