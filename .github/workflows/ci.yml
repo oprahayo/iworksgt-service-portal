@@ -226,13 +226,33 @@ jobs:
         run: php tests/academy_database_integration_test.php
 
       - name: Render all Academy administration sections using MySQL fixtures
+        env:
+          ACADEMY_VISUAL_FIXTURES: '1'
         run: |
           for tab in students student enrollments courses certificates; do
             php tests/academy_admin_render_test.php "$tab"
           done
 
       - name: Render independent Academy student screens
+        env:
+          ACADEMY_VISUAL_FIXTURES: '1'
         run: |
           for screen in dashboard courses certificates profile; do
             php tests/academy_student_render_test.php "$screen"
           done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Academy responsive layouts in Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+          node tests/academy_responsive_visual_qa.mjs
+      - name: Save synthetic Academy screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: academy-responsive-qa
+          path: docs/visual-qa/academy/*.png
+          if-no-files-found: ignore
