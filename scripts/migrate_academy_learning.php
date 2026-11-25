@@ -2,7 +2,7 @@
 declare(strict_types=1);
 // Additive LMS schema. No changes to existing enrollment, graduate or payment records.
 if(PHP_SAPI!=='cli'||!in_array('--backup-confirmed',$argv,true)){http_response_code(404);exit(2);}
-$root=realpath($argv[1]??dirname(__DIR__));
+$root=realpath(isset($argv[1])&&$argv[1]!=='--backup-confirmed'?$argv[1]:dirname(__DIR__));
 if(!$root||!is_file($root.'/app/bootstrap.php'))exit(2);
 require $root.'/app/bootstrap.php';
 db()->exec("CREATE TABLE IF NOT EXISTS academy_learning_courses (
