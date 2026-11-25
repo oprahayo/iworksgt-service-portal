@@ -20,6 +20,7 @@
     <?php if (google_auth_ready()): ?><a class="iw-auth-google" href="<?= e(portal_url('google_start')) ?>"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a><?php endif; ?>
   </form>
   <p class="iw-auth-switch">New to iWorks? <a href="<?= e(url('register', !empty($_GET['embed']) ? ['embed'=>'1'] : [])) ?>"<?= !empty($_GET['embed']) ? ' data-iw-auth-switch="register"' : '' ?>>Create an account</a></p>
+  <p class="iw-auth-switch">Joining iWorks Academy? <a href="<?= e(portal_absolute_url('student/register')) ?>" target="_top">Register as a student</a></p>
 </section>
 <script>
 <?php if (empty($iwEmbeddedPublicAuth)): ?>
