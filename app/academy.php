@@ -35,6 +35,17 @@ function academy_paystack_key(): string {
     }
     return trim((string)$method['secret_key']);
 }
+/** Live issuance must never accept a sandbox transaction or a test secret. */
+function academy_live_paystack_key(): string {
+    $key=academy_paystack_key();
+    if (!preg_match('/^sk_live_[A-Za-z0-9]+$/D',$key)) {
+        throw new RuntimeException('Live certification payments require a live Paystack key.');
+    }
+    return $key;
+}
+function academy_live_payment_matches(array $cert,array $verified): bool {
+    return ($verified['data']['domain']??'')==='live' && academy_verified_payment_matches($cert,$verified);
+}
 function academy_valid_name(string $name): bool {
     return preg_match("/^[\\p{L}\\p{M} .’'\\-]{2,150}$/u", $name) === 1;
 }
@@ -131,14 +142,14 @@ function academy_confirm(string $reference): bool {
     if (!$cert) return false;
     if ($cert['status']==='issued') return true;
     if ($cert['status']!=='pending') return false;
-    $verified = gateway_json_get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference),academy_paystack_key());
+    $verified = gateway_json_get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference),academy_live_paystack_key());
     $data = $verified['data'] ?? [];
-    if (!academy_verified_payment_matches($cert,$verified)) return false;
+    if (!academy_live_payment_matches($cert,$verified)) return false;
     // Only a verified provider transaction can issue a certificate.
     db()->beginTransaction();
     try {
         $row=db_one('SELECT * FROM academy_certificates WHERE id=:id FOR UPDATE',['id'=>$cert['id']]);
-        if (!$row || !academy_verified_payment_matches($row,$verified)) {
+        if (!$row || !academy_live_payment_matches($row,$verified)) {
             db()->rollBack(); return false;
         }
         if ($row['status']==='pending') {
@@ -188,7 +199,7 @@ function academy_new_checkout(array $user,int $graduate,string $name): string {
         if ($previous['status']==='pending') return academy_resume_checkout($user,$graduate);
         throw new RuntimeException('A certificate already exists.');
     }
-    $secret=academy_paystack_key();
+    $secret=academy_live_paystack_key();
     $ref='IWGA-'.bin2hex(random_bytes(16));
     $certno='IWGA-'.date('Y').'-'.strtoupper(bin2hex(random_bytes(8)));
     // Fail before initiating checkout if assets or PDF renderer are unavailable.
