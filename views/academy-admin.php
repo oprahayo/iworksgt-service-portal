@@ -59,21 +59,12 @@ $status=(string)($_GET['status']??'');
 $page=max(1,min(100000,(int)($_GET['p']??1)));
 $notice=flash('academy_admin_notice');$error=flash('academy_admin_error');
 ac_head('Academy');
-echo '<div class="ac-admin"><div class="ac-intro"><div><p class="ac-kicker">ACADEMY MANAGEMENT</p><h2>Manage students and certifications</h2><p>Find a student, confirm their completed course, and track their certificate in one place.</p></div><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div>';
-$counts=[
-    ['Students',ac_admin_count("SELECT COUNT(*) n FROM users WHERE role='student' AND deleted_at IS NULL"),'students',[]],
-    ['New requests',ac_admin_count("SELECT COUNT(*) n FROM academy_enrollments en JOIN users u ON u.id=en.student_id WHERE en.status='requested' AND u.role='student' AND u.deleted_at IS NULL"),'enrollments',['status'=>'requested']],
-    ['Ready to certify',ac_admin_count("SELECT COUNT(*) n FROM academy_graduates g JOIN users u ON u.id=g.student_id LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id WHERE u.role='student' AND u.deleted_at IS NULL AND ce.id IS NULL"),'certificates',['status'=>'ready']],
-    ['Issued certificates',ac_admin_count("SELECT COUNT(*) n FROM academy_certificates WHERE status='issued'"),'certificates',['status'=>'issued']]
-];
-echo '<div class="ac-stats">';
-foreach($counts as [$label,$count,$dest,$params])echo '<a href="'.e(ac_admin_url($dest,$params)).'"><span>'.e($label).'</span><strong>'.number_format($count).'</strong></a>';
-echo '</div><nav class="ac-tabs" aria-label="Academy sections">';
+echo '<div class="ac-admin"><div class="ac-intro"><div><h2>Academy</h2><p>Manage students, courses and certificates.</p></div><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
 foreach(['students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).'</a>';}
 echo '</nav>';
 if($notice)echo '<div class="ac-message" role="status">'.e($notice).'</div>';
 if($error)echo '<div class="ac-message ac-error" role="alert">'.e($error).'</div>';
-if(!academy_checkout_enabled())echo '<div class="ac-callout">Certification checkout is currently disabled. You can still approve students for certification.</div>';
+if(!academy_checkout_enabled()&&in_array($tab,['students','student','certificates'],true))echo '<div class="ac-callout">Payments are off. Student approvals are available.</div>';
 if($tab==='students'){
     echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>Students</h2><p>Registered Academy students and their progress.</p></div></div>';
     $options=['verified'=>'Verified','unverified'=>'Email unverified','inactive'=>'Inactive'];
@@ -91,8 +82,8 @@ if($tab==='students'){
         (SELECT COUNT(*) FROM academy_certificates ce WHERE ce.student_id=u.id AND ce.status='issued') AS certificate_count".$from." ORDER BY u.id DESC LIMIT 25 OFFSET ".$offset,$params);
     if(!$rows)ac_admin_empty('No students match your search. New students appear here after registration.');
     else{
-        ac_admin_table(['Student','Account','Courses','Completed','Certificates','Action']);
-        foreach($rows as $u){echo '<tr><td><strong>'.e($u['full_name']).'</strong><small>'.e($u['email']).'</small></td><td>';ac_admin_status(ac_admin_student_state($u));echo '</td><td>'.(int)$u['enrolled_count'].'</td><td>'.(int)$u['completed_count'].'</td><td>'.(int)$u['certificate_count'].'</td><td>';ac_admin_link('View student','student',['id'=>(int)$u['id']],'ac-secondary');echo '</td></tr>';}
+        ac_admin_table(['Student','Account','Progress','Action']);
+        foreach($rows as $u){echo '<tr><td><strong>'.e($u['full_name']).'</strong><small>'.e($u['email']).'</small></td><td>';ac_admin_status(ac_admin_student_state($u));echo '</td><td>'.(int)$u['completed_count'].' completed<small>'.(int)$u['certificate_count'].' issued certificate(s)</small></td><td>';ac_admin_link('View student','student',['id'=>(int)$u['id']],'ac-primary');echo '</td></tr>';}
         ac_admin_table_end();
     }
     ac_admin_pager('students',$page,$total,['q'=>$query,'status'=>$status]);echo '</section>';
@@ -103,11 +94,24 @@ if($tab==='students'){
     if(!$u)ac_admin_empty('Student not found.');
     else{
         echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>'.e($u['full_name']).'</h2><p>'.e($u['email']).' · '.e((string)($u['phone']??'')).'</p></div>';ac_admin_status(ac_admin_student_state($u));echo '</div>';
+        echo '<div id="approve" class="ac-approval"><h3>Approve completed training</h3><p>Select the completed course and duration. The student can then request a certificate.</p>';
+        if(ac_admin_student_state($u)!=='verified')ac_admin_empty('The student must have an active, email-verified account before approval.');
+        else{
+            $available=db_all("SELECT c.id,c.title,c.colour FROM academy_courses c WHERE c.active=1 AND NOT EXISTS(SELECT 1 FROM academy_graduates g WHERE g.course_id=c.id AND g.student_id=:student) ORDER BY c.title",['student'=>$id]);
+            if(!$available)ac_admin_empty('All available courses are already approved for this student.');
+            else{
+                ac_admin_post('approve','student',$id);
+                echo '<div class="ac-fields"><label>Completed course<select required name="course"><option value="">Select course</option>';
+                foreach($available as $c)echo '<option value="'.(int)$c['id'].'"'.((int)($_GET['course']??0)===(int)$c['id']?' selected':'').'>'.e($c['title']).' · '.ucfirst($c['colour']).'</option>';
+                echo '</select></label><label>Training duration<input name="duration" maxlength="80" required placeholder="e.g. 12 weeks"></label></div><button>Approve for certification</button></form>';
+            }
+        }
+        echo '</div></section><section class="ac-panel">';
         $rows=db_all("SELECT c.id,c.title,c.colour,c.active,en.id AS enrollment_id,en.status AS enrollment_status,g.id AS graduate_id,g.duration,ce.status AS certificate_status,ce.certificate_number
             FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student
             LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id
             WHERE en.id IS NOT NULL OR g.id IS NOT NULL ORDER BY c.title",['en_student'=>$id,'g_student'=>$id]);
-        echo '<div class="ac-panel-title"><h3>Course and certificate history</h3>';if(ac_admin_student_state($u)==='verified')echo '<a class="ac-secondary" href="#approve">Approve completed training</a>';echo '</div>';
+        echo '<h3>Course and certificate history</h3>';
         if(!$rows)ac_admin_empty('No course history yet. Approve a completed course below if this student has already graduated.');
         else{
             ac_admin_table(['Course','Enrollment','Duration','Certificate','Action']);
@@ -121,18 +125,6 @@ if($tab==='students'){
                 echo '</td></tr>';
             }
             ac_admin_table_end();
-        }
-        echo '</section><section class="ac-panel" id="approve"><h2>Approve completed training</h2><p>For graduates who have finished their training, including students trained before the portal launch. This makes Get Certificate available on their student dashboard; it does not issue a certificate or charge them.</p>';
-        if(ac_admin_student_state($u)!=='verified')ac_admin_empty('The student must have an active, email-verified account before approval.');
-        else{
-            $available=db_all("SELECT c.id,c.title,c.colour FROM academy_courses c WHERE c.active=1 AND NOT EXISTS(SELECT 1 FROM academy_graduates g WHERE g.course_id=c.id AND g.student_id=:student) ORDER BY c.title",['student'=>$id]);
-            if(!$available)ac_admin_empty('All available courses are already approved for this student.');
-            else{
-                ac_admin_post('approve','student',$id);
-                echo '<div class="ac-fields"><label>Completed course<select required name="course"><option value="">Select course</option>';
-                foreach($available as $c)echo '<option value="'.(int)$c['id'].'"'.((int)($_GET['course']??0)===(int)$c['id']?' selected':'').'>'.e($c['title']).' · '.ucfirst($c['colour']).'</option>';
-                echo '</select></label><label>Training duration<input name="duration" maxlength="80" required placeholder="e.g. 12 weeks"></label></div><button>Approve for certification</button></form>';
-            }
         }
         echo '</section>';
     }
