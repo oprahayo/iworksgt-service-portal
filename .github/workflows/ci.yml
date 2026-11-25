@@ -183,3 +183,41 @@ jobs:
           node --check assets/js/dashboard-live-visitors.js
           node --check assets/js/admin-transition.js
           node tests/admin_transition_behavior_test.js
+
+  academy-database:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: academy_ci_root
+          MYSQL_DATABASE: academy_ci
+          MYSQL_USER: academy_ci
+          MYSQL_PASSWORD: academy_ci_fixture
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_NAME: academy_ci
+      DB_USER: academy_ci
+      DB_PASS: academy_ci_fixture
+      ACADEMY_CI_DATABASE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_mysql
+          coverage: none
+      - name: Load isolated baseline and apply migration twice
+        run: |
+          MYSQL_PWD="$DB_PASS" mysql -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" < database.sql
+          php scripts/migrate_academy.php --backup-confirmed
+          php scripts/migrate_academy.php --backup-confirmed
+      - name: Verify real database constraints and simulated gateway issuance
+        run: php tests/academy_database_integration_test.php
