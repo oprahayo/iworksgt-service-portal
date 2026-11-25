@@ -22,13 +22,14 @@ try{
     db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'6 weeks',:admin,'2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id'],'admin'=>$admin['id']]);
     $course=db_one("SELECT id FROM academy_courses WHERE slug='hosting'");
     db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'requested','2026-11-25 12:00:00','2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id']]);
+    if($action==='certificates')db_execute("INSERT INTO academy_certification_requests(student_id,course_id,student_name,student_note,review_note,status,submitted_at) VALUES(:student,:course,'CI Test Student','','Training could not be verified.','declined','2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id']]);
     $_SESSION=[];
     define('IWORKS_ACADEMY_STUDENT_VIEW',true);
     ob_start();require __DIR__.'/../views/academy-student.php';$html=ob_get_clean();
     $expected=match($action){
         'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request certification'],
         'courses'=>['My courses &amp; applications','Pending application','Explore courses','Apply for course'],
-        'certificates'=>['My certificates','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked'],
+        'certificates'=>['My certificates','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked','Administrator query','Training could not be verified.'],
         'profile'=>['Personal information','student@academy.invalid','Save profile'],
         default=>throw new RuntimeException('Unknown screen')
     };
@@ -40,6 +41,7 @@ try{
     };
     foreach($expected as $needle)if(!str_contains($html,$needle))throw new RuntimeException($action.' missing '.$needle);
     foreach($excluded as $needle)if(str_contains($html,$needle))throw new RuntimeException($action.' incorrectly contains '.$needle);
+    if(str_contains($html,'name="note"')||str_contains($html,'Contact Academy')||str_contains($html,'Send inquiry'))throw new RuntimeException('Student messaging exposed');
     if(str_contains($html,'admin@academy.invalid'))throw new RuntimeException('Other user exposed');
     if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
         $dir=__DIR__.'/../docs/visual-qa/academy';
