@@ -253,7 +253,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
-  <?php if (in_array($currentPage, ['academy','academy_courses','academy_certificates','academy_profile'], true)): ?><link rel="stylesheet" href="/assets/css/academy.css?v=15"><?php endif; ?>
+  <?php if (($user['role']??'')==='student' || in_array($currentPage, ['academy','academy_courses','academy_certificates','academy_profile'], true)): ?><link rel="stylesheet" href="/assets/css/academy.css?v=16"><?php endif; ?>
   <?php require __DIR__ . '/portal-transition-head.php'; ?>
   <style>
     :root {
@@ -330,6 +330,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <div class="portal-main">
+    <?php if (($user['role']??'')==='student'): require __DIR__.'/academy-student-topbar.php'; else: ?>
     <header class="portal-topbar">
       <div class="d-flex align-items-center gap-2">
         <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" id="sidebarOpenBtn" aria-label="Open menu">
@@ -360,6 +361,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         <a class="btn btn-sm btn-primary" href="logout.php">Logout</a>
       </div>
     </header>
+    <?php endif; ?>
 
     <main class="portal-content">
       <?php if ($msg = flash('success')): ?>
