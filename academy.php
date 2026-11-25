@@ -39,10 +39,15 @@ function ac_notify(array $cert,array $user): void {
 }
 try {
     if ($action==='verify') {
+        $number=strtoupper(trim((string)($_GET['number']??'')));
+        if ($number!=='') {
+            $ip=iworks_auth_ip();
+            if (!iworks_auth_limit_allows('academy_verify_ip',$ip,60,900)) {http_response_code(429);exit('Too many verification attempts. Try again later.');}
+            iworks_auth_limit_record('academy_verify_ip',$ip,900);
+        }
         ac_head('Verify a certificate');
         echo '<form method="get" action="/verify"><input type="hidden" name="action" value="verify">';
         ac_input('number','Certificate number',(string)($_GET['number']??'')); echo '<button>Verify certificate</button></form>';
-        $number=strtoupper(trim((string)($_GET['number']??'')));
         if ($number!=='') {
             $cert=preg_match('/^IWGA-\\d{4}-[A-F0-9]{16}$/D',$number)?db_one("SELECT certificate_number,student_name,course_title,duration,issued_at,status FROM academy_certificates WHERE certificate_number=:number AND status IN ('issued','revoked')",['number'=>$number]):null;
             if (!$cert || $cert['status']!=='issued') echo '<section>No valid certificate found.</section>';
@@ -51,7 +56,7 @@ try {
         ac_end(); exit;
     }
     if ($action==='register') {
-        if (is_logged_in()) redirect($base);
+        if (is_logged_in()) redirect(has_role(['student']) ? $base : portal_url('dashboard'));
         if (method_is('POST')) {
             require_csrf();
             $name=trim((string)($_POST['name']??'')); $email=strtolower(trim((string)($_POST['email']??'')));
