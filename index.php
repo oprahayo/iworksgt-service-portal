@@ -537,7 +537,7 @@ try {
         if (in_array((string)$page, ['dashboard','login','register','otp','profile'], true)) {
             redirect('https://portal.iworksgt.com/academy.php');
         }
-        if (!in_array((string)$page, ['public_auth_status'], true)) {
+        if (!in_array((string)$page, ['public_auth_status','notifications','realtime'], true)) {
             http_response_code(403);
             exit('Student accounts can access their own Academy dashboard only.');
         }
@@ -1349,6 +1349,7 @@ try {
             require_login();
             header('Content-Type: application/json');
             $scope = strtolower(trim((string) ($_GET['scope'] ?? 'notifications')));
+            if (user_role() === 'student' && $scope !== 'notifications') { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Scope denied']); break; }
             $user = current_user();
 
             if ($scope === 'chat_typing') {
