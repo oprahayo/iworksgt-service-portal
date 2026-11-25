@@ -105,7 +105,7 @@ if($tab==='students'){
                 echo '</select></label><label>Training duration<input name="duration" maxlength="80" required placeholder="e.g. 12 weeks"></label></div><button>Approve for certification</button></form>';
             }
         }
-        echo '</div></section><section class="ac-panel">';
+        echo '</div>';if(ac_admin_student_state($u)==='verified'){echo '<details class="ac-contact"><summary>Send an update to this student</summary>';ac_admin_post('send_update','student',$id);echo '<label>Message<textarea name="message" maxlength="1000" rows="3" required></textarea></label><button>Send update</button></form></details>';}echo '</section><section class="ac-panel">';
         $rows=db_all("SELECT c.id,c.title,c.colour,c.active,en.id AS enrollment_id,en.status AS enrollment_status,g.id AS graduate_id,g.duration,ce.status AS certificate_status,ce.certificate_number
             FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student
             LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id
