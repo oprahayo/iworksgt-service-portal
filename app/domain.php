@@ -8948,6 +8948,12 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
             return ['success' => false, 'status_code' => 400, 'message' => 'Missing Paystack reference.'];
         }
 
+        if (preg_match('/^IWGA-[a-f0-9]{32}$/D', $reference)) {
+            require_once __DIR__ . '/academy.php';
+            $confirmed = academy_confirm($reference);
+            return ['success' => $confirmed, 'status_code' => $confirmed ? 200 : 503, 'message' => $confirmed ? 'Academy payment confirmed.' : 'Academy payment verification pending.'];
+        }
+
         $payment = find_gateway_payment_by_reference_any($provider, $reference);
         if (!$payment) {
             return ['success' => true, 'status_code' => 200, 'message' => 'No matching payment record.'];
