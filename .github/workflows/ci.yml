@@ -271,3 +271,20 @@ jobs:
           name: academy-responsive-qa
           path: docs/visual-qa/academy/*.png
           if-no-files-found: ignore
+
+  academy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install synthetic preview test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-lato
+          python -m pip install 'Pillow==11.3.0'
+      - name: Test restricted certificate rendering and deployment syntax
+        run: |
+          bash -n scripts/deploy_academy_sprint7c.sh
+          python tests/academy_preview_render_test.py /usr/share/fonts/truetype/lato
