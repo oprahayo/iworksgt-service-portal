@@ -6,8 +6,8 @@ WORK="$(mktemp -d "$HOME/.academy-final-qa.XXXXXXXX")"
 trap 'unset TEST_KEY; rm -rf "$WORK"' EXIT
 PORTAL="$HOME/public_html/portal.iworksgt.com"
 BASE="https://raw.githubusercontent.com/oprahayo/iworksgt-service-portal"
-curl -fsSL --retry 3 "$BASE/8afc83352cafe4b8624c95ba7a36c038853bf82e/scripts/academy_real_student_qa.php" -o "$WORK/student.php"
-curl -fsSL --retry 3 "$BASE/2912bb957830abe0e3db8a3c2008a674eab52ed0/scripts/academy_paystack_sandbox.php" -o "$WORK/payment.php"
+curl -fsSL --retry 3 "$BASE/228c7ddb7c5a0d0d66908f402947d7ff14c46ffd/scripts/academy_real_student_qa.php" -o "$WORK/student.php"
+curl -fsSL --retry 3 "$BASE/d960b069ff1af8250dfa904244b60c3c85e477ce/scripts/academy_paystack_sandbox.php" -o "$WORK/payment.php"
 php -l "$WORK/student.php"
 php -l "$WORK/payment.php"
 STUDENT_RESULT=3
