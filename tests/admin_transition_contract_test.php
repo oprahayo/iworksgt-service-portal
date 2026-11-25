@@ -3,6 +3,8 @@ declare(strict_types=1);
 // The latest operator instruction removes the repeated branded page flashes.
 $root=dirname(__DIR__);
 function check_transition(bool $ok,string $why):void{if(!$ok)throw new RuntimeException($why);}
+function e(string $value):string{return htmlspecialchars($value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
+function portal_absolute_url(string $path):string{return 'https://portal.iworksgt.com/'.ltrim($path,'/');}
 foreach(['admin','agent','finance','author','client','student',null] as $role){
     $user=$role===null?null:['id'=>99,'role'=>$role];
     ob_start();
