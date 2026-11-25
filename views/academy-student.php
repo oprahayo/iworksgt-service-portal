@@ -128,7 +128,7 @@ if($screen==='dashboard'){
         echo '</div></details>';
       }
     }
-    echo '</section><dialog class="ac-cert-dialog" id="ac-cert-dialog" aria-labelledby="ac-cert-dialog-title"><div class="ac-cert-dialog-head"><div><h2 id="ac-cert-dialog-title">Certificate details</h2><p id="ac-cert-dialog-meta"></p></div><button type="button" data-cert-close aria-label="Close certificate details">Close</button></div><div data-cert-dialog-body></div></dialog><script src="/assets/js/academy-certificates.js?v=3" defer></script></div>';
+    echo '</section><dialog class="ac-cert-dialog" id="ac-cert-dialog" aria-labelledby="ac-cert-dialog-title"><div class="ac-cert-dialog-head"><div><h2 id="ac-cert-dialog-title">Certificate details</h2><p id="ac-cert-dialog-meta"></p></div><button type="button" data-cert-close aria-label="Close certificate details"><i class="bi bi-x-lg" aria-hidden="true"></i><span aria-hidden="true" class="ac-x-fallback">×</span></button></div><div data-cert-dialog-body></div></dialog><script src="/assets/js/academy-certificates.js?v=4" defer></script></div>';
 }else{
     ac_guide('profile',$studentId);
     echo '<section class="ac-student-panel ac-profile-panel"><h2>Personal information</h2><p>Keep your name and contact details up to date.</p><label>Email address<input type="email" readonly value="'.e($user['email']).'"></label><small>Email verified. Contact support if you need to change it.</small>';
