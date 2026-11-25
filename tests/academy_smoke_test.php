@@ -17,7 +17,7 @@ academy_assert(str_contains($entry,"require_roles(['student'])"),'Student role c
 academy_assert(str_contains($entry,"require_roles(['admin'])"),'Admin role check');
 require __DIR__.'/../app/auth_rate_limits.php';
 foreach (['academy_register_ip','academy_verify_ip','academy_inquiry'] as $scope) academy_assert(iworks_auth_bucket($scope,'fixture',900)['scope']===$scope,'Academy auth rate limit scope');
-academy_assert(str_contains($student,'Request course review')&&str_contains($entry,'academy_student_notice'),'Student course review and confirmation');
+academy_assert(str_contains($student,'Submit certification request')&&str_contains($entry,'academy_student_notice'),'Student course review and confirmation');
 academy_assert(str_contains($student,"\$screen==='dashboard'")&&str_contains($student,"\$screen==='courses'")&&str_contains($student,"\$screen==='certificates'"),'Dedicated student screens');
 $public=file_get_contents(__DIR__.'/../views/public-service-detail.php');
 academy_assert(str_contains($public,"'pro-training'")&&str_contains($public,'iwAcademyCoursesTitle')&&str_contains($public,"'action'=>'apply'"),'Public training application link');
@@ -37,4 +37,6 @@ academy_assert(str_contains($student,"ac_form('inquiry')")&&str_contains($adminV
 academy_assert(academy_duration_weeks('12')===12&&academy_duration_weeks('16 Weeks')===16&&academy_duration_weeks('3 months')===null&&academy_duration_weeks('0')===null,'Weeks validation');
 academy_assert(academy_duration_label(1)==='1 Week'&&academy_duration_label(16)==='16 Weeks','Canonical duration');
 academy_assert(academy_recommended_weeks('fullstack')===32&&academy_recommended_weeks('unknown')===null,'Course recommendations');
+academy_assert(str_contains($entry,"'certificate_preview','preview_image'")&&!str_contains($entry,'data:image/svg+xml;base64,'),'Private preview endpoint');
+academy_assert(str_contains($entry,"\$mode==='review_request'")&&!str_contains($entry,"\$mode==='approve'"),'Student-initiated review only');
 echo "Academy smoke checks passed.\n";
