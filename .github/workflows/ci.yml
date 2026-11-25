@@ -84,6 +84,7 @@ jobs:
 
       - name: Run smoke tests
         run: |
+          php tests/academy_smoke_test.php
           php tests/crypto_conversion_test.php
           php tests/public_cms_layout_test.php
           php tests/public_services_template_test.php
