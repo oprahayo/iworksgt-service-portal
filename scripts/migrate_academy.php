@@ -21,11 +21,14 @@ db()->exec("CREATE TABLE IF NOT EXISTS academy_certificates (
  student_id INT UNSIGNED NOT NULL, certificate_number VARCHAR(48) NOT NULL UNIQUE,
  student_name VARCHAR(150) NOT NULL, course_title VARCHAR(160) NOT NULL, duration VARCHAR(80) NOT NULL,
  colour ENUM('orange','purple','green','blue') NOT NULL, amount_minor INT UNSIGNED NOT NULL,
- payment_reference VARCHAR(80) NOT NULL UNIQUE, provider_transaction VARCHAR(80) NULL UNIQUE,
+ payment_reference VARCHAR(80) NOT NULL UNIQUE, checkout_url VARCHAR(512) NULL, provider_transaction VARCHAR(80) NULL UNIQUE,
  status ENUM('pending','issued','revoked') NOT NULL DEFAULT 'pending',
  issued_at DATETIME NULL, email_sent_at DATETIME NULL, created_at DATETIME NOT NULL,
  FOREIGN KEY(graduate_id) REFERENCES academy_graduates(id), FOREIGN KEY(student_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+if (!db_one("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='academy_certificates' AND COLUMN_NAME='checkout_url'")) {
+    db()->exec('ALTER TABLE academy_certificates ADD COLUMN checkout_url VARCHAR(512) NULL AFTER payment_reference');
+}
 foreach ([
  ['digital-marketing','Digital Marketing','orange'],
  ['wordpress','WordPress & CMS Web Design','purple'],
