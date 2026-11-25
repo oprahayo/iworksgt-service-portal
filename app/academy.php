@@ -223,6 +223,29 @@ function academy_resume_checkout(array $user, int $graduate): string {
     if (!academy_checkout_url_valid($url)) throw new RuntimeException('Contact support to recover this payment.');
     return $url;
 }
+function academy_recommended_weeks(string $slug):?int{
+    return ['digital-marketing'=>12,'wordpress'=>16,'frontend-basic'=>12,'frontend-advanced'=>16,'backend'=>16,'fullstack'=>32,'hosting'=>8][$slug]??null;
+}
+function academy_duration_weeks(string $raw):?int{
+    if(!preg_match('/^\s*([0-9]{1,3})(?:\s*weeks?)?\s*$/iD',$raw,$m))return null;
+    $n=(int)$m[1];return $n>=1&&$n<=104?$n:null;
+}
+function academy_duration_label(int $weeks):string{
+    if($weeks<1||$weeks>104)throw new InvalidArgumentException('Enter training duration between 1 and 104 weeks.');
+    return $weeks.($weeks===1?' Week':' Weeks');
+}
+// A certificate snapshot is immutable once checkout exists. This guarded
+// update and checkout's conditional INSERT prevent stale duration snapshots.
+function academy_edit_duration(int $student,int $graduate,string $duration,?string $expected=null):bool{
+    $weeks=academy_duration_weeks($duration);
+    if($weeks===null)throw new InvalidArgumentException('Enter training duration in weeks (1–104).');
+    $label=academy_duration_label($weeks);
+    $params=['student'=>$student,'graduate'=>$graduate,'duration'=>$label];
+    $where='';
+    if($expected!==null){$where=' AND g.duration=:expected';$params['expected']=$expected;}
+    return db_query("UPDATE academy_graduates g LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id SET g.duration=:duration WHERE g.id=:graduate AND g.student_id=:student AND ce.id IS NULL".$where,$params)->rowCount()===1;
+}
+
 function academy_new_checkout(array $user,int $graduate,string $name): string {
     if (!academy_checkout_enabled()) throw new RuntimeException('Certification checkout is not yet enabled.');
     if (!is_email_verified($user) || !academy_valid_name($name) || trim((string)$user['phone'])==='') {
@@ -242,10 +265,11 @@ function academy_new_checkout(array $user,int $graduate,string $name): string {
     // Fail before initiating checkout if assets or PDF renderer are unavailable.
     academy_pdf(['colour'=>$g['colour'],'certificate_number'=>$certno,'student_name'=>$name,
         'course_title'=>$g['title'],'duration'=>$g['duration'],'issued_at'=>now()]);
-    db_execute('INSERT INTO academy_certificates (graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,created_at)
-        VALUES (:graduate,:student,:number,:name,:course,:duration,:colour,:amount,:ref,:created)',
+    $inserted=db_query('INSERT INTO academy_certificates (graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,created_at)
+        SELECT g.id,g.student_id,:number,:name,:course,g.duration,:colour,:amount,:ref,:created FROM academy_graduates g WHERE g.id=:graduate AND g.student_id=:student AND g.duration=:duration',
         ['graduate'=>$graduate,'student'=>$user['id'],'number'=>$certno,'name'=>$name,'course'=>$g['title'],'duration'=>$g['duration'],
-        'colour'=>$g['colour'],'amount'=>ACADEMY_FEE_MINOR,'ref'=>$ref,'created'=>now()]);
+        'colour'=>$g['colour'],'amount'=>ACADEMY_FEE_MINOR,'ref'=>$ref,'created'=>now()])->rowCount();
+    if($inserted!==1)throw new RuntimeException('Training details changed. Refresh the certificate preview before paying.');
     $response=gateway_json_post('https://api.paystack.co/transaction/initialize',[
         'email'=>$user['email'],'amount'=>ACADEMY_FEE_MINOR,'currency'=>'NGN','reference'=>$ref,
         'callback_url'=>'https://portal.iworksgt.com/academy.php?action=callback'
