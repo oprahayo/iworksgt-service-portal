@@ -10,6 +10,7 @@ function ac_form(string $action):void{echo '<form method="post" action="/academy
 function ac_input(string $name,string $label,string $value='',string $type='text'):void{echo '<label>'.e($label).'<input name="'.e($name).'" value="'.e($value).'"></label>';}
 function ac_head(string $title):void{echo '<header>'.e($title).'</header>';}
 function ac_end():void{}
+require __DIR__.'/../app/academy_requests.php';
 function academy_checkout_enabled():bool{return false;}
 $action=$argv[1]??'dashboard';
 $user=db_one("SELECT * FROM users WHERE email='student@academy.invalid'");
@@ -25,9 +26,9 @@ try{
     define('IWORKS_ACADEMY_STUDENT_VIEW',true);
     ob_start();require __DIR__.'/../views/academy-student.php';$html=ob_get_clean();
     $expected=match($action){
-        'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request course review'],
+        'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request certification'],
         'courses'=>['My courses &amp; applications','Pending application','Explore courses','Apply for course'],
-        'certificates'=>['My certificates','Get Certificate','Digital Marketing','Certificate revoked'],
+        'certificates'=>['My certificates','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked'],
         'profile'=>['Personal information','student@academy.invalid','Save profile'],
         default=>throw new RuntimeException('Unknown screen')
     };
