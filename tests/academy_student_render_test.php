@@ -40,5 +40,10 @@ try{
     foreach($expected as $needle)if(!str_contains($html,$needle))throw new RuntimeException($action.' missing '.$needle);
     foreach($excluded as $needle)if(str_contains($html,$needle))throw new RuntimeException($action.' incorrectly contains '.$needle);
     if(str_contains($html,'admin@academy.invalid'))throw new RuntimeException('Other user exposed');
+    if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
+        $dir=__DIR__.'/../docs/visual-qa/academy';
+        if(!is_dir($dir))mkdir($dir,0755,true);
+        file_put_contents($dir.'/student-'.$action.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.$html.'</div></main></body></html>');
+    }
     echo 'Student '.$action." rendered using isolated MySQL fixtures.\n";
 }finally{if(db()->inTransaction())db()->rollBack();}
