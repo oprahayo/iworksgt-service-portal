@@ -10,6 +10,8 @@ function ac_form(string $action):void{echo '<form method="post" action="/academy
 function ac_input(string $name,string $label,string $value='',string $type='text'):void{echo '<label>'.e($label).'<input name="'.e($name).'" value="'.e($value).'"></label>';}
 function ac_head(string $title):void{echo '<header>'.e($title).'</header>';}
 function ac_end():void{}
+function csrf_token():string{return 'fixture';}
+function url(string $page):string{return '/index.php?page='.$page;}
 require __DIR__.'/../app/academy_requests.php';
 function academy_checkout_enabled():bool{return ($GLOBALS['action']??'')==='certificates';}
 $action=$argv[1]??'dashboard';
@@ -61,7 +63,13 @@ try{
     if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
         $dir=__DIR__.'/../docs/visual-qa/academy';
         if(!is_dir($dir))mkdir($dir,0755,true);
-        file_put_contents($dir.'/student-'.$action.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace(['/assets/js/academy-guide.js?v=3','/assets/js/academy-certificates.js?v=3'],['../../../assets/js/academy-guide.js?v=3','../../../assets/js/academy-certificates.js?v=3'],$html).'</div></main></body></html>');
+        $pageHeading=$action==='profile'?'My Profile':($action==='courses'?'My Courses':'My Certificates');
+        $unreadCount=4;$latestNotificationId=42;
+        $originalName=$user['full_name'];$user['full_name']='CI Student With A Very Long Name For Mobile Layout';
+        ob_start();require __DIR__.'/../views/partials/academy-student-topbar.php';$topbar=ob_get_clean();$user['full_name']=$originalName;
+        if(!str_contains($topbar,'topbarUnreadBadge')||!str_contains($topbar,'data-profile-form'))throw new RuntimeException('Student shell missing profile or notification controls');
+        $topbar=str_replace('/assets/js/academy-profile.js?v=1','../../../assets/js/academy-profile.js?v=1',$topbar);
+        file_put_contents($dir.'/student-'.$action.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body class="portal-authenticated role-student"><main class="fixture-shell">'.$topbar.'<div class="academy-workspace">'.str_replace(['/assets/js/academy-guide.js?v=3','/assets/js/academy-certificates.js?v=3'],['../../../assets/js/academy-guide.js?v=3','../../../assets/js/academy-certificates.js?v=3'],$html).'</div></main></body></html>');
     }
     echo 'Student '.$action." rendered using isolated MySQL fixtures.\n";
 }finally{if(db()->inTransaction())db()->rollBack();}
