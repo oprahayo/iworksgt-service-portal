@@ -21,6 +21,7 @@ try{
         if(!d||d.x<0||d.y<0||d.x+d.width>width+1||d.y+d.height>900+1)throw Error('Welcome guide exceeds viewport');
         if(width===320)await page.keyboard.press('Escape');else await dialog.getByRole('button',{name:'Got it, continue'}).click();
         await dialog.waitFor({state:'hidden'});
+        await page.waitForFunction(()=>{const d=document.getElementById('ac-welcome-guide');return localStorage.getItem(d.dataset.guideKey)==='1';});
         await page.reload({waitUntil:'load'});
         if(await dialog.isVisible())throw Error('Dismissed welcome guide reopened on reload');
         const help=page.locator('#ac-guide-dashboard');
