@@ -12,10 +12,10 @@ function ac_student_courses(array $courses,bool $dashboard=false):void{
     echo '<div class="ac-course-grid">';
     foreach($courses as $c){
         $status=(string)($c['enrollment_status']??'');
-        echo '<article class="ac-course-card"><span class="ac-course-icon"><i class="bi bi-book" aria-hidden="true"></i></span><h3>'.e($c['title']).'</h3><p class="ac-course-status">'.e($status===''?'':ac_student_status($status)).'</p>';
+        echo '<article class="ac-course-card"><div class="ac-course-copy"><h3>'.e($c['title']).'</h3>';if($status!=='')echo '<p class="ac-course-status">'.e(ac_student_status($status)).'</p>';echo '</div>';
         if(in_array($status,['enrolled','completed'],true)&&$c['active'])echo '<a class="ac-student-primary" href="/academy.php?action=learn&amp;course='.(int)$c['id'].'">Open course</a>';
-        elseif($status==='') {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><input type="hidden" name="return_to" value="'.($dashboard?'dashboard':'courses').'"><button>Apply for course</button></form>';}
-        elseif($status==='requested')echo '<small>Waiting for Academy review.</small>';
+        elseif($status==='') {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><input type="hidden" name="return_to" value="'.($dashboard?'dashboard':'courses').'"><button aria-label="Apply for course: '.e($c['title']).'">Apply<span class="ac-full-label"> for course</span></button></form>';}
+        elseif($status==='requested')echo '<small>In review</small>';
         elseif(!$c['active'])echo '<small>Course no longer accepting applications.</small>';
         echo '</article>';
     }
@@ -41,10 +41,10 @@ if($screen==='dashboard'){
     $learning=count(array_filter($courseRows,fn($c)=>$c['enrollment_status']==='enrolled'));
     $issued=count(array_filter($graduates,fn($g)=>$g['certificate_status']==='issued'));
     $ready=count(array_filter($graduates,fn($g)=>$g['certificate_status']===null||$g['certificate_status']==='pending'));
-    echo '<div class="ac-student-welcome"><div><p class="ac-student-kicker">IWORKS GLOBAL ACADEMY</p><h1>Welcome, '.e($first?:'student').'</h1><p>Explore courses, track your applications and manage your certificates.</p></div><i class="bi bi-mortarboard" aria-hidden="true"></i></div>';
+    echo '<div class="ac-student-welcome"><div><h1>Welcome, '.e($first?:'student').'</h1></div></div>';
     echo '<div class="ac-student-stats">';
     foreach([['Pending applications',$pending,'courses','bi-hourglass-split'],['My active courses',$learning,'courses','bi-book'],['Certificates issued',$issued,'certificates','bi-award']] as [$label,$count,$dest,$icon]){
-        echo '<a href="/academy.php?action='.$dest.'"><i class="bi '.$icon.'" aria-hidden="true"></i><div><small>'.e($label).'</small><strong>'.$count.'</strong></div></a>';
+        echo '<a href="/academy.php?action='.$dest.'" aria-label="'.e($label).': '.$count.'"><strong>'.$count.'</strong><small>'.e(['Pending applications'=>'Pending applications','My active courses'=>'Active courses','Certificates issued'=>'Certificates'][$label]).'</small></a>';
     }
     echo '</div>';
     $intent=(int)($_SESSION['academy_course_intent']??0);
@@ -55,27 +55,28 @@ if($screen==='dashboard'){
             ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$selected['id'].'"><input type="hidden" name="return_to" value="courses"><button>Submit application</button></form></section>';
         }else unset($_SESSION['academy_course_intent']);
     }
+    echo '<div class="ac-dashboard-columns"><div class="ac-dashboard-actions">';
     {
         echo '<section class="ac-student-panel"><h2>Things to do</h2><div class="ac-task-list">';
-        if(trim((string)($user['phone']??''))===''){echo '<div><span><strong>Complete your profile</strong><small>Add your phone number.</small></span>';ac_student_link('profile','Edit profile');echo '</div>';}
-        if($ready>0){echo '<div><span><strong>Your certificate is ready for the next step</strong><small>Review your approved training and certificate status.</small></span>';ac_student_link('certificates','My Certificates');echo '</div>';}
-        if($pending>0){echo '<div><span><strong>'.(int)$pending.' pending application(s)</strong><small>Track your application while the Academy reviews it.</small></span>';ac_student_link('courses','View status');echo '</div>';}
+        if(trim((string)($user['phone']??''))===''){echo '<div><span><strong>Complete your profile</strong></span>';ac_student_link('profile','Edit profile');echo '</div>';}
+        if($ready>0){echo '<div><span><strong>Your certificate is ready for the next step</strong></span>';ac_student_link('certificates','My Certificates');echo '</div>';}
+        if($pending>0){echo '<div><span><strong>'.(int)$pending.' pending application(s)</strong></span>';ac_student_link('courses','View status');echo '</div>';}
         if(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning===0){
-            echo '<div><span><strong>Choose your next step</strong><small>Apply for a course or request a review of completed training.</small></span><a class="ac-student-link" href="#available-courses">Explore courses</a></div>';
+            echo '<div><span><strong>Choose your next step</strong></span><a class="ac-student-link" href="#available-courses">Explore courses</a></div>';
         }elseif(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning>0){
-            echo '<div><span><strong>Continue your learning journey</strong><small>Open your approved courses to see availability.</small></span>';ac_student_link('courses','My Courses');echo '</div>';
+            echo '<div><span><strong>Continue your learning journey</strong></span>';ac_student_link('courses','My Courses');echo '</div>';
         }
         echo '</div></section>';
     }
-    echo '<section class="ac-student-panel ac-past-training"><div><h2>Already completed training with iWorks?</h2><p>Trained before this portal upgrade? Select the course you completed and request a review to get your certificate.</p></div>';
+    echo '<section class="ac-student-panel ac-past-training"><div><h2>Already completed training with iWorks?</h2><p>Select your completed course to request certification.</p></div>';
     $reviewCourses=array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status']);
     if($reviewCourses){
-        ac_form('enroll');echo '<input type="hidden" name="return_to" value="dashboard"><label>Completed course<select name="course" required><option value="">Select your course</option>';
+        ac_form('enroll');echo '<input type="hidden" name="return_to" value="dashboard"><label><span class="ac-visually-hidden">Completed course</span><select name="course" required><option value="">Select your course</option>';
         foreach($reviewCourses as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';
         echo '</select></label><button>Request course review</button></form>';
     }else{echo '<p>Check your existing applications or approved certificates.</p>';ac_student_link('certificates','My Certificates');}
-    echo '</section><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
-    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section>';
+    echo '</section></div><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
+    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div>';
 }elseif($screen==='courses'){
     echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['enrollment_status']!==null)));
