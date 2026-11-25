@@ -34,6 +34,7 @@ try{
             db_execute("INSERT INTO academy_certificates(graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,status,issued_at,created_at) VALUES(:g,:s,:n,'CI TEST STUDENT',:title,'8 weeks','blue',10200000,:ref,:state,:issued,'2026-11-25 12:00:00')",['g'=>$graduate,'s'=>$other['id'],'n'=>'IWGA-2026-'.str_repeat($suffix,16),'title'=>$slug,'ref'=>'IWGA-'.str_repeat(strtolower($suffix),32),'state'=>$state,'issued'=>$state==='issued'?'2026-11-25 12:00:00':null]);
         }
     }
+    if($tab==='requests')db_execute("INSERT INTO academy_certification_requests(student_id,course_id,student_name,student_note,review_note,submitted_at) VALUES(:student,:course,'CI Test student','Completed training','','2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id']]);
     $_GET=['tab'=>$tab,'id'=>$id,'q'=>$tab==='students'?'CI Test':'','status'=>''];
     define('IWORKS_ACADEMY_ADMIN_VIEW',true);
     ob_start();
@@ -41,9 +42,10 @@ try{
     $html=ob_get_clean();
     $expected=match($tab){
       'students'=>['CI Test student','student@academy.invalid','View student','Verified'],
-      'student'=>['CI Test student','Approve for certification','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked'],
+      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
+      'requests'=>['Certification requests','Completed training','Approve for certification','Decline and notify student'],
       'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started','Verify payment','Retry email'],
       default=>throw new RuntimeException('Unknown test tab')
     };
