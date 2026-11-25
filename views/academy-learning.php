@@ -24,8 +24,10 @@ else{
     if(!$lesson)echo '<p>Lesson unavailable. Choose a published lesson.</p>';
     else{
         echo '<h2>'.e($lesson['title']).'</h2><div class="ac-lesson-body">'.nl2br(e($lesson['body'])).'</div>';
+        if($embed=academy_video_embed($lesson['video_url']))echo '<div class="ac-lms-video"><iframe src="'.e($embed).'" title="Lesson video" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
         if($lesson['video_url']!=='')echo '<p><a class="ac-student-link" href="'.e(academy_learning_url($lesson['video_url'])).'" target="_blank" rel="noopener noreferrer">Watch lesson video</a></p>';
         if($lesson['material_url']!=='')echo '<p><a class="ac-student-link" href="'.e(academy_learning_url($lesson['material_url'])).'" target="_blank" rel="noopener noreferrer">Open learning material</a></p>';
+        ac_assessment_student((int)$user['id'],$cid,$lid);
         $completed=false;foreach($lessons as $l)if((int)$l['id']===$lid)$completed=(bool)$l['completed'];
         if($completed)echo '<p>Lesson completed.</p>';
         else{ac_form('lesson_complete');echo '<input type="hidden" name="course" value="'.$cid.'"><input type="hidden" name="lesson" value="'.$lid.'"><button>Mark as complete</button></form>';}
