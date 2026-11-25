@@ -28,4 +28,8 @@ $adminView=file_get_contents(__DIR__.'/../views/academy-admin.php');
 academy_assert(str_contains($entry,"\$mode==='verify_payment'")&&str_contains($adminView,"ac_admin_post('verify_payment','certificates')"),'Admin verifies existing payments');
 academy_assert(str_contains($entry,"\$mode==='retry_email'")&&str_contains($adminView,"ac_admin_post('retry_email','certificates')"),'Admin can retry issued certificate email');
 academy_assert(str_contains($entry,'do not pay twice')&&str_contains($student,'Certificate email queued for delivery.'),'Clear student payment and delivery feedback');
+$reg=file_get_contents(__DIR__.'/../views/academy-register.php');$router=file_get_contents(__DIR__.'/../index.php');
+academy_assert(str_contains($reg,'data-iw-password="iwAcademyPassword"')&&str_contains($reg,'data-iw-password="iwAcademyConfirm"'),'Inline password toggles');
+academy_assert(str_contains($router,"['public_auth_status','notifications','realtime']")&&str_contains($router,"$"+"scope !== 'notifications'"),'Student notifications only');
+academy_assert(str_contains($student,"ac_form('inquiry')")&&str_contains($adminView,"ac_admin_post('send_update','student',"),'Two-way inquiry and update forms');
 echo "Academy smoke checks passed.\n";
