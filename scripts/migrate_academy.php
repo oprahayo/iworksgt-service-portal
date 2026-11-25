@@ -3,7 +3,14 @@ declare(strict_types=1);
 // Apply only after a verified database backup. Never execute from HTTP.
 if (PHP_SAPI !== 'cli' || !in_array('--backup-confirmed', $argv, true)) { exit("CLI only; verified backup required (--backup-confirmed).\n"); }
 require __DIR__.'/../app/bootstrap.php';
-db()->exec("ALTER TABLE users MODIFY role ENUM('admin','agent','client','finance','author','student') NOT NULL DEFAULT 'client'");
+$roleSchema=db_one("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='role'");
+$oldRoleType="enum('admin','agent','client','finance','author')";
+$newRoleType="enum('admin','agent','client','finance','author','student')";
+if (($roleSchema['COLUMN_TYPE']??'')===$oldRoleType) {
+    db()->exec("ALTER TABLE users MODIFY role ENUM('admin','agent','client','finance','author','student') NOT NULL DEFAULT 'client'");
+} elseif (($roleSchema['COLUMN_TYPE']??'')!==$newRoleType) {
+    throw new RuntimeException('Unexpected users.role schema; refusing destructive enum conversion.');
+}
 db()->exec("CREATE TABLE IF NOT EXISTS academy_courses (
  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, slug VARCHAR(100) NOT NULL UNIQUE,
  title VARCHAR(160) NOT NULL, colour ENUM('orange','purple','green','blue') NOT NULL,
