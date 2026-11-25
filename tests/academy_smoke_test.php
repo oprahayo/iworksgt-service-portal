@@ -22,8 +22,10 @@ academy_assert(str_contains($student,"\$screen==='dashboard'")&&str_contains($st
 $public=file_get_contents(__DIR__.'/../views/public-service-detail.php');
 academy_assert(str_contains($public,"'pro-training'")&&str_contains($public,'iwAcademyCoursesTitle')&&str_contains($public,"'action'=>'apply'"),'Public training application link');
 academy_assert(str_contains($entry,"academy_course_intent")&&str_contains($student,'Submit application')&&str_contains($student,'Pending application'),'Course selection retained and confirmed after login');
-academy_assert(str_contains($entry,"en.status IN ('enrolled','completed') AND c.active=1")&&str_contains($entry,"en.student_id=:student AND en.course_id=:course"),'Learning area limited to approved owned enrollment');
-academy_assert(str_contains($entry,'Course lessons and modules have not been published yet.'),'No false claim of published lessons');
+$learning=file_get_contents(__DIR__.'/../app/academy_learning.php');
+$learningView=file_get_contents(__DIR__.'/../views/academy-learning.php');
+academy_assert(str_contains($learning,"en.status IN ('enrolled','completed') AND c.active=1")&&str_contains($learning,"en.student_id=:student AND en.course_id=:course"),'Learning area limited to approved owned enrollment');
+academy_assert(str_contains($learningView,'Course lessons and modules have not been published yet.'),'No false claim of published lessons');
 $adminView=file_get_contents(__DIR__.'/../views/academy-admin.php');
 academy_assert(str_contains($entry,"\$mode==='verify_payment'")&&str_contains($adminView,"ac_admin_post('verify_payment','certificates')"),'Admin verifies existing payments');
 academy_assert(str_contains($entry,"\$mode==='retry_email'")&&str_contains($adminView,"ac_admin_post('retry_email','certificates')"),'Admin can retry issued certificate email');
