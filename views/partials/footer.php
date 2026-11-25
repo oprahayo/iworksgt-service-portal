@@ -1000,7 +1000,7 @@ $socialIcons = [
 })();
 </script>
 <?php if ($user): ?>
-  <script defer src="assets/js/admin-transition.js?v=20261114-pulse2"></script>
+  <script defer src="/assets/js/admin-transition.js?v=single1"></script>
 <?php endif; ?>
 </body>
 </html>
