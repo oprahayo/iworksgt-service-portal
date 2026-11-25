@@ -71,13 +71,19 @@ try {
             require_csrf();
             $name=trim((string)($_POST['name']??'')); $email=strtolower(trim((string)($_POST['email']??'')));
             $phone=trim((string)($_POST['phone']??''));$password=(string)($_POST['password']??'');
-            if (!academy_valid_name($name)||!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190||strlen($phone)<7||strlen($phone)>40||strlen($password)<12||strlen($password)>72||!email_enabled()||find_user_by_email($email)) throw new RuntimeException('Check the registration details or sign in if you already have an account.');
+            if (!academy_valid_name($name)||!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190||strlen($phone)<7||strlen($phone)>40||strlen($password)<12||strlen($password)>72||$password!==(string)($_POST['confirm_password']??'')||!email_enabled()||find_user_by_email($email)) throw new RuntimeException('Check the registration details or sign in if you already have an account.');
             $ip=iworks_auth_ip(); if (!iworks_auth_limit_allows('academy_register_ip',$ip,8,3600)) throw new RuntimeException('Try again later.');
             iworks_auth_limit_record('academy_register_ip',$ip,3600);
             $id=create_user(['full_name'=>$name,'email'=>$email,'phone'=>$phone,'password'=>$password,'role'=>'student']);
             start_otp_challenge($id,'verify_email'); redirect(portal_url('otp'));
         }
-        ac_head('Student registration');if($selectedCourse)echo '<section><h2>'.e($selectedCourse['title']).'</h2><p>Create and verify your student account, then confirm your course application. No payment is required at this stage.</p></section>';ac_form('register');ac_input('name','Full name');ac_input('email','Email','','email');ac_input('phone','Phone','','tel');ac_input('password','Password (12 or more characters)','','password');echo '<button>Register</button></form><a href="/index.php?page=login">Already registered? Sign in</a>';ac_end();exit;
+        $_GET['page']='register';
+        $academyGuestRegistration=true;
+        $title='Student registration - '.app_name();
+        require __DIR__.'/views/partials/header.php';
+        require __DIR__.'/views/academy-register.php';
+        require __DIR__.'/views/partials/footer.php';
+        exit;
     }
     if ($action==='admin') {
         require_roles(['admin']);
@@ -189,6 +195,7 @@ try {
     }
     ac_head('Welcome, '.(string)$user['full_name']);echo '<nav class="ac-student-nav"><a href="#certificates">My Certificates</a><a href="#courses">My Courses</a><a href="#profile">My Profile</a></nav><h2 id="certificates">My certificates</h2>';
     $graduates=db_all('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.student_id=:student',['student'=>$user['id']]);
+    if(trim((string)($user['phone']??''))==='')echo '<section><h3>Complete your student profile</h3><p>Add your phone number before requesting a certificate.</p><a href="#profile">Complete profile</a></section>';
     if($notice=flash('academy_student_notice'))echo '<div class="ac-student-notice" role="status">'.e($notice).'</div>';
     $intent=(int)($_SESSION['academy_course_intent']??0);
     if($intent>0){
