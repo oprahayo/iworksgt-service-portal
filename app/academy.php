@@ -59,25 +59,54 @@ function academy_render(array $cert, bool $preview = false): string {
     if ($preview) $svg = str_replace('</svg>','<text x="723" y="710" text-anchor="middle" font-size="23" fill="#a00000">PREVIEW - NOT VALID</text></svg>',$svg);
     return $svg;
 }
+// Resolve the hosting account home from the application owner, not a request.
+function academy_private_home(): string {
+    if (function_exists('posix_getpwuid')) {
+        $owner=posix_getpwuid(fileowner(__FILE__));
+        if (is_array($owner) && !empty($owner['dir']) && is_dir($owner['dir'])) return rtrim($owner['dir'],'/');
+    }
+    // cPanel document root and private staging directory are both under /home*/ACCOUNT.
+    if (preg_match('~^(/home[^/]*/[^/]+)(?:/|$)~',__DIR__,$m)) return $m[1];
+    $home=getenv('HOME');
+    if (is_string($home) && $home!=='' && is_dir($home)) return rtrim($home,'/');
+    throw new RuntimeException('Private hosting home not found.');
+}
+function academy_renderer_command(string $input,string $output): array {
+    if (!function_exists('proc_open')) throw new RuntimeException('PDF renderer process execution is unavailable.');
+    $home=academy_private_home();
+    $python=$home.'/.iworks-academy-renderer/bin/python';
+    $script=__DIR__.'/../scripts/render_academy_pdf.py';
+    $fonts=$home.'/.local/share/fonts/iworks-academy';
+    if (is_executable($python) && is_readable($script)) {
+        foreach (['Lato-Regular.ttf','Lato-Bold.ttf','Lato-Black.ttf','LiberationSerif-Bold.ttf'] as $font) {
+            if (!is_readable($fonts.'/'.$font)) throw new RuntimeException('Required certificate font unavailable.');
+        }
+        return [$python,'-I',$script,$input,$output,$fonts];
+    }
+    if (is_executable('/usr/bin/inkscape')) return ['/usr/bin/inkscape','--export-type=pdf','--export-filename='.$output,$input];
+    throw new RuntimeException('Install the private Academy PDF renderer or Inkscape.');
+}
+function academy_renderer_available(): bool {
+    try { academy_renderer_command('/tmp/academy-input.svg','/tmp/academy-output.pdf'); return true; }
+    catch(Throwable $e) { return false; }
+}
 function academy_pdf(array $cert): string {
-    // Server operator installs Inkscape and the exact template fonts.
-    $binary = '/usr/bin/inkscape';
-    if (!is_executable($binary) || !function_exists('proc_open')) throw new RuntimeException('PDF renderer unavailable.');
-    $input = tempnam(sys_get_temp_dir(),'iwga-');
-    if ($input === false) throw new RuntimeException('Unable to prepare certificate.');
-    $svgInput = $input.'.svg';
-    $output = $input.'.pdf';
+    // Protect personal data and signed artwork throughout rendering.
+    $work=rtrim(sys_get_temp_dir(),'/').'/iwga-'.bin2hex(random_bytes(16));
+    if (!mkdir($work,0700)) throw new RuntimeException('Unable to prepare private certificate directory.');
+    $svgInput=$work.'/input.svg';$output=$work.'/output.pdf';
     try {
-        file_put_contents($svgInput,academy_render($cert));
-        $process = proc_open([$binary,'--export-type=pdf','--export-filename='.$output,$svgInput],
-            [0=>['pipe','r'],1=>['file','/dev/null','a'],2=>['file','/dev/null','a']],$pipes);
+        if (file_put_contents($svgInput,academy_render($cert))===false) throw new RuntimeException('Unable to write certificate.');
+        chmod($svgInput,0600);
+        $command=academy_renderer_command($svgInput,$output);
+        $process=proc_open($command,[0=>['pipe','r'],1=>['file','/dev/null','a'],2=>['file','/dev/null','a']],$pipes);
         if (!is_resource($process)) throw new RuntimeException('PDF renderer unavailable.');
         fclose($pipes[0]);
         if (proc_close($process)!==0 || !is_file($output)) throw new RuntimeException('Certificate rendering failed.');
-        $pdf = file_get_contents($output);
+        $pdf=file_get_contents($output);
         if (!$pdf || !str_starts_with($pdf,'%PDF-')) throw new RuntimeException('Invalid PDF.');
         return $pdf;
-    } finally { @unlink($input); @unlink($svgInput); @unlink($output); }
+    } finally { @unlink($svgInput); @unlink($output); @rmdir($work); }
 }
 function academy_verified_payment_matches(array $cert,array $verified): bool {
     $data=$verified['data']??null;
