@@ -152,7 +152,7 @@ try{
         const tasks=root.querySelector('.ac-dashboard-actions');const available=root.querySelector('#available-courses');
         const courseRows=[...root.querySelectorAll('.ac-course-card')].map(el=>el.getBoundingClientRect().height);
         const studentPanels=[...root.querySelectorAll('.ac-student-panel,.ac-request-shell,.ac-catalogue-grid .ac-course-card')];
-        return {studentSurfaceErrors:studentPanels.filter(transparent).length,stats,courseRows,availableTop:available?.getBoundingClientRect().top??null,viewport:innerWidth,scroll:document.documentElement.scrollWidth,panels:panels.length+studentPanels.length,boxed:panels.filter(el=>!transparent(el)).length,bad,tableOverflow:[...root.querySelectorAll('.ac-table-wrap')].some(el=>el.scrollWidth>el.clientWidth+2)};
+        return {studentSurfaceErrors:studentPanels.filter(transparent).length,stats,courseRows,availableTop:available?available.getBoundingClientRect().top-(document.querySelector('.ac-student-topbar')?.getBoundingClientRect().height??0):null,viewport:innerWidth,scroll:document.documentElement.scrollWidth,panels:panels.length+studentPanels.length,boxed:panels.filter(el=>!transparent(el)).length,bad,tableOverflow:[...root.querySelectorAll('.ac-table-wrap')].some(el=>el.scrollWidth>el.clientWidth+2)};
       });
       console.log(file,width,JSON.stringify(metrics));
       if(!metrics.panels||metrics.studentSurfaceErrors||metrics.boxed||metrics.scroll>width+2||metrics.bad.length||metrics.tableOverflow)throw Error('Academy layout overflow or unwanted card: '+file+' at '+width);
