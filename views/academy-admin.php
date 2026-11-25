@@ -19,9 +19,9 @@ function ac_admin_post(string $mode,string $tab,int $student=0):void{
 }
 function ac_admin_empty(string $message):void{echo '<div class="ac-empty">'.e($message).'</div>';}
 function ac_admin_table(array $headers):void{
-    echo '<div class="ac-table-wrap"><table class="ac-table"><thead><tr>';
-    foreach($headers as $h)echo '<th scope="col">'.e($h).'</th>';
-    echo '</tr></thead><tbody>';
+    echo '<div class="ac-table-wrap"><table class="ac-table" role="table"><thead role="rowgroup"><tr role="row">';
+    foreach($headers as $h)echo '<th scope="col" role="columnheader">'.e($h).'</th>';
+    echo '</tr></thead><tbody role="rowgroup">';
 }
 function ac_admin_table_end():void{echo '</tbody></table></div>';}
 function ac_admin_pager(string $tab,int $page,int $total,array $params=[]):void{
@@ -82,7 +82,7 @@ if($tab==='students'){
     if(!$rows)ac_admin_empty('No students match your search. New students appear here after registration.');
     else{
         ac_admin_table(['Student','Account','Progress','Action']);
-        foreach($rows as $u){echo '<tr><td><strong>'.e($u['full_name']).'</strong><small>'.e($u['email']).'</small></td><td>';ac_admin_status(ac_admin_student_state($u));echo '</td><td>'.(int)$u['completed_count'].' completed<small>'.(int)$u['certificate_count'].' issued certificate(s)</small></td><td>';ac_admin_link('View student','student',['id'=>(int)$u['id']],'ac-primary');echo '</td></tr>';}
+        foreach($rows as $u){echo '<tr role="row"><td role="cell"><strong>'.e($u['full_name']).'</strong><small>'.e($u['email']).'</small></td><td role="cell" data-label="Account">';ac_admin_status(ac_admin_student_state($u));echo '</td><td role="cell" data-label="Progress">'.(int)$u['completed_count'].' completed<small>'.(int)$u['certificate_count'].' issued certificate(s)</small></td><td role="cell">';ac_admin_link('View student','student',['id'=>(int)$u['id']],'ac-primary');echo '</td></tr>';}
         ac_admin_table_end();
     }
     ac_admin_pager('students',$page,$total,['q'=>$query,'status'=>$status]);echo '</section>';
@@ -115,9 +115,9 @@ if($tab==='students'){
         else{
             ac_admin_table(['Course','Enrollment','Duration','Certificate','Action']);
             foreach($rows as $r){
-                echo '<tr><td><strong>'.e($r['title']).'</strong></td><td>';ac_admin_status((string)($r['enrollment_status']??'completed'));echo '</td><td>'.e((string)($r['duration']??'—')).'</td><td>';
+                echo '<tr role="row"><td role="cell"><strong>'.e($r['title']).'</strong></td><td role="cell" data-label="Enrollment">';ac_admin_status((string)($r['enrollment_status']??'completed'));echo '</td><td role="cell" data-label="Duration">'.e((string)($r['duration']??'—')).'</td><td role="cell" data-label="Certificate">';
                 if($r['graduate_id']){ac_admin_status(ac_admin_certificate_state($r));if($r['certificate_number']&&$r['certificate_status']==='issued')echo '<small>'.e($r['certificate_number']).'</small>';}else echo '—';
-                echo '</td><td>';
+                echo '</td><td role="cell">';
                 if($r['graduate_id'])ac_admin_link('View certificate','certificates',['student'=>$id],'ac-secondary');
                 elseif($r['active']&&ac_admin_student_state($u)==='verified'&&$r['enrollment_status']!=='cancelled')echo '<a class="ac-secondary" href="'.e(ac_admin_url('student',['id'=>$id,'course'=>(int)$r['id']])).'#approve">Mark completed</a>';
                 else echo '—';
@@ -140,7 +140,7 @@ if($tab==='students'){
     if(!$rows)ac_admin_empty('No enrollment records match your search.');
     else{
         ac_admin_table(['Student','Course','Status','Action']);
-        foreach($rows as $r){echo '<tr><td><strong>'.e($r['full_name']).'</strong><small>'.e($r['email']).'</small></td><td>'.e($r['title']).'</td><td>';ac_admin_status($r['status']);echo '</td><td><div class="ac-actions">';
+        foreach($rows as $r){echo '<tr role="row"><td role="cell"><strong>'.e($r['full_name']).'</strong><small>'.e($r['email']).'</small></td><td role="cell" data-label="Course">'.e($r['title']).'</td><td role="cell" data-label="Status">';ac_admin_status($r['status']);echo '</td><td role="cell"><div class="ac-actions">';
             if($r['status']==='requested'){ac_admin_post('enrollment','enrollments');echo '<input type="hidden" name="id" value="'.(int)$r['id'].'"><input type="hidden" name="status" value="enrolled"><button>Accept</button></form>';}
             if(in_array($r['status'],['requested','enrolled'],true)){ac_admin_post('enrollment','enrollments');echo '<input type="hidden" name="id" value="'.(int)$r['id'].'"><input type="hidden" name="status" value="cancelled"><button class="ac-secondary">Cancel</button></form>';}
             ac_admin_link('View student','student',['id'=>(int)$r['student_id'],'course'=>(int)$r['course_id']],'ac-secondary');echo '</div></td></tr>';
@@ -155,7 +155,7 @@ if($tab==='students'){
     if(!$rows)ac_admin_empty('No courses yet.');
     else{
         ac_admin_table(['Course','Students','Completed','Certificate colour','Action']);
-        foreach($rows as $c){echo '<tr><td><strong>'.e($c['title']).'</strong><small>'.($c['active']?'Active':'Inactive').'</small></td><td>'.(int)$c['enrolled_count'].'</td><td>'.(int)$c['completed_count'].'</td><td colspan="2">';ac_admin_post('colour','courses');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><div class="ac-inline"><span class="ac-swatch ac-swatch-'.e($c['colour']).'" aria-hidden="true"></span><select name="colour" aria-label="Certificate colour for '.e($c['title']).'">';ac_admin_colour_options($c['colour']);echo '</select><button class="ac-secondary">Save</button></div></form></td></tr>';}
+        foreach($rows as $c){echo '<tr role="row"><td role="cell"><strong>'.e($c['title']).'</strong><small>'.($c['active']?'Active':'Inactive').'</small></td><td role="cell" data-label="Students">'.(int)$c['enrolled_count'].'</td><td role="cell" data-label="Completed">'.(int)$c['completed_count'].'</td><td role="cell" colspan="2">';ac_admin_post('colour','courses');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><div class="ac-inline"><span class="ac-swatch ac-swatch-'.e($c['colour']).'" aria-hidden="true"></span><select name="colour" aria-label="Certificate colour for '.e($c['title']).'">';ac_admin_colour_options($c['colour']);echo '</select><button class="ac-secondary">Save</button></div></form></td></tr>';}
         ac_admin_table_end();
     }
     echo '</section>';
@@ -174,9 +174,9 @@ if($tab==='students'){
     if(!$rows)ac_admin_empty('No certificate records match your search. Approve a completed course from the Students tab to get started.');
     else{
         ac_admin_table(['Student','Course / duration','Status','Payment / email','Action']);
-        foreach($rows as $r){$st=ac_admin_certificate_state($r);echo '<tr><td><strong>'.e($r['full_name']).'</strong><small>'.e($r['email']).'</small></td><td>'.e($r['title']).'<small>'.e($r['duration']).'</small></td><td>';ac_admin_status($st);if($st==='issued'||$st==='revoked')echo '<small>'.e((string)$r['certificate_number']).'</small>';echo '</td><td>';
+        foreach($rows as $r){$st=ac_admin_certificate_state($r);echo '<tr role="row"><td role="cell"><strong>'.e($r['full_name']).'</strong><small>'.e($r['email']).'</small></td><td role="cell" data-label="Course / duration">'.e($r['title']).'<small>'.e($r['duration']).'</small></td><td role="cell" data-label="Status">';ac_admin_status($st);if($st==='issued'||$st==='revoked')echo '<small>'.e((string)$r['certificate_number']).'</small>';echo '</td><td role="cell" data-label="Payment / email">';
             if($st==='ready')echo 'Not started';elseif($st==='pending')echo '₦'.number_format((int)$r['amount_minor']/100,2).' · Pending';else {echo '₦'.number_format((int)$r['amount_minor']/100,2).' · Verified payment';echo '<small>Email: '.($r['email_sent_at']?'Sent':'Awaiting delivery').'</small>';}
-            echo '</td><td><div class="ac-actions">';ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');
+            echo '</td><td role="cell"><div class="ac-actions">';ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');
             if($st==='issued'){echo '<details class="ac-danger-details"><summary>Revoke</summary>';ac_admin_post('revoke','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><label class="ac-check"><input type="checkbox" name="confirm_revoke" value="1" required> I confirm revocation.</label><button class="ac-danger">Revoke certificate</button></form></details>';}
             echo '</div></td></tr>';
         }
