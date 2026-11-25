@@ -11,7 +11,7 @@ function ac_input(string $name,string $label,string $value='',string $type='text
 function ac_head(string $title):void{echo '<header>'.e($title).'</header>';}
 function ac_end():void{}
 require __DIR__.'/../app/academy_requests.php';
-function academy_checkout_enabled():bool{return false;}
+function academy_checkout_enabled():bool{return ($GLOBALS['action']??'')==='certificates';}
 $action=$argv[1]??'dashboard';
 $user=db_one("SELECT * FROM users WHERE email='student@academy.invalid'");
 $admin=db_one("SELECT id FROM users WHERE email='admin@academy.invalid'");
@@ -23,13 +23,21 @@ try{
     $course=db_one("SELECT id FROM academy_courses WHERE slug='hosting'");
     db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'requested','2026-11-25 12:00:00','2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id']]);
     if($action==='certificates')db_execute("INSERT INTO academy_certification_requests(student_id,course_id,student_name,student_note,review_note,status,submitted_at) VALUES(:student,:course,'CI Test Student','','Training could not be verified.','declined','2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$course['id']]);
+    if($action==='certificates'){
+        foreach([['frontend-advanced','pending','CCCCCCCCCCCCCCCC'],['frontend-basic','issued','DDDDDDDDDDDDDDDD']] as [$slug,$status,$number]){
+            $fixture=db_one('SELECT id,title,colour FROM academy_courses WHERE slug=:slug',compact('slug'));
+            db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'16 Weeks',:admin,'2026-11-25 12:00:00')",['student'=>$user['id'],'course'=>$fixture['id'],'admin'=>$admin['id']]);
+            $graduate=db_last_id();
+            db_execute("INSERT INTO academy_certificates(graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,checkout_url,status,issued_at,created_at) VALUES(:g,:s,:number,'CI Test Student',:title,'16 Weeks',:colour,10200000,:ref,:url,:status,:issued,'2026-11-25 12:00:00')",['g'=>$graduate,'s'=>$user['id'],'number'=>'IWGA-2026-'.$number,'title'=>$fixture['title'],'colour'=>$fixture['colour'],'ref'=>'IWGA-'.str_repeat(strtolower($number[0]),32),'url'=>'https://checkout.paystack.com/fixture','status'=>$status,'issued'=>$status==='issued'?'2026-11-25 12:05:00':null]);
+        }
+    }
     $_SESSION=[];
     define('IWORKS_ACADEMY_STUDENT_VIEW',true);
     ob_start();require __DIR__.'/../views/academy-student.php';$html=ob_get_clean();
     $expected=match($action){
         'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request certification'],
         'courses'=>['My courses &amp; applications','Pending application','Explore courses','Apply for course'],
-        'certificates'=>['Certificate history','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked','Administrator query','Training could not be verified.'],
+        'certificates'=>['Certificate history','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked','Administrator query','Training could not be verified.','Check Payment','Continue Payment','Download Certificate'],
         'profile'=>['Personal information','student@academy.invalid','Save profile'],
         default=>throw new RuntimeException('Unknown screen')
     };
