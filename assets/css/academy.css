@@ -164,13 +164,14 @@
  .academy-workspace .ac-dashboard-columns{grid-template-columns:minmax(0,1fr);gap:14px}
 }
 @media(max-width:600px){
- .academy-workspace .ac-student .ac-student-welcome{margin-bottom:10px}
- .academy-workspace .ac-student .ac-student-stats{margin-bottom:14px}
- .academy-workspace .ac-student .ac-student-stats>a{padding:9px 7px;min-height:64px;gap:2px}
+ .academy-workspace .ac-student .ac-student-welcome{margin-bottom:8px}
+ .academy-workspace .ac-student .ac-student-stats{margin-bottom:10px}
+ .academy-workspace .ac-student .ac-student-stats>a{padding:6px 7px;min-height:64px;gap:2px}
  .academy-workspace .ac-student .ac-student-stats>a:first-child{padding-left:8px}
  .academy-workspace .ac-student .ac-student-stats strong{font-size:22px}
  .academy-workspace .ac-student .ac-student-stats small{font-size:11px;line-height:1.25}
- .academy-workspace .ac-student section.ac-student-panel{padding-bottom:10px;margin-bottom:10px}
+ .academy-workspace .ac-student section.ac-student-panel{padding-bottom:8px;margin-bottom:8px}
+ .academy-workspace .ac-dashboard-columns{gap:8px}
  .academy-workspace .ac-student .ac-course-card{min-height:48px;padding:3px 0}
  .academy-workspace .ac-past-training form{grid-template-columns:minmax(0,1fr) auto;gap:6px}
  .academy-workspace .ac-past-training button{font-size:12px;padding:5px 8px;max-width:120px}
