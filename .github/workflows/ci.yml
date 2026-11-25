@@ -229,6 +229,8 @@ jobs:
           php scripts/migrate_academy_assessments.php --backup-confirmed
           php scripts/migrate_academy_requests.php --backup-confirmed
           php scripts/migrate_academy_requests.php --backup-confirmed
+          php scripts/migrate_academy_timed_exams.php --backup-confirmed
+          php scripts/migrate_academy_timed_exams.php --backup-confirmed
       - name: Verify real database constraints and simulated gateway issuance
         run: php tests/academy_database_integration_test.php
 
