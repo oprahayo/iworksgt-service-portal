@@ -230,3 +230,9 @@ jobs:
           for tab in students student enrollments courses certificates; do
             php tests/academy_admin_render_test.php "$tab"
           done
+
+      - name: Render independent Academy student screens
+        run: |
+          for screen in dashboard courses certificates profile; do
+            php tests/academy_student_render_test.php "$screen"
+          done
