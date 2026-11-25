@@ -6,7 +6,7 @@ function app_config():array{return ['db'=>['host'=>getenv('DB_HOST'),'port'=>330
 require __DIR__.'/../app/db.php';
 function now():string{return '2026-11-25 12:00:00';}
 function get_payment_method_by_code(string $code):array{return ['is_active'=>1,'secret_key'=>'sk_live_CIFixtureNotARealSecret'];}
-function gateway_json_get(string $url,string $secret):array{return $GLOBALS['gateway_fixture'];}
+function gateway_json_get(string $url,string $secret):array{if(!empty($GLOBALS['gateway_unavailable']))throw new RuntimeException('Fixture gateway unavailable');return $GLOBALS['gateway_fixture'];}
 require __DIR__.'/../app/academy.php';
 function check(bool $value,string $message):void {if(!$value)throw new RuntimeException($message);}
 function user(string $role,string $email):int{
@@ -41,7 +41,18 @@ try{
  $GLOBALS['gateway_fixture']['data']['domain']='test';
  check(!academy_confirm($ref),'Reject sandbox transaction for production issuance');
  $GLOBALS['gateway_fixture']['data']['domain']='live';
- check(academy_confirm($ref),'Issue on verified payment');
+ $GLOBALS['gateway_unavailable']=true;
+ $recovery=academy_reconcile_pending(0,3);
+ check($recovery['checked']===1&&$recovery['confirmed']===0&&$recovery['errors']===1,'Temporary gateway failure does not issue or abort batch');
+ check(academy_owned_certificate($cert,$student)===null,'Pending record remains recoverable after provider failure');
+ unset($GLOBALS['gateway_unavailable']);
+ $GLOBALS['gateway_fixture']['data']['domain']='test';
+ $recovery=academy_reconcile_pending($recovery['cursor'],3);
+ check($recovery['checked']===1&&$recovery['confirmed']===0&&$recovery['errors']===0,'Cursor wraps without accepting sandbox payment');
+ $GLOBALS['gateway_fixture']['data']['domain']='live';
+ $recovery=academy_reconcile_pending($recovery['cursor'],3);
+ check($recovery['checked']===1&&$recovery['confirmed']===1&&$recovery['errors']===0,'Scheduled reconciliation issues only verified live payment');
+ check(academy_reconcile_pending($recovery['cursor'],3)['checked']===0,'Issued record is not reprocessed by payment reconciliation');
  check(academy_confirm($ref),'Replay idempotent');
  check(academy_owned_certificate($cert,$other)===null,'Ownership enforced');
  $row=academy_owned_certificate($cert,$student);
