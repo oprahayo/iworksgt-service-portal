@@ -40,6 +40,44 @@ try{
         if(wide)throw Error('Expanded hint overflows: '+file);
         await hint.locator('summary').click();
       }
+      if(file==='student-certificates.html'){
+        const workspace=page.locator('.ac-cert-compact');
+        const box=await workspace.boundingBox();
+        if(!box||box.width>941)throw Error('Certificate workspace too wide');
+        const request=page.locator('#ac-new-certificate');
+        const course=request.locator('[data-cert-course]');
+        const name=request.locator('[data-cert-name]');
+        const confirmation=request.locator('[data-cert-confirm]');
+        const output=request.locator('[data-cert-name-output]');
+        if(await course.isVisible()||await name.isVisible())throw Error('Request form must start collapsed');
+        await request.locator(':scope > summary').click();
+        if(!await course.isVisible()||await name.isVisible()||await confirmation.isVisible())throw Error('Only course selection should be shown initially');
+        await course.selectOption({index:1});
+        if(!await name.isVisible()||!await confirmation.isVisible())throw Error('Name and confirmation did not reveal after course selection');
+        await name.fill('CI Correct Certificate Name');
+        if(await output.textContent()!=='CI Correct Certificate Name')throw Error('Name confirmation did not update');
+        if(await confirmation.isChecked()||await request.locator('form').evaluate(form=>form.checkValidity()))throw Error('Unconfirmed name was accepted');
+        await confirmation.check();
+        if(!await request.locator('form').evaluate(form=>form.checkValidity()))throw Error('Confirmed form should validate');
+        await name.fill('CI Changed Name');
+        if(await confirmation.isChecked()||await output.textContent()!=='CI Changed Name')throw Error('Changing name must clear consent');
+        await confirmation.check();
+        await course.selectOption({index:0});
+        if(await name.isVisible()||await confirmation.isVisible()||await confirmation.isChecked())throw Error('Clearing course must reset later steps');
+        await request.locator(':scope > summary').click();
+        const declined=workspace.locator('details.ac-cert-record').filter({hasText:'Training could not be verified.'});
+        await workspace.locator('section.ac-cert-group').nth(1).locator(':scope > details > summary').click();
+        await declined.locator(':scope > summary').click();
+        if(!await declined.locator('.ac-query-reason').isVisible())throw Error('Decline reason did not expand');
+        await declined.locator(':scope > summary').click();
+        await workspace.locator('section.ac-cert-group').nth(1).locator(':scope > details > summary').click();
+        const approved=workspace.locator('details.ac-cert-record').filter({has:page.getByRole('button',{name:'Get Certificate',exact:true,includeHidden:true})}).first();
+        if(await approved.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Approved certificate form starts expanded');
+        await approved.locator(':scope > summary').click();
+        if(!await approved.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Approved certificate action not visible after expansion');
+        if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Expanded certificate form overflows viewport');
+        await approved.locator(':scope > summary').click();
+      }
       const metrics=await page.evaluate(()=>{
         const root=document.querySelector('.academy-workspace');
         const transparent=el=>getComputedStyle(el).backgroundColor==='rgba(0, 0, 0, 0)';
