@@ -187,3 +187,5 @@
 .academy-workspace .ac-student .ac-dashboard-actions>section:last-child{border:1px solid var(--ac-line);padding:14px 16px}
 .academy-workspace .ac-student .ac-course-card{background:transparent;border-radius:0;box-shadow:none}
 @media(max-width:600px){.academy-workspace .ac-student section.ac-student-panel,.academy-workspace .ac-student section.ac-student-panel:last-child,.academy-workspace .ac-student .ac-dashboard-actions>section:last-child{padding:10px 11px;margin-bottom:8px}.academy-workspace .ac-dashboard-columns{gap:8px}.academy-workspace .ac-student .ac-student-stats>a{min-width:0}}
+
+.academy-workspace .ac-contact{margin:10px 0;padding:8px 0;min-width:0}.academy-workspace .ac-contact summary{cursor:pointer;color:var(--ac-primary);font-weight:600;font-size:14px}.academy-workspace .ac-contact form{max-width:580px;padding-top:6px}.academy-workspace .ac-contact textarea{display:block;width:100%;min-width:0;resize:vertical;border:1px solid #cbd5e1;border-radius:6px;padding:8px;font:inherit;margin:5px 0 8px;background:#fff}
