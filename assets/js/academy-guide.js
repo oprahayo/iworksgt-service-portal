@@ -29,7 +29,7 @@
     if (!allowed.has(location.hash)) return;
     const target=document.getElementById(location.hash.slice(1));
     if (!target) return;
-    if (target.tagName==='DETAILS') target.open=true;
+    if (target.tagName==='DETAILS') { const summary=target.querySelector(':scope > summary'); if(summary?.getAttribute('aria-haspopup')==='dialog'){summary.click();return;} target.open=true; }
     document.querySelectorAll('.ac-guide-target').forEach(el=>el.classList.remove('ac-guide-target'));
     target.classList.add('ac-guide-target');
     const focusTarget=target.tagName==='DETAILS'?target.querySelector(':scope > summary'):target;
@@ -40,5 +40,6 @@
   }
   window.addEventListener('hashchange',pointToAction);
   document.querySelectorAll('.ac-guide-links a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{if(location.hash===a.hash)pointToAction();}));
-  pointToAction();
+  // All deferred action scripts must finish binding before following an initial fragment.
+  if(document.readyState==='complete')pointToAction();else window.addEventListener('load',pointToAction,{once:true});
 })();
