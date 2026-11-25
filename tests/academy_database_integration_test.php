@@ -5,7 +5,7 @@ if (PHP_SAPI!=='cli' || getenv('ACADEMY_CI_DATABASE')!=='1' || getenv('DB_NAME')
 function app_config():array{return ['db'=>['host'=>getenv('DB_HOST'),'port'=>3306,'name'=>getenv('DB_NAME'),'user'=>getenv('DB_USER'),'pass'=>getenv('DB_PASS'),'charset'=>'utf8mb4']];}
 require __DIR__.'/../app/db.php';
 function now():string{return '2026-11-25 12:00:00';}
-function get_payment_method_by_code(string $code):array{return ['is_active'=>1,'secret_key'=>'fixture-only'];}
+function get_payment_method_by_code(string $code):array{return ['is_active'=>1,'secret_key'=>'sk_live_CIFixtureNotARealSecret'];}
 function gateway_json_get(string $url,string $secret):array{return $GLOBALS['gateway_fixture'];}
 require __DIR__.'/../app/academy.php';
 function check(bool $value,string $message):void {if(!$value)throw new RuntimeException($message);}
@@ -34,10 +34,13 @@ try{
  $cert=db_last_id();
  // academy_confirm owns its transaction, so commit fixture rows first.
  db()->commit();
- $GLOBALS['gateway_fixture']=['status'=>true,'data'=>['id'=>765432,'status'=>'success','reference'=>$ref,'currency'=>'NGN','amount'=>10199999]];
+ $GLOBALS['gateway_fixture']=['status'=>true,'data'=>['domain'=>'live','id'=>765432,'status'=>'success','reference'=>$ref,'currency'=>'NGN','amount'=>10199999]];
  check(!academy_confirm($ref),'Reject wrong amount');
  check(academy_owned_certificate($cert,$student)===null,'No pending PDF');
  $GLOBALS['gateway_fixture']['data']['amount']=10200000;
+ $GLOBALS['gateway_fixture']['data']['domain']='test';
+ check(!academy_confirm($ref),'Reject sandbox transaction for production issuance');
+ $GLOBALS['gateway_fixture']['data']['domain']='live';
  check(academy_confirm($ref),'Issue on verified payment');
  check(academy_confirm($ref),'Replay idempotent');
  check(academy_owned_certificate($cert,$other)===null,'Ownership enforced');
