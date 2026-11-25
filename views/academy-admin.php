@@ -82,8 +82,8 @@ if($tab==='requests'){
         echo '<article class="ac-request-row"><div class="ac-request-top"><div><h3>'.e($r['title']).'</h3><p class="ac-request-person">'.e($r['full_name']).' <span>·</span> '.e($r['email']).'</p></div><span class="ac-request-state state-'.e($r['status']).'">'.e(['pending'=>'Awaiting review','approved'=>'Approved','declined'=>'Declined'][$r['status']]).'</span></div><div class="ac-request-meta"><div><small>Certificate name</small><strong>'.e($r['student_name']).'</strong></div><div><small>Submitted</small><strong>'.e(date('d M Y',strtotime($r['submitted_at']))).'</strong></div><div><small>Request</small><strong>#'.(int)$r['id'].' · Attempt '.(int)$r['attempts'].'</strong></div></div>';
         if($r['review_note']!=='')echo '<div class="ac-query-reason"><strong>Administrator review</strong><p>'.nl2br(e($r['review_note'])).'</p></div>';
         if($r['status']==='pending'){
-            echo '<div class="ac-review-actions"><details class="ac-contact"><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><button>Approve for certification</button></form></details>';
-            echo '<details class="ac-contact"><summary>Decline request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline (shown to student)<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details></div>';
+            echo '<div class="ac-review-actions"><details class="ac-contact" data-ac-popup><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><button>Approve for certification</button></form></details>';
+            echo '<details class="ac-contact" data-ac-popup><summary>Decline request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline (shown to student)<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details></div>';
         }
         ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');echo '</article>';
     }
@@ -132,7 +132,7 @@ if($tab==='requests'){
                 echo '</td><td role="cell">';
                 if($r['graduate_id']){
                     ac_admin_link('View certificate','certificates',['student'=>$id],'ac-secondary');
-                    if(!$r['certificate_status']){echo '<details class="ac-contact"><summary>Edit duration</summary>';ac_admin_post('edit_duration','student',$id);echo '<input type="hidden" name="graduate" value="'.(int)$r['graduate_id'].'"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_duration_weeks((string)$r['duration'])??'')).'"></label><button>Save duration</button></form></details>';}
+                    if(!$r['certificate_status']){echo '<details class="ac-contact" data-ac-popup><summary>Edit duration</summary>';ac_admin_post('edit_duration','student',$id);echo '<input type="hidden" name="graduate" value="'.(int)$r['graduate_id'].'"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_duration_weeks((string)$r['duration'])??'')).'"></label><button>Save duration</button></form></details>';}
                     else echo '<small>Duration locked after checkout starts.</small>';
                 }
                 elseif($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
@@ -195,11 +195,11 @@ if($tab==='requests'){
             echo '</td><td role="cell"><div class="ac-actions">';ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');
             if($st==='pending'){ac_admin_post('verify_payment','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><button>Verify payment</button></form>';}
             if($st==='issued'&&!$r['email_sent_at']){ac_admin_post('retry_email','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><button class="ac-secondary">Retry email</button></form>';}
-            if($st==='issued'){echo '<details class="ac-danger-details"><summary>Revoke</summary>';ac_admin_post('revoke','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><label class="ac-check"><input type="checkbox" name="confirm_revoke" value="1" required> I confirm revocation.</label><button class="ac-danger">Revoke certificate</button></form></details>';}
+            if($st==='issued'){echo '<details class="ac-danger-details" data-ac-popup><summary>Revoke</summary>';ac_admin_post('revoke','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><label class="ac-check"><input type="checkbox" name="confirm_revoke" value="1" required> I confirm revocation.</label><button class="ac-danger">Revoke certificate</button></form></details>';}
             echo '</div></td></tr>';
         }
         ac_admin_table_end();
     }
     ac_admin_pager('certificates',$page,$total,['q'=>$query,'status'=>$status,'student'=>$student]);echo '</section>';
 }
-echo '</div>';ac_end();
+echo '</div><script src="/assets/js/academy-actions.js?v=1" defer></script>';ac_end();
