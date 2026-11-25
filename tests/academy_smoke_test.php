@@ -16,4 +16,6 @@ academy_assert(str_contains($entry,"require_roles(['student'])"),'Student role c
 academy_assert(str_contains($entry,"require_roles(['admin'])"),'Admin role check');
 require __DIR__.'/../app/auth_rate_limits.php';
 foreach (['academy_register_ip','academy_verify_ip'] as $scope) academy_assert(iworks_auth_bucket($scope,'fixture',900)['scope']===$scope,'Academy auth rate limit scope');
+academy_assert(str_contains($entry,'Request course review')&&str_contains($entry,'academy_student_notice'),'Student course review and confirmation');
+academy_assert(strpos($entry,'<h2 id="certificates">My certificates</h2>')<strpos($entry,'<section id="profile">'),'Certificates shown before profile');
 echo "Academy smoke checks passed.\n";
