@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 function ac_assessment_admin(int $course,int $lesson):void{
- echo '<details class="ac-lms-editor"><summary>Private PDF materials</summary>';
+ echo '<details class="ac-lms-editor" data-ac-popup><summary>Private PDF materials</summary>';
  foreach(academy_materials($lesson) as $m)echo '<p>'.e($m['filename']).' · '.number_format((int)$m['size_bytes']/1024).' KB</p>';
  echo '<form method="post" enctype="multipart/form-data" action="/academy.php?action=builder"><input type="hidden" name="csrf_token" value="'.e(csrf_token()).'"><input type="hidden" name="course" value="'.$course.'"><input type="hidden" name="mode" value="material"><input type="hidden" name="lesson" value="'.$lesson.'"><label>PDF, maximum 2 MB<input type="file" name="material" accept=".pdf,application/pdf" required></label><button>Upload material</button></form></details>';
  echo '<details class="ac-lms-editor" data-ac-popup><summary>Add quiz, exam or assignment</summary>';ac_build_form($course,'assessment');echo '<input type="hidden" name="lesson" value="'.$lesson.'"><div data-ac-author><label>Type<select name="kind" data-ac-kind><option value="quiz">Quiz</option><option value="exam">Exam</option><option value="assignment">Assignment</option></select></label>';
