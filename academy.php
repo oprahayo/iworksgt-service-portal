@@ -264,9 +264,15 @@ try {
         }
         if ($action==='inquiry'){http_response_code(403);exit('Student messaging is unavailable.');}
         if ($action==='profile'){
+            $json=($_SERVER['HTTP_ACCEPT']??'')==='application/json';
             $name=trim((string)($_POST['name']??''));$phone=trim((string)($_POST['phone']??''));
-            if(!academy_valid_name($name)||strlen($phone)<7||strlen($phone)>40)throw new RuntimeException('Enter a valid name and phone.');
-            db_execute('UPDATE users SET full_name=:name,phone=:phone WHERE id=:id',['name'=>$name,'phone'=>$phone,'id'=>$user['id']]);flash('academy_student_notice','Profile updated.');redirect($base.'?action=profile');
+            if(!academy_valid_name($name)||strlen($phone)<7||strlen($phone)>40){
+                if($json){http_response_code(422);header('Content-Type: application/json');header('Cache-Control: no-store');echo json_encode(['ok'=>false,'message'=>'Enter a valid name and phone.']);exit;}
+                flash('academy_student_notice','Enter a valid name and phone.');redirect($base.'?action=profile');
+            }
+            db_execute('UPDATE users SET full_name=:name,phone=:phone WHERE id=:id',['name'=>$name,'phone'=>$phone,'id'=>$user['id']]);
+            if($json){header('Content-Type: application/json');header('Cache-Control: no-store');echo json_encode(['ok'=>true,'name'=>$name,'phone'=>$phone],JSON_INVALID_UTF8_SUBSTITUTE);exit;}
+            flash('academy_student_notice','Profile updated.');redirect($base.'?action=profile');
         }
         if ($action==='checkout') {
             $graduate=(int)($_POST['graduate']??0);
