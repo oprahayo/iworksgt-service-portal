@@ -112,8 +112,9 @@ try {
                     $status=(string)($_POST['status']??'');$id=(int)($_POST['id']??0);
                     if(!in_array($status,['enrolled','cancelled'],true)||$id<1)$error='Choose a valid enrollment action.';
                     else{
-                        $changed=db_query("UPDATE academy_enrollments en JOIN users u ON u.id=en.student_id JOIN academy_courses c ON c.id=en.course_id SET en.status=:status,en.updated_at=:updated WHERE en.id=:id AND en.status IN ('requested','enrolled') AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active' AND u.email_verified_at IS NOT NULL AND (c.active=1 OR :cancel_status='cancelled')",['status'=>$status,'updated'=>now(),'id'=>$id,'cancel_status'=>$status])->rowCount();
-                        if($changed>0)$success=$status==='enrolled'?'Enrollment accepted.':'Enrollment cancelled.';
+                        $enrollment=db_one('SELECT en.student_id,c.title FROM academy_enrollments en JOIN academy_courses c ON c.id=en.course_id WHERE en.id=:id',['id'=>$id]);
+                        $changed=db_query("UPDATE academy_enrollments en JOIN users u ON u.id=en.student_id JOIN academy_courses c ON c.id=en.course_id SET en.status=:status,en.updated_at=:updated WHERE en.id=:id AND en.status IN ('requested','enrolled') AND en.status<>:current_status AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active' AND u.email_verified_at IS NOT NULL AND (c.active=1 OR :cancel_status='cancelled')",['status'=>$status,'updated'=>now(),'id'=>$id,'cancel_status'=>$status,'current_status'=>$status])->rowCount();
+                        if($changed>0){$success=$status==='enrolled'?'Enrollment accepted.':'Enrollment cancelled.';if($enrollment)academy_notice((int)$enrollment['student_id'],$success,$enrollment['title'].': '.$success,'courses');}
                         else $error='This enrollment is no longer available or has already changed.';
                     }
                 }elseif($mode==='approve'){
@@ -130,12 +131,17 @@ try {
                             db_execute("INSERT INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'completed',:created,:updated) ON DUPLICATE KEY UPDATE status='completed',updated_at=VALUES(updated_at)",['student'=>$studentId,'course'=>$course,'created'=>now(),'updated'=>now()]);
                             $success='Training approved. The student can now request a certificate.';
                         }
-                        if($error!=='')db()->rollBack();else db()->commit();
+                        if($error!=='')db()->rollBack();else {db()->commit();academy_notice($studentId,'Training approved','Your completed training has been approved. Open My Certificates to preview and request your certificate.','certificates');}
                     }
                 }elseif($mode==='colour'){
                     $colour=(string)($_POST['colour']??'');$course=(int)($_POST['course']??0);
                     if(!in_array($colour,['orange','purple','green','blue'],true)||!db_one('SELECT id FROM academy_courses WHERE id=:id',['id'=>$course]))$error='Select a valid course and colour.';
                     else{db_execute('UPDATE academy_courses SET colour=:colour WHERE id=:id',['colour'=>$colour,'id'=>$course]);$success='Certificate colour saved for future requests.';}
+                }elseif($mode==='send_update'){
+                    $message=trim((string)($_POST['message']??''));
+                    $student=db_one("SELECT id FROM users WHERE id=:id AND role='student' AND status='active' AND account_state='active' AND deleted_at IS NULL AND email_verified_at IS NOT NULL",['id'=>$studentId]);
+                    if(!$student||$message===''||mb_strlen($message)>1000)$error='Select an active verified student and enter a message of up to 1,000 characters.';
+                    else {create_notification($studentId,'Academy update',$message,'/academy.php?action=dashboard');$success='Update sent to the student.';}
                 }elseif($mode==='verify_payment'){
                     $cert=db_one("SELECT id,payment_reference FROM academy_certificates WHERE id=:id AND status='pending'",['id'=>(int)($_POST['id']??0)]);
                     if(!$cert)$error='This payment is no longer pending. Refresh the certificate list.';
@@ -190,10 +196,21 @@ try {
         if ($action==='enroll'){
             $course=(int)($_POST['course']??0);
             if(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course])) throw new RuntimeException('Course unavailable.');
-            db_execute("INSERT IGNORE INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'requested',:created,:updated)",['student'=>$user['id'],'course'=>$course,'created'=>now(),'updated'=>now()]);
+            $created=db_query("INSERT IGNORE INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'requested',:created,:updated)",['student'=>$user['id'],'course'=>$course,'created'=>now(),'updated'=>now()])->rowCount();
+            if($created===1){$courseInfo=db_one('SELECT title FROM academy_courses WHERE id=:id',['id'=>$course]);academy_notice((int)$user['id'],'Course application received','Application for '.($courseInfo['title']??'your course').' is pending administrator review.','courses',true);}
             if((int)($_SESSION['academy_course_intent']??0)===$course)unset($_SESSION['academy_course_intent']);
             flash('academy_student_notice','Course application submitted. The Academy administrator will review your request.');
             redirect($base.'?action='.(in_array(($_POST['return_to']??''),['dashboard','courses','certificates'],true)?$_POST['return_to']:'courses'));
+        }
+        if ($action==='inquiry'){
+            $message=trim((string)($_POST['message']??''));
+            if($message===''||mb_strlen($message)>1000)throw new RuntimeException('Enter a message of up to 1,000 characters.');
+            $key=(string)$user['id'];
+            if(!iworks_auth_limit_allows('academy_inquiry',$key,5,3600))throw new RuntimeException('Please wait before sending another inquiry.');
+            iworks_auth_limit_record('academy_inquiry',$key,3600);
+            notify_roles(['admin'],'Student inquiry',$message,'/academy.php?action=admin&tab=student&id='.(int)$user['id']);
+            flash('academy_student_notice','Your inquiry has been sent to the Academy administrator.');
+            redirect($base.'?action=dashboard');
         }
         if ($action==='profile'){
             $name=trim((string)($_POST['name']??''));$phone=trim((string)($_POST['phone']??''));
