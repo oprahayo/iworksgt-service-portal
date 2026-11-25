@@ -222,6 +222,8 @@ jobs:
           MYSQL_PWD="$DB_PASS" mysql -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" < database.sql
           php scripts/migrate_academy.php --backup-confirmed
           php scripts/migrate_academy.php --backup-confirmed
+          php scripts/migrate_academy_learning.php --backup-confirmed
+          php scripts/migrate_academy_learning.php --backup-confirmed
       - name: Verify real database constraints and simulated gateway issuance
         run: php tests/academy_database_integration_test.php
 
@@ -241,6 +243,10 @@ jobs:
             php tests/academy_student_render_test.php "$screen"
           done
 
+      - name: Verify learning access and render course builder and learning workspace
+        env:
+          ACADEMY_VISUAL_FIXTURES: '1'
+        run: php tests/academy_learning_integration_test.php
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
