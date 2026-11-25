@@ -43,6 +43,7 @@
     active = null;
   }
   close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();});
   dialog.addEventListener('close', restore);
   document.querySelectorAll('[data-cert-record]').forEach(record => {
     const summary = record.querySelector(':scope > summary');
