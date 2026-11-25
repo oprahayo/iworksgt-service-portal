@@ -10,7 +10,7 @@ Orange: Digital Marketing. Purple: WordPress/CMS, basic and advanced frontend. B
 
 ## Production prerequisites
 - Preserve and stage the four exact approved SVG files from iWorks_Certificate_Templates.zip under storage/academy-templates/ (non-public, no modification). The PHP loader checks their SHA-256 hashes. The public repository deliberately does not contain these signed certificate artworks.
-- Install Inkscape at /usr/bin/inkscape, Lato and Liberation Serif, and enable proc_open; confirm on the cPanel PHP environment. Checkout fails closed if PDF cannot render.
+- Install Lato and Liberation Serif in the account font directory, enable proc_open, and use either the private ReportLab renderer in ~/.iworks-academy-renderer or /usr/bin/inkscape. Checkout fails closed if PDF cannot render.
 - Back up database, inspect live users.role schema, run php scripts/migrate_academy.php --backup-confirmed. Validate old user roles and both site roots. Ensure existing Paystack charge.success webhook reaches the existing handler.
 - Configure verified email delivery. PDF attachment delivery and queue retries are implemented; verify mail transport and delivery on staging. Delivery is at-least-once if a process crashes after accepting mail but before recording success.
 - Resume Checkout reuses the existing Paystack reference; initialization failures with no checkout URL and expired sessions still need operator reconciliation. Never allocate a new reference without establishing the old one cannot settle.
@@ -34,3 +34,6 @@ Admin first approves the three students after they register and verify email, as
 - `scripts/academy_host_check.sh` downloads a pinned source archive to a temporary private home directory and checks the exact SVGs, PHP, fonts, PDF generation and existing database/mail/payment configuration without modifying production. It is a diagnostic, not a deployment command.
 - CI covers PHP lint, existing portal regression tests, Academy validation and a simulated payment lifecycle; a separate isolated MySQL job exercises baseline schema, repeated migration, enrollment, ownership, unique graduate certificate constraint and revocation. This does not represent real Paystack or production delivery.
 - Retain current `b.sh` for its prior invoice release; do not use it to deploy Academy.
+
+## cPanel dependency correction
+Host report verified PHP, database access, existing roles, mail configuration, Paystack configuration, all template hashes and installed fonts. Inkscape was not installed. Added a private Python/ReportLab fallback that consumes the same hash-verified SVG, uses explicit Lato Regular/Bold/Black and Liberation Serif Bold files, preserves its background and QR geometry, and embeds vector text. The four locally generated preview PDFs decoded to the original verification URL. Server-side Python availability and end-to-end render remain unverified; no payment activation or deployment has been performed.
