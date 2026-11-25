@@ -188,7 +188,7 @@ jobs:
           node tests/admin_transition_behavior_test.js
 
   academy-database:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       mysql:
         image: mysql:8.0
