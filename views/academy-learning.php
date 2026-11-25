@@ -51,4 +51,4 @@ else{
     }
     if($done===$total)echo '<p>All published lessons completed. The Academy administrator reviews training completion separately before certification.</p>';
 }
-echo '</div>';ac_end();
+echo '</div><script src="/assets/js/academy-actions.js?v=1" defer></script>';ac_end();
