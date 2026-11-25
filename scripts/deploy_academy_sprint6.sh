@@ -35,8 +35,18 @@ finish(){
 }
 trap finish EXIT
 echo '=== Academy Sprint 6: private learning materials and assessments ==='
-curl -fsSL --retry 2 "https://api.github.com/repos/oprahayo/iworksgt-service-portal/actions/runs?head_sha=$TARGET&per_page=20" -o "$WORK/ci.json"
-php -r '$j=json_decode(file_get_contents($argv[1]),true);foreach($j["workflow_runs"]??[] as $r){if(($r["name"]??"")==="CI"&&($r["head_sha"]??"")===$argv[2]&&($r["conclusion"]??"")==="success"){echo "PASS pinned CI\n";exit(0);}}fwrite(STDERR,"BLOCK pinned CI not yet successful\n");exit(3);' "$WORK/ci.json" "$TARGET"
+# Wait only while this exact pinned CI is queued or running; never bypass a failure.
+CI_READY=0
+for attempt in $(seq 1 25); do
+  curl -fsSL --retry 2 "https://api.github.com/repos/oprahayo/iworksgt-service-portal/actions/runs?head_sha=$TARGET&per_page=20" -o "$WORK/ci.json"
+  CI_STATE="$(php -r '$j=json_decode(file_get_contents($argv[1]),true);foreach($j["workflow_runs"]??[] as $r){if(($r["name"]??"")==="CI"&&($r["head_sha"]??"")===$argv[2]){echo ($r["status"]??"")==="completed"?($r["conclusion"]??"failure"):"pending";exit;}}echo "pending";' "$WORK/ci.json" "$TARGET")"
+  if [[ "$CI_STATE" == success ]]; then CI_READY=1; echo 'PASS pinned CI'; break; fi
+  [[ "$CI_STATE" == pending ]] || { echo "BLOCK pinned CI: $CI_STATE; no production changes"; exit 3; }
+  echo "Pinned CI still running ($attempt/25); no production changes yet."
+  [[ "$attempt" == 25 ]] || sleep 15
+done
+[[ "$CI_READY" == 1 ]] || { echo 'BLOCK pinned CI still pending; no production changes'; exit 3; }
+
 REPO=https://raw.githubusercontent.com/oprahayo/iworksgt-service-portal
  : > "$WORK/existing"; : > "$WORK/added"; : > "$WORK/changes"
 for f in app/academy_assessments.php views/academy-assessments.php app/auth.php views/otp.php views/login.php app/academy_learning.php views/academy-builder.php views/academy-learning.php assets/css/academy.css views/academy-admin.php views/academy-student.php views/partials/header.php academy.php app/academy.php scripts/run_scheduled_operations.php views/academy-register.php views/register.php index.php app/auth_rate_limits.php; do
