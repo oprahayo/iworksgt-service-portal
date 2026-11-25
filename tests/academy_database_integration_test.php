@@ -7,6 +7,8 @@ require __DIR__.'/../app/db.php';
 function now():string{return '2026-11-25 12:00:00';}
 function get_payment_method_by_code(string $code):array{return ['is_active'=>1,'secret_key'=>'sk_live_CIFixtureNotARealSecret'];}
 function gateway_json_get(string $url,string $secret):array{if(!empty($GLOBALS['gateway_unavailable']))throw new RuntimeException('Fixture gateway unavailable');return $GLOBALS['gateway_fixture'];}
+function create_notification(int $id,string $title,string $message,string $url=''):void{$GLOBALS['academy_test_notices'][]=[$id,$title,$url];}
+function notify_roles(array $roles,string $title,string $message,string $url=''):void{$GLOBALS['academy_test_role_notices'][]=[$roles,$title,$url];}
 require __DIR__.'/../app/academy.php';
 function check(bool $value,string $message):void {if(!$value)throw new RuntimeException($message);}
 function user(string $role,string $email):int{
@@ -54,6 +56,8 @@ try{
  check($recovery['checked']===1&&$recovery['confirmed']===1&&$recovery['errors']===0,'Scheduled reconciliation issues only verified live payment');
  check(academy_reconcile_pending($recovery['cursor'],3)['checked']===0,'Issued record is not reprocessed by payment reconciliation');
  check(academy_confirm($ref),'Replay idempotent');
+ check(count($GLOBALS['academy_test_notices']??[])===1&&$GLOBALS['academy_test_notices'][0][0]===$student,'Only certificate owner notified once');
+ check(count($GLOBALS['academy_test_role_notices']??[])===1&&$GLOBALS['academy_test_role_notices'][0][0]===['admin'],'Admin notified once on verified issuance');
  check(academy_owned_certificate($cert,$other)===null,'Ownership enforced');
  $row=academy_owned_certificate($cert,$student);
  check($row!==null&&$row['status']==='issued'&&$row['provider_transaction']==='765432'&&$row['email_sent_at']===null,'Issuance and durable email pending');
