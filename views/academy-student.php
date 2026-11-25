@@ -76,7 +76,7 @@ if($screen==='dashboard'){
         echo '</select></label><button class="btn btn-primary">Request course review</button></form>';
     }else{echo '<p>Check your existing applications or approved certificates.</p>';ac_student_link('certificates','My Certificates');}
     echo '</section></div><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
-    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div>';
+    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div><details class="ac-contact"><summary>Contact Academy</summary>';ac_form('inquiry');echo '<label>Your message<textarea name="message" maxlength="1000" rows="3" required></textarea></label><button>Send inquiry</button></form></details>';
 }elseif($screen==='courses'){
     echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['enrollment_status']!==null)));
