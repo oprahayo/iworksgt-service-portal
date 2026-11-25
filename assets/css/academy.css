@@ -321,3 +321,26 @@
 .academy-workspace .ac-cert-dialog [data-cert-details]{padding:0}
 .academy-workspace .ac-cert-dialog p{overflow-wrap:anywhere}
 @media(max-width:600px){.academy-workspace .ac-cert-activity-head,.academy-workspace .ac-cert-activity>.ac-cert-record>.ac-cert-summary{padding:11px 12px}.academy-workspace .ac-cert-dialog{padding:14px}.academy-workspace .ac-cert-dialog-head h2{font-size:16px}}
+
+/* Sprint 7A: light, action-led guidance and gentle app-like movement. */
+.academy-workspace .ac-guide{background:transparent;border:0;margin:0 0 7px}
+.academy-workspace .ac-guide summary{min-height:44px;padding:4px 2px;font-weight:550}
+.academy-workspace .ac-guide-icon{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#fff3e8}
+.academy-workspace .ac-guide-body{border-left:2px solid #f4d1b4;margin:0 0 4px 11px;padding:3px 0 5px 14px}
+.academy-workspace .ac-guide-body ol{margin:0 0 4px}
+.academy-workspace .ac-welcome-guide{inset:auto 18px 18px auto;margin:0;width:min(350px,calc(100vw - 36px));max-height:calc(100dvh - 36px);padding:16px;box-shadow:0 12px 42px #15223822}
+.academy-workspace .ac-welcome-guide h2{font-size:18px}
+.academy-workspace .ac-welcome-guide .ac-welcome-path{padding:9px 0 0;margin:8px 0}
+.academy-workspace .ac-welcome-guide .ac-welcome-path p{margin:0}
+.academy-workspace .ac-welcome-guide .ac-welcome-path a{min-height:44px}
+.academy-workspace .ac-guide-close,.academy-workspace .ac-guide-dismiss{font-size:12px}
+.academy-workspace .ac-cert-next{font-size:12px;font-weight:600;color:var(--ac-primary);white-space:nowrap}
+.academy-workspace .ac-cert-activity .ac-cert-summary{transition:background-color .16s ease}
+.academy-workspace .ac-cert-activity .ac-cert-summary:hover{background:#fff8f1}
+.academy-workspace .ac-guide-target{outline:2px solid #f59e54;outline-offset:3px;border-radius:7px}
+.academy-workspace .ac-guide-target:focus{outline:2px solid #f59e54}
+@keyframes ac-guide-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ac-guide-focus{0%,100%{outline-color:#f59e54}50%{outline-color:#e65c00}}
+@media(prefers-reduced-motion:no-preference){.academy-workspace .ac-welcome-guide[open],.academy-workspace .ac-cert-dialog[open],.academy-workspace .ac-guide[open]>.ac-guide-body,.academy-workspace .ac-cert-wizard [data-cert-name-step]:not([hidden]),.academy-workspace .ac-cert-wizard [data-cert-confirm-step]:not([hidden]){animation:ac-guide-enter .2s ease-out}.academy-workspace .ac-guide-target{animation:ac-guide-focus .65s ease-in-out 2}}
+@media(prefers-reduced-motion:reduce){.academy-workspace .ac-guide*,.academy-workspace .ac-welcome-guide,.academy-workspace .ac-cert-dialog,.academy-workspace .ac-cert-summary,.academy-workspace .ac-guide-target{animation:none!important;transition:none!important}}
+@media(max-width:600px){.academy-workspace .ac-welcome-guide{inset:auto 12px 12px 12px;width:auto;max-height:calc(100dvh - 24px);padding:13px}.academy-workspace .ac-cert-next{display:none}}
