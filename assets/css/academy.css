@@ -421,7 +421,7 @@ body.portal-authenticated.role-student .portal-topbar.ac-student-topbar,.ac-stud
 
 /* Certificate catalogue: clear request action, airy history and lighter hierarchy. */
 .academy-workspace .ac-cert-page-head h1{color:#25364a;font-weight:650}
-.academy-workspace .ac-student .ac-cert-compact .ac-cert-start{margin:12px 0 26px;background:#fff;border:1px solid #f3d4bd;border-radius:10px}
+.academy-workspace .ac-student .ac-cert-compact section.ac-cert-group.ac-cert-start{margin:12px 0 26px;background:#fff;border:1px solid #f3d4bd;border-radius:10px}
 .academy-workspace .ac-cert-start .ac-cert-summary{gap:12px;padding:16px;min-height:76px}
 .academy-workspace .ac-cert-start-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;background:#fff0e3;color:#e65c00;border-radius:9px;font-size:26px;font-weight:400}
 .academy-workspace .ac-cert-start .ac-cert-summary-copy strong{font-size:16px;font-weight:600;color:#25364a}
