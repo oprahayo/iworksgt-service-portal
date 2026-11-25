@@ -20,10 +20,15 @@ try{
         const panels=[...root.querySelectorAll('.ac-student-panel,.ac-panel,.ac-course-card,.ac-student-stats a,.ac-student-welcome')];
         const controls=[...root.querySelectorAll('button,a,input:not([type=hidden]),select')].filter(visible);
         const bad=controls.filter(el=>{const r=el.getBoundingClientRect();return r.left<bounds.left-2||r.right>bounds.right+2;}).map(el=>el.textContent.trim().slice(0,60)||el.getAttribute('name'));
-        return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,panels:panels.length,boxed:panels.filter(el=>!transparent(el)).length,bad,tableOverflow:[...root.querySelectorAll('.ac-table-wrap')].some(el=>el.scrollWidth>el.clientWidth+2)};
+        const stats=[...root.querySelectorAll('.ac-student-stats>a')].map(el=>{const r=el.getBoundingClientRect();return {top:r.top,width:r.width,height:r.height}});
+        const tasks=root.querySelector('.ac-dashboard-actions');const available=root.querySelector('#available-courses');
+        const courseRows=[...root.querySelectorAll('.ac-course-card')].map(el=>el.getBoundingClientRect().height);
+        return {stats,courseRows,availableTop:available?.getBoundingClientRect().top??null,viewport:innerWidth,scroll:document.documentElement.scrollWidth,panels:panels.length,boxed:panels.filter(el=>!transparent(el)).length,bad,tableOverflow:[...root.querySelectorAll('.ac-table-wrap')].some(el=>el.scrollWidth>el.clientWidth+2)};
       });
       console.log(file,width,JSON.stringify(metrics));
       if(!metrics.panels||metrics.boxed||metrics.scroll>width+2||metrics.bad.length||metrics.tableOverflow)throw Error('Academy layout overflow or unwanted card: '+file+' at '+width);
+      if(file==='student-dashboard.html'&&(metrics.stats.length!==3||Math.max(...metrics.stats.map(x=>x.top))-Math.min(...metrics.stats.map(x=>x.top))>1||metrics.stats.some(x=>x.height>90||x.width<70)))throw Error('Dashboard metrics must occupy exactly one compact row: '+width);
+      if(width<=390&&file==='student-dashboard.html'&&(metrics.availableTop>570||metrics.courseRows.some(x=>x>100)))throw Error('Dashboard content too tall on phone: '+JSON.stringify(metrics));
       if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-enrollments.html'].includes(file)){
         await page.screenshot({path:resolve(dir,file.replace('.html','-'+width+'.png')),fullPage:true,animations:'disabled'});
       }
