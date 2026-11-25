@@ -36,6 +36,19 @@ else{
         $next=false;foreach($lessons as $l){if($next){echo '<p><a class="ac-student-link" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$l['id'].'">Next lesson</a></p>';break;}if((int)$l['id']===$lid)$next=true;}
     }
     echo '</section></div>';
+    $results=academy_course_results((int)$user['id'],$cid);
+    if($results){
+        $submitted=count(array_filter($results,fn($r)=>$r['submitted_at']!==null));
+        $graded=count(array_filter($results,fn($r)=>$r['score_percent']!==null));
+        echo '<section class="ac-student-panel ac-results-panel"><details><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>Academic results</strong><small>'.$submitted.' of '.count($results).' submitted · '.$graded.' graded</small></span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-results-list">';
+        foreach($results as $r){
+            $result=$r['submitted_at']===null?'Not submitted':($r['score_percent']===null?'Awaiting grading':(int)$r['score_percent'].'% · '.((int)$r['score_percent']>=(int)$r['pass_percent']?'Passed':'Not passed'));
+            echo '<article class="ac-result-row"><div><strong>'.e($r['title']).'</strong><small>'.e(ucfirst($r['kind']).' · '.$r['lesson_title']).'</small><small>Pass mark: '.(int)$r['pass_percent'].'%</small></div><span>'.e($result).'</span><a class="ac-student-link" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$r['lesson_id'].'">View lesson</a>';
+            if($r['feedback']!==' '&&!empty($r['feedback']))echo '<p class="ac-result-feedback">'.nl2br(e($r['feedback'])).'</p>';
+            echo '</article>';
+        }
+        echo '<small>These are your learning results, not an official transcript or certificate.</small></div></details></section>';
+    }
     if($done===$total)echo '<p>All published lessons completed. The Academy administrator reviews training completion separately before certification.</p>';
 }
 echo '</div>';ac_end();
