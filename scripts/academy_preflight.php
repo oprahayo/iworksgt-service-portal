@@ -14,7 +14,7 @@ academy_preflight('PHP 8.2 or later',fn()=>PHP_VERSION_ID>=80200);
 academy_preflight('PDO MySQL',fn()=>extension_loaded('pdo_mysql'));
 academy_preflight('cURL',fn()=>extension_loaded('curl'));
 academy_preflight('UTF-8 handling',fn()=>extension_loaded('mbstring'));
-academy_preflight('Inkscape PDF renderer',fn()=>is_executable('/usr/bin/inkscape')&&function_exists('proc_open'));
+academy_preflight('PDF renderer (private Python or Inkscape)',fn()=>academy_renderer_available());
 foreach(['orange','purple','green','blue'] as $colour){
     academy_preflight('Approved '.$colour.' artwork and PDF output',function()use($colour){
         $pdf=academy_pdf(['colour'=>$colour,'certificate_number'=>'IWGA-TEST-ONLY','student_name'=>'TEST STUDENT - NOT VALID',
