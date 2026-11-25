@@ -342,5 +342,13 @@
 @keyframes ac-guide-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes ac-guide-focus{0%,100%{outline-color:#f59e54}50%{outline-color:#e65c00}}
 @media(prefers-reduced-motion:no-preference){.academy-workspace .ac-welcome-guide[open],.academy-workspace .ac-cert-dialog[open],.academy-workspace .ac-guide[open]>.ac-guide-body,.academy-workspace .ac-cert-wizard [data-cert-name-step]:not([hidden]),.academy-workspace .ac-cert-wizard [data-cert-confirm-step]:not([hidden]){animation:ac-guide-enter .2s ease-out}.academy-workspace .ac-guide-target{animation:ac-guide-focus .65s ease-in-out 2}}
-@media(prefers-reduced-motion:reduce){.academy-workspace .ac-guide*,.academy-workspace .ac-welcome-guide,.academy-workspace .ac-cert-dialog,.academy-workspace .ac-cert-summary,.academy-workspace .ac-guide-target{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){.academy-workspace .ac-guide * ,.academy-workspace .ac-welcome-guide,.academy-workspace .ac-cert-dialog,.academy-workspace .ac-cert-summary,.academy-workspace .ac-guide-target{animation:none!important;transition:none!important}}
 @media(max-width:600px){.academy-workspace .ac-welcome-guide{inset:auto 12px 12px 12px;width:auto;max-height:calc(100dvh - 24px);padding:13px}.academy-workspace .ac-cert-next{display:none}}
+
+.academy-workspace .ac-results-panel{padding:0;margin-top:12px}
+.academy-workspace .ac-results-list{padding:0 14px 14px}
+.academy-workspace .ac-result-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px 12px;align-items:center;border-top:1px solid var(--ac-line);padding:10px 0;min-width:0;font-size:13px}
+.academy-workspace .ac-result-row>div{min-width:0;overflow-wrap:anywhere}
+.academy-workspace .ac-result-row small{display:block;color:var(--ac-muted);margin-top:3px}
+.academy-workspace .ac-result-feedback{grid-column:1/-1;margin:0;overflow-wrap:anywhere;color:var(--ac-muted)}
+@media(max-width:600px){.academy-workspace .ac-result-row{grid-template-columns:minmax(0,1fr) auto}.academy-workspace .ac-result-row>a{grid-column:1/-1}}
