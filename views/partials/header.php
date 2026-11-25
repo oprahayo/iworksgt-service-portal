@@ -48,9 +48,9 @@ if ($user && (string) ($user['role'] ?? '') === 'client') {
 $sidebarItems = [];
 if ($user && (string)($user['role'] ?? '') === 'student') {
     $sidebarItems = [
-        ['page'=>'academy','label'=>'My Certificates','icon'=>'bi-award','url'=>'/academy.php#certificates'],
-        ['page'=>'academy_courses','label'=>'My Courses','icon'=>'bi-book','url'=>'/academy.php#courses'],
-        ['page'=>'academy_profile','label'=>'My Profile','icon'=>'bi-person','url'=>'/academy.php#profile'],
+        ['page'=>'academy','label'=>'Dashboard','icon'=>'bi-speedometer2','url'=>'/academy.php?action=dashboard'],
+        ['page'=>'academy_courses','label'=>'My Courses','icon'=>'bi-book','url'=>'/academy.php?action=courses'],
+        ['page'=>'academy_certificates','label'=>'My Certificates','icon'=>'bi-award','url'=>'/academy.php?action=certificates'],
     ];
 } elseif ($user && (string)($user['role'] ?? '') === 'author') {
     $sidebarItems = [
@@ -253,7 +253,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
-  <?php if ($currentPage === 'academy'): ?><link rel="stylesheet" href="/assets/css/academy.css?v=4"><?php endif; ?>
+  <?php if (in_array($currentPage, ['academy','academy_courses','academy_certificates','academy_profile'], true)): ?><link rel="stylesheet" href="/assets/css/academy.css?v=5"><?php endif; ?>
   <?php require __DIR__ . '/portal-transition-head.php'; ?>
   <style>
     :root {
@@ -288,7 +288,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <nav class="sidebar-nav">
       <?php
         $portalGroups = [
-          'dashboard'=>'OVERVIEW','academy'=>'ACADEMY','academy_courses'=>'ACADEMY','academy_profile'=>'ACADEMY',
+          'dashboard'=>'OVERVIEW','academy'=>'ACADEMY','academy_courses'=>'ACADEMY','academy_certificates'=>'ACADEMY','academy_profile'=>'ACADEMY',
           'jobs'=>'SERVICE DELIVERY','support'=>'SERVICE DELIVERY',
           'messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
           'services'=>'SERVICE CATALOGUE','forms'=>'SERVICE CATALOGUE',
@@ -314,10 +314,12 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
         <span class="sidebar-label">View website</span>
       </a>
+      <?php if (($user['role']??'') !== 'student'): ?>
       <a class="sidebar-link <?= $currentPage === 'profile' ? 'active' : '' ?>" href="<?= e(url('profile')) ?>" title="My Profile">
         <i class="bi bi-person-circle"></i>
         <span class="sidebar-label">My Profile</span>
       </a>
+      <?php endif; ?>
       <a class="sidebar-link" href="logout.php" title="Logout">
         <i class="bi bi-box-arrow-right"></i>
         <span class="sidebar-label">Logout</span>
@@ -354,7 +356,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
           </span>
         </a>
         <?php endif; ?>
-        <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('profile')) ?>"><?= e($user['full_name']) ?></a>
+        <a class="btn btn-sm btn-outline-secondary" href="<?= e(($user['role']??'')==='student'?'/academy.php?action=profile':url('profile')) ?>"><?= e($user['full_name']) ?></a>
         <a class="btn btn-sm btn-primary" href="logout.php">Logout</a>
       </div>
     </header>
