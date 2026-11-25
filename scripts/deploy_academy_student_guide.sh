@@ -18,7 +18,7 @@ SPRINT6=211dff0e3516689ee20470be8ba17c11a5f77352
 DURATION=ebd4639dcd58845ed58c8d2ddda3e47a760b38d7
 REQUESTS=a40576dec30ea0b45c9685528cf576bc0880ee65
 POLISH=c2d086384ac245e80a1c321b77a99ebc2d34b67b
-TARGET=655b4039f55c6dc00dfda24ab4b9a553734f0e15
+TARGET=3f57bdfa9f23750caf7d27c17134658db04ac765
 ROOT="$(readlink -f "$HOME/public_html/portal.iworksgt.com")"
 HTML="$(readlink -f "$HOME/public_html")"
 [[ "$ROOT" == "$HTML/"* && -f "$ROOT/app/config.php" ]] || { echo 'BLOCK unexpected portal root'; exit 3; }
@@ -159,7 +159,7 @@ grep -Fq 'Sprint 6: materials and assessments' "$WORK/style"
 grep -Fq 'Certification request workspace: compact' "$WORK/style"
 grep -Fq 'Trust this private device for 30 days' "$WORK/register"
 grep -Fq 'Student guidance: lightweight contextual hints' "$WORK/style"
-curl -fsS --max-time 30 'https://portal.iworksgt.com/assets/js/academy-guide.js?v=1' -o "$WORK/guide.js"
+curl -fsS --max-time 30 'https://portal.iworksgt.com/assets/js/academy-guide.js?v=2' -o "$WORK/guide.js"
 cmp -s "$WORK/guide.js" "$WORK/target/assets/js/academy-guide.js"
 echo 'PASS deployed guide script matches tested version'
 STARTED=0
