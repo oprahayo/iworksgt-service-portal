@@ -20,3 +20,24 @@
   dialog.addEventListener('close', () => { markSeen(); if (summary) summary.focus({preventScroll:true}); });
   if (!seen && dialog.dataset.guideAuto === '1') dialog.show();
 })();
+
+(() => {
+  const allowed = new Set(['#ac-new-certificate','#ac-certificate-history','#ac-explore-courses']);
+  let timer;
+  function pointToAction() {
+    if (!allowed.has(location.hash)) return;
+    const target=document.getElementById(location.hash.slice(1));
+    if (!target) return;
+    if (target.tagName==='DETAILS') target.open=true;
+    document.querySelectorAll('.ac-guide-target').forEach(el=>el.classList.remove('ac-guide-target'));
+    target.classList.add('ac-guide-target');
+    const focusTarget=target.tagName==='DETAILS'?target.querySelector(':scope > summary'):target;
+    if(focusTarget)focusTarget.focus({preventScroll:true});
+    target.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+    clearTimeout(timer);
+    timer=setTimeout(()=>target.classList.remove('ac-guide-target'),1400);
+  }
+  window.addEventListener('hashchange',pointToAction);
+  document.querySelectorAll('.ac-guide-links a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{if(location.hash===a.hash)pointToAction();}));
+  pointToAction();
+})();
