@@ -84,3 +84,9 @@ function academy_assignment_grade(int $admin,int $course,int $lesson,int $submis
  $feedback=academy_learning_text($data['feedback']??'',10000);
  $count=db_query("UPDATE academy_assessment_submissions s JOIN academy_assessments a ON a.id=s.assessment_id SET s.score_percent=:score,s.feedback=:feedback,s.graded_by=:admin,s.graded_at=:at WHERE s.id=:submission AND a.lesson_id=:lesson AND a.kind='assignment'",['score'=>$score,'feedback'=>$feedback,'admin'=>$admin,'at'=>now(),'submission'=>$submission,'lesson'=>$lesson])->rowCount();
 }
+
+/** Student-owned results only, scoped to currently available published course content. */
+function academy_course_results(int $student,int $course):array{
+ if(!(academy_learning_access($student,$course)['published']??false))return [];
+ return db_all("SELECT a.id,a.title,a.kind,a.pass_percent,l.id lesson_id,l.title lesson_title,s.score_percent,s.feedback,s.submitted_at,s.graded_at FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id AND lc.published=1 JOIN academy_courses c ON c.id=m.course_id AND c.active=1 JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:student AND en.status IN ('enrolled','completed') JOIN users u ON u.id=en.student_id AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL LEFT JOIN academy_assessment_submissions s ON s.assessment_id=a.id AND s.student_id=en.student_id WHERE c.id=:course AND a.published=1 AND l.published=1 AND m.published=1 ORDER BY m.position,m.id,l.position,l.id,a.id",compact('student','course'));
+}
