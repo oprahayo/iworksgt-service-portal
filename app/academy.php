@@ -160,6 +160,32 @@ function academy_confirm(string $reference): bool {
     } catch (Throwable $e) { if(db()->inTransaction()) db()->rollBack(); throw $e; }
     return in_array($row['status'],['pending','issued'],true);
 }
+/** Recheck only existing pending references, never create a new charge.
+ * The scheduled worker supplies its private cursor so old unpaid rows cannot
+ * monopolize every batch. Checkout disablement prevents new payments, not
+ * recovery of an already-paid certificate.
+ */
+function academy_reconcile_pending(int $cursor=0,int $limit=3): array {
+    $result=['checked'=>0,'confirmed'=>0,'errors'=>0,'cursor'=>max(0,$cursor)];
+    if (!db_one("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='academy_certificates'")) return $result;
+    $limit=max(1,min(5,$limit));
+    $rows=db_all("SELECT id,payment_reference FROM academy_certificates WHERE status='pending' AND id>:cursor ORDER BY id LIMIT ".$limit,['cursor'=>$result['cursor']]);
+    if (!$rows && $result['cursor']>0) {
+        $result['cursor']=0;
+        $rows=db_all("SELECT id,payment_reference FROM academy_certificates WHERE status='pending' ORDER BY id LIMIT ".$limit);
+    }
+    foreach($rows as $row){
+        $result['cursor']=(int)$row['id'];
+        $result['checked']++;
+        try {
+            if(academy_confirm((string)$row['payment_reference']))$result['confirmed']++;
+        } catch(Throwable $e) {
+            $result['errors']++;
+            error_log('Academy pending payment reconciliation failed: '.get_class($e));
+        }
+    }
+    return $result;
+}
 function academy_owned_certificate(int $id,int $student): ?array {
     return db_one("SELECT * FROM academy_certificates WHERE id=:id AND student_id=:student AND status='issued'",
         ['id'=>$id,'student'=>$student]);
@@ -178,7 +204,7 @@ function academy_resume_checkout(array $user, int $graduate): string {
     // A temporary provider outage must not make a valid original checkout
     // impossible to resume; never initialize another reference here.
     try {
-        if (academy_confirm($cert['payment_reference'])) return 'https://portal.iworksgt.com/student';
+        if (academy_confirm($cert['payment_reference'])) return 'https://portal.iworksgt.com/academy.php?action=certificates';
     } catch (Throwable $e) {
         error_log('Academy payment verification temporarily unavailable: '.get_class($e));
     }
