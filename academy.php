@@ -199,7 +199,8 @@ try {
             header('Content-Type: image/svg+xml; charset=UTF-8');header('X-Content-Type-Options: nosniff');header("Content-Security-Policy: default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox");echo $svg;exit;
         }
         ac_head('Preview your certificate');
-        echo '<div class="ac-student"><section class="ac-student-panel"><h2>Review your certificate</h2><img class="preview" style="max-width:100%;height:auto" alt="Watermarked certificate preview" src="/academy.php?action=preview_image"><p>'.e($name).' · '.e($g['title']).' · '.e($g['duration']).'</p>';
+        require_once __DIR__.'/views/academy-guide.php';
+        echo '<div class="ac-student">';ac_guide('preview',(int)$user['id']);echo '<section class="ac-student-panel"><h2>Review your certificate</h2><img class="preview" style="max-width:100%;height:auto" alt="Watermarked certificate preview" src="/academy.php?action=preview_image"><p>'.e($name).' · '.e($g['title']).' · '.e($g['duration']).'</p>';
         ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the amount before authorizing payment.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'?action=certificates">Back to certificates</a></section></div>';ac_end();exit;
     }
     if ($action==='learn'){
