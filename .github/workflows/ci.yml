@@ -51,6 +51,8 @@ jobs:
           bash -n t.sh
           bash -n b.sh
           bash -n scripts/academy_host_check.sh
+          bash -n scripts/deploy_academy_beta.sh
+          bash -n scripts/install_academy_renderer.sh
           bash -n scripts/deploy_invoice_payment_layout.sh
           bash -n s.sh
           bash -n scripts/deploy_scuml_guidance.sh
