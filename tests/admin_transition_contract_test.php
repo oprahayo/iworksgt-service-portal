@@ -15,7 +15,7 @@ foreach(['admin','agent','finance','author','client','student',null] as $role){
 }
 $header=file_get_contents($root.'/views/partials/header.php');
 $academy=file_get_contents($root.'/academy.php');
-$style=strpos($header,'/assets/css/academy.css?v=9');
+$style=strpos($header,'/assets/css/academy.css?v=10');
 check_transition($style!==false&&$style<strpos($header,'</head>'),'Academy CSS loads before first paint');
 check_transition(!str_contains($academy,'<link rel="stylesheet" href="/assets/css/academy.css'), 'No late Academy CSS injection');
 $view=file_get_contents($root.'/views/academy-admin.php');
