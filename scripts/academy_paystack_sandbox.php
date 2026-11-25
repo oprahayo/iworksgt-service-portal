@@ -19,9 +19,6 @@ try{
     if(!preg_match('/^sk_test_[A-Za-z0-9]+$/D',$secret))throw new AcademySandboxFailure('A Paystack TEST secret key is required. Never use a live key for this check.');
     $tty=fopen('/dev/tty','r');
     if(!$tty)throw new AcademySandboxFailure('Interactive terminal required');
-    echo "Enter an email address you control for the sandbox checkout: ";
-    $email=trim((string)fgets($tty));
-    if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190)throw new AcademySandboxFailure('Invalid test email');
     // Deliberately not an IWGA reference: even a signed test event cannot match
     // a production certificate or invoice.
     echo "Existing Academy TEST transaction reference (from Paystack Test Mode dashboard), or Enter to start a new test: ";
@@ -30,6 +27,9 @@ try{
     $ref=$existingRef!==''?$existingRef:'academy-qa-'.bin2hex(random_bytes(16));
     $amount=ACADEMY_FEE_MINOR;
     if($existingRef===''){
+    echo "Enter an email address you control for the sandbox checkout: ";
+    $email=trim((string)fgets($tty));
+    if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190)throw new AcademySandboxFailure('Invalid test email');
     $result=gateway_json_post('https://api.paystack.co/transaction/initialize',[
         'email'=>$email,'amount'=>$amount,'currency'=>'NGN','reference'=>$ref,
         'channels'=>['card'],'metadata'=>['purpose'=>'ACADEMY SANDBOX TEST - NO CERTIFICATE']
