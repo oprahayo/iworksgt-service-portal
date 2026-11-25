@@ -50,13 +50,14 @@ function academy_valid_name(string $name): bool {
     return preg_match("/^[\\p{L}\\p{M} .’'\\-]{2,150}$/u", $name) === 1;
 }
 function academy_render(array $cert, bool $preview = false): string {
+    if ($preview) throw new LogicException('Use the restricted raster preview renderer.');
     $svg = academy_template($cert['colour']);
     $values = [
-        'CERTIFICATE_NUMBER' => $preview ? 'PREVIEW' : $cert['certificate_number'],
+        'CERTIFICATE_NUMBER' => $cert['certificate_number'],
         'STUDENT_FULL_NAME' => $cert['student_name'],
         'COURSE_TITLE' => $cert['course_title'],
         'DURATION' => $cert['duration'],
-        'ISSUE_DATE' => $preview ? 'On issuance' : date('d F Y', strtotime($cert['issued_at']))
+        'ISSUE_DATE' => date('d F Y', strtotime($cert['issued_at']))
     ];
     if (function_exists('mb_strtoupper')) $values['STUDENT_FULL_NAME'] = mb_strtoupper($values['STUDENT_FULL_NAME'],'UTF-8');
     else $values['STUDENT_FULL_NAME'] = strtoupper($values['STUDENT_FULL_NAME']);
@@ -73,8 +74,26 @@ function academy_render(array $cert, bool $preview = false): string {
         if (substr_count($svg,$token)!==1) throw new RuntimeException('Invalid certificate template token.');
         $svg = str_replace($token,htmlspecialchars((string)$value, ENT_QUOTES|ENT_XML1,'UTF-8'),$svg);
     }
-    if ($preview) $svg = str_replace('</svg>','<text x="723" y="710" text-anchor="middle" font-size="23" fill="#a00000">PREVIEW - NOT VALID</text></svg>',$svg);
     return $svg;
+}
+/** Unpaid previews are independent of the signed SVG and never receive issuance credentials. */
+function academy_preview_png(array $cert): string {
+    $home=academy_private_home();
+    $python=$home.'/.iworks-academy-renderer/bin/python';
+    $script=__DIR__.'/../scripts/render_academy_preview.py';
+    $fonts=$home.'/.local/share/fonts/iworks-academy';
+    if (!function_exists('proc_open') || !is_executable($python) || !is_readable($script)) throw new RuntimeException('Restricted preview renderer unavailable.');
+    $payload=[];
+    foreach (['colour','student_name','course_title','duration'] as $key) $payload[$key]=(string)($cert[$key]??'');
+    if (!in_array($payload['colour'],['orange','purple','green','blue'],true) || !academy_valid_name($payload['student_name'])) throw new InvalidArgumentException('Invalid preview data.');
+    $json=json_encode($payload,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE);
+    $process=proc_open([$python,'-I',$script,$fonts],[0=>['pipe','r'],1=>['pipe','w'],2=>['file','/dev/null','a']],$pipes);
+    if (!is_resource($process)) throw new RuntimeException('Restricted preview unavailable.');
+    $written=fwrite($pipes[0],$json);fclose($pipes[0]);
+    $png=stream_get_contents($pipes[1],4194305);fclose($pipes[1]);
+    $status=proc_close($process);
+    if ($written!==strlen($json) || $status!==0 || !is_string($png) || strlen($png)>4194304 || !str_starts_with($png,"\x89PNG\r\n\x1a\n")) throw new RuntimeException('Restricted preview rendering failed.');
+    return $png;
 }
 // Resolve the hosting account home from the application owner, not a request.
 function academy_private_home(): string {
