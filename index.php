@@ -944,7 +944,9 @@ try {
             }
 
             try {
-                redirect(google_oauth_authorization_url());
+                $googleUrl = google_oauth_authorization_url();
+                $_SESSION['google_oauth_academy'] = (($_GET['academy'] ?? '') === '1');
+                redirect($googleUrl);
             } catch (Throwable $e) {
                 flash('error', $e->getMessage());
                 redirect(url('login'));
@@ -956,10 +958,12 @@ try {
                 redirect(iworks_post_login_destination(current_user()));
             }
 
+            $academyGoogle = ($_SESSION['google_oauth_academy'] ?? false) === true;
+            unset($_SESSION['google_oauth_academy']);
             $oauthError = trim((string) ($_GET['error'] ?? ''));
             if ($oauthError !== '') {
                 flash('error', 'Google sign-in failed: ' . str_replace('_', ' ', $oauthError) . '.');
-                redirect(url('login'));
+                redirect($academyGoogle ? portal_absolute_url('student/register') : url('login'));
             }
 
             $state = trim((string) ($_GET['state'] ?? ''));
@@ -970,7 +974,7 @@ try {
                     throw new RuntimeException('Invalid Google sign-in state. Please try again.');
                 }
 
-                $user = authenticate_with_google_code($code);
+                $user = authenticate_with_google_code($code, $academyGoogle);
                 login_user((int) $user['id']);
                 remember_trusted_device((int) $user['id']);
 
@@ -978,7 +982,7 @@ try {
                 redirect(iworks_post_login_destination(current_user()));
             } catch (Throwable $e) {
                 flash('error', $e->getMessage());
-                redirect(url('login'));
+                redirect($academyGoogle ? portal_absolute_url('student/register') : url('login'));
             }
             break;
 
