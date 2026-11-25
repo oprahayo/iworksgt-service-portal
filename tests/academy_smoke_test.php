@@ -16,7 +16,7 @@ academy_assert(str_contains($entry,'Pay Now')&&str_contains($entry,'number_forma
 academy_assert(str_contains($entry,"require_roles(['student'])"),'Student role check');
 academy_assert(str_contains($entry,"require_roles(['admin'])"),'Admin role check');
 require __DIR__.'/../app/auth_rate_limits.php';
-foreach (['academy_register_ip','academy_verify_ip'] as $scope) academy_assert(iworks_auth_bucket($scope,'fixture',900)['scope']===$scope,'Academy auth rate limit scope');
+foreach (['academy_register_ip','academy_verify_ip','academy_inquiry'] as $scope) academy_assert(iworks_auth_bucket($scope,'fixture',900)['scope']===$scope,'Academy auth rate limit scope');
 academy_assert(str_contains($student,'Request course review')&&str_contains($entry,'academy_student_notice'),'Student course review and confirmation');
 academy_assert(str_contains($student,"\$screen==='dashboard'")&&str_contains($student,"\$screen==='courses'")&&str_contains($student,"\$screen==='certificates'"),'Dedicated student screens');
 $public=file_get_contents(__DIR__.'/../views/public-service-detail.php');
@@ -30,6 +30,6 @@ academy_assert(str_contains($entry,"\$mode==='retry_email'")&&str_contains($admi
 academy_assert(str_contains($entry,'do not pay twice')&&str_contains($student,'Certificate email queued for delivery.'),'Clear student payment and delivery feedback');
 $reg=file_get_contents(__DIR__.'/../views/academy-register.php');$router=file_get_contents(__DIR__.'/../index.php');
 academy_assert(str_contains($reg,'data-iw-password="iwAcademyPassword"')&&str_contains($reg,'data-iw-password="iwAcademyConfirm"'),'Inline password toggles');
-academy_assert(str_contains($router,"['public_auth_status','notifications','realtime']")&&str_contains($router,"$"+"scope !== 'notifications'"),'Student notifications only');
+academy_assert(str_contains($router,"['public_auth_status','notifications','realtime']")&&str_contains($router,"\$scope !== 'notifications'"),'Student notifications only');
 academy_assert(str_contains($student,"ac_form('inquiry')")&&str_contains($adminView,"ac_admin_post('send_update','student',"),'Two-way inquiry and update forms');
 echo "Academy smoke checks passed.\n";
