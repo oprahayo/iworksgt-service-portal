@@ -72,9 +72,16 @@ try{
  $admin=(int)db_one("SELECT id FROM users WHERE email='admin@academy.invalid'")['id'];
  academy_assignment_grade($admin,$cid,$lid,(int)$sub['id'],['score'=>'85','feedback'=>'Good work']);
  expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE id=:id',['id'=>$sub['id']])['score_percent']===85,'Assignment manual grade saved');
+ $results=academy_course_results($sid,$cid);
+ expect(count($results)===3,'Only published assessment results shown');
+ expect(academy_course_results($oid,$cid)===[],'Unapproved student denied results');
+ expect(academy_course_results($sid,0)===[],'Wrong course denied results');
+ expect(count(array_filter($results,fn($r)=>$r['score_percent']!==null))===3,'All own graded results visible');
+ expect(!array_key_exists('questions_json',$results[0]),'Answer keys not exposed');
  $course=academy_learning_access($sid,$cid);$_GET=['lesson'=>$lid];define('IWORKS_ACADEMY_LEARNING_VIEW',true);
  ob_start();require __DIR__.'/../views/academy-learning.php';$html=ob_get_clean();
  expect(str_contains($html,'How to study your course'),'Learning guidance rendered');
+ expect(str_contains($html,'Academic results')&&str_contains($html,'3 of 3 submitted')&&str_contains($html,'Good work'),'Own course academic results rendered');
  expect(str_contains($html,'1 of 1 lessons completed')&&str_contains($html,'Watch lesson video')&&!str_contains($html,'<script>alert(1)</script>')&&!str_contains($html,'Draft secret'),'Student view renders escaped published content and progress');
  expect(str_contains($html,'Download PDF')&&str_contains($html,'Result: 100%')&&str_contains($html,'Result: 85%')&&!str_contains($html,'Hidden assessment'),'Published assessment results visible; drafts hidden');
  $GLOBALS['fixtureRole']='admin';define('IWORKS_ACADEMY_BUILDER',true);
