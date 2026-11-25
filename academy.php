@@ -22,7 +22,7 @@ function ac_head(string $title): void {
     $GLOBALS['academy_native_shell'] = is_logged_in() && has_role(['admin','student']) && ($_GET['action']??'')!=='verify';
     if ($GLOBALS['academy_native_shell']) {
         $_GET['page']='academy';
-        if(has_role(['student'])) { $studentAction=(string)($_GET['action']??'dashboard'); $_GET['page']=match($studentAction){'courses','learn'=>'academy_courses','certificates','preview','callback','checkout','resume','recheck'=>'academy_certificates','profile'=>'academy_profile',default=>'academy'}; }
+        if(has_role(['student'])) { $studentAction=(string)($_GET['action']??'dashboard'); $_GET['page']=match($studentAction){'courses','learn'=>'academy_courses','certificates','preview','certificate_preview','preview_image','callback','checkout','resume','recheck'=>'academy_certificates','profile'=>'academy_profile',default=>'academy'}; }
         $title=$title.' - '.app_name();
         require __DIR__.'/views/partials/header.php';
         echo '<div class="academy-workspace">';
@@ -193,6 +193,20 @@ try {
     }
     require_roles(['student']);$user=current_user();
     if (!is_email_verified($user)) { http_response_code(403);exit('Verify your email first.'); }
+    if(in_array($action,['certificate_preview','preview_image'],true)&&!method_is('POST')){
+        $p=$_SESSION['academy_preview']??[];
+        $g=($p['student']??0)===(int)$user['id']&&($p['expires']??0)>=time()?db_one('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.id=:id AND g.student_id=:student',['id'=>(int)$p['graduate'],'student'=>$user['id']]):null;
+        if(!$g){if($action==='preview_image'){http_response_code(404);exit;}flash('academy_student_notice','Preview expired. Open your certificate again.');redirect($base.'?action=certificates');}
+        $name=academy_request_name((int)$user['id'],(int)$g['id'],(string)$p['name']);
+        try{$svg=academy_render(['colour'=>$g['colour'],'student_name'=>$name,'course_title'=>$g['title'],'duration'=>$g['duration']],true);}
+        catch(Throwable $e){error_log('Academy preview rendering failed: '.get_class($e));if($action==='preview_image'){http_response_code(503);exit;}flash('academy_student_notice','Certificate artwork is temporarily unavailable. No payment was started. Please contact Academy support.');redirect($base.'?action=certificates');}
+        if($action==='preview_image'){
+            header('Content-Type: image/svg+xml; charset=UTF-8');header('X-Content-Type-Options: nosniff');header("Content-Security-Policy: default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox");echo $svg;exit;
+        }
+        ac_head('Preview your certificate');
+        echo '<div class="ac-student"><section class="ac-student-panel"><h2>Review your certificate</h2><img class="preview" style="max-width:100%;height:auto" alt="Watermarked certificate preview" src="/academy.php?action=preview_image"><p>'.e($name).' · '.e($g['title']).' · '.e($g['duration']).'</p>';
+        ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the amount before authorizing payment.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'?action=certificates">Back to certificates</a></section></div>';ac_end();exit;
+    }
     if ($action==='learn'){
         $course=academy_learning_access((int)$user['id'],(int)($_GET['course']??0));
         if(!$course){http_response_code(403);ac_head('Learning access unavailable');echo '<p>Your course application must be approved before you can access the learning area.</p><a href="'.$base.'?action=courses">My courses</a>';ac_end();exit;}
@@ -277,10 +291,12 @@ try {
             redirect($base.'?action=certificates');
         }
         if ($action==='preview'){
-            $g=db_one('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.id=:id AND g.student_id=:student',['id'=>(int)($_POST['graduate']??0),'student'=>$user['id']]);
-            $name=$g?academy_request_name((int)$user['id'],(int)$g['id'],trim((string)($_POST['name']??''))):'';if(!$g||!academy_valid_name($name))throw new RuntimeException('Invalid certificate application.');
-            $svg=academy_render(['colour'=>$g['colour'],'student_name'=>$name,'course_title'=>$g['title'],'duration'=>$g['duration']],true);
-            ac_head('Preview your certificate');echo '<img class="preview" alt="Certificate preview" src="data:image/svg+xml;base64,'.base64_encode($svg).'">';ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the payment amount before authorizing payment. Any additional provider charge, if applicable, will be shown at checkout.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'?action=certificates">Back to certificates</a>';ac_end();exit;
+            $graduate=(int)($_POST['graduate']??0);
+            $g=db_one('SELECT id FROM academy_graduates WHERE id=:id AND student_id=:student',['id'=>$graduate,'student'=>$user['id']]);
+            $name=$g?academy_request_name((int)$user['id'],$graduate,trim((string)($_POST['name']??''))):'';
+            if(!$g||!academy_valid_name($name)){flash('academy_student_notice','Select an approved certificate and enter a valid name.');redirect($base.'?action=certificates');}
+            $_SESSION['academy_preview']=['student'=>(int)$user['id'],'graduate'=>$graduate,'name'=>$name,'expires'=>time()+1800];
+            redirect($base.'?action=certificate_preview');
         }
     }
     define('IWORKS_ACADEMY_STUDENT_VIEW',true);
