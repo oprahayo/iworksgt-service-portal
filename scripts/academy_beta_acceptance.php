@@ -8,8 +8,9 @@ $home=realpath((string)getenv('HOME'));
 if(!$portal||!$home||$portal!==realpath($home.'/public_html/portal.iworksgt.com')||!is_file($portal.'/app/config.php')){fwrite(STDERR,"BLOCK portal root invalid\n");exit(2);}
 require $portal.'/app/bootstrap.php';
 require $portal.'/app/academy.php';
+final class AcademyAcceptanceFailure extends RuntimeException {}
 function ac_accept(bool $value,string $label):void{
-    if(!$value)throw new RuntimeException($label);
+    if(!$value)throw new AcademyAcceptanceFailure($label);
     echo "PASS ".$label."\n";
 }
 function ac_http(string $path,?string $body=null,array $headers=[]):array{
@@ -17,7 +18,7 @@ function ac_http(string $path,?string $body=null,array $headers=[]):array{
     curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>35,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2]);
     if($body!==null)curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$body,CURLOPT_HTTPHEADER=>$headers]);
     $response=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
-    if(!is_string($response))throw new RuntimeException('HTTPS request failed');
+    if(!is_string($response))throw new AcademyAcceptanceFailure('HTTPS request failed');
     return [$status,$response];
 }
 function ac_test_attachment(string $recipient,string $pdf):bool{
@@ -112,14 +113,14 @@ try{
     echo "Enter an email address you control for one clearly marked test PDF (or press Enter to skip): ";
     $recipient=trim((string)fgets(STDIN));
     if($recipient!==''){
-        if(!filter_var($recipient,FILTER_VALIDATE_EMAIL))throw new RuntimeException('Invalid test recipient');
+        if(!filter_var($recipient,FILTER_VALIDATE_EMAIL))throw new AcademyAcceptanceFailure('Invalid test recipient');
         ac_accept(ac_test_attachment($recipient,$pdf),'Mail transport accepted marked test PDF; confirm actual inbox delivery separately');
     }else{echo "SKIP test email (no recipient supplied)\n";}
     echo "PENDING: real registration OTP/browser journey, actual Paystack test-mode checkout and provider webhook delivery, issued-certificate email workflow, backup restoration rehearsal. Checkout remains disabled.\n";
 }catch(Throwable $e){
     if(db()->inTransaction())db()->rollBack();
     // Only controlled assertion labels are safe to display, never PDO errors/config.
-    if(get_class($e)===RuntimeException::class)fwrite(STDERR,"BLOCK ".$e->getMessage()."\n");
+    if($e instanceof AcademyAcceptanceFailure)fwrite(STDERR,"BLOCK ".$e->getMessage()."\n");
     else fwrite(STDERR,"BLOCK unexpected ".get_class($e)."; review private application logs\n");
     exit(3);
 }
