@@ -214,6 +214,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <?php if (!empty($academyGuestRegistration)): ?><base href="<?= e(portal_absolute_url('')) ?>"><?php endif; ?>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($title ?: app_name()) ?></title>
   <meta name="description" content="<?= e($seoDescriptionText) ?>">
@@ -391,7 +392,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 <?php else: ?>
 <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= e(url('login')) ?>">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= e(public_url('home')) ?>">
       <picture class="iw-auth-brand-picture">
         <source media="(max-width:575.98px)" srcset="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1">
         <img src="<?= e(portal_absolute_url('assets/branding/iworks-desktop.svg')) ?>?v=20261113-logo1" alt="<?= e(brand_name()) ?>" class="brand-logo" width="204" height="19" decoding="async">
