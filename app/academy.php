@@ -19,6 +19,9 @@ function academy_template(string $colour): string {
     }
     return $svg;
 }
+function academy_checkout_enabled(): bool {
+    return setting('academy_checkout_enabled','0')==='1';
+}
 function academy_paystack_key(): string {
     $method = get_payment_method_by_code('paystack');
     if (!$method || (int)$method['is_active'] !== 1 || trim((string)$method['secret_key']) === '') {
@@ -121,16 +124,24 @@ function academy_checkout_url_valid(string $url): bool {
         && !isset($p['user']) && !isset($p['pass']) && !isset($p['port']) && !empty($p['path']);
 }
 function academy_resume_checkout(array $user, int $graduate): string {
+    if (!academy_checkout_enabled()) throw new RuntimeException('Certification checkout is temporarily unavailable.');
     $cert=db_one("SELECT * FROM academy_certificates WHERE graduate_id=:graduate AND student_id=:student AND status='pending'",
         ['graduate'=>$graduate,'student'=>$user['id']]);
     if (!$cert) throw new RuntimeException('No pending certificate payment.');
     // Never allocate a second payment reference while the original can succeed.
-    if (academy_confirm($cert['payment_reference'])) return 'https://portal.iworksgt.com/student';
+    // A temporary provider outage must not make a valid original checkout
+    // impossible to resume; never initialize another reference here.
+    try {
+        if (academy_confirm($cert['payment_reference'])) return 'https://portal.iworksgt.com/student';
+    } catch (Throwable $e) {
+        error_log('Academy payment verification temporarily unavailable: '.get_class($e));
+    }
     $url=(string)($cert['checkout_url']??'');
     if (!academy_checkout_url_valid($url)) throw new RuntimeException('Contact support to recover this payment.');
     return $url;
 }
 function academy_new_checkout(array $user,int $graduate,string $name): string {
+    if (!academy_checkout_enabled()) throw new RuntimeException('Certification checkout is not yet enabled.');
     if (!is_email_verified($user) || !academy_valid_name($name) || trim((string)$user['phone'])==='') {
         throw new RuntimeException('Complete your verified profile and enter a valid certificate name.');
     }
