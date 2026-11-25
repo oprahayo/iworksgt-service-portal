@@ -4,7 +4,7 @@ set -Eeuo pipefail
 umask 077
 BASE=7564d94d98242e42d42f84e4a277c30caffa173f
 LEGACY=86be6193e4d0b04fa43452a2e9a73edf9bed4d36
-TARGET=c960771acf3b4e72cfe2151da4292bb8be141d87
+TARGET=e9011344e7a3142aa909b62ff203858add6a5f75
 ROOT="$(readlink -f "$HOME/public_html/portal.iworksgt.com")"
 HTML="$(readlink -f "$HOME/public_html")"
 [[ "$ROOT" == "$HTML/"* && -f "$ROOT/app/config.php" ]] || { echo 'BLOCK unexpected portal root'; exit 3; }
