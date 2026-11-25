@@ -39,4 +39,7 @@ academy_assert(academy_duration_label(1)==='1 Week'&&academy_duration_label(16)=
 academy_assert(academy_recommended_weeks('fullstack')===32&&academy_recommended_weeks('unknown')===null,'Course recommendations');
 academy_assert(str_contains($entry,"'certificate_preview','preview_image'")&&!str_contains($entry,'data:image/svg+xml;base64,'),'Private preview endpoint');
 academy_assert(str_contains($entry,"\$mode==='review_request'")&&!str_contains($entry,"\$mode==='approve'"),'Student-initiated review only');
+$guide=file_get_contents(__DIR__.'/../views/academy-guide.php');
+academy_assert(str_contains($entry,"ac_guide('preview'")&&str_contains($guide,'If already paid, use Check Payment instead of paying again.'),'Payment preview help with duplicate-payment warning');
+academy_assert(!str_contains($guide,'<form')&&!str_contains($guide,'method="post"'),'Guidance has no mutation forms');
 echo "Academy smoke checks passed.\n";
