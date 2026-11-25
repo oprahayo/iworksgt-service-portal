@@ -8,6 +8,22 @@ if(!$root||!$home||$root!==realpath($home.'/public_html/portal.iworksgt.com'))ex
 require $root.'/app/bootstrap.php';
 require $root.'/app/academy.php';
 final class AcademyQaFailure extends RuntimeException {}
+// CLI acceptance checks must not reuse a connection across human input.
+function qa_connection():PDO{
+    $config=app_config()['db'];
+    $dsn=sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s',$config['host'],(int)($config['port']??3306),$config['name'],$config['charset']??'utf8mb4');
+    return new PDO($dsn,$config['user'],$config['pass'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]);
+}
+function qa_read(string $sql,array $params=[]):?array{
+    $connection=qa_connection();$stmt=$connection->prepare($sql);$stmt->execute($params);
+    return $stmt->fetch()?:null;
+}
+function qa_lookup(string $email):?array{
+    return qa_read('SELECT * FROM users WHERE email=:email AND deleted_at IS NULL LIMIT 1',['email'=>strtolower(trim($email))]);
+}
+function qa_write(string $sql,array $params=[]):void{
+    $connection=qa_connection();$stmt=$connection->prepare($sql);$stmt->execute($params);
+}
 function qa_assert(bool $ok,string $label):void{
     if(!$ok)throw new AcademyQaFailure($label);
     echo "PASS ".$label."\n";
@@ -54,8 +70,8 @@ try{
     $stage='existing-email lookup';
     // Compare bytes to avoid an incompatible connection/column collation.
     // Also run the usual lookup so the deployed registration cannot fail later.
-    $existing=db_one('SELECT id FROM users WHERE BINARY LOWER(email)=BINARY :email LIMIT 1',['email'=>$email]);
-    if($existing!==null||find_user_by_email($email)!==null)throw new AcademyQaFailure('Address already belongs to a portal account. Use the fresh alias instead.');
+    $existing=qa_read('SELECT id FROM users WHERE BINARY LOWER(email)=BINARY :email LIMIT 1',['email'=>$email]);
+    if($existing!==null||qa_lookup($email)!==null)throw new AcademyQaFailure('Address already belongs to a portal account. Use the fresh alias instead.');
     echo "PASS fresh student email\n";
     $password=bin2hex(random_bytes(24));
     // Name validation allows only letters, so convert random hex digits to letters.
@@ -69,7 +85,7 @@ try{
     $attempted=true;
     [$status,$html]=qa_http($ch,'/academy.php?action=register',['csrf_token'=>$csrf,'name'=>$name,'email'=>$email,'phone'=>'00000000000','password'=>$password,'confirm_password'=>$password]);
     $stage='registered account lookup';
-    $user=find_user_by_email($email);
+    $user=qa_lookup($email);
     qa_assert($user!==null&&$user['role']==='student'&&$user['full_name']===$name&&password_verify($password,$user['password_hash']),'Real HTTP student registration');
     qa_assert($status===200&&str_contains($html,'otp_challenge_csrf')&&str_contains($html,'otp_code'),'Real email OTP challenge displayed');
     $csrf=qa_hidden($html,'csrf_token');$challenge=qa_hidden($html,'otp_challenge_csrf');
@@ -79,19 +95,21 @@ try{
     $stage='OTP form submission';
     [$status,$html]=qa_http($ch,'/index.php?page=otp',['csrf_token'=>$csrf,'otp_challenge_csrf'=>$challenge,'form_action'=>'verify_otp','otp_code'=>$otp]);
     unset($otp);
-    qa_assert($status===200&&is_email_verified(find_user_by_email($email)??[])&&stripos($html,'My Certificates')!==false,'Real OTP verified and student dashboard reached');
+    $stage='post-OTP database verification';
+    qa_assert(is_email_verified(qa_lookup($email)??[]),'Student email verified in database');
+    qa_assert($status===200&&stripos($html,'My Certificates')!==false,'Real OTP verified and student dashboard reached');
     $stage='student workspace routes';
     foreach(['dashboard'=>'Available courses','courses'=>'My courses &amp; applications','certificates'=>'My certificates','profile'=>'Personal information'] as $screen=>$marker){
         [$status,$html]=qa_http($ch,'/academy.php?action='.$screen);
         qa_assert($status===200&&str_contains($html,$marker),'Real student '.$screen.' screen');
     }
     $stage='course application';
-    $course=db_one('SELECT id FROM academy_courses WHERE active=1 ORDER BY id LIMIT 1');
+    $course=qa_read('SELECT id FROM academy_courses WHERE active=1 ORDER BY id LIMIT 1');
     qa_assert($course!==null,'An active Academy course is available');
     [$status,$html]=qa_http($ch,'/academy.php?action=courses');
     $csrf=qa_hidden($html,'csrf_token');
     [$status,$html]=qa_http($ch,'/academy.php?action=enroll',['csrf_token'=>$csrf,'course'=>(int)$course['id'],'return_to'=>'courses']);
-    $application=db_one('SELECT status FROM academy_enrollments WHERE student_id=:student AND course_id=:course',['student'=>$user['id'],'course'=>$course['id']]);
+    $application=qa_read('SELECT status FROM academy_enrollments WHERE student_id=:student AND course_id=:course',['student'=>$user['id'],'course'=>$course['id']]);
     qa_assert($status===200&&($application['status']??'')==='requested'&&str_contains($html,'Pending application'),'Real course application pending administrator approval');
     [$status,$html]=qa_http($ch,'/academy.php?action=learn&course='.(int)$course['id']);
     qa_assert($status===403,'Unapproved student cannot access learning area');
@@ -115,9 +133,9 @@ try{
     // Retain an audit record, invalidate only the account we demonstrably created.
     if($attempted&&$email!==''&&$password!==''){
         try{
-            $u=find_user_by_email($email);
+            $u=qa_lookup($email);
             if($u&&$u['role']==='student'&&$u['full_name']===$name&&password_verify($password,$u['password_hash'])){
-                db_execute('UPDATE users SET deleted_at=:deleted,password_hash=:hash WHERE id=:id AND role=:role AND deleted_at IS NULL',['deleted'=>now(),'hash'=>password_hash(bin2hex(random_bytes(32)),PASSWORD_DEFAULT),'id'=>$u['id'],'role'=>'student']);
+                qa_write('UPDATE users SET deleted_at=:deleted,password_hash=:hash WHERE id=:id AND role=:role AND deleted_at IS NULL',['deleted'=>now(),'hash'=>password_hash(bin2hex(random_bytes(32)),PASSWORD_DEFAULT),'id'=>$u['id'],'role'=>'student']);
                 echo "PASS QA account disabled; audit record retained\n";
             }
         }catch(Throwable $e){fwrite(STDERR,"BLOCK QA account cleanup; contact administrator\n");$failed=true;}
