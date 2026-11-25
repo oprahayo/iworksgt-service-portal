@@ -29,7 +29,7 @@ try{
     $expected=match($action){
         'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request certification'],
         'courses'=>['My courses &amp; applications','Pending application','Explore courses','Apply for course'],
-        'certificates'=>['My certificates','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked','Administrator query','Training could not be verified.'],
+        'certificates'=>['Certificate history','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked','Administrator query','Training could not be verified.'],
         'profile'=>['Personal information','student@academy.invalid','Save profile'],
         default=>throw new RuntimeException('Unknown screen')
     };
@@ -43,7 +43,7 @@ try{
     if(!str_contains($html,$guideTitle)||!str_contains($html,'id="ac-guide-'.$action.'"'))throw new RuntimeException('Missing contextual student guide');
     if($action==='dashboard'&&(!str_contains($html,'id="ac-welcome-guide"')||!str_contains($html,'data-guide-auto="1"')||!str_contains($html,'Go to My Certificates')||!str_contains($html,'Go to My Courses')))throw new RuntimeException('Missing welcome paths');
     if($action!=='dashboard'&&str_contains($html,'id="ac-welcome-guide"'))throw new RuntimeException('Welcome dialog outside dashboard');
-    if($action==='certificates'&&(!str_contains($html,'data-cert-wizard')||!str_contains($html,'name="confirm_name"')||!str_contains($html,'ac-cert-record')||!str_contains($html,'cannot be regenerated')))throw new RuntimeException('Missing progressive certificate request or confirmation');
+    if($action==='certificates'&&(!str_contains($html,'data-cert-wizard')||!str_contains($html,'name="confirm_name"')||!str_contains($html,'id="ac-cert-dialog"')||!str_contains($html,'ac-cert-record')||!str_contains($html,'cannot be regenerated')))throw new RuntimeException('Missing progressive certificate request or confirmation');
     foreach($expected as $needle)if(!str_contains($html,$needle))throw new RuntimeException($action.' missing '.$needle);
     foreach($excluded as $needle)if(str_contains($html,$needle))throw new RuntimeException($action.' incorrectly contains '.$needle);
     if(str_contains($html,'name="note"')||str_contains($html,'Contact Academy')||str_contains($html,'Send inquiry'))throw new RuntimeException('Student messaging exposed');
@@ -51,7 +51,7 @@ try{
     if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
         $dir=__DIR__.'/../docs/visual-qa/academy';
         if(!is_dir($dir))mkdir($dir,0755,true);
-        file_put_contents($dir.'/student-'.$action.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace(['/assets/js/academy-guide.js?v=2','/assets/js/academy-certificates.js?v=1'],['../../../assets/js/academy-guide.js?v=2','../../../assets/js/academy-certificates.js?v=1'],$html).'</div></main></body></html>');
+        file_put_contents($dir.'/student-'.$action.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace(['/assets/js/academy-guide.js?v=2','/assets/js/academy-certificates.js?v=2'],['../../../assets/js/academy-guide.js?v=2','../../../assets/js/academy-certificates.js?v=2'],$html).'</div></main></body></html>');
     }
     echo 'Student '.$action." rendered using isolated MySQL fixtures.\n";
 }finally{if(db()->inTransaction())db()->rollBack();}
