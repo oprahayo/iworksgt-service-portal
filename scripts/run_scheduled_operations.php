@@ -45,6 +45,19 @@ try {
         $email = iworks_process_notification_email_outbox(25);
         $chatEmail = iw_chat_process_email_outbox(15);
         require_once __DIR__.'/../app/academy.php';
+        // Verify existing pending payments before sending the issued PDFs.
+        // A temporary gateway problem must not interrupt other mail queues.
+        $metric['academy_payment_cursor'] = max(0,(int)($previous['academy_payment_cursor']??0));
+        try {
+            $academyPayments=academy_reconcile_pending($metric['academy_payment_cursor'],3);
+            $metric['academy_payment_cursor']=$academyPayments['cursor'];
+            $metric['academy_payments_checked']=$academyPayments['checked'];
+            $metric['academy_payments_confirmed']=$academyPayments['confirmed'];
+            $metric['academy_payment_errors']=$academyPayments['errors'];
+        } catch(Throwable $e) {
+            $metric['academy_payment_errors']=1;
+            error_log('Academy reconciliation unavailable: '.get_class($e));
+        }
         $academyEmail = academy_process_certificate_mail(5);
         $metric['academy_email_processed'] = $academyEmail['processed'];
         // Existing installed queue worker also enforces the documented
