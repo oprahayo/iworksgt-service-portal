@@ -50,7 +50,7 @@
   function render(focus=false){questions.forEach((q,i)=>q.hidden=i!==current);progress.textContent='Question '+(current+1)+' of '+questions.length;back.disabled=current===0;next.hidden=current===questions.length-1;submit.hidden=current!==questions.length-1;if(focus)questions[current].querySelector('input')?.focus();}
   back.addEventListener('click',()=>{if(current>0){current--;render(true);}});
   next.addEventListener('click',()=>{if(!questions[current].querySelector('input:checked')){questions[current].querySelector('input').reportValidity();return;}if(current<questions.length-1){current++;render(true);}});
-  form.addEventListener('invalid',e=>{const i=questions.findIndex(q=>q.contains(e.target));if(i>=0&&questions[current].querySelector('input:checked')){current=i;render();}},true);
+  form.addEventListener('invalid',e=>{const i=questions.findIndex(q=>q.contains(e.target));if(i>=0&&i!==current&&questions[current].querySelector('input:checked')){current=i;render();}},true);
   render();
  });
  root.querySelectorAll('[data-exam-seconds]').forEach(clock=>{
