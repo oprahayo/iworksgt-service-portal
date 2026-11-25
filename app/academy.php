@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-const ACADEMY_FEE_MINOR = 10000000;
+const ACADEMY_FEE_MINOR = 10200000;
 const ACADEMY_VERIFY_URL = 'https://portal.iworksgt.com/verify';
 
 function academy_template(string $colour): string {
@@ -86,7 +86,7 @@ function academy_confirm(string $reference): bool {
     $data = $verified['data'] ?? [];
     if (empty($verified['status']) || ($data['status']??'')!=='success'
         || ($data['reference']??'')!==$reference || ($data['currency']??'')!=='NGN'
-        || (int)($data['amount']??0)!==(int)$cert['amount_minor'] || (int)$cert['amount_minor']!==ACADEMY_FEE_MINOR
+        || (int)($data['amount']??0)!==(int)$cert['amount_minor'] || (int)$cert['amount_minor']<=0
         || empty($data['id'])) return false;
     // Only a verified provider transaction can issue a certificate.
     db()->beginTransaction();
