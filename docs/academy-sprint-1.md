@@ -1,7 +1,9 @@
 # Academy Sprint 1 (draft — do not deploy until release gates pass)
 
 ## Scope
-Dedicated student role, registration using existing email OTP, profile, admin-approved existing graduates, certificate preview, NGN 100,000 Paystack checkout, verified webhook/callback issuance, PDF download and number-based verification. Course title, colour, duration and student-confirmed name are frozen at application; certificate number is random and unique. Existing service payments continue through the original gateway flow.
+Dedicated student role, registration using existing email OTP, profile, admin-approved existing graduates, certificate preview, NGN 102,000 Paystack checkout (initial amount; includes a processing-cost allowance, not a guarantee of net settlement), verified webhook/callback issuance, PDF download and number-based verification. Course title, colour, duration and student-confirmed name are frozen at application; certificate number is random and unique. Existing service payments continue through the original gateway flow.
+
+The dashboard does not display a certification price. The Get Certificate button opens a name confirmation/preview; exact amount is disclosed before Pay Now. Do not automatically add another processing fee in application code; verify the merchant Paystack fee-bearer configuration and provider checkout before live release.
 
 ## Initial course assignments
 Orange: Digital Marketing. Purple: WordPress/CMS, basic and advanced frontend. Blue: Backend. Green: Full-stack and hosting. Admin may change the colour for future applications.
