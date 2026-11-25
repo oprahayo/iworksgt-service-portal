@@ -41,6 +41,64 @@ for ref in "$BASE" "$RELEASE"; do
   tar -xzf "$WORK/$ref.tar.gz" -C "$WORK/$ref" --strip-components=1
 done
 SRC="$WORK/$RELEASE"; OLD="$WORK/$BASE"
+# Preserve the operator-reviewed live Apache configuration byte-for-byte.
+# Accept only the exact diagnostic hash, the repository base, or their exact
+# previously merged variants. Never ignore arbitrary .htaccess drift.
+[[ -f "$PORTAL/.htaccess" && ! -L "$PORTAL/.htaccess" ]] || { echo 'BLOCK invalid live .htaccess'; exit 3; }
+PY="$HOME/.iworks-academy-renderer/bin/python"
+[[ -x "$PY" ]] || { echo 'BLOCK private Python renderer unavailable'; exit 3; }
+"$PY" -I - "$PORTAL/.htaccess" "$OLD/.htaccess" "$SRC/.htaccess" <<'PYTHON'
+import hashlib
+import pathlib
+import sys
+
+live_path, base_path, target_path = map(pathlib.Path, sys.argv[1:])
+live = live_path.read_bytes()
+base = base_path.read_bytes()
+target = target_path.read_bytes()
+approved = '1f22ab06817161da1b098a691e34b3cad1b1f14960aad115e97de37bd8748059'
+anchor = b'RewriteRule ^sitemap\\.xml$ index.php?page=seo_sitemap [L,QSA]'
+rules = [
+    b'RewriteRule ^verify/?$ academy.php?action=verify [L,QSA]',
+    b'RewriteRule ^student/register/?$ academy.php?action=register [L,QSA]',
+    b'RewriteRule ^student/?$ academy.php [L,QSA]',
+]
+def recognized(data):
+    return data == base or hashlib.sha256(data).hexdigest() == approved
+def merge(data):
+    lines = data.splitlines(keepends=True)
+    indices = [i for i, line in enumerate(lines) if line.rstrip(b'\r\n') == anchor]
+    if len(indices) != 1:
+        raise ValueError('Expected exactly one existing sitemap rule')
+    i = indices[0]
+    if any(rule in data for rule in rules):
+        raise ValueError('Unexpected existing Academy routing')
+    eol = b'\r\n' if lines[i].endswith(b'\r\n') else b'\n'
+    return b''.join(lines[:i] + [r + eol for r in rules] + lines[i:])
+try:
+    if recognized(live):
+        merged = merge(live)
+    elif live == target:
+        merged = live
+    else:
+        stripped = live
+        for rule in rules:
+            matches = [line for line in stripped.splitlines(keepends=True) if line.rstrip(b'\r\n') == rule]
+            if len(matches) != 1:
+                raise ValueError('Unrecognized live Apache configuration')
+            stripped = stripped.replace(matches[0], b'', 1)
+        if not recognized(stripped) or merge(stripped) != live:
+            raise ValueError('Live Apache configuration changed since diagnostics')
+        merged = live
+    # The old comparison baseline is deliberately the verified live file;
+    # the target is a local surgical merge rather than an upstream replacement.
+    base_path.write_bytes(live)
+    target_path.write_bytes(merged)
+except ValueError as exc:
+    print('BLOCK .htaccess: ' + str(exc), file=sys.stderr)
+    sys.exit(3)
+print('PASS .htaccess: existing configuration preserved; three Academy routes staged')
+PYTHON
 cp "$PORTAL/app/config.php" "$SRC/app/config.php"; chmod 0600 "$SRC/app/config.php"
 mkdir -p "$SRC/storage/academy-templates"
 for colour in orange purple green blue; do
@@ -112,6 +170,7 @@ if [[ -s "$WORK/existing" ]]; then tar -czf "$BACKUP/source.tar.gz" -C "$PORTAL"
 cp "$WORK/added" "$BACKUP/added-files.txt"
 printf '%s\n' "$RELEASE" > "$BACKUP/release.txt"
 echo 'PASS encrypted database and source backup integrity (not a restore rehearsal)'
+cmp -s "$OLD/.htaccess" "$PORTAL/.htaccess" || { echo 'BLOCK .htaccess changed during release preparation'; exit 3; }
 # Keep signed assets outside the public root.
 mkdir -p "$PRIVATE"; chmod 0700 "$PRIVATE"
 for colour in orange purple green blue; do
@@ -122,6 +181,7 @@ done
 php "$SRC/scripts/academy_preflight.php"
 php "$SRC/scripts/migrate_academy.php" --backup-confirmed
 # No payment setting is enabled here.
+cmp -s "$OLD/.htaccess" "$PORTAL/.htaccess" || { echo 'BLOCK .htaccess changed during migration'; exit 3; }
 STARTED=1
 while IFS= read -r f; do
   dest="$PORTAL/$f"
