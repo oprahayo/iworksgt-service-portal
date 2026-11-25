@@ -31,9 +31,14 @@ try{
  db_execute("UPDATE academy_enrollments SET status='completed' WHERE student_id=:student AND course_id=:course",['student'=>$student,'course'=>$cid]);
  db_execute("INSERT INTO academy_graduates (student_id,course_id,duration,approved_by,approved_at) VALUES (:student,:course,'12 weeks',:admin,:approved)",['student'=>$student,'course'=>$cid,'admin'=>$admin,'approved'=>now()]);
  $graduate=db_last_id();
+ check(academy_edit_duration($student,$graduate,'16'),'Edit approved duration before checkout');
+ check(db_one('SELECT duration FROM academy_graduates WHERE id=:id',['id'=>$graduate])['duration']==='16 Weeks','Canonical stored duration');
+ check(!academy_edit_duration($other,$graduate,'20'),'Wrong student cannot edit graduate');
+ check(academy_edit_duration($student,$graduate,'12'),'Restore fixture duration');
  $ref='IWGA-'.str_repeat('a',32);
  db_execute("INSERT INTO academy_certificates (graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,created_at) VALUES (:g,:s,'IWGA-2026-AAAAAAAAAAAAAAAA','CI TEST STUDENT','WordPress & CMS Web Design','12 weeks','purple',10200000,:ref,:created)",['g'=>$graduate,'s'=>$student,'ref'=>$ref,'created'=>now()]);
  $cert=db_last_id();
+ check(!academy_edit_duration($student,$graduate,'20'),'Pending certificate locks duration');
  // academy_confirm owns its transaction, so commit fixture rows first.
  db()->commit();
  $GLOBALS['gateway_fixture']=['status'=>true,'data'=>['domain'=>'live','id'=>765432,'status'=>'success','reference'=>$ref,'currency'=>'NGN','amount'=>10199999]];
