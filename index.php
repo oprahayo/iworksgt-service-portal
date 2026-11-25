@@ -640,7 +640,7 @@ try {
                             redirect(url('login'));
                         }
 
-                        start_otp_challenge((int) $user['id'], 'verify_email');
+                        start_otp_challenge((int) $user['id'], 'verify_email', $remember30Days);
                         $_SESSION['pending_otp_remember'] = $remember30Days ? '1' : '0';
                         flash('success', 'Enter the 6-digit OTP sent to your email to verify your account.');
                         redirect(url('otp'));
@@ -657,7 +657,7 @@ try {
                         redirect(url('login'));
                     }
 
-                    start_otp_challenge((int) $user['id'], 'login');
+                    start_otp_challenge((int) $user['id'], 'login', $remember30Days);
                     $_SESSION['pending_otp_remember'] = $remember30Days ? '1' : '0';
                     flash('success', 'Enter the 6-digit OTP sent to your email.');
                     redirect(url('otp'));
@@ -1143,7 +1143,7 @@ try {
                     ]);
 
                     $_SESSION['pending_otp_remember'] = !empty($_POST['remember_30days']) ? '1' : '0';
-                    start_otp_challenge($userId, 'verify_email');
+                    start_otp_challenge($userId, 'verify_email', !empty($_POST['remember_30days']));
                     flash('success', 'Account created. Enter the 6-digit OTP sent to your email to continue.');
                     redirect(url('otp'));
                 }
@@ -1195,7 +1195,7 @@ try {
                             throw new RuntimeException('Please wait ' . $cooldownRemaining . ' second(s) before requesting another OTP.');
                         }
 
-                        start_otp_challenge((int) $otpUser['id'], (string) $pendingOtp['purpose']);
+                        start_otp_challenge((int) $otpUser['id'], (string) $pendingOtp['purpose'], !empty($pendingOtp['remember']));
                         flash('success', 'A new OTP code was queued for delivery.');
                         redirect(url('otp'));
                     }
@@ -1231,7 +1231,7 @@ try {
                             mark_email_verified((int) $otpUser['id']);
                         }
 
-                        $rememberFlag = !empty($_POST['remember_30days']) || (($_SESSION['pending_otp_remember'] ?? '0') === '1');
+                        $rememberFlag = array_key_exists('remember_30days', $_POST) ? $_POST['remember_30days'] === '1' : !empty($pendingOtp['remember']);
 
                         login_user((int) $otpUser['id']);
 
