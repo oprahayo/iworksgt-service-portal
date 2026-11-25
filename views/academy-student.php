@@ -31,7 +31,7 @@ if(in_array($screen,['dashboard','courses'],true)){
     $courseRows=db_all("SELECT c.id,c.title,c.active,en.status AS enrollment_status FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:student WHERE c.active=1 OR en.id IS NOT NULL ORDER BY c.title",['student'=>$studentId]);
 }
 if(in_array($screen,['dashboard','certificates'],true)){
-    $graduates=db_all('SELECT g.id,g.duration,c.title,c.colour,ce.id AS certificate_id,ce.status AS certificate_status,ce.certificate_number,ce.checkout_url,ce.payment_reference,ce.email_sent_at FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id WHERE g.student_id=:student ORDER BY g.id DESC',['student'=>$studentId]);
+    $graduates=db_all('SELECT g.id,g.duration,g.approved_at,c.title,c.colour,COALESCE(ce.issued_at,ce.created_at,g.approved_at) AS activity_at,ce.id AS certificate_id,ce.status AS certificate_status,ce.certificate_number,ce.checkout_url,ce.payment_reference,ce.email_sent_at FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id WHERE g.student_id=:student ORDER BY g.id DESC',['student'=>$studentId]);
 }
 $titles=['dashboard'=>'Dashboard','courses'=>'My Courses','certificates'=>'My Certificates','profile'=>'My Profile'];
 ac_head($titles[$screen]);
@@ -99,17 +99,23 @@ if($screen==='dashboard'){
     echo '</div></details></section>';
     echo '<section class="ac-student-panel ac-cert-group ac-cert-activity"><div class="ac-cert-activity-head"><h2>Certificate history</h2><p>'.(count($waiting)+count($graduates)).' activities · '.$ready.' ready · '.$paying.' awaiting payment</p></div>';
     if(!$waiting&&!$graduates)echo '<p class="ac-student-empty">No certificate activity yet. Submit a certification request above.</p>';
-    foreach($waiting as $r){
+    $activities=[];
+    foreach($waiting as $r)$activities[]=['request'=>$r,'at'=>max((string)$r['submitted_at'],(string)$r['reviewed_at'])];
+    foreach($graduates as $g)$activities[]=['graduate'=>$g,'at'=>$g['activity_at']];
+    usort($activities,fn($a,$b)=>strcmp($b['at'],$a['at']));
+    foreach($activities as $activity){
+      if(isset($activity['request'])){
+        $r=$activity['request'];
         echo '<details class="ac-cert-record" data-cert-record><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($r['title']).'</strong><small>Submitted '.e(date('d M Y',strtotime($r['submitted_at']))).'</small></span><span class="ac-request-state state-'.e($r['status']).'">'.e($r['status']==='pending'?'Awaiting review':'Declined').'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded" data-cert-details>';
         if($r['review_note']!=='')echo '<div class="ac-query-reason"><strong>Administrator query</strong><p>'.nl2br(e($r['review_note'])).'</p></div>';
         if($r['status']==='declined'&&$r['active'])echo '<small>You may submit a fresh request after addressing the administrator query.</small>';
         elseif($r['status']==='pending')echo '<p>Waiting for administrator review. You will be notified of the decision.</p>';
         echo '</div></details>';
-    }
-    foreach($graduates as $g){
+      }else{
+        $g=$activity['graduate'];
         $status=$g['certificate_status']??'ready';
         $label=['ready'=>'Ready to certify','pending'=>'Payment pending','issued'=>'Issued','revoked'=>'Revoked'][$status]??'Unavailable';
-        echo '<details class="ac-cert-record" data-cert-record><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($g['title']).'</strong><small>'.e($g['duration']).'</small></span><span class="ac-request-state state-'.e($status==='ready'||$status==='issued'?'approved':($status==='pending'?'pending':'declined')).'">'.e($label).'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded" data-cert-details>';
+        echo '<details class="ac-cert-record" data-cert-record><summary class="ac-cert-summary"><span class="ac-cert-summary-copy"><strong>'.e($g['title']).'</strong><small>'.e($g['duration']).' · '.e(date('d M Y',strtotime($g['activity_at']))).'</small></span><span class="ac-request-state state-'.e($status==='ready'||$status==='issued'?'approved':($status==='pending'?'pending':'declined')).'">'.e($label).'</span><span class="ac-cert-chevron" aria-hidden="true"></span></summary><div class="ac-cert-expanded" data-cert-details>';
         if(!$g['certificate_id']){
             ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';
             $approvedName=academy_request_name($studentId,(int)$g['id'],'');
@@ -120,6 +126,7 @@ if($screen==='dashboard'){
         elseif($status==='pending'){echo '<p>Payment pending. If you have already paid, check the status; do not pay again.</p><div class="ac-cert-payment-actions">';ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($g['payment_reference']).'"><button>Check Payment</button></form>';if(!empty($g['checkout_url'])&&academy_checkout_enabled()){ac_form('resume');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><button class="ac-secondary">Continue Payment</button></form>';}echo '</div>';}
         else echo '<p>Certificate revoked. Contact support.</p>';
         echo '</div></details>';
+      }
     }
     echo '</section><dialog class="ac-cert-dialog" id="ac-cert-dialog" aria-labelledby="ac-cert-dialog-title"><div class="ac-cert-dialog-head"><div><h2 id="ac-cert-dialog-title">Certificate details</h2><p id="ac-cert-dialog-meta"></p></div><button type="button" data-cert-close aria-label="Close certificate details">Close</button></div><div data-cert-dialog-body></div></dialog><script src="/assets/js/academy-certificates.js?v=2" defer></script></div>';
 }else{
