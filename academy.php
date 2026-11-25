@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__.'/app/bootstrap.php';
 require __DIR__.'/app/academy.php';
+require __DIR__.'/app/academy_requests.php';
 require __DIR__.'/app/academy_learning.php';
 require __DIR__.'/app/academy_assessments.php';
 require __DIR__.'/views/academy-assessments.php';
@@ -122,7 +123,7 @@ try {
             require_csrf();
             $mode=(string)($_POST['mode']??'');
             $tab=(string)($_POST['return_tab']??'students');
-            if(!in_array($tab,['students','student','enrollments','courses','certificates'],true))$tab='students';
+            if(!in_array($tab,['students','student','enrollments','courses','certificates','requests'],true))$tab='students';
             $studentId=(int)($_POST['student_id']??0);
             $destination=$base.'?'.http_build_query(['action'=>'admin','tab'=>$tab]+($tab==='student'&&$studentId>0?['id'=>$studentId]:[]));
             $error='';$success='';
@@ -146,22 +147,12 @@ try {
                     $graduate=(int)($_POST['graduate']??0);
                     if(academy_edit_duration($studentId,$graduate,(string)($_POST['duration']??'')))$success='Training duration updated.';
                     else $error='No change saved. The duration may already match, or a certificate payment has started.';
-                }elseif($mode==='approve'){
-                    $course=(int)($_POST['course']??0);$weeks=academy_duration_weeks((string)($_POST['duration']??''));$duration=$weeks===null?'':academy_duration_label($weeks);
-                    if($studentId<1||$course<1||$duration===''||mb_strlen($duration)>80)$error='Select the completed course and enter its training duration.';
-                    else{
-                        db()->beginTransaction();
-                        $student=db_one("SELECT * FROM users WHERE id=:id AND role='student' AND deleted_at IS NULL FOR UPDATE",['id'=>$studentId]);
-                        if(!$student||!is_email_verified($student)||$student['status']!=='active'||$student['account_state']!=='active')$error='This student must have an active, email-verified account.';
-                        elseif(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course]))$error='Select an active course.';
-                        elseif(db_one('SELECT id FROM academy_graduates WHERE student_id=:student AND course_id=:course',['student'=>$studentId,'course'=>$course]))$error='This student is already approved for this course.';
-                        else{
-                            db_execute('INSERT INTO academy_graduates (student_id,course_id,duration,approved_by,approved_at) VALUES (:student,:course,:duration,:admin,:approved)',['student'=>$studentId,'course'=>$course,'duration'=>$duration,'admin'=>current_user()['id'],'approved'=>now()]);
-                            db_execute("INSERT INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'completed',:created,:updated) ON DUPLICATE KEY UPDATE status='completed',updated_at=VALUES(updated_at)",['student'=>$studentId,'course'=>$course,'created'=>now(),'updated'=>now()]);
-                            $success='Training approved. The student can now request a certificate.';
-                        }
-                        if($error!=='')db()->rollBack();else {db()->commit();academy_notice($studentId,'Training approved','Your completed training has been approved. Open My Certificates to preview and request your certificate.','certificates');}
-                    }
+                }elseif($mode==='review_request'){
+                    try{
+                        $changed=academy_request_review((int)current_user()['id'],(int)($_POST['request']??0),(string)($_POST['decision']??''),(string)($_POST['duration']??''),(string)($_POST['reason']??''));
+                        if($changed)$success='Certification request reviewed. Student notified.';
+                        else $error='This request is no longer pending. Refresh the queue.';
+                    }catch(InvalidArgumentException $e){$error=$e->getMessage();}
                 }elseif($mode==='colour'){
                     $colour=(string)($_POST['colour']??'');$course=(int)($_POST['course']??0);
                     if(!in_array($colour,['orange','purple','green','blue'],true)||!db_one('SELECT id FROM academy_courses WHERE id=:id',['id'=>$course]))$error='Select a valid course and colour.';
@@ -244,6 +235,13 @@ try {
     }
     if (method_is('POST')) {
         require_csrf();
+        if ($action==='request_certificate'){
+            try{
+                $created=academy_request_submit((int)$user['id'],(int)($_POST['course']??0),(string)($_POST['name']??''),(string)($_POST['note']??''));
+                flash('academy_student_notice',$created?'Certification request submitted. You will be notified after review.':'Your request is already submitted.');
+            }catch(InvalidArgumentException $e){flash('academy_student_notice',$e->getMessage());}
+            redirect($base.'?action=certificates');
+        }
         if ($action==='enroll'){
             $course=(int)($_POST['course']??0);
             if(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course])) throw new RuntimeException('Course unavailable.');
@@ -268,7 +266,7 @@ try {
             if(!academy_valid_name($name)||strlen($phone)<7||strlen($phone)>40)throw new RuntimeException('Enter a valid name and phone.');
             db_execute('UPDATE users SET full_name=:name,phone=:phone WHERE id=:id',['name'=>$name,'phone'=>$phone,'id'=>$user['id']]);flash('academy_student_notice','Profile updated.');redirect($base.'?action=profile');
         }
-        if ($action==='checkout') redirect(academy_new_checkout($user,(int)($_POST['graduate']??0),trim((string)($_POST['name']??''))));
+        if ($action==='checkout') {$graduate=(int)($_POST['graduate']??0);redirect(academy_new_checkout($user,$graduate,academy_request_name((int)$user['id'],$graduate,trim((string)($_POST['name']??'')))));}
         if ($action==='resume') redirect(academy_resume_checkout($user,(int)($_POST['graduate']??0)));
         if ($action==='recheck'){
             $ref=(string)($_POST['reference']??'');
@@ -280,7 +278,7 @@ try {
         }
         if ($action==='preview'){
             $g=db_one('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.id=:id AND g.student_id=:student',['id'=>(int)($_POST['graduate']??0),'student'=>$user['id']]);
-            $name=trim((string)($_POST['name']??''));if(!$g||!academy_valid_name($name))throw new RuntimeException('Invalid certificate application.');
+            $name=$g?academy_request_name((int)$user['id'],(int)$g['id'],trim((string)($_POST['name']??''))):'';if(!$g||!academy_valid_name($name))throw new RuntimeException('Invalid certificate application.');
             $svg=academy_render(['colour'=>$g['colour'],'student_name'=>$name,'course_title'=>$g['title'],'duration'=>$g['duration']],true);
             ac_head('Preview your certificate');echo '<img class="preview" alt="Certificate preview" src="data:image/svg+xml;base64,'.base64_encode($svg).'">';ac_form('checkout');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><input type="hidden" name="name" value="'.e($name).'"><p>Total payable: <strong>₦'.number_format(ACADEMY_FEE_MINOR/100,2).'</strong></p><small>Review the payment amount before authorizing payment. Any additional provider charge, if applicable, will be shown at checkout.</small><p>'.(academy_checkout_enabled()?'<button>Pay Now</button>':'<button disabled>Payment unavailable</button>').'</p></form><a href="'.$base.'?action=certificates">Back to certificates</a>';ac_end();exit;
         }
