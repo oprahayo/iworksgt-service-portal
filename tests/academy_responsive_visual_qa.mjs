@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 const dir=resolve('docs/visual-qa/academy');
 const files=(await readdir(dir)).filter(f=>f.endsWith('.html'));
-if(files.length!==11)throw Error('Expected all eleven real Academy view fixtures; got '+files.length);
+if(files.length!==12)throw Error('Expected all twelve real Academy view fixtures; got '+files.length);
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 await mkdir(dir,{recursive:true});
 try{
@@ -37,4 +37,4 @@ try{
     await page.close();
   }
 }finally{await browser.close();}
-console.log('All eleven Academy views passed purposeful-panel and responsive checks at four viewport widths.');
+console.log('All twelve Academy views passed purposeful-panel and responsive checks at four viewport widths.');
