@@ -19,7 +19,7 @@ function academy_request_submit(int $student,int $course,string $name,string $no
  try{notify_roles(['admin'],'New certification request',$c['title'].' — review the student request.','/academy.php?action=admin&tab=requests');}catch(Throwable $e){error_log('Academy admin request notice deferred');}
  return true;
 }
-function academy_request_review(int $admin,int $id,string $decision,string $duration,string $note):bool{
+function academy_request_review(int $admin,int $id,string $decision,string $duration,string $note,?int $attempt=null):bool{
  $note=trim($note);$weeks=academy_duration_weeks($duration);
  if(!in_array($decision,['approved','declined'],true)||mb_strlen($note)>2000||($decision==='declined'&&$note==='')||($decision==='approved'&&$weeks===null))throw new InvalidArgumentException('Enter a valid duration for approval or a reason for decline.');
  $initial=db_one('SELECT student_id FROM academy_certification_requests WHERE id=:id',['id'=>$id]);
@@ -29,7 +29,7 @@ function academy_request_review(int $admin,int $id,string $decision,string $dura
  try{
   $u=db_one("SELECT id FROM users WHERE id=:id AND role='student' AND deleted_at IS NULL AND status='active' AND account_state='active' AND email_verified_at IS NOT NULL FOR UPDATE",['id'=>$student]);
   $r=db_one('SELECT r.*,c.title,c.active FROM academy_certification_requests r JOIN academy_courses c ON c.id=r.course_id WHERE r.id=:id AND r.student_id=:student FOR UPDATE',compact('id','student'));
-  if(!$u||!$r||$r['status']!=='pending'){db()->commit();return false;}
+  if(!$u||!$r||$r['status']!=='pending'||($attempt!==null&&$attempt!==(int)$r['attempts'])){db()->commit();return false;}
   $course=(int)$r['course_id'];
   if($decision==='approved'){
    if(!$r['active']||db_one('SELECT id FROM academy_graduates WHERE student_id=:student AND course_id=:course',compact('student','course')))throw new InvalidArgumentException('Course unavailable or already approved.');
