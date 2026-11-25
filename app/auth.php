@@ -1349,7 +1349,7 @@ function fetch_google_user_profile(string $accessToken): array
     ];
 }
 
-function find_or_create_google_user(array $profile): array
+function find_or_create_google_user(array $profile, bool $academy = false): array
 {
     $email = strtolower(trim((string) ($profile['email'] ?? '')));
     if ($email === '') {
@@ -1358,6 +1358,9 @@ function find_or_create_google_user(array $profile): array
 
     $user = find_user_by_email($email);
     if ($user) {
+        if ($academy && ($user['role'] ?? '') !== 'student') {
+            throw new RuntimeException('This Google account already belongs to a different iWorks workspace. Sign in normally or use a separate student email.');
+        }
         if (($user['status'] ?? 'active') !== 'active' || ($user['account_state'] ?? 'active') !== 'active') {
             throw new RuntimeException('Your account is not active. Contact support.');
         }
@@ -1391,7 +1394,7 @@ function find_or_create_google_user(array $profile): array
         'last_name' => $lastName,
         'email' => $email,
         'password' => bin2hex(random_bytes(16)),
-        'role' => 'client',
+        'role' => $academy ? 'student' : 'client',
         'email_verified' => true,
     ]);
 
@@ -1403,7 +1406,7 @@ function find_or_create_google_user(array $profile): array
     return $created;
 }
 
-function authenticate_with_google_code(string $code): array
+function authenticate_with_google_code(string $code, bool $academy = false): array
 {
     if (!google_auth_ready()) {
         throw new RuntimeException('Google authentication is currently disabled.');
@@ -1412,5 +1415,5 @@ function authenticate_with_google_code(string $code): array
     $accessToken = exchange_google_code_for_access_token($code);
     $profile = fetch_google_user_profile($accessToken);
 
-    return find_or_create_google_user($profile);
+    return find_or_create_google_user($profile, $academy);
 }
