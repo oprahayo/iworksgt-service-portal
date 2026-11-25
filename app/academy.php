@@ -5,7 +5,13 @@ const ACADEMY_VERIFY_URL = 'https://portal.iworksgt.com/verify';
 
 function academy_template(string $colour): string {
     if (!in_array($colour, ['orange','purple','green','blue'], true)) throw new RuntimeException('Invalid template.');
-    $path = __DIR__.'/../storage/academy-templates/iworks-'.$colour.'.svg';
+    // Signed templates must remain outside all HTTP document roots.
+    $path = academy_private_home().'/.iworks-academy-templates/iworks-'.$colour.'.svg';
+    // The isolated CLI preflight deliberately stages assets inside its private
+    // temporary checkout; never use this fallback in an HTTP request.
+    if (PHP_SAPI === 'cli' && !is_readable($path)) {
+        $path = __DIR__.'/../storage/academy-templates/iworks-'.$colour.'.svg';
+    }
     $approvedHashes = [
         'blue'=>'31b7a6a8ddd1d2df5f62a70c9a0b3a895b7cc93836b1c9a6c987d684a43b72e0',
         'green'=>'a0f6334eaaf448529ace4c9e5ab0bf50a7529f72fdb00ca85216f22dcae287e2',
