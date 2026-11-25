@@ -14,6 +14,7 @@
   dialog.querySelectorAll('[data-guide-close]').forEach(button => button.addEventListener('click', () => { markSeen(); dialog.close(); }));
   dialog.querySelectorAll('[data-guide-link]').forEach(link => link.addEventListener('click', markSeen));
   dialog.addEventListener('cancel', markSeen);
+  document.addEventListener('pointerdown',event=>{if(dialog.open&&!dialog.contains(event.target)&&!launch.contains(event.target)){markSeen();dialog.close();}});
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && dialog.open && !document.querySelector('dialog[open]:not(#ac-welcome-guide)')) { markSeen(); dialog.close(); }
   });
