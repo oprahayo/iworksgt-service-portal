@@ -136,6 +136,17 @@ try {
                     $colour=(string)($_POST['colour']??'');$course=(int)($_POST['course']??0);
                     if(!in_array($colour,['orange','purple','green','blue'],true)||!db_one('SELECT id FROM academy_courses WHERE id=:id',['id'=>$course]))$error='Select a valid course and colour.';
                     else{db_execute('UPDATE academy_courses SET colour=:colour WHERE id=:id',['colour'=>$colour,'id'=>$course]);$success='Certificate colour saved for future requests.';}
+                }elseif($mode==='verify_payment'){
+                    $cert=db_one("SELECT id,payment_reference FROM academy_certificates WHERE id=:id AND status='pending'",['id'=>(int)($_POST['id']??0)]);
+                    if(!$cert)$error='This payment is no longer pending. Refresh the certificate list.';
+                    elseif(academy_confirm($cert['payment_reference']))$success='Payment verified. Certificate issued; email delivery is queued.';
+                    else $error='Payment is not yet verified by Paystack. No certificate was issued and no new payment was initiated.';
+                }elseif($mode==='retry_email'){
+                    $cert=db_one("SELECT id,email_sent_at FROM academy_certificates WHERE id=:id AND status='issued'",['id'=>(int)($_POST['id']??0)]);
+                    if(!$cert)$error='Only issued certificates can be delivered.';
+                    elseif($cert['email_sent_at'])$success='Certificate email was already accepted by the mail server.';
+                    elseif(academy_deliver_email((int)$cert['id']))$success='Certificate email accepted by the mail server.';
+                    else $error='Email could not be sent now. The scheduled delivery worker will retry.';
                 }elseif($mode==='revoke'){
                     if(($_POST['confirm_revoke']??'')!=='1')$error='Confirm revocation before proceeding.';
                     elseif(db_query("UPDATE academy_certificates SET status='revoked' WHERE id=:id AND status='issued'",['id'=>(int)($_POST['id']??0)])->rowCount()===1)$success='Certificate revoked. Public verification and downloads are disabled for it.';
@@ -163,7 +174,10 @@ try {
     }
     if ($action==='callback'){
         $ref=(string)($_GET['reference']??'');
-        if(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref AND student_id=:student',['ref'=>$ref,'student'=>$user['id']])) academy_confirm($ref);
+        if(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref AND student_id=:student',['ref'=>$ref,'student'=>$user['id']])){
+            try{flash('academy_student_notice',academy_confirm($ref)?'Payment verified. Your certificate is available to download.':'Payment is not yet confirmed. Check again later; do not pay twice.');}
+            catch(Throwable $e){error_log('Academy callback verification deferred: '.get_class($e));flash('academy_student_notice','We are checking your payment. You can return later or check the payment status.');}
+        }
         redirect($base.'?action=certificates');
     }
     if ($action==='download'){
@@ -190,7 +204,11 @@ try {
         if ($action==='resume') redirect(academy_resume_checkout($user,(int)($_POST['graduate']??0)));
         if ($action==='recheck'){
             $ref=(string)($_POST['reference']??'');
-            if(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref AND student_id=:student',['ref'=>$ref,'student'=>$user['id']])) academy_confirm($ref);redirect($base.'?action=certificates');
+            if(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref AND student_id=:student',['ref'=>$ref,'student'=>$user['id']])){
+                try{flash('academy_student_notice',academy_confirm($ref)?'Payment verified. Your certificate is available to download.':'Payment is not yet confirmed. Check again later; do not pay twice.');}
+                catch(Throwable $e){error_log('Academy student payment verification deferred: '.get_class($e));flash('academy_student_notice','Paystack verification is temporarily unavailable. Your existing payment reference is unchanged.');}
+            }
+            redirect($base.'?action=certificates');
         }
         if ($action==='preview'){
             $g=db_one('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.id=:id AND g.student_id=:student',['id'=>(int)($_POST['graduate']??0),'student'=>$user['id']]);
