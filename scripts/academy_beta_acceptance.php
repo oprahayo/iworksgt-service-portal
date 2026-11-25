@@ -65,8 +65,10 @@ try{
         db_execute("INSERT INTO academy_graduates (student_id,course_id,duration,approved_by,approved_at) VALUES (:student,:course,'12 weeks',:admin,:approved)",['student'=>$student,'course'=>$cid,'admin'=>$admin['id'],'approved'=>now()]);
         $graduate=db_last_id();
         ac_accept(db_one('SELECT id FROM academy_graduates WHERE id=:id AND student_id=:student',['id'=>$graduate,'student'=>$student])!==null,'Enrollment and graduate approval database records');
-        $preview=academy_preview_png(['colour'=>'purple','student_name'=>'ACADEMY TEST STUDENT','course_title'=>$course['title'],'duration'=>'12 weeks']);
-        ac_accept(str_starts_with($preview,"\x89PNG\r\n\x1a\n")&&!str_contains($preview,'<svg'),'Restricted certificate preview is a flattened PNG');
+        $preview=academy_render(['colour'=>'purple','student_name'=>'ACADEMY TEST STUDENT','course_title'=>$course['title'],'duration'=>'12 weeks'],true);
+        ac_accept(str_contains($preview,'PREVIEW - NOT VALID')&&str_contains($preview,'ACADEMY TEST STUDENT'),'Original certificate preview retained');
+        $raster=academy_preview_png(['colour'=>'purple','student_name'=>'ACADEMY TEST STUDENT','course_title'=>$course['title'],'duration'=>'12 weeks']);
+        ac_accept(str_starts_with($raster,"\x89PNG\r\n\x1a\n"),'Original preview flattened with repeated watermark');
         db_execute("INSERT INTO academy_certificates (graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,created_at) VALUES (:g,:s,:number,'ACADEMY TEST STUDENT','WordPress & CMS Web Design','12 weeks','purple',10200000,:ref,:created)",['g'=>$graduate,'s'=>$student,'number'=>$number,'ref'=>$ref,'created'=>now()]);
         $cert=db_last_id();
         ac_accept(academy_owned_certificate($cert,$student)===null&&academy_owned_certificate($cert,$other)===null,'Unpaid certificate not downloadable');
