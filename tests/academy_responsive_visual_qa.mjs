@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 const dir=resolve('docs/visual-qa/academy');
 const files=(await readdir(dir)).filter(f=>f.endsWith('.html'));
-if(files.length!==9)throw Error('Expected all nine real Academy view fixtures; got '+files.length);
+if(files.length!==11)throw Error('Expected all eleven real Academy view fixtures; got '+files.length);
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 await mkdir(dir,{recursive:true});
 try{
@@ -30,11 +30,11 @@ try{
       if(!metrics.panels||metrics.studentSurfaceErrors||metrics.boxed||metrics.scroll>width+2||metrics.bad.length||metrics.tableOverflow)throw Error('Academy layout overflow or unwanted card: '+file+' at '+width);
       if(file==='student-dashboard.html'&&(metrics.stats.length!==3||Math.max(...metrics.stats.map(x=>x.top))-Math.min(...metrics.stats.map(x=>x.top))>1||metrics.stats.some(x=>x.height>90||x.width<70)))throw Error('Dashboard metrics must occupy exactly one compact row: '+width);
       if(width<=390&&file==='student-dashboard.html'&&(metrics.availableTop>650||metrics.courseRows.some(x=>x>100)))throw Error('Dashboard content too tall on phone: '+JSON.stringify(metrics));
-      if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-enrollments.html'].includes(file)){
+      if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-enrollments.html','student-learning.html','admin-builder.html'].includes(file)){
         await page.screenshot({path:resolve(dir,file.replace('.html','-'+width+'.png')),fullPage:true,animations:'disabled'});
       }
     }
     await page.close();
   }
 }finally{await browser.close();}
-console.log('All nine Academy views passed purposeful-panel and responsive checks at four viewport widths.');
+console.log('All eleven Academy views passed purposeful-panel and responsive checks at four viewport widths.');
