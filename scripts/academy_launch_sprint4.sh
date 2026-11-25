@@ -2,7 +2,7 @@
 # Authorized live Academy activation; no live or sandbox payment initialization.
 set -Eeuo pipefail
 umask 077
-TARGET=d4685d2dd3fba7559f0bc991d6e3f355c6d0621c
+TARGET=47a54dbb3f53314535492ee47ec417e35939aed5
 REPO=https://raw.githubusercontent.com/oprahayo/iworksgt-service-portal
 ROOT="$(readlink -f "$HOME/public_html/portal.iworksgt.com")"
 HTML="$(readlink -f "$HOME/public_html")"
