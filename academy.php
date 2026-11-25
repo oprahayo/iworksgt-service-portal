@@ -158,8 +158,8 @@ try {
     if (!is_email_verified($user)) { http_response_code(403);exit('Verify your email first.'); }
     if ($action==='learn'){
         $course=db_one("SELECT c.title,en.status FROM academy_enrollments en JOIN academy_courses c ON c.id=en.course_id WHERE en.student_id=:student AND en.course_id=:course AND en.status IN ('enrolled','completed') AND c.active=1",['student'=>$user['id'],'course'=>(int)($_GET['course']??0)]);
-        if(!$course){http_response_code(403);ac_head('Learning access unavailable');echo '<p>Your course application must be approved before you can access the learning area.</p><a href="'.$base.'#courses">My courses</a>';ac_end();exit;}
-        ac_head($course['title']);echo '<section><h2>Your learning area</h2><p>Enrollment approved. Course lessons and modules have not been published yet. You will be able to access them here when available.</p><a href="'.$base.'#courses">Back to my courses</a></section>';ac_end();exit;
+        if(!$course){http_response_code(403);ac_head('Learning access unavailable');echo '<p>Your course application must be approved before you can access the learning area.</p><a href="'.$base.'?action=courses">My courses</a>';ac_end();exit;}
+        ac_head($course['title']);echo '<section><h2>Your learning area</h2><p>Enrollment approved. Course lessons and modules have not been published yet. You will be able to access them here when available.</p><a href="'.$base.'?action=courses">Back to my courses</a></section>';ac_end();exit;
     }
     if ($action==='callback'){
         $ref=(string)($_GET['reference']??'');
