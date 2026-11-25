@@ -147,3 +147,16 @@ echo 'Additive learning tables only; no existing records or payment settings cha
 
 curl -fsSL --retry 2 "$REPO/$TARGET/scripts/academy_notification_health.php" -o "$WORK/notification-health.php"
 php "$WORK/notification-health.php" "$ROOT" || echo "WARNING notification audit unavailable; release installed."
+
+if [[ "$AFTER" == 0 ]]; then
+  echo 'Live certificate checkout was already disabled. Optional activation uses the previously confirmed sandbox dashboard payment, not another checkout.'
+  echo 'The post-payment sandbox API check and isolated backup restore are still outstanding; the first live payment and certificate email require confirmation.'
+  echo 'Type ENABLE to activate the existing NGN 102,000 certificate checkout, or press Enter to leave it disabled.'
+  if read -r confirmation </dev/tty && [[ "$confirmation" == ENABLE ]]; then
+    curl -fsSL --retry 2 "$REPO/c4ccc3d616d88008082ad26dd3a9555e0065014f/scripts/academy_launch_gate.php" -o "$WORK/gate.php"
+    php -l "$WORK/gate.php"
+    php "$WORK/gate.php" "$ROOT" check
+    php "$WORK/gate.php" "$ROOT" enable
+    php "$WORK/gate.php" "$ROOT" status
+  fi
+fi
