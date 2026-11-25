@@ -65,18 +65,26 @@ try{
         await course.selectOption({index:0});
         if(await name.isVisible()||await confirmation.isVisible()||await confirmation.isChecked())throw Error('Clearing course must reset later steps');
         await request.locator(':scope > summary').click();
+        const dialog=page.locator('#ac-cert-dialog');
         const declined=workspace.locator('details.ac-cert-record').filter({hasText:'Training could not be verified.'});
-        await workspace.locator('section.ac-cert-group').nth(1).locator(':scope > details > summary').click();
+        if(await declined.locator('.ac-query-reason').isVisible())throw Error('Decline reason should start hidden');
         await declined.locator(':scope > summary').click();
-        if(!await declined.locator('.ac-query-reason').isVisible())throw Error('Decline reason did not expand');
-        await declined.locator(':scope > summary').click();
-        await workspace.locator('section.ac-cert-group').nth(1).locator(':scope > details > summary').click();
-        const approved=workspace.locator('details.ac-cert-record').filter({has:page.getByRole('button',{name:'Get Certificate',exact:true,includeHidden:true})}).first();
+        await dialog.waitFor({state:'visible'});
+        if(!await dialog.locator('.ac-query-reason').isVisible())throw Error('Decline reason not in dialog');
+        await dialog.getByRole('button',{name:'Close certificate details'}).click();
+        await dialog.waitFor({state:'hidden'});
+        const approved=workspace.locator('details.ac-cert-record').filter({has:page.locator('button').filter({hasText:'Get Certificate'})}).first();
         if(await approved.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Approved certificate form starts expanded');
         await approved.locator(':scope > summary').click();
-        if(!await approved.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Approved certificate action not visible after expansion');
-        if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Expanded certificate form overflows viewport');
-        await approved.locator(':scope > summary').click();
+        await dialog.waitFor({state:'visible'});
+        if(!await dialog.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Approved certificate action not in dialog');
+        const bounds=await dialog.boundingBox();
+        if(!bounds||bounds.x<0||bounds.y<0||bounds.x+bounds.width>width+1||bounds.y+bounds.height>901)throw Error('Certificate dialog exceeds viewport');
+        await page.keyboard.press('Escape');
+        await dialog.waitFor({state:'hidden'});
+        await page.waitForFunction(()=>document.querySelector('#ac-cert-dialog [data-cert-dialog-body]').childElementCount===0);
+        if(await approved.getByRole('button',{name:'Get Certificate',exact:true}).isVisible())throw Error('Record not restored after closing');
+        if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Certificate history overflows viewport');
       }
       const metrics=await page.evaluate(()=>{
         const root=document.querySelector('.academy-workspace');
