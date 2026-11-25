@@ -24,22 +24,35 @@ try{
     if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190)throw new AcademySandboxFailure('Invalid test email');
     // Deliberately not an IWGA reference: even a signed test event cannot match
     // a production certificate or invoice.
-    $ref='academy-qa-'.bin2hex(random_bytes(16));
+    echo "Existing Academy TEST transaction reference (from Paystack Test Mode dashboard), or Enter to start a new test: ";
+    $existingRef=trim((string)fgets($tty));
+    if($existingRef!==''&&!preg_match('/^academy-qa-[a-f0-9]{32}$/D',$existingRef))throw new AcademySandboxFailure('Enter only the reference of a previous Academy sandbox transaction.');
+    $ref=$existingRef!==''?$existingRef:'academy-qa-'.bin2hex(random_bytes(16));
     $amount=ACADEMY_FEE_MINOR;
+    if($existingRef===''){
     $result=gateway_json_post('https://api.paystack.co/transaction/initialize',[
         'email'=>$email,'amount'=>$amount,'currency'=>'NGN','reference'=>$ref,
         'channels'=>['card'],'metadata'=>['purpose'=>'ACADEMY SANDBOX TEST - NO CERTIFICATE']
     ],$secret);
     $url=(string)($result['data']['authorization_url']??'');
     sandbox_check(($result['status']??false)===true&&($result['data']['reference']??'')===$ref&&academy_checkout_url_valid($url),'Actual Paystack test checkout initialized');
-    echo "\nOpen the following TEST checkout URL in a browser:\n".$url."\n";
+    echo "\nTest reference: ".$ref."\nOpen the following TEST checkout URL in a browser:\n".$url."\n";
     echo "Use Paystack's official sandbox test card, not a real bank card. No money will move.\n";
     echo "Test card: 4084 0840 8408 4081; CVV: 408; any future expiry date.\n";
     echo "After completing the TEST checkout, press Enter here to verify: ";
-    fgets($tty);fclose($tty);
+    fgets($tty);
+    }
+    fclose($tty);
     $verified=gateway_json_get('https://api.paystack.co/transaction/verify/'.rawurlencode($ref),$secret);
     $data=$verified['data']??[];
     sandbox_check(($data['domain']??'')==='test','Paystack confirms test-mode transaction');
+    $status=(string)($data['status']??'missing');
+    $safeStatus=in_array($status,['success','failed','abandoned','pending','ongoing','processing','queued','reversed'],true)?$status:'unknown';
+    echo "Provider transaction status: ".$safeStatus."\n";
+    echo "Reference matches: ".(($data['reference']??'')===$ref?'yes':'no')."\n";
+    echo "Currency NGN: ".(($data['currency']??'')==='NGN'?'yes':'no')."\n";
+    echo "Exact expected amount: ".(is_int($data['amount']??null)&&$data['amount']===$amount?'yes':'no')."\n";
+    echo "Numeric transaction ID: ".(preg_match('/^[0-9]{1,80}$/D',(string)($data['id']??''))===1?'yes':'no')."\n";
     sandbox_check(academy_verified_payment_matches(['payment_reference'=>$ref,'amount_minor'=>$amount],$verified),'Actual Paystack success, exact NGN amount and reference verified with production validation logic');
     sandbox_check(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref',['ref'=>$ref])===null,'No production certificate record created');
     sandbox_check(!academy_checkout_enabled(),'Live checkout still disabled');
