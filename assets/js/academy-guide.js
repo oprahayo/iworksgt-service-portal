@@ -11,8 +11,9 @@
   launch.type = 'button'; launch.className = 'ac-guide-replay'; launch.textContent = 'Open welcome guide';
   launch.addEventListener('click', () => { if (!dialog.open) dialog.showModal(); });
   help.querySelector('.ac-guide-body').appendChild(launch);
-  dialog.querySelectorAll('[data-guide-close]').forEach(button => button.addEventListener('click', () => dialog.close()));
+  dialog.querySelectorAll('[data-guide-close]').forEach(button => button.addEventListener('click', () => { markSeen(); dialog.close(); }));
   dialog.querySelectorAll('[data-guide-link]').forEach(link => link.addEventListener('click', markSeen));
+  dialog.addEventListener('cancel', markSeen);
   dialog.addEventListener('close', () => { markSeen(); if (summary) summary.focus({preventScroll:true}); });
   if (!seen && dialog.dataset.guideAuto === '1') dialog.showModal();
 })();
