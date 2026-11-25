@@ -80,11 +80,26 @@ try{
     [$status,$html]=qa_http($ch,'/index.php?page=otp',['csrf_token'=>$csrf,'otp_challenge_csrf'=>$challenge,'form_action'=>'verify_otp','otp_code'=>$otp]);
     unset($otp);
     qa_assert($status===200&&is_email_verified(find_user_by_email($email)??[])&&stripos($html,'My Certificates')!==false,'Real OTP verified and student dashboard reached');
+    $stage='student workspace routes';
+    foreach(['dashboard'=>'Available courses','courses'=>'My courses &amp; applications','certificates'=>'My certificates','profile'=>'Personal information'] as $screen=>$marker){
+        [$status,$html]=qa_http($ch,'/academy.php?action='.$screen);
+        qa_assert($status===200&&str_contains($html,$marker),'Real student '.$screen.' screen');
+    }
+    $stage='course application';
+    $course=db_one('SELECT id FROM academy_courses WHERE active=1 ORDER BY id LIMIT 1');
+    qa_assert($course!==null,'An active Academy course is available');
+    [$status,$html]=qa_http($ch,'/academy.php?action=courses');
+    $csrf=qa_hidden($html,'csrf_token');
+    [$status,$html]=qa_http($ch,'/academy.php?action=enroll',['csrf_token'=>$csrf,'course'=>(int)$course['id'],'return_to'=>'courses']);
+    $application=db_one('SELECT status FROM academy_enrollments WHERE student_id=:student AND course_id=:course',['student'=>$user['id'],'course'=>$course['id']]);
+    qa_assert($status===200&&($application['status']??'')==='requested'&&str_contains($html,'Pending application'),'Real course application pending administrator approval');
+    [$status,$html]=qa_http($ch,'/academy.php?action=learn&course='.(int)$course['id']);
+    qa_assert($status===403,'Unapproved student cannot access learning area');
     [$status,$html]=qa_http($ch,'/index.php?page=jobs');
     qa_assert($status===403,'Student denied access to customer/staff jobs');
     [$status,$html]=qa_http($ch,'/academy.php?action=admin');
     qa_assert($status===403,'Student denied access to Academy administration');
-    echo "REAL STUDENT OTP AND DASHBOARD CHECKS PASSED.\n";
+    echo "REAL STUDENT OTP, WORKSPACE AND COURSE APPLICATION CHECKS PASSED.\n";
 }catch(Throwable $e){
     if($e instanceof AcademyQaFailure)fwrite(STDERR,"BLOCK ".$e->getMessage()."\n");
     elseif($e instanceof PDOException){
