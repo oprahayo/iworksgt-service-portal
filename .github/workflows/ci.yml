@@ -224,3 +224,9 @@ jobs:
           php scripts/migrate_academy.php --backup-confirmed
       - name: Verify real database constraints and simulated gateway issuance
         run: php tests/academy_database_integration_test.php
+
+      - name: Render all Academy administration sections using MySQL fixtures
+        run: |
+          for tab in students student enrollments courses certificates; do
+            php tests/academy_admin_render_test.php "$tab"
+          done
