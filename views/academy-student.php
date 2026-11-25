@@ -12,7 +12,7 @@ function ac_student_courses(array $courses,bool $dashboard=false):void{
     echo '<div class="ac-course-grid">';
     foreach($courses as $c){
         $status=(string)($c['enrollment_status']??'');
-        echo '<article class="ac-course-card"><span class="ac-course-icon"><i class="bi bi-book" aria-hidden="true"></i></span><h3>'.e($c['title']).'</h3><p class="ac-course-status">'.e(ac_student_status($status)).'</p>';
+        echo '<article class="ac-course-card"><span class="ac-course-icon"><i class="bi bi-book" aria-hidden="true"></i></span><h3>'.e($c['title']).'</h3><p class="ac-course-status">'.e($status===''?'':ac_student_status($status)).'</p>';
         if(in_array($status,['enrolled','completed'],true)&&$c['active'])echo '<a class="ac-student-primary" href="/academy.php?action=learn&amp;course='.(int)$c['id'].'">Open course</a>';
         elseif($status==='') {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><input type="hidden" name="return_to" value="'.($dashboard?'dashboard':'courses').'"><button>Apply for course</button></form>';}
         elseif($status==='requested')echo '<small>Waiting for Academy review.</small>';
@@ -74,7 +74,7 @@ if($screen==='dashboard'){
         foreach($reviewCourses as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';
         echo '</select></label><button>Request course review</button></form>';
     }else{echo '<p>Check your existing applications or approved certificates.</p>';ac_student_link('certificates','My Certificates');}
-    echo '</section><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2><p>Choose a skill you want to learn.</p></div>';ac_student_link('courses','View my courses');echo '</div>';
+    echo '</section><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section>';
 }elseif($screen==='courses'){
     echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
@@ -85,7 +85,7 @@ if($screen==='dashboard'){
     echo '<section class="ac-student-panel"><h2>My certificates</h2><p>Request, preview or download certificates for your approved completed courses.</p>';
     if(!$graduates){echo '<p class="ac-student-empty">No approved certificates yet. If you have completed training, request a course review from your dashboard.</p>';ac_student_link('dashboard','Go to dashboard','ac-student-primary');}
     foreach($graduates as $g){
-        echo '<article class="ac-cert-card"><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).' · '.e(ucfirst($g['colour'])).' certificate</p>';
+        echo '<article class="ac-cert-card"><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).'</p>';
         if(!$g['certificate_id']){ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';ac_input('name','Name on certificate',$user['full_name']);echo '<button>Get Certificate</button></form>';}
         elseif($g['certificate_status']==='issued'){echo '<p>Issued: '.e($g['certificate_number']).'</p><a class="ac-student-primary" href="/academy.php?action=download&amp;id='.(int)$g['certificate_id'].'">Download Certificate</a>';}
         elseif($g['certificate_status']==='pending'){echo '<p>Payment pending. Continue your existing payment or check its status.</p>';if(!empty($g['checkout_url'])&&academy_checkout_enabled()){ac_form('resume');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><button>Continue Payment</button></form>';}ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($g['payment_reference']).'"><button>Check Payment</button></form>';}
