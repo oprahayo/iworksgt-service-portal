@@ -46,7 +46,13 @@ if ($user && (string) ($user['role'] ?? '') === 'client') {
 }
 
 $sidebarItems = [];
-if ($user && (string)($user['role'] ?? '') === 'author') {
+if ($user && (string)($user['role'] ?? '') === 'student') {
+    $sidebarItems = [
+        ['page'=>'academy','label'=>'My Certificates','icon'=>'bi-award','url'=>'/academy.php#certificates'],
+        ['page'=>'academy_courses','label'=>'My Courses','icon'=>'bi-book','url'=>'/academy.php#courses'],
+        ['page'=>'academy_profile','label'=>'My Profile','icon'=>'bi-person','url'=>'/academy.php#profile'],
+    ];
+} elseif ($user && (string)($user['role'] ?? '') === 'author') {
     $sidebarItems = [
         ['page'=>'dashboard','label'=>'Dashboard','icon'=>'bi-speedometer2','url'=>url('dashboard')],
         ['page'=>'blog','label'=>'Insights','icon'=>'bi-journal-richtext','url'=>url('blog')],
@@ -280,7 +286,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <nav class="sidebar-nav">
       <?php
         $portalGroups = [
-          'dashboard'=>'OVERVIEW',
+          'dashboard'=>'OVERVIEW','academy'=>'ACADEMY','academy_courses'=>'ACADEMY','academy_profile'=>'ACADEMY',
           'jobs'=>'SERVICE DELIVERY','support'=>'SERVICE DELIVERY',
           'messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
           'services'=>'SERVICE CATALOGUE','forms'=>'SERVICE CATALOGUE',
@@ -333,6 +339,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 
       <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
         <a class="btn btn-sm btn-outline-secondary iw-ops-preview-link" href="<?= e(public_url($publicPreviewPage)) ?>" title="Open corresponding public website page in this tab"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-md-inline">View website</span></a>
+        <?php if (($user['role']??'') !== 'student'): ?>
         <a class="btn btn-sm btn-outline-secondary position-relative" id="topbarNotificationBtn" href="<?= e(url('notifications')) ?>" title="Notifications">
           <i class="bi bi-bell"></i>
           <span
@@ -344,6 +351,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
             <?= (int) $unreadCount ?>
           </span>
         </a>
+        <?php endif; ?>
         <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('profile')) ?>"><?= e($user['full_name']) ?></a>
         <a class="btn btn-sm btn-primary" href="logout.php">Logout</a>
       </div>
