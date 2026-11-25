@@ -78,7 +78,7 @@ try {
             $ip=iworks_auth_ip(); if (!iworks_auth_limit_allows('academy_register_ip',$ip,8,3600)) throw new RuntimeException('Try again later.');
             iworks_auth_limit_record('academy_register_ip',$ip,3600);
             $id=create_user(['full_name'=>$name,'email'=>$email,'phone'=>$phone,'password'=>$password,'role'=>'student']);
-            start_otp_challenge($id,'verify_email'); redirect(portal_url('otp'));
+            start_otp_challenge($id,'verify_email',!empty($_POST['remember_30days'])); redirect(portal_url('otp'));
             } catch (Throwable $e) {
                 error_log('Academy registration failed: '.get_class($e));
                 flash('error','Unable to register. Check your details, use a matching password of at least 12 characters, or sign in if you already have an account.');
