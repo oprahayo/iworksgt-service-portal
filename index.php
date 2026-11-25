@@ -532,6 +532,17 @@ try {
         iworks_order_intent_capture($_GET);
     }
 
+    // Student accounts have an independent workspace and must not inherit staff permissions.
+    if (is_logged_in() && user_role() === 'student' && !$isPublicPageRoute) {
+        if (in_array((string)$page, ['dashboard','login','register','otp','profile'], true)) {
+            redirect('https://portal.iworksgt.com/academy.php');
+        }
+        if (!in_array((string)$page, ['public_auth_status'], true)) {
+            http_response_code(403);
+            exit('Student accounts can access their own Academy dashboard only.');
+        }
+    }
+
     // Editorial-only accounts must never inherit access to jobs, payments,
     // other users, settings or staff operations through broadly-allowed routes.
     if (is_logged_in() && user_role() === 'author'
