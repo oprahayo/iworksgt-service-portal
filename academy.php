@@ -19,7 +19,7 @@ function ac_head(string $title): void {
     if ($GLOBALS['academy_native_shell']) {
         $_GET['page']='academy';
         require __DIR__.'/views/partials/header.php';
-        echo '<link rel="stylesheet" href="/assets/css/academy.css"><div class="academy-workspace"><h1>'.e($title).'</h1>';
+        echo '<link rel="stylesheet" href="/assets/css/academy.css?v=2"><div class="academy-workspace"><h1>'.e($title).'</h1>';
         return;
     }
     echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.e($title).' | iWorks Global</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/assets/css/brand-color-pass.css"><style>*{box-sizing:border-box}body{font-family:Outfit,system-ui,sans-serif;color:var(--brand-text);margin:0}header,main{max-width:960px;margin:auto;padding:24px}header{display:flex;align-items:center;justify-content:space-between}header img{width:180px;max-width:45vw}section,article,form{background:white;border:1px solid #e1e4e8;border-radius:12px;padding:20px;margin:16px 0}label{display:block;margin:12px 0}input,select{display:block;width:100%;padding:12px;border:1px solid #bfc5ca;border-radius:6px;font:inherit}button{min-height:44px;background:var(--brand-primary);color:white;border:0;border-radius:6px;padding:12px 18px;font:inherit;cursor:pointer}a{color:var(--brand-primary)}nav a{margin-right:16px}small{color:#555}h1{font-size:28px}img.preview{max-width:100%;height:auto}@media(max-width:600px){header,main{padding:16px}button{width:100%}h1{font-size:24px}section,article,form{padding:16px}}</style><header><img src="/assets/branding/iworks-desktop.svg" alt="iWorks Global"><a href="/logout.php">Sign out</a></header><main><h1>'.e($title).'</h1>';
@@ -72,43 +72,65 @@ try {
     if ($action==='admin') {
         require_roles(['admin']);
         if(method_is('POST')){
-            require_csrf();$mode=(string)($_POST['mode']??'');
-            if($mode==='create_course'){
-                $title=trim((string)($_POST['title']??''));$colour=(string)($_POST['colour']??'');
-                $slug=trim(preg_replace('/[^a-z0-9]+/','-',strtolower($title)),'-');
-                if($title===''||strlen($title)>160||$slug===''||strlen($slug)>100||!in_array($colour,['orange','purple','green','blue'],true)) throw new RuntimeException('Invalid course.');
-                db_execute('INSERT INTO academy_courses (slug,title,colour) VALUES (:slug,:title,:colour)',compact('slug','title','colour'));
-            } elseif($mode==='enrollment'){
-                $status=(string)($_POST['status']??'');
-                if(!in_array($status,['enrolled','cancelled'],true)) throw new RuntimeException('Invalid enrollment status.');
-                db_execute("UPDATE academy_enrollments SET status=:status,updated_at=:updated WHERE id=:id AND status IN ('requested','enrolled')",['status'=>$status,'updated'=>now(),'id'=>(int)$_POST['id']]);
-            } elseif($mode==='approve'){
-                $student=find_user_by_email((string)($_POST['email']??''));$course=(int)($_POST['course']??0);$duration=trim((string)($_POST['duration']??''));
-                if(!$student||$student['role']!=='student'||!is_email_verified($student)||$duration===''||strlen($duration)>80||!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course])) throw new RuntimeException('Select a verified student, active course and duration.');
-                db()->beginTransaction();
-                try {
-                db_execute('INSERT INTO academy_graduates (student_id,course_id,duration,approved_by,approved_at) VALUES (:student,:course,:duration,:admin,:approved)',['student'=>$student['id'],'course'=>$course,'duration'=>$duration,'admin'=>current_user()['id'],'approved'=>now()]);
-                db_execute("INSERT INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'completed',:created,:updated) ON DUPLICATE KEY UPDATE status='completed',updated_at=VALUES(updated_at)",['student'=>$student['id'],'course'=>$course,'created'=>now(),'updated'=>now()]);
-                db()->commit();
-                } catch(Throwable $e){if(db()->inTransaction())db()->rollBack();throw $e;}
-            } elseif($mode==='colour'){
-                $colour=(string)($_POST['colour']??'');if(!in_array($colour,['orange','purple','green','blue'],true)) throw new RuntimeException('Invalid colour.');
-                db_execute('UPDATE academy_courses SET colour=:colour WHERE id=:id',['colour'=>$colour,'id'=>(int)$_POST['course']]);
-            } elseif($mode==='revoke'){
-                db_execute("UPDATE academy_certificates SET status='revoked' WHERE id=:id AND status='issued'",['id'=>(int)$_POST['id']]);
+            require_csrf();
+            $mode=(string)($_POST['mode']??'');
+            $tab=(string)($_POST['return_tab']??'students');
+            if(!in_array($tab,['students','student','enrollments','courses','certificates'],true))$tab='students';
+            $studentId=(int)($_POST['student_id']??0);
+            $destination=$base.'?'.http_build_query(['action'=>'admin','tab'=>$tab]+($tab==='student'&&$studentId>0?['id'=>$studentId]:[]));
+            $error='';$success='';
+            try{
+                if($mode==='create_course'){
+                    $title=trim((string)($_POST['title']??''));$colour=(string)($_POST['colour']??'');
+                    $slug=trim(preg_replace('/[^a-z0-9]+/','-',strtolower($title)),'-');
+                    if($title===''||mb_strlen($title)>160||$slug===''||strlen($slug)>100||!in_array($colour,['orange','purple','green','blue'],true))$error='Enter a course title and select a valid certificate colour.';
+                    elseif(db_one('SELECT id FROM academy_courses WHERE slug=:slug',['slug'=>$slug]))$error='A course with that title already exists.';
+                    else{db_execute('INSERT INTO academy_courses (slug,title,colour) VALUES (:slug,:title,:colour)',compact('slug','title','colour'));$success='Course added.';}
+                }elseif($mode==='enrollment'){
+                    $status=(string)($_POST['status']??'');$id=(int)($_POST['id']??0);
+                    if(!in_array($status,['enrolled','cancelled'],true)||$id<1)$error='Choose a valid enrollment action.';
+                    else{
+                        $changed=db_query("UPDATE academy_enrollments en JOIN users u ON u.id=en.student_id SET en.status=:status,en.updated_at=:updated WHERE en.id=:id AND en.status IN ('requested','enrolled') AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active'",['status'=>$status,'updated'=>now(),'id'=>$id])->rowCount();
+                        if($changed>0)$success=$status==='enrolled'?'Enrollment accepted.':'Enrollment cancelled.';
+                        else $error='This enrollment is no longer available or has already changed.';
+                    }
+                }elseif($mode==='approve'){
+                    $course=(int)($_POST['course']??0);$duration=trim((string)($_POST['duration']??''));
+                    if($studentId<1||$course<1||$duration===''||mb_strlen($duration)>80)$error='Select the completed course and enter its training duration.';
+                    else{
+                        db()->beginTransaction();
+                        $student=db_one("SELECT * FROM users WHERE id=:id AND role='student' AND deleted_at IS NULL FOR UPDATE",['id'=>$studentId]);
+                        if(!$student||!is_email_verified($student)||$student['status']!=='active'||$student['account_state']!=='active')$error='This student must have an active, email-verified account.';
+                        elseif(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course]))$error='Select an active course.';
+                        elseif(db_one('SELECT id FROM academy_graduates WHERE student_id=:student AND course_id=:course',['student'=>$studentId,'course'=>$course]))$error='This student is already approved for this course.';
+                        else{
+                            db_execute('INSERT INTO academy_graduates (student_id,course_id,duration,approved_by,approved_at) VALUES (:student,:course,:duration,:admin,:approved)',['student'=>$studentId,'course'=>$course,'duration'=>$duration,'admin'=>current_user()['id'],'approved'=>now()]);
+                            db_execute("INSERT INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'completed',:created,:updated) ON DUPLICATE KEY UPDATE status='completed',updated_at=VALUES(updated_at)",['student'=>$studentId,'course'=>$course,'created'=>now(),'updated'=>now()]);
+                            $success='Training approved. The student can now request a certificate.';
+                        }
+                        if($error!=='')db()->rollBack();else db()->commit();
+                    }
+                }elseif($mode==='colour'){
+                    $colour=(string)($_POST['colour']??'');$course=(int)($_POST['course']??0);
+                    if(!in_array($colour,['orange','purple','green','blue'],true)||!db_one('SELECT id FROM academy_courses WHERE id=:id',['id'=>$course]))$error='Select a valid course and colour.';
+                    else{db_execute('UPDATE academy_courses SET colour=:colour WHERE id=:id',['colour'=>$colour,'id'=>$course]);$success='Certificate colour saved for future requests.';}
+                }elseif($mode==='revoke'){
+                    if(($_POST['confirm_revoke']??'')!=='1')$error='Confirm revocation before proceeding.';
+                    elseif(db_query("UPDATE academy_certificates SET status='revoked' WHERE id=:id AND status='issued'",['id'=>(int)($_POST['id']??0)])->rowCount()===1)$success='Certificate revoked. Public verification and downloads are disabled for it.';
+                    else $error='Certificate is no longer available for revocation.';
+                }else $error='Unknown Academy action.';
+            }catch(Throwable $e){
+                if(db()->inTransaction())db()->rollBack();
+                error_log('Academy admin action failed: '.get_class($e));
+                $error='The change could not be saved. Refresh and try again.';
             }
-            redirect($base.'?action=admin');
+            if($error!=='')flash('academy_admin_error',$error);
+            elseif($success!=='')flash('academy_admin_notice',$success);
+            redirect($destination);
         }
-        $courses=db_all('SELECT * FROM academy_courses ORDER BY title');
-        ac_head('Academy management'); echo '<h2>Create a course</h2>'; ac_form('admin');echo '<input type="hidden" name="mode" value="create_course">';ac_input('title','Course title');echo '<label>Certificate colour<select name="colour">';foreach(['orange','purple','green','blue'] as $colour)echo '<option>'.e($colour).'</option>';echo '</select></label><button>Create Course</button></form>';
-        echo '<h2>Enrollment requests</h2>';
-        foreach(db_all("SELECT en.*,u.full_name,c.title FROM academy_enrollments en JOIN users u ON u.id=en.student_id JOIN academy_courses c ON c.id=en.course_id WHERE en.status IN ('requested','enrolled') ORDER BY en.id DESC LIMIT 100") as $en){
-            echo '<article>'.e($en['full_name']).' — '.e($en['title']).' — '.e($en['status']);ac_form('admin');echo '<input type="hidden" name="mode" value="enrollment"><input type="hidden" name="id" value="'.(int)$en['id'].'"><label>Status<select name="status"><option value="enrolled">Enrolled</option><option value="cancelled">Cancelled</option></select></label><button>Save</button></form></article>';
-        }
-        echo '<h2>Approve existing graduate</h2>'; ac_form('admin');echo '<input type="hidden" name="mode" value="approve">';ac_input('email','Verified student email','','email');echo '<label>Course<select name="course">';
-        foreach($courses as $c) echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';echo '</select></label>';ac_input('duration','Training duration (e.g. 12 weeks)');echo '<button>Approve course completion</button></form><h2>Course certificate colours</h2>';
-        foreach($courses as $c){ac_form('admin');echo '<input type="hidden" name="mode" value="colour"><input type="hidden" name="course" value="'.(int)$c['id'].'"><strong>'.e($c['title']).'</strong><select name="colour">';foreach(['orange','purple','green','blue'] as $colour)echo '<option'.($colour===$c['colour']?' selected':'').'>'.e($colour).'</option>';echo '</select><button>Save colour</button></form>';}
-        echo '<h2>Certification records</h2>';foreach(db_all('SELECT * FROM academy_certificates ORDER BY id DESC LIMIT 100') as $c){echo '<article>'.e($c['student_name']).' — '.e($c['course_title']).' — '.e($c['status']).' — '.e($c['certificate_number']);if($c['status']==='issued'){ac_form('admin');echo '<input type="hidden" name="mode" value="revoke"><input type="hidden" name="id" value="'.(int)$c['id'].'"><button>Revoke</button></form>';}echo '</article>';}ac_end();exit;
+        define('IWORKS_ACADEMY_ADMIN_VIEW',true);
+        require __DIR__.'/views/academy-admin.php';
+        exit;
     }
     require_roles(['student']);$user=current_user();
     if (!is_email_verified($user)) { http_response_code(403);exit('Verify your email first.'); }
