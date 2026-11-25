@@ -227,14 +227,18 @@ jobs:
           php scripts/migrate_academy_learning.php --backup-confirmed
           php scripts/migrate_academy_assessments.php --backup-confirmed
           php scripts/migrate_academy_assessments.php --backup-confirmed
+          php scripts/migrate_academy_requests.php --backup-confirmed
+          php scripts/migrate_academy_requests.php --backup-confirmed
       - name: Verify real database constraints and simulated gateway issuance
         run: php tests/academy_database_integration_test.php
 
+      - name: Verify certification request lifecycle
+        run: php tests/academy_requests_integration_test.php
       - name: Render all Academy administration sections using MySQL fixtures
         env:
           ACADEMY_VISUAL_FIXTURES: '1'
         run: |
-          for tab in students student enrollments courses certificates; do
+          for tab in students student enrollments courses certificates requests; do
             php tests/academy_admin_render_test.php "$tab"
           done
 
