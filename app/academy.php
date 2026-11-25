@@ -6,7 +6,14 @@ const ACADEMY_VERIFY_URL = 'https://portal.iworksgt.com/verify';
 function academy_template(string $colour): string {
     if (!in_array($colour, ['orange','purple','green','blue'], true)) throw new RuntimeException('Invalid template.');
     $path = __DIR__.'/../storage/academy-templates/iworks-'.$colour.'.svg';
+    $approvedHashes = [
+        'blue'=>'31b7a6a8ddd1d2df5f62a70c9a0b3a895b7cc93836b1c9a6c987d684a43b72e0',
+        'green'=>'a0f6334eaaf448529ace4c9e5ab0bf50a7529f72fdb00ca85216f22dcae287e2',
+        'orange'=>'feb655f2c721314f77102f25e3aa7793288a40daaa3db75caf1fe8867816262e',
+        'purple'=>'4934580781f3e36530c4ae020efe2f31a6d2c783e9761951791a2f628f971b51'
+    ];
     $svg = is_readable($path) ? file_get_contents($path) : false;
+    if (!$svg || !hash_equals($approvedHashes[$colour],hash('sha256',$svg))) throw new RuntimeException('Approved certificate artwork not installed.');
     if (!$svg || !str_contains($svg, '{{STUDENT_FULL_NAME}}') || !str_contains($svg,'id="verification_qr"')) {
         throw new RuntimeException('Certificate template not installed.');
     }
@@ -55,10 +62,11 @@ function academy_pdf(array $cert): string {
     if (!is_executable($binary) || !function_exists('proc_open')) throw new RuntimeException('PDF renderer unavailable.');
     $input = tempnam(sys_get_temp_dir(),'iwga-');
     if ($input === false) throw new RuntimeException('Unable to prepare certificate.');
+    $svgInput = $input.'.svg';
     $output = $input.'.pdf';
     try {
-        file_put_contents($input,academy_render($cert));
-        $process = proc_open([$binary,'--export-type=pdf','--export-filename='.$output,$input],
+        file_put_contents($svgInput,academy_render($cert));
+        $process = proc_open([$binary,'--export-type=pdf','--export-filename='.$output,$svgInput],
             [0=>['pipe','r'],1=>['file','/dev/null','a'],2=>['file','/dev/null','a']],$pipes);
         if (!is_resource($process)) throw new RuntimeException('PDF renderer unavailable.');
         fclose($pipes[0]);
@@ -66,7 +74,7 @@ function academy_pdf(array $cert): string {
         $pdf = file_get_contents($output);
         if (!$pdf || !str_starts_with($pdf,'%PDF-')) throw new RuntimeException('Invalid PDF.');
         return $pdf;
-    } finally { @unlink($input); @unlink($output); }
+    } finally { @unlink($input); @unlink($svgInput); @unlink($output); }
 }
 function academy_confirm(string $reference): bool {
     if (!preg_match('/^IWGA-[a-f0-9]{32}$/D',$reference)) return false;
