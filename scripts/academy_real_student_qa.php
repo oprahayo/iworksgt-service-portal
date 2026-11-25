@@ -37,25 +37,38 @@ function qa_http($ch,string $path,?array $fields=null):array{
     }
     throw new AcademyQaFailure('Too many redirects');
 }
-$ch=null;$email='';$password='';$attempted=false;$tag=bin2hex(random_bytes(5));$name='ACADEMY QA TEST '.$tag;
+$ch=null;$email='';$password='';$attempted=false;$stage='initialization';$tag=bin2hex(random_bytes(5));$name='ACADEMY QA TEST '.$tag;
 try{
     qa_assert(!academy_checkout_enabled(),'Live certificate checkout disabled');
     $secret=academy_paystack_key();
     $mode=str_starts_with($secret,'sk_test_')?'TEST':(str_starts_with($secret,'sk_live_')?'LIVE':'UNKNOWN');
     unset($secret);
     echo "Paystack configured key mode: ".$mode." (key not displayed; no gateway request made)\n";
-    echo "Enter a fresh email alias you control for the real student OTP test: ";
-    $email=strtolower(trim((string)fgets(STDIN)));
-    if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190||db_one('SELECT id FROM users WHERE email=:email',['email'=>$email]))throw new AcademyQaFailure('Use an unused email address you control; existing accounts are never changed');
+    // Use a fresh forwarding alias, not the existing administrator's address.
+    $email='academyqa-'.$tag.'@iworkscac.33mail.com';
+    echo "Proposed fresh test alias: ".$email."\n";
+    echo "Press Enter to use it if you control this forwarding mailbox, or type a different unused address: ";
+    $input=trim((string)fgets(STDIN));
+    if($input!=='')$email=strtolower($input);
+    if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190)throw new AcademyQaFailure('Invalid test email');
+    $stage='existing-email lookup';
+    // Compare bytes to avoid an incompatible connection/column collation.
+    // Also run the usual lookup so the deployed registration cannot fail later.
+    $existing=db_one('SELECT id FROM users WHERE BINARY LOWER(email)=BINARY :email LIMIT 1',['email'=>$email]);
+    if($existing!==null||find_user_by_email($email)!==null)throw new AcademyQaFailure('Address already belongs to a portal account. Use the fresh alias instead.');
+    echo "PASS fresh student email\n";
     $password=bin2hex(random_bytes(24));
     // Name validation allows only letters, so convert random hex digits to letters.
     $name='ACADEMY QA TEST '.strtr(strtoupper($tag),'0123456789','GHIJKLMNOP');
+    $stage='registration page';
     $ch=curl_init();curl_setopt($ch,CURLOPT_COOKIEFILE,'');
     [$status,$html]=qa_http($ch,'/student/register');
     qa_assert($status===200,'Real registration page available');
     $csrf=qa_hidden($html,'csrf_token');
+    $stage='registration form submission';
     $attempted=true;
     [$status,$html]=qa_http($ch,'/academy.php?action=register',['csrf_token'=>$csrf,'name'=>$name,'email'=>$email,'phone'=>'00000000000','password'=>$password]);
+    $stage='registered account lookup';
     $user=find_user_by_email($email);
     qa_assert($user!==null&&$user['role']==='student'&&$user['full_name']===$name&&password_verify($password,$user['password_hash']),'Real HTTP student registration');
     qa_assert($status===200&&str_contains($html,'otp_challenge_csrf')&&str_contains($html,'otp_code'),'Real email OTP challenge displayed');
@@ -63,6 +76,7 @@ try{
     echo "Enter the six-digit OTP from your own mailbox (or press Enter to stop safely): ";
     $otp=trim((string)fgets(STDIN));
     if(!preg_match('/^[0-9]{6}$/D',$otp))throw new AcademyQaFailure('OTP not supplied; check inbox or forwarding');
+    $stage='OTP form submission';
     [$status,$html]=qa_http($ch,'/index.php?page=otp',['csrf_token'=>$csrf,'otp_challenge_csrf'=>$challenge,'form_action'=>'verify_otp','otp_code'=>$otp]);
     unset($otp);
     qa_assert($status===200&&is_email_verified(find_user_by_email($email)??[])&&stripos($html,'My Certificates')!==false,'Real OTP verified and student dashboard reached');
@@ -73,7 +87,13 @@ try{
     echo "REAL STUDENT OTP AND DASHBOARD CHECKS PASSED.\n";
 }catch(Throwable $e){
     if($e instanceof AcademyQaFailure)fwrite(STDERR,"BLOCK ".$e->getMessage()."\n");
-    else fwrite(STDERR,"BLOCK unexpected ".get_class($e)."; inspect private logs\n");
+    elseif($e instanceof PDOException){
+        $state=(string)($e->errorInfo[0]??$e->getCode());
+        $driver=(string)($e->errorInfo[1]??'unknown');
+        if(!preg_match('/^[A-Z0-9]{5}$/D',$state))$state='unknown';
+        if(!preg_match('/^[0-9]+$/D',$driver))$driver='unknown';
+        fwrite(STDERR,"BLOCK database stage: ".$stage."; SQLSTATE=".$state."; driver=".$driver."\n");
+    }else fwrite(STDERR,"BLOCK ".$stage.": ".get_class($e)."; inspect private logs\n");
     $failed=true;
 }finally{
     if($ch!==null)curl_close($ch);
