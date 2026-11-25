@@ -107,7 +107,7 @@ function academy_owned_certificate(int $id,int $student): ?array {
 function academy_checkout_url_valid(string $url): bool {
     $p = parse_url($url);
     return is_array($p) && ($p['scheme']??'')==='https' && ($p['host']??'')==='checkout.paystack.com'
-        && !isset($p['user'],$p['pass']) && !isset($p['port']) && !empty($p['path']);
+        && !isset($p['user']) && !isset($p['pass']) && !isset($p['port']) && !empty($p['path']);
 }
 function academy_resume_checkout(array $user, int $graduate): string {
     $cert=db_one("SELECT * FROM academy_certificates WHERE graduate_id=:graduate AND student_id=:student AND status='pending'",
@@ -151,4 +151,50 @@ function academy_new_checkout(array $user,int $graduate,string $name): string {
     }
     db_execute('UPDATE academy_certificates SET checkout_url=:url WHERE payment_reference=:ref',['url'=>$url,'ref'=>$ref]);
     return $url;
+}
+
+/** Send the approved certificate PDF only to the verified owner. */
+function academy_send_pdf_email(array $cert, array $user): bool {
+    if (!email_enabled() || !is_email_verified($user) || (int)$cert['student_id']!==(int)$user['id']
+        || $cert['status']!=='issued' || !filter_var($user['email'],FILTER_VALIDATE_EMAIL)) return false;
+    $from = trim(setting('mail_from_email','no-reply@iworksgt.com'));
+    $envelope = iworks_mail_envelope_parameters($from);
+    if ($envelope===null) return false;
+    $pdf = academy_pdf($cert);
+    $boundary='iwga-'.bin2hex(random_bytes(18));
+    $number=$cert['certificate_number'];
+    if (!preg_match('/^IWGA-\\d{4}-[A-F0-9]{16}$/D',$number)) return false;
+    $headers=implode("\r\n",['MIME-Version: 1.0','From: '.$from,'Reply-To: '.$from,
+        'Content-Type: multipart/mixed; boundary="'.$boundary.'"']);
+    $body="--".$boundary."\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+        .chunk_split(base64_encode("Congratulations! Your iWorks Global certificate is attached. Verify at ".ACADEMY_VERIFY_URL." using ".$number."."))
+        ."\r\n--".$boundary."\r\nContent-Type: application/pdf; name=\"".$number.".pdf\"\r\n"
+        ."Content-Disposition: attachment; filename=\"".$number.".pdf\"\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+        .chunk_split(base64_encode($pdf))."\r\n--".$boundary."--\r\n";
+    return @mail($user['email'],'Your iWorks Global certificate',$body,$headers,$envelope);
+}
+/** The issued record is a durable email outbox; advisory lock prevents concurrent sends. */
+function academy_deliver_email(int $id): bool {
+    $lock='academy-cert-mail-'.$id;
+    if ((int)(db_one('SELECT GET_LOCK(:name,0) AS acquired',['name'=>$lock])['acquired']??0)!==1) return false;
+    try {
+        $cert=db_one("SELECT * FROM academy_certificates WHERE id=:id AND status='issued'",['id'=>$id]);
+        if (!$cert) return false;
+        if (!empty($cert['email_sent_at'])) return true;
+        $user=find_user_by_id((int)$cert['student_id']);
+        if (!$user || !academy_send_pdf_email($cert,$user)) return false;
+        db_execute('UPDATE academy_certificates SET email_sent_at=:sent WHERE id=:id AND email_sent_at IS NULL',['sent'=>now(),'id'=>$id]);
+        return true;
+    } finally { db_one('SELECT RELEASE_LOCK(:name)',['name'=>$lock]); }
+}
+function academy_process_certificate_mail(int $limit=5): array {
+    $result=['processed'=>0,'sent'=>0,'failed'=>0];
+    if (!email_enabled() || !db_one("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='academy_certificates'")) return $result;
+    $limit=max(1,min(20,$limit));
+    foreach(db_all("SELECT id FROM academy_certificates WHERE status='issued' AND email_sent_at IS NULL ORDER BY id LIMIT ".$limit) as $row){
+        $result['processed']++;
+        try { if (academy_deliver_email((int)$row['id'])) $result['sent']++; else $result['failed']++; }
+        catch(Throwable $e){$result['failed']++;error_log('Academy certificate mail failed: '.get_class($e));}
+    }
+    return $result;
 }
