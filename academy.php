@@ -15,9 +15,23 @@ function ac_input(string $name,string $label,string $value='',string $type='text
     echo '<label>'.e($label).'<input required type="'.e($type).'" name="'.e($name).'" value="'.e($value).'"></label>';
 }
 function ac_head(string $title): void {
+    $GLOBALS['academy_native_shell'] = is_logged_in() && has_role(['admin','student']) && ($_GET['action']??'')!=='verify';
+    if ($GLOBALS['academy_native_shell']) {
+        $_GET['page']='academy';
+        require __DIR__.'/views/partials/header.php';
+        echo '<link rel="stylesheet" href="/assets/css/academy.css"><div class="academy-workspace"><h1>'.e($title).'</h1>';
+        return;
+    }
     echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.e($title).' | iWorks Global</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/assets/css/brand-color-pass.css"><style>*{box-sizing:border-box}body{font-family:Outfit,system-ui,sans-serif;color:var(--brand-text);margin:0}header,main{max-width:960px;margin:auto;padding:24px}header{display:flex;align-items:center;justify-content:space-between}header img{width:180px;max-width:45vw}section,article,form{background:white;border:1px solid #e1e4e8;border-radius:12px;padding:20px;margin:16px 0}label{display:block;margin:12px 0}input,select{display:block;width:100%;padding:12px;border:1px solid #bfc5ca;border-radius:6px;font:inherit}button{min-height:44px;background:var(--brand-primary);color:white;border:0;border-radius:6px;padding:12px 18px;font:inherit;cursor:pointer}a{color:var(--brand-primary)}nav a{margin-right:16px}small{color:#555}h1{font-size:28px}img.preview{max-width:100%;height:auto}@media(max-width:600px){header,main{padding:16px}button{width:100%}h1{font-size:24px}section,article,form{padding:16px}}</style><header><img src="/assets/branding/iworks-desktop.svg" alt="iWorks Global"><a href="/logout.php">Sign out</a></header><main><h1>'.e($title).'</h1>';
 }
-function ac_end(): void { echo '</main></html>'; }
+function ac_end(): void {
+    if (!empty($GLOBALS['academy_native_shell'])) {
+        echo '</div>';
+        require __DIR__.'/views/partials/footer.php';
+        return;
+    }
+    echo '</main></html>';
+}
 function ac_notify(array $cert,array $user): void {
     if ((int)$cert['student_id']!==(int)$user['id'] || !empty($cert['email_sent_at'])) return;
     try { academy_deliver_email((int)$cert['id']); }
@@ -26,7 +40,7 @@ function ac_notify(array $cert,array $user): void {
 try {
     if ($action==='verify') {
         ac_head('Verify a certificate');
-        echo '<form method="get"><input type="hidden" name="action" value="verify">';
+        echo '<form method="get" action="/verify"><input type="hidden" name="action" value="verify">';
         ac_input('number','Certificate number',(string)($_GET['number']??'')); echo '<button>Verify certificate</button></form>';
         $number=strtoupper(trim((string)($_GET['number']??'')));
         if ($number!=='') {
@@ -136,7 +150,7 @@ try {
         echo '<article><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).' · '.e(ucfirst($g['colour'])).' certificate</p>';
         $cert=db_one('SELECT * FROM academy_certificates WHERE graduate_id=:id',['id'=>$g['id']]);
         if(!$cert){ac_form('preview');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'">';ac_input('name','Name on certificate',$user['full_name']);echo '<button>Get Certificate</button></form>';}
-        elseif($cert['status']==='issued'){echo '<p>Issued: '.e($cert['certificate_number']).'</p><a href="?action=download&amp;id='.(int)$cert['id'].'">Download Certificate</a>';ac_notify($cert,$user);}
+        elseif($cert['status']==='issued'){echo '<p>Issued: '.e($cert['certificate_number']).'</p><a href="/academy.php?action=download&amp;id='.(int)$cert['id'].'">Download Certificate</a>';ac_notify($cert,$user);}
         elseif($cert['status']==='pending'){echo '<p>Payment pending. Continue your existing payment or check its status.</p>';if(!empty($cert['checkout_url'])){ac_form('resume');echo '<input type="hidden" name="graduate" value="'.(int)$g['id'].'"><button>Continue Payment</button></form>';}ac_form('recheck');echo '<input type="hidden" name="reference" value="'.e($cert['payment_reference']).'"><button>Check Payment</button></form>';}
         else echo '<p>Certificate revoked. Contact support.</p>';echo '</article>';
     }
