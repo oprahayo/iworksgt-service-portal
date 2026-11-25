@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 if(!defined('IWORKS_ACADEMY_LEARNING_VIEW')||!has_role(['student'])){http_response_code(403);exit;}
+require_once __DIR__.'/academy-guide.php';
 $cid=(int)$course['id'];
 $lessons=academy_learning_lessons((int)$user['id'],$cid);
 $done=count(array_filter($lessons,fn($l)=>(int)$l['completed']===1));
@@ -11,6 +12,7 @@ $lesson=$lid?academy_learning_lesson((int)$user['id'],$cid,$lid):null;
 if($lid&&!$lesson)http_response_code(404);
 ac_head($course['title']);
 echo '<div class="ac-student ac-lms"><a class="ac-student-link" href="/academy.php?action=courses">Back to My Courses</a><h1>'.e($course['title']).'</h1>';
+ac_guide('learn',(int)$user['id']);
 if($notice=flash('academy_student_notice'))echo '<p class="ac-student-notice" role="status">'.e($notice).'</p>';
 if(!$total){echo '<section class="ac-student-panel"><h2>Your learning area</h2><p>Course lessons and modules have not been published yet. You will be able to access them here when available.</p></section>';}
 else{
