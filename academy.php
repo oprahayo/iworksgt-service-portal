@@ -56,8 +56,17 @@ try {
         }
         ac_end(); exit;
     }
+    if ($action==='apply') {
+        $slug=trim((string)($_GET['course']??''));
+        $course=preg_match('/^[a-z0-9-]{1,100}$/D',$slug)?db_one('SELECT id,slug,title FROM academy_courses WHERE slug=:slug AND active=1',['slug'=>$slug]):null;
+        if(!$course){http_response_code(404);ac_head('Course unavailable');echo '<p>This course is not currently accepting applications.</p><a href="https://iworksgt.com/services/pro-training">View training courses</a>';ac_end();exit;}
+        if(is_logged_in()&&!has_role(['student'])){http_response_code(403);ac_head('Student account required');echo '<p>Sign out and use a separate student account to apply. Your existing portal role will not be changed.</p><a href="/logout.php">Sign out</a>';ac_end();exit;}
+        $_SESSION['academy_course_intent']=(int)$course['id'];
+        redirect(is_logged_in()?$base.'#application':'https://portal.iworksgt.com/student/register');
+    }
     if ($action==='register') {
         if (is_logged_in()) redirect(has_role(['student']) ? $base : portal_url('dashboard'));
+        $selectedCourse=(int)($_SESSION['academy_course_intent']??0)>0?db_one('SELECT id,title FROM academy_courses WHERE id=:id AND active=1',['id'=>(int)$_SESSION['academy_course_intent']]):null;
         if (method_is('POST')) {
             require_csrf();
             $name=trim((string)($_POST['name']??'')); $email=strtolower(trim((string)($_POST['email']??'')));
@@ -68,7 +77,7 @@ try {
             $id=create_user(['full_name'=>$name,'email'=>$email,'phone'=>$phone,'password'=>$password,'role'=>'student']);
             start_otp_challenge($id,'verify_email'); redirect(portal_url('otp'));
         }
-        ac_head('Student registration');ac_form('register');ac_input('name','Full name');ac_input('email','Email','','email');ac_input('phone','Phone','','tel');ac_input('password','Password (12 or more characters)','','password');echo '<button>Register</button></form><a href="/index.php?page=login">Already registered? Sign in</a>';ac_end();exit;
+        ac_head('Student registration');if($selectedCourse)echo '<section><h2>'.e($selectedCourse['title']).'</h2><p>Create and verify your student account, then confirm your course application. No payment is required at this stage.</p></section>';ac_form('register');ac_input('name','Full name');ac_input('email','Email','','email');ac_input('phone','Phone','','tel');ac_input('password','Password (12 or more characters)','','password');echo '<button>Register</button></form><a href="/index.php?page=login">Already registered? Sign in</a>';ac_end();exit;
     }
     if ($action==='admin') {
         require_roles(['admin']);
@@ -91,7 +100,7 @@ try {
                     $status=(string)($_POST['status']??'');$id=(int)($_POST['id']??0);
                     if(!in_array($status,['enrolled','cancelled'],true)||$id<1)$error='Choose a valid enrollment action.';
                     else{
-                        $changed=db_query("UPDATE academy_enrollments en JOIN users u ON u.id=en.student_id SET en.status=:status,en.updated_at=:updated WHERE en.id=:id AND en.status IN ('requested','enrolled') AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active'",['status'=>$status,'updated'=>now(),'id'=>$id])->rowCount();
+                        $changed=db_query("UPDATE academy_enrollments en JOIN users u ON u.id=en.student_id JOIN academy_courses c ON c.id=en.course_id SET en.status=:status,en.updated_at=:updated WHERE en.id=:id AND en.status IN ('requested','enrolled') AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active' AND u.email_verified_at IS NOT NULL AND (c.active=1 OR :cancel_status='cancelled')",['status'=>$status,'updated'=>now(),'id'=>$id,'cancel_status'=>$status])->rowCount();
                         if($changed>0)$success=$status==='enrolled'?'Enrollment accepted.':'Enrollment cancelled.';
                         else $error='This enrollment is no longer available or has already changed.';
                     }
@@ -135,6 +144,11 @@ try {
     }
     require_roles(['student']);$user=current_user();
     if (!is_email_verified($user)) { http_response_code(403);exit('Verify your email first.'); }
+    if ($action==='learn'){
+        $course=db_one("SELECT c.title,en.status FROM academy_enrollments en JOIN academy_courses c ON c.id=en.course_id WHERE en.student_id=:student AND en.course_id=:course AND en.status IN ('enrolled','completed') AND c.active=1",['student'=>$user['id'],'course'=>(int)($_GET['course']??0)]);
+        if(!$course){http_response_code(403);ac_head('Learning access unavailable');echo '<p>Your course application must be approved before you can access the learning area.</p><a href="'.$base.'#courses">My courses</a>';ac_end();exit;}
+        ac_head($course['title']);echo '<section><h2>Your learning area</h2><p>Enrollment approved. Course lessons and modules have not been published yet. You will be able to access them here when available.</p><a href="'.$base.'#courses">Back to my courses</a></section>';ac_end();exit;
+    }
     if ($action==='callback'){
         $ref=(string)($_GET['reference']??'');
         if(db_one('SELECT id FROM academy_certificates WHERE payment_reference=:ref AND student_id=:student',['ref'=>$ref,'student'=>$user['id']])) academy_confirm($ref);
@@ -151,7 +165,8 @@ try {
             $course=(int)($_POST['course']??0);
             if(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course])) throw new RuntimeException('Course unavailable.');
             db_execute("INSERT IGNORE INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'requested',:created,:updated)",['student'=>$user['id'],'course'=>$course,'created'=>now(),'updated'=>now()]);
-            flash('academy_student_notice','Course request submitted. The Academy administrator will review your request.');
+            if((int)($_SESSION['academy_course_intent']??0)===$course)unset($_SESSION['academy_course_intent']);
+            flash('academy_student_notice','Course application submitted. The Academy administrator will review your request.');
             redirect($base.(($_POST['return_to']??'')==='certificates'?'#certificates':'#courses'));
         }
         if ($action==='profile'){
@@ -175,6 +190,14 @@ try {
     ac_head('Welcome, '.(string)$user['full_name']);echo '<nav class="ac-student-nav"><a href="#certificates">My Certificates</a><a href="#courses">My Courses</a><a href="#profile">My Profile</a></nav><h2 id="certificates">My certificates</h2>';
     $graduates=db_all('SELECT g.*,c.title,c.colour FROM academy_graduates g JOIN academy_courses c ON c.id=g.course_id WHERE g.student_id=:student',['student'=>$user['id']]);
     if($notice=flash('academy_student_notice'))echo '<div class="ac-student-notice" role="status">'.e($notice).'</div>';
+    $intent=(int)($_SESSION['academy_course_intent']??0);
+    if($intent>0){
+        $selected=db_one("SELECT c.id,c.title,en.status FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:student WHERE c.id=:course AND c.active=1",['student'=>$user['id'],'course'=>$intent]);
+        if($selected&&!$selected['status']){
+            echo '<section id="application"><h3>Confirm your course application</h3><p>'.e($selected['title']).'</p><p>Applications are reviewed by the Academy. No payment is requested when you apply.</p>';
+            ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$selected['id'].'"><button>Submit application</button></form></section>';
+        }else unset($_SESSION['academy_course_intent']);
+    }
     if(!$graduates){
         echo '<section><h3>Already completed training?</h3><p>Request a course review. After the administrator confirms your completed training, Get Certificate will appear here.</p>';
         $available=db_all("SELECT c.id,c.title FROM academy_courses c WHERE c.active=1 AND NOT EXISTS(SELECT 1 FROM academy_enrollments en WHERE en.course_id=c.id AND en.student_id=:student) ORDER BY c.title",['student'=>$user['id']]);
@@ -196,8 +219,8 @@ try {
     echo '<h2 id="courses">Courses</h2>';
     foreach(db_all("SELECT c.*,en.status AS enrollment_status FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:student WHERE c.active=1 ORDER BY c.title",['student'=>$user['id']]) as $c){
         echo '<article><h3>'.e($c['title']).'</h3>';
-        if($c['enrollment_status']) echo '<p>'.e(['requested'=>'Awaiting administrator review','enrolled'=>'Enrolled','completed'=>'Completed','cancelled'=>'Cancelled'][$c['enrollment_status']]??ucfirst($c['enrollment_status'])).'</p>';
-        else {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><button>Enroll</button></form>';}
+        if($c['enrollment_status']) {echo '<p>'.e(['requested'=>'Pending application','enrolled'=>'Approved · learning area available','completed'=>'Completed','cancelled'=>'Cancelled'][$c['enrollment_status']]??ucfirst($c['enrollment_status'])).'</p>';if(in_array($c['enrollment_status'],['enrolled','completed'],true))echo '<a href="/academy.php?action=learn&amp;course='.(int)$c['id'].'">Open course</a>';}
+        else {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><button>Apply for course</button></form>';}
         echo '</article>';
     }
     echo '<section id="profile"><h2>My profile</h2>';ac_form('profile');ac_input('name','Full name',$user['full_name']);ac_input('phone','Phone',(string)$user['phone'],'tel');echo '<button>Save profile</button></form></section>';
