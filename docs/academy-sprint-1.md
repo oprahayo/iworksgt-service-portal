@@ -12,11 +12,14 @@ Orange: Digital Marketing. Purple: WordPress/CMS, basic and advanced frontend. B
 - Preserve and stage the four exact approved SVG files from iWorks_Certificate_Templates.zip under storage/academy-templates/ (non-public, no modification). The PHP loader checks their SHA-256 hashes. The public repository deliberately does not contain these signed certificate artworks.
 - Install Inkscape at /usr/bin/inkscape, Lato and Liberation Serif, and enable proc_open; confirm on the cPanel PHP environment. Checkout fails closed if PDF cannot render.
 - Back up database, inspect live users.role schema, run php scripts/migrate_academy.php --backup-confirmed. Validate old user roles and both site roots. Ensure existing Paystack charge.success webhook reaches the existing handler.
-- Configure verified email delivery. Current code sends a private authenticated PDF download link on dashboard/download; automatic PDF attachment and durable retry/outbox are still required.
-- Implement safe recovery of abandoned/failed Paystack initialization without creating duplicate paid attempts. Current pending record prevents double payment but needs operator reconciliation if checkout fails or is abandoned.
-- Add navigation links on public site and admin dashboard; current branch provides direct routes.
+- Configure verified email delivery. PDF attachment delivery and queue retries are implemented; verify mail transport and delivery on staging. Delivery is at-least-once if a process crashes after accepting mail but before recording success.
+- Resume Checkout reuses the existing Paystack reference; initialization failures with no checkout URL and expired sessions still need operator reconciliation. Never allocate a new reference without establishing the old one cannot settle.
+- Admin sidebar now links to Academy. Student pages use native header/footer and role-specific navigation; public registration link remains to be added.
 - Confirm full DB/integration tests, role isolation, PDF visual fit for long names, email delivery, and Paystack test-mode transactions including wrong amount/currency/signature, replay, concurrent requests, revoked cert and cross-student download.
 - Use private staging/test mode. Do not charge live students until release gates pass.
+
+## Local rendering evidence
+All four exact approved SVG hashes were checked and all four variants rendered to PDF in PHP 8.4/Inkscape 1.4 using a local copy of the rendering logic and sample student data. The purple WordPress result was visually inspected, and its QR decoded to https://portal.iworksgt.com/verify. This is not a deployed repository integration or Paystack test. Course creation and enrollment requests are implemented in the draft; admin approval controls enrollment and certificate eligibility.
 
 ## Routes (not deployed)
 - /student/register
