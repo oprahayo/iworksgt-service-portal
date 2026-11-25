@@ -30,7 +30,7 @@ function db_execute(string $sql,array $p=[]):bool{
 require __DIR__.'/../app/academy.php';
 function expect(bool $ok,string $msg):void{if(!$ok)throw new RuntimeException($msg);}
 $good=$GLOBALS['verified'];
-foreach(['amount'=>10199999,'currency'=>'USD','reference'=>'wrong','status'=>'failed','id'=>'','amount'=>'10200000'] as $key=>$value){
+foreach([['amount',10199999],['currency','USD'],['reference','wrong'],['status','failed'],['id',''],['amount','10200000']] as [$key,$value]){
  $GLOBALS['verified']=$good;$GLOBALS['verified']['data'][$key]=$value;
  expect(!academy_confirm($GLOBALS['ref']),'Reject mismatched '.$key);
  expect($GLOBALS['cert']['status']==='pending'&&$GLOBALS['writes']===0,'No issuance');
