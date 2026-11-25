@@ -157,11 +157,6 @@ try {
                     $colour=(string)($_POST['colour']??'');$course=(int)($_POST['course']??0);
                     if(!in_array($colour,['orange','purple','green','blue'],true)||!db_one('SELECT id FROM academy_courses WHERE id=:id',['id'=>$course]))$error='Select a valid course and colour.';
                     else{db_execute('UPDATE academy_courses SET colour=:colour WHERE id=:id',['colour'=>$colour,'id'=>$course]);$success='Certificate colour saved for future requests.';}
-                }elseif($mode==='send_update'){
-                    $message=trim((string)($_POST['message']??''));
-                    $student=db_one("SELECT id FROM users WHERE id=:id AND role='student' AND status='active' AND account_state='active' AND deleted_at IS NULL AND email_verified_at IS NOT NULL",['id'=>$studentId]);
-                    if(!$student||$message===''||mb_strlen($message)>1000)$error='Select an active verified student and enter a message of up to 1,000 characters.';
-                    else {create_notification($studentId,'Academy update',$message,'/academy.php?action=dashboard');$success='Update sent to the student.';}
                 }elseif($mode==='verify_payment'){
                     $cert=db_one("SELECT id,payment_reference FROM academy_certificates WHERE id=:id AND status='pending'",['id'=>(int)($_POST['id']??0)]);
                     if(!$cert)$error='This payment is no longer pending. Refresh the certificate list.';
@@ -251,7 +246,7 @@ try {
         require_csrf();
         if ($action==='request_certificate'){
             try{
-                $created=academy_request_submit((int)$user['id'],(int)($_POST['course']??0),(string)($_POST['name']??''),(string)($_POST['note']??''));
+                $created=academy_request_submit((int)$user['id'],(int)($_POST['course']??0),(string)($_POST['name']??''));
                 flash('academy_student_notice',$created?'Certification request submitted. You will be notified after review.':'Your request is already submitted.');
             }catch(InvalidArgumentException $e){flash('academy_student_notice',$e->getMessage());}
             redirect($base.'?action=certificates');
@@ -260,21 +255,12 @@ try {
             $course=(int)($_POST['course']??0);
             if(!db_one('SELECT id FROM academy_courses WHERE id=:id AND active=1',['id'=>$course])) throw new RuntimeException('Course unavailable.');
             $created=db_query("INSERT IGNORE INTO academy_enrollments (student_id,course_id,status,created_at,updated_at) VALUES (:student,:course,'requested',:created,:updated)",['student'=>$user['id'],'course'=>$course,'created'=>now(),'updated'=>now()])->rowCount();
-            if($created===1){$courseInfo=db_one('SELECT title FROM academy_courses WHERE id=:id',['id'=>$course]);academy_notice((int)$user['id'],'Course application received','Application for '.($courseInfo['title']??'your course').' is pending administrator review.','courses',true);}
+            if($created===1){$courseInfo=db_one('SELECT title FROM academy_courses WHERE id=:id',['id'=>$course]);try{notify_roles(['admin'],'New course application',($courseInfo['title']??'Course').' — review the student application.','/academy.php?action=admin&tab=enrollments');}catch(Throwable $e){error_log('Academy enrollment notice deferred');}}
             if((int)($_SESSION['academy_course_intent']??0)===$course)unset($_SESSION['academy_course_intent']);
             flash('academy_student_notice','Course application submitted. The Academy administrator will review your request.');
             redirect($base.'?action='.(in_array(($_POST['return_to']??''),['dashboard','courses','certificates'],true)?$_POST['return_to']:'courses'));
         }
-        if ($action==='inquiry'){
-            $message=trim((string)($_POST['message']??''));
-            if($message===''||mb_strlen($message)>1000)throw new RuntimeException('Enter a message of up to 1,000 characters.');
-            $key=(string)$user['id'];
-            if(!iworks_auth_limit_allows('academy_inquiry',$key,5,3600))throw new RuntimeException('Please wait before sending another inquiry.');
-            iworks_auth_limit_record('academy_inquiry',$key,3600);
-            notify_roles(['admin'],'Student inquiry',$message,'/academy.php?action=admin&tab=student&id='.(int)$user['id']);
-            flash('academy_student_notice','Your inquiry has been sent to the Academy administrator.');
-            redirect($base.'?action=dashboard');
-        }
+        if ($action==='inquiry'){http_response_code(403);exit('Student messaging is unavailable.');}
         if ($action==='profile'){
             $name=trim((string)($_POST['name']??''));$phone=trim((string)($_POST['phone']??''));
             if(!academy_valid_name($name)||strlen($phone)<7||strlen($phone)>40)throw new RuntimeException('Enter a valid name and phone.');
