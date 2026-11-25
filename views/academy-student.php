@@ -74,18 +74,27 @@ if($screen==='dashboard'){
     $reviewPending=count(array_filter($requests,fn($r)=>$r['status']==='pending'));
     if($reviewPending)echo '<p>'.(int)$reviewPending.' certification request(s) awaiting review.</p>';
     echo '</section></div><section class="ac-student-panel" id="available-courses"><div class="ac-student-heading"><div><h2>Available courses</h2></div>';ac_student_link('courses','View my courses');echo '</div>';
-    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div><details class="ac-contact"><summary>Contact Academy</summary>';ac_form('inquiry');echo '<label>Your message<textarea name="message" maxlength="1000" rows="3" required></textarea></label><button>Send inquiry</button></form></details>';
+    ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])),true);echo '</section></div>';
 }elseif($screen==='courses'){
     echo '<section class="ac-student-panel"><h2>My courses &amp; applications</h2><p>Track your submitted applications and open approved courses.</p>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['enrollment_status']!==null)));
     echo '</section><section class="ac-student-panel"><h2>Explore courses</h2>';
     ac_student_courses(array_values(array_filter($courseRows,fn($c)=>$c['active']&&!$c['enrollment_status'])));echo '</section>';
 }elseif($screen==='certificates'){
-    echo '<section class="ac-student-panel"><h2>Request certification</h2><p>Select a course you have completed. Submit once for administrator review. Payment is only available after approval.</p>';
+    echo '<div class="ac-cert-workspace"><header class="ac-request-heading"><div><h1>My Certificates</h1><p>Request, track and download your certificates in one place.</p></div></header><section class="ac-student-panel ac-cert-request-form"><h2>Request certification</h2><p>Select a completed course and confirm your certificate name.</p>';
     $available=db_all("SELECT c.id,c.title FROM academy_courses c LEFT JOIN academy_certification_requests r ON r.course_id=c.id AND r.student_id=:request_student WHERE c.active=1 AND (r.id IS NULL OR r.status='declined') AND NOT EXISTS(SELECT 1 FROM academy_graduates g WHERE g.course_id=c.id AND g.student_id=:graduate_student) ORDER BY c.title",['request_student'=>$studentId,'graduate_student'=>$studentId]);
-    if($available){ac_form('request_certificate');echo '<label>Completed course<select name="course" required><option value="">Select your completed course</option>';foreach($available as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';echo '</select></label>';ac_input('name','Name on certificate',$user['full_name']);echo '<label>Training details or reply to reviewer (optional)<textarea name="note" maxlength="2000" rows="3"></textarea></label><button>Submit certification request</button></form>';}else echo '<p>No additional courses available for certification requests.</p>';
-    foreach($requests as $r){echo '<article class="ac-request-row"><h3>'.e($r['title']).'</h3><p>'.e(['pending'=>'Awaiting review','approved'=>'Approved','declined'=>'Declined — resubmit with corrections'][$r['status']]).'</p>';if($r['review_note']!=='')echo '<p>Administrator feedback: '.nl2br(e($r['review_note'])).'</p>';if($r['status']==='declined')echo '<p>Select this course above and submit your corrected details.</p>';echo '</article>';}
-    echo '</section><section class="ac-student-panel"><h2>My certificates</h2><p>Preview, pay for or download approved certificates.</p>';
+    if($available){ac_form('request_certificate');echo '<label>Completed course<select name="course" required><option value="">Select your completed course</option>';foreach($available as $c)echo '<option value="'.(int)$c['id'].'">'.e($c['title']).'</option>';echo '</select></label>';ac_input('name','Name on certificate',$user['full_name']);echo '<div class="ac-request-submit"><button>Submit certification request</button><small>Payment is only available after approval.</small></div></form>';}else echo '<p>No additional courses available for certification requests.</p>';
+    echo '</section>';
+    $waiting=array_filter($requests,fn($r)=>$r['status']!=='approved');
+    echo '<section class="ac-student-panel ac-cert-history"><h2>Request status</h2>';
+    if(!$waiting)echo '<p class="ac-student-empty">No pending or declined requests.</p>';
+    foreach($waiting as $r){
+        echo '<article class="ac-request-row"><div class="ac-request-top"><div><h3>'.e($r['title']).'</h3><p>Submitted '.e(date('d M Y',strtotime($r['submitted_at']))).'</p></div><span class="ac-request-state state-'.e($r['status']).'">'.e($r['status']==='pending'?'Awaiting review':'Declined').'</span></div>';
+        if($r['review_note']!=='')echo '<div class="ac-query-reason"><strong>Administrator query</strong><p>'.nl2br(e($r['review_note'])).'</p></div>';
+        if($r['status']==='declined'&&$r['active'])echo '<small>You may submit a new request using the form above.</small>';
+        echo '</article>';
+    }
+    echo '</section><section class="ac-student-panel ac-cert-history"><h2>My certificates</h2><p>Approved training, payments and downloads.</p>';
     if(!$graduates){echo '<p class="ac-student-empty">No approved certificates yet. If you have completed training, submit a certification request above.</p>';ac_student_link('dashboard','Go to dashboard','ac-student-primary');}
     foreach($graduates as $g){
         echo '<article class="ac-cert-card"><h3>'.e($g['title']).'</h3><p>'.e($g['duration']).'</p>';
@@ -95,7 +104,7 @@ if($screen==='dashboard'){
         else echo '<p>Certificate revoked. Contact support.</p>';
         echo '</article>';
     }
-    echo '</section>';
+    echo '</section></div>';
 }else{
     echo '<section class="ac-student-panel ac-profile-panel"><h2>Personal information</h2><p>Keep your name and contact details up to date.</p><label>Email address<input type="email" readonly value="'.e($user['email']).'"></label><small>Email verified. Contact support if you need to change it.</small>';
     ac_form('profile');ac_input('name','Full name',$user['full_name']);ac_input('phone','Phone',(string)$user['phone'],'tel');echo '<button>Save profile</button></form></section>';
