@@ -34,6 +34,23 @@ function academy_material_download(int $student,int $course,int $lesson,int $id)
 function academy_materials(int $lesson):array{
  return db_all('SELECT id,filename,size_bytes FROM academy_lesson_materials WHERE lesson_id=:lesson ORDER BY id',compact('lesson'));
 }
+/** One optional PDF per assignment, stored privately with the submission. */
+function academy_assignment_upload_read(array $file):?array{
+ if(!$file||($file['error']??null)===UPLOAD_ERR_NO_FILE)return null;
+ if(($file['error']??null)!==UPLOAD_ERR_OK||!is_string($file['tmp_name']??null)||!is_uploaded_file($file['tmp_name'])||!is_int($file['size']??null)||$file['size']>2*1024*1024)throw new InvalidArgumentException('Choose a PDF of at most 2 MB.');
+ $content=file_get_contents($file['tmp_name'],false,null,0,2*1024*1024+1);
+ if(!is_string($content))throw new InvalidArgumentException('Assignment file unavailable.');
+ return ['filename'=>academy_material_validate((string)($file['name']??''),$content),'content'=>$content];
+}
+function academy_assignment_file_download(int $viewer,int $course,int $lesson,int $submission,bool $admin=false):?array{
+ if($admin){
+  if(!db_one("SELECT id FROM users WHERE id=:viewer AND role='admin' AND status='active' AND account_state='active' AND deleted_at IS NULL",compact('viewer')))return null;
+ }elseif(!academy_learning_lesson($viewer,$course,$lesson))return null;
+ $sql="SELECT f.filename,f.content,f.size_bytes FROM academy_assignment_files f JOIN academy_assessment_submissions s ON s.id=f.submission_id JOIN academy_assessments a ON a.id=s.assessment_id JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id WHERE f.submission_id=:submission AND a.kind='assignment' AND l.id=:lesson AND m.course_id=:course";
+ $params=compact('submission','lesson','course');
+ if(!$admin){$sql.=" AND s.student_id=:viewer AND a.published=1";$params['viewer']=$viewer;}
+ return db_one($sql,$params);
+}
 function academy_assessment_questions(string $raw):array{
  $lines=preg_split('/\R/',trim($raw));$questions=[];
  foreach($lines as $line){
@@ -80,12 +97,18 @@ function academy_exam_start(int $student,int $course,int $lesson,int $id,int $ge
   return academy_exam_start_current($student,$course,$lesson,$id);
  });
 }
-function academy_assessment_submit(int $student,int $course,int $lesson,int $id,array $data):bool{
+function academy_assessment_submit(int $student,int $course,int $lesson,int $id,array $data,?array $file=null):bool{
  $generation=filter_var($data['attempt_generation']??'0',FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>1]]);
  if($generation===false)throw new InvalidArgumentException('Invalid assessment attempt.');
- return academy_attempt_locked($student,$id,function()use($student,$course,$lesson,$id,$data,$generation){
+ return academy_attempt_locked($student,$id,function()use($student,$course,$lesson,$id,$data,$generation,$file){
   if($generation!==academy_attempt_generation($student,$id))throw new InvalidArgumentException('Assessment changed. Reopen it before submitting.');
-  return academy_assessment_submit_current($student,$course,$lesson,$id,$data);
+  $own=!db()->inTransaction();
+  if($own)db()->beginTransaction();
+  try{
+   $saved=academy_assessment_submit_current($student,$course,$lesson,$id,$data,$file);
+   if($own)db()->commit();
+   return $saved;
+  }catch(Throwable $e){if($own&&db()->inTransaction())db()->rollBack();throw $e;}
  });
 }
 function academy_grant_retake(int $admin,int $student,int $course,int $lesson,int $id,string $reason):bool{
@@ -120,13 +143,17 @@ function academy_exam_start_current(int $student,int $course,int $lesson,int $id
  $r=db_one("SELECT t.deadline_epoch,UNIX_TIMESTAMP() server_epoch FROM academy_exam_starts t JOIN academy_assessments a ON a.id=t.assessment_id WHERE t.assessment_id=:id AND t.student_id=:student AND a.lesson_id=:lesson AND a.published=1 AND a.duration_minutes>0 AND NOT EXISTS(SELECT 1 FROM academy_assessment_submissions s WHERE s.assessment_id=t.assessment_id AND s.student_id=t.student_id)",compact('id','student','lesson'));
  return $r!==null&&(int)$r['deadline_epoch']>(int)$r['server_epoch'];
 }
-function academy_assessment_submit_current(int $student,int $course,int $lesson,int $id,array $data):bool{
+function academy_assessment_submit_current(int $student,int $course,int $lesson,int $id,array $data,?array $file=null):bool{
  if(!academy_learning_lesson($student,$course,$lesson))throw new InvalidArgumentException('Assessment unavailable.');
  $a=db_one('SELECT * FROM academy_assessments WHERE id=:id AND lesson_id=:lesson AND published=1',compact('id','lesson'));
  if(!$a)throw new InvalidArgumentException('Assessment unavailable.');
  if((int)$a['duration_minutes']>0){$timer=db_one('SELECT deadline_epoch,UNIX_TIMESTAMP() server_epoch FROM academy_exam_starts WHERE assessment_id=:id AND student_id=:student',compact('id','student'));if(!$timer||(int)$timer['deadline_epoch']<=(int)$timer['server_epoch'])throw new InvalidArgumentException('Start the exam first, or the allotted time has expired.');}
  $score=null;
- if($a['kind']==='assignment')$response=academy_learning_text($data['response']??'',20000,true);
+ if($file!==null){
+  if($a['kind']!=='assignment'||!is_string($file['filename']??null)||!is_string($file['content']??null))throw new InvalidArgumentException('Attachments are available for assignments only.');
+  $file['filename']=academy_material_validate($file['filename'],$file['content']);
+ }
+ if($a['kind']==='assignment')$response=academy_learning_text($data['response']??'',20000,$file===null);
  else{
   $questions=json_decode($a['questions_json'],true,512,JSON_THROW_ON_ERROR);$answers=$data['answers']??null;
   if(!is_array($answers)||count($answers)!==count($questions)||!$questions)throw new InvalidArgumentException('Answer every question.');
@@ -136,6 +163,10 @@ function academy_assessment_submit_current(int $student,int $course,int $lesson,
  }
  // Unique constraint prevents duplicate attempts; the SELECT rechecks publication and enrollment atomically.
  $count=db_query("INSERT IGNORE INTO academy_assessment_submissions(assessment_id,student_id,response_json,score_percent,feedback,submitted_at,graded_at) SELECT a.id,en.student_id,:response,:score,'',:submitted,:graded FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id JOIN academy_courses c ON c.id=m.course_id JOIN academy_enrollments en ON en.course_id=c.id JOIN users u ON u.id=en.student_id WHERE a.id=:id AND l.id=:lesson AND c.id=:course AND en.student_id=:student AND a.published=1 AND l.published=1 AND m.published=1 AND lc.published=1 AND c.active=1 AND en.status IN ('enrolled','completed') AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL AND (a.duration_minutes=0 OR EXISTS(SELECT 1 FROM academy_exam_starts t WHERE t.assessment_id=a.id AND t.student_id=en.student_id AND t.deadline_epoch>UNIX_TIMESTAMP()))",['response'=>json_encode($response,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE),'score'=>$score,'submitted'=>now(),'graded'=>$score===null?null:now(),'id'=>$id,'lesson'=>$lesson,'course'=>$course,'student'=>$student])->rowCount();
+ if($count===1&&$file!==null){
+  $submission=db_last_id();
+  db_execute('INSERT INTO academy_assignment_files(submission_id,filename,content,size_bytes,uploaded_at) VALUES(:submission,:filename,:content,:size,:at)',['submission'=>$submission,'filename'=>$file['filename'],'content'=>$file['content'],'size'=>strlen($file['content']),'at'=>now()]);
+ }
  return $count===1;
 }
 function academy_assignment_grade(int $admin,int $course,int $lesson,int $submission,array $data):void{
