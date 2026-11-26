@@ -31,7 +31,15 @@ try{
         await page.keyboard.press('Escape');await dlg.waitFor({state:'hidden'});
         if(page.url()!==original)throw Error('Profile save navigated away');
         // Reload fixture to reset its welcome-guide state after testing profile on the dashboard.
-        if(file==='student-dashboard.html'){await page.evaluate(()=>localStorage.removeItem(document.querySelector('#ac-welcome-guide').dataset.guideKey));await page.reload({waitUntil:'load'});}
+        if(file==='student-learning.html'){
+        const outline=page.locator('.ac-study-directory');
+        if(await outline.count()!==1||await outline.evaluate(el=>el.open))throw Error('Lesson outline should start collapsed');
+        await outline.locator(':scope > summary').click();
+        if(!await outline.locator('[aria-current="page"]').isVisible())throw Error('Current lesson not visible in outline');
+        await outline.locator(':scope > summary').click();
+        if(!await page.locator('.ac-study-heading').isVisible()||!await page.locator('.ac-study-nav').isVisible())throw Error('Study navigation missing');
+      }
+      if(file==='student-dashboard.html'){await page.evaluate(()=>localStorage.removeItem(document.querySelector('#ac-welcome-guide').dataset.guideKey));await page.reload({waitUntil:'load'});}
       }
       if(file==='student-dashboard.html'){
         const dialog=page.locator('#ac-welcome-guide');
