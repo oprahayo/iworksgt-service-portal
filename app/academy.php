@@ -315,13 +315,19 @@ function academy_send_pdf_email(array $cert, array $user): bool {
     $boundary='iwga-'.bin2hex(random_bytes(18));
     $number=$cert['certificate_number'];
     if (!preg_match('/^IWGA-\\d{4}-[A-F0-9]{16}$/D',$number)) return false;
+    $alt='iwga-alt-'.bin2hex(random_bytes(18));
+    $subject='Your iWorks Global certificate';
+    $plain="Congratulations, ".$cert['student_name']."!\n\nYour official certificate for ".$cert['course_title']." is attached to this email.\n\nCertificate number: ".$number."\n\nVerify: ".ACADEMY_VERIFY_URL."\n\nUse your certificate number to confirm authenticity.";
+    require_once __DIR__.'/support_email.php';
+    $html=iworks_email_html($subject,$plain);
     $headers=implode("\r\n",['MIME-Version: 1.0','From: '.$from,'Reply-To: '.$from,
         'Content-Type: multipart/mixed; boundary="'.$boundary.'"']);
-    $body="--".$boundary."\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
-        .chunk_split(base64_encode("Congratulations! Your iWorks Global certificate is attached. Verify at ".ACADEMY_VERIFY_URL." using ".$number."."))
+    $body="--".$boundary."\r\nContent-Type: multipart/alternative; boundary=\"".$alt."\"\r\n\r\n"
+        .iworks_email_alternative_body($alt,$plain,$html)
         ."\r\n--".$boundary."\r\nContent-Type: application/pdf; name=\"".$number.".pdf\"\r\n"
         ."Content-Disposition: attachment; filename=\"".$number.".pdf\"\r\nContent-Transfer-Encoding: base64\r\n\r\n"
         .chunk_split(base64_encode($pdf))."\r\n--".$boundary."--\r\n";
+
     return @mail($user['email'],'Your iWorks Global certificate',$body,$headers,$envelope);
 }
 /** The issued record is a durable email outbox; advisory lock prevents concurrent sends. */
