@@ -217,3 +217,8 @@
 @media(prefers-reduced-motion:reduce){
  .academy-workspace :is(.ac-roster-row,.ac-profile-course-head,.ac-course-chevron,.ac-module-body,.ac-profile-course-body,.ac-action-dialog,.ac-tabs a,.ac-quick-links a,.ac-student-stats a){animation:none!important;transition:none!important}
 }
+
+.academy-workspace .ac-course-glyph[data-ac-icon]::before{margin:0}
+.academy-workspace .ac-admin .ac-tabs a[data-ac-icon]{min-width:0}
+.academy-workspace .ac-admin .ac-roster-state{min-width:0}
+.academy-workspace .ac-admin .ac-quick-links a[data-ac-icon]::before{margin:0}
