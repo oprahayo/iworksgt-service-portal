@@ -159,6 +159,7 @@ jobs:
           bash -n scripts/deploy_academy_sprint9.sh
           bash -n scripts/deploy_academy_sprint9b.sh
           bash -n scripts/deploy_academy_sprint10.sh
+          bash -n scripts/deploy_academy_sprint11.sh
           php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
@@ -294,8 +295,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y fonts-lato
-          python -m pip install 'Pillow==11.3.0'
+          python -m pip install 'Pillow==11.3.0' 'reportlab==4.4.4' 'pypdf==6.1.3'
       - name: Test restricted certificate rendering and deployment syntax
         run: |
           bash -n scripts/deploy_academy_sprint7c.sh
           python tests/academy_preview_render_test.py /usr/share/fonts/truetype/lato
+          python tests/academy_transcript_render_test.py /usr/share/fonts/truetype/lato
