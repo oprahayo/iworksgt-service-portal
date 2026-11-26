@@ -87,6 +87,7 @@ jobs:
 
       - name: Run smoke tests
         run: |
+          php scripts/seed_academy_digital_marketing.php --check
           php tests/academy_smoke_test.php
           php tests/academy_payment_lifecycle_test.php
           php tests/crypto_conversion_test.php
