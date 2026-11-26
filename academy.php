@@ -4,6 +4,7 @@ require __DIR__.'/app/bootstrap.php';
 require __DIR__.'/app/academy.php';
 require __DIR__.'/app/academy_requests.php';
 require __DIR__.'/app/academy_learning.php';
+require __DIR__.'/app/academy_admin.php';
 require __DIR__.'/app/academy_assessments.php';
 require __DIR__.'/views/academy-assessments.php';
 if (!is_configured()) { http_response_code(503); exit('Academy unavailable.'); }
@@ -139,14 +140,15 @@ try {
                     elseif(db_one('SELECT id FROM academy_courses WHERE slug=:slug',['slug'=>$slug]))$error='A course with that title already exists.';
                     else{db_execute('INSERT INTO academy_courses (slug,title,colour) VALUES (:slug,:title,:colour)',compact('slug','title','colour'));$success='Course added.';}
                 }elseif($mode==='enrollment'){
-                    $status=(string)($_POST['status']??'');$id=(int)($_POST['id']??0);
-                    if(!in_array($status,['enrolled','cancelled'],true)||$id<1)$error='Choose a valid enrollment action.';
-                    else{
-                        $enrollment=db_one('SELECT en.student_id,c.title FROM academy_enrollments en JOIN academy_courses c ON c.id=en.course_id WHERE en.id=:id',['id'=>$id]);
-                        $changed=db_query("UPDATE academy_enrollments en JOIN users u ON u.id=en.student_id JOIN academy_courses c ON c.id=en.course_id SET en.status=:status,en.updated_at=:updated WHERE en.id=:id AND en.status IN ('requested','enrolled') AND en.status<>:current_status AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active' AND u.email_verified_at IS NOT NULL AND (c.active=1 OR :cancel_status='cancelled')",['status'=>$status,'updated'=>now(),'id'=>$id,'cancel_status'=>$status,'current_status'=>$status])->rowCount();
-                        if($changed>0){$success=$status==='enrolled'?'Enrollment accepted.':'Enrollment cancelled.';if($enrollment)academy_notice((int)$enrollment['student_id'],$success,$enrollment['title'].': '.$success,'courses');}
-                        else $error='This enrollment is no longer available or has already changed.';
-                    }
+                    $result=academy_admin_enrollment((int)current_user()['id'],(int)($_POST['id']??0),(string)($_POST['expected']??''),(string)($_POST['status']??''),(string)($_POST['reason']??''),$studentId);
+                    $success=match($result['status']){'enrolled'=>'Enrollment accepted.','requested'=>'Enrollment returned to review.','cancelled'=>'Enrollment cancelled.'};
+                    academy_notice($result['student'],$success,$result['title'].': '.$success,'courses');
+                }elseif($mode==='reopen_request'){
+                    $result=academy_admin_reopen_request((int)current_user()['id'],(int)($_POST['request']??0),(int)($_POST['attempt']??0),(string)($_POST['reason']??''),$studentId);
+                    $success='Certification request reopened for review.';
+                    academy_notice($result['student'],$success,$result['title'].': '.$success,'certificates');
+                }elseif($mode==='edit_student'){
+                    $success=academy_admin_edit_student((int)current_user()['id'],$studentId,(string)($_POST['name']??''),(string)($_POST['phone']??''),(string)($_POST['reason']??''))?'Student profile updated.':'No profile changes required.';
                 }elseif($mode==='edit_duration'){
                     $graduate=(int)($_POST['graduate']??0);
                     if(academy_edit_duration($studentId,$graduate,(string)($_POST['duration']??'')))$success='Training duration updated.';
@@ -174,9 +176,15 @@ try {
                     else $error='Email could not be sent now. The scheduled delivery worker will retry.';
                 }elseif($mode==='revoke'){
                     if(($_POST['confirm_revoke']??'')!=='1')$error='Confirm revocation before proceeding.';
-                    elseif(db_query("UPDATE academy_certificates SET status='revoked' WHERE id=:id AND status='issued'",['id'=>(int)($_POST['id']??0)])->rowCount()===1)$success='Certificate revoked. Public verification and downloads are disabled for it.';
-                    else $error='Certificate is no longer available for revocation.';
+                    else{
+                        $result=academy_admin_revoke((int)current_user()['id'],(int)($_POST['id']??0),(string)($_POST['reason']??''),$studentId);
+                        $success='Certificate revoked. Public verification and downloads are disabled for it.';
+                        academy_notice($result['student'],'Certificate revoked',$result['title'].': Certificate revoked. Contact Academy support for details.','certificates');
+                    }
                 }else $error='Unknown Academy action.';
+            }catch(InvalidArgumentException $e){
+                if(db()->inTransaction())db()->rollBack();
+                $error=$e->getMessage();
             }catch(Throwable $e){
                 if(db()->inTransaction())db()->rollBack();
                 error_log('Academy admin action failed: '.get_class($e));
