@@ -247,3 +247,22 @@
 .academy-workspace .ac-study-end{font-size:11px;color:var(--ac-muted)}
 @media(max-width:760px){.academy-workspace .ac-study-layout{grid-template-columns:minmax(0,1fr);gap:0}.academy-workspace .ac-study-directory>summary{min-height:44px}.academy-workspace .ac-study-directory .ac-lms-lesson{min-height:44px}.academy-workspace .ac-study-heading h2{font-size:16px}}
 @media(prefers-reduced-motion:no-preference){.academy-workspace .ac-study-directory[open]>.ac-lms-lesson{animation:ac-content-reveal 140ms ease-out}}
+
+/* Sprint 20: compact assessment navigation and review. */
+.academy-workspace .ac-quiz-meter{display:block;width:100%;height:5px;margin:0 0 10px;accent-color:var(--ac-primary)}
+.academy-workspace .ac-quiz-review[hidden]{display:none!important}
+.academy-workspace .ac-quiz-review{margin:8px 0;padding:0;background:transparent;border:0}
+.academy-workspace .ac-quiz-review h3{font-size:14px;margin:0 0 5px}
+.academy-workspace .ac-quiz-review-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--ac-line)}
+.academy-workspace .ac-quiz-review-row>div{display:grid;gap:2px;min-width:0;overflow-wrap:anywhere}
+.academy-workspace .ac-quiz-review-row strong{font-size:12px;line-height:1.4}
+.academy-workspace .ac-quiz-review-row small{font-size:12px;color:var(--ac-muted)}
+.academy-workspace .ac-quiz-review-row button{min-height:36px;padding:5px 8px;background:#f3f5f8;color:#243347;font-size:12px;border:1px solid var(--ac-line);border-radius:6px}
+.academy-workspace .ac-question-nav button{font-size:12px;min-height:44px;padding:6px 10px}
+.academy-workspace .ac-question-nav button:disabled{opacity:.55;cursor:not-allowed}
+.academy-workspace .ac-action-dialog .ac-lms-question{min-width:0}
+.academy-workspace .ac-action-dialog .ac-lms-question .ac-check{padding:7px 8px;border:1px solid var(--ac-line);border-radius:6px;min-height:40px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.academy-workspace .ac-action-dialog .ac-lms-question .ac-check:has(input:checked){background:#fff4eb;border-color:#ed9c69;color:#883d0b}
+.academy-workspace .ac-action-dialog .ac-lms-question input[type=radio]{accent-color:var(--ac-primary);width:16px;flex:none}
+@media(max-width:760px){.academy-workspace .ac-quiz-review-row button,.academy-workspace .ac-action-dialog .ac-lms-question .ac-check{min-height:44px}}
+@media(prefers-reduced-motion:no-preference){.academy-workspace .ac-quiz-review:not([hidden]){animation:ac-content-reveal 140ms ease-out}}
