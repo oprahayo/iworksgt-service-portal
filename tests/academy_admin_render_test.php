@@ -42,8 +42,9 @@ try{
     require __DIR__.'/../views/academy-admin.php';
     $html=ob_get_clean();
     $expected=match($tab){
+      'analytics'=>['Learning overview','Active enrollments','Awaiting grading','Certificates issued','Course progress','Completion rate','Web Hosting'],
       'students'=>['CI Test student','student@academy.invalid','View student','Verified'],
-      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status'],
+      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status','Download transcript'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
       'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student'],
@@ -56,7 +57,7 @@ try{
     if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
         $dir=__DIR__.'/../docs/visual-qa/academy';
         if(!is_dir($dir))mkdir($dir,0755,true);
-        file_put_contents($dir.'/admin-'.$tab.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace('/assets/js/academy-actions.js?v=1','../../../assets/js/academy-actions.js?v=1',$html).'</div></main></body></html>');
+        file_put_contents($dir.'/admin-'.$tab.'.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academy visual fixture</title><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><link rel="stylesheet" href="../../../assets/css/academy-compact.css"><style>:root{--brand-primary:#e65c00;--brand-primary-dark:#b54708}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace('/assets/js/academy-actions.js?v=1','../../../assets/js/academy-actions.js?v=1',$html).'</div></main></body></html>');
     }
     echo 'Academy admin '.$tab." rendered against real MySQL fixture.\n";
 }finally{if(db()->inTransaction())db()->rollBack();}
