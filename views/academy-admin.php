@@ -64,19 +64,43 @@ function ac_admin_student_state(array $u):string{
 function ac_admin_count(string $sql,array $params=[]):int{return (int)(db_one($sql,$params)['n']??0);}
 function ac_admin_certificate_state(array $row):string{return (string)($row['certificate_status']??'ready');}
 $tab=(string)($_GET['tab']??'requests');
-if(!in_array($tab,['students','student','enrollments','courses','certificates','requests'],true))$tab='students';
+if(!in_array($tab,['students','student','enrollments','courses','certificates','requests','analytics'],true))$tab='students';
 $query=mb_substr(trim((string)($_GET['q']??'')),0,100);
 $status=(string)($_GET['status']??'');
 $page=max(1,min(100000,(int)($_GET['p']??1)));
 $notice=flash('academy_admin_notice');$error=flash('academy_admin_error');
 ac_head('Academy');
 echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
-foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
+foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates','analytics'=>'Analytics'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
 echo '</nav>';
 if($notice)echo '<div class="ac-message" role="status">'.e($notice).'</div>';
 if($error)echo '<div class="ac-message ac-error" role="alert">'.e($error).'</div>';
 if(!academy_checkout_enabled()&&in_array($tab,['students','student','certificates'],true))echo '<div class="ac-callout">Payments are off. Student approvals are available.</div>';
-if($tab==='requests'){
+if($tab==='analytics'){
+    echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>Learning overview</h2><p>Current Academy activity and course progress.</p></div></div>';
+    $metrics=[
+      ['Students',ac_admin_count("SELECT COUNT(*) n FROM users WHERE role='student' AND deleted_at IS NULL")],
+      ['Active enrollments',ac_admin_count("SELECT COUNT(*) n FROM academy_enrollments en JOIN users u ON u.id=en.student_id WHERE en.status='enrolled' AND u.role='student' AND u.deleted_at IS NULL AND u.status='active' AND u.account_state='active'")],
+      ['Awaiting grading',ac_admin_count("SELECT COUNT(*) n FROM academy_assessment_submissions s JOIN academy_assessments a ON a.id=s.assessment_id JOIN users u ON u.id=s.student_id WHERE a.kind='assignment' AND s.score_percent IS NULL AND u.role='student' AND u.deleted_at IS NULL")],
+      ['Certificates issued',ac_admin_count("SELECT COUNT(*) n FROM academy_certificates ce JOIN users u ON u.id=ce.student_id WHERE ce.status='issued' AND u.role='student' AND u.deleted_at IS NULL")]
+    ];
+    echo '<div class="ac-metric-strip">';
+    foreach($metrics as [$label,$value])echo '<div class="ac-metric"><strong>'.number_format($value).'</strong><small>'.e($label).'</small></div>';
+    echo '</div><h3>Course progress</h3><p>Completed enrollments and outstanding course applications.</p>';
+    $rows=db_all("SELECT c.id,c.title,c.active,COALESCE(x.pending,0) pending,COALESCE(x.enrolled,0) enrolled,COALESCE(x.completed,0) completed,COALESCE(x.cancelled,0) cancelled FROM academy_courses c LEFT JOIN (SELECT en.course_id,SUM(en.status='requested') pending,SUM(en.status='enrolled') enrolled,SUM(en.status='completed') completed,SUM(en.status='cancelled') cancelled FROM academy_enrollments en JOIN users u ON u.id=en.student_id WHERE u.role='student' AND u.deleted_at IS NULL GROUP BY en.course_id) x ON x.course_id=c.id ORDER BY c.title");
+    if(!$rows)ac_admin_empty('No courses available.');
+    else{
+      ac_admin_table(['Course','Pending','Enrolled','Completed','Completion']);
+      foreach($rows as $r){
+        $total=(int)$r['enrolled']+(int)$r['completed'];$pct=$total?(int)round(100*(int)$r['completed']/$total):0;
+        echo '<tr role="row"><td role="cell"><strong>'.e($r['title']).'</strong><small>'.($r['active']?'Active':'Inactive').' · '.(int)$r['cancelled'].' cancelled</small></td><td role="cell" data-label="Pending">'.(int)$r['pending'].'</td><td role="cell" data-label="Enrolled">'.(int)$r['enrolled'].'</td><td role="cell" data-label="Completed">'.(int)$r['completed'].'</td><td role="cell" data-label="Completion"><strong>'.($total?$pct.'%':'—').'</strong>';
+        if($total)echo '<progress class="ac-analytics-track" max="100" value="'.$pct.'" aria-label="Course completion rate"></progress>';
+        echo '</td></tr>';
+      }
+      ac_admin_table_end();
+    }
+    echo '<small>Completion rate = completed ÷ (enrolled + completed). Counts represent current records, not a historical trend.</small></section>';
+}elseif($tab==='requests'){
     echo '<section class="ac-request-shell"><div class="ac-request-heading"><div><h2>Certification requests</h2><p>Review completed training and decide whether to approve certification.</p></div></div>';
     $options=['pending'=>'Awaiting review','approved'=>'Approved','declined'=>'Declined'];
     if(!isset($options[$status]))$status='pending';
@@ -167,11 +191,11 @@ if($tab==='requests'){
             }
             ac_admin_table_end();
         }
-        echo '</section><section class="ac-panel"><h3>Administrator activity</h3>';
+        echo '</section><section class="ac-panel"><details class="ac-history-panel" data-ac-popup><summary>Administrator activity</summary>';
         $history=db_all('SELECT h.*,u.full_name admin_name FROM academy_admin_history h JOIN users u ON u.id=h.admin_id WHERE h.student_id=:student ORDER BY h.id DESC LIMIT 50',['student'=>$id]);
         if(!$history)ac_admin_empty('No administrative corrections recorded.');
         foreach($history as $event)echo '<div class="ac-lms-submission"><strong>'.e(ucfirst(str_replace('_',' ',$event['entity_type']))).': '.e($event['old_state']).' → '.e($event['new_state']).'</strong><p>'.nl2br(e($event['reason'])).'</p><small>'.e($event['admin_name']).' · '.e($event['changed_at']).'</small></div>';
-        echo '</section>';
+        echo '</details></section>';
     }
 }elseif($tab==='enrollments'){
     echo '<section class="ac-panel"><h2>Enrollment requests</h2><p>Accept new requests or open a student to approve completed training.</p>';
