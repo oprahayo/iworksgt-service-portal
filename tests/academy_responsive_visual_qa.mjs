@@ -169,6 +169,14 @@ try{
         const strip=page.locator('.ac-metric-strip');
         const bounds=await strip.boundingBox();
         if(await strip.locator('.ac-metric').count()!==4||!bounds||bounds.height>100||bounds.width>width+1)throw Error('Analytics metric strip must stay compact');
+        await page.getByText('Review assignment',{exact:true}).first().click();
+        const review=page.locator('.ac-action-dialog');
+        await review.waitFor({state:'visible'});
+        const popup=await review.boundingBox();
+        if(!popup||popup.width>461||popup.width>width-20||popup.height>873)throw Error('Grading popup exceeds compact bounds');
+        if(!await review.getByRole('link',{name:'Download submitted PDF'}).isVisible()||!await review.getByRole('button',{name:'Save grade'}).isVisible())throw Error('Review controls missing');
+        await page.keyboard.press('Escape');await review.waitFor({state:'hidden'});
+
       }
       if(file==='admin-requests.html'){
         await page.locator('details[data-ac-popup]').filter({has:page.locator('summary').filter({hasText:'Decline request'})}).first().locator('summary').click();
