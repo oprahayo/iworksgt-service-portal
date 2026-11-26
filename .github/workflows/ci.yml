@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'academy/sprint-1-certification']
   pull_request:
     branches: [main]
 
@@ -87,6 +87,8 @@ jobs:
 
       - name: Run smoke tests
         run: |
+          bash -n scripts/deploy_academy_digital_marketing.sh
+          php scripts/seed_academy_digital_marketing.php --check
           php tests/academy_smoke_test.php
           php tests/academy_payment_lifecycle_test.php
           php tests/crypto_conversion_test.php
@@ -280,6 +282,12 @@ jobs:
         env:
           ACADEMY_VISUAL_FIXTURES: '1'
         run: php tests/academy_learning_integration_test.php
+      - name: Verify Digital Marketing course import and idempotency
+        run: |
+          test "$DB_NAME" = academy_ci
+          php scripts/seed_academy_digital_marketing.php "$PWD" --backup-confirmed
+          php scripts/seed_academy_digital_marketing.php "$PWD" --backup-confirmed
+          php tests/academy_digital_marketing_seed_test.php
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
