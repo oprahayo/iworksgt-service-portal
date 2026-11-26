@@ -7,6 +7,7 @@ require __DIR__.'/../app/db.php';
 function has_role(array $roles):bool{return in_array('admin',$roles,true);}
 function is_email_verified(array $u):bool{return !empty($u['email_verified_at']);}
 require __DIR__.'/../app/academy.php';
+require __DIR__.'/../app/academy_admin.php';
 function setting(string $key,string $default=''):string{return '0';}
 function flash(string $key):?string{return null;}
 function e(string $s):string{return htmlspecialchars($s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
@@ -42,7 +43,7 @@ try{
     $html=ob_get_clean();
     $expected=match($tab){
       'students'=>['CI Test student','student@academy.invalid','View student','Verified'],
-      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked'],
+      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
       'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student'],
