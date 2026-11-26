@@ -58,7 +58,7 @@ try{
       'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status','Download transcript'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
-      'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student','Learning evidence','Review needed','Download academic transcript'],
+      'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student','Learning evidence','Review needed','Download academic transcript','Assignments to grade','Manage course content'],
       'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started','Verify payment','Retry email'],
       default=>throw new RuntimeException('Unknown test tab')
     };
