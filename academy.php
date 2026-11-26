@@ -5,6 +5,7 @@ require __DIR__.'/app/academy.php';
 require __DIR__.'/app/academy_requests.php';
 require __DIR__.'/app/academy_learning.php';
 require __DIR__.'/app/academy_admin.php';
+require __DIR__.'/app/academy_transcript.php';
 require __DIR__.'/app/academy_assessments.php';
 require __DIR__.'/views/academy-assessments.php';
 if (!is_configured()) { http_response_code(503); exit('Academy unavailable.'); }
@@ -95,6 +96,16 @@ try {
         require __DIR__.'/views/academy-register.php';
         require __DIR__.'/views/partials/footer.php';
         exit;
+    }
+    if ($action==='transcript'){
+        require_roles(['admin','student']);
+        if(!method_is('GET')){http_response_code(405);exit;}
+        $viewer=current_user();$admin=has_role(['admin']);$student=$admin?(int)($_GET['student']??0):(int)$viewer['id'];
+        if(!$admin&&isset($_GET['student'])&&(int)$_GET['student']!==$student){http_response_code(404);exit;}
+        $data=academy_transcript_data((int)$viewer['id'],$student,(int)($_GET['course']??0),$admin);
+        if(!$data){http_response_code(404);exit('Transcript unavailable.');}
+        try{$pdf=academy_transcript_pdf($data);}catch(Throwable $e){error_log('Academy transcript rendering failed: '.get_class($e));http_response_code(503);exit('Transcript temporarily unavailable.');}
+        header('Content-Type: application/pdf');header('Content-Disposition: attachment; filename="iWorks-Academic-Transcript.pdf"');header('Content-Length: '.strlen($pdf));header('X-Content-Type-Options: nosniff');header('Cross-Origin-Resource-Policy: same-origin');echo $pdf;exit;
     }
     if ($action==='assignment_file'){
         require_roles(['admin','student']);
