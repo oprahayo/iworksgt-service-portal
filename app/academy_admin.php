@@ -108,3 +108,29 @@ function academy_completion_summary(int $total,int $completed,array $results):ar
  $assessments=count($results);
  return ['lessons'=>$total,'completed'=>$completed,'assessments'=>$assessments,'passed'=>$passed,'failed'=>$failed,'awaiting'=>$awaiting,'missing'=>$missing,'ready'=>$total>0&&$completed===$total&&$passed===$assessments];
 }
+
+/** Remove an Academy-only student and their learning/authentication records.
+ * Never cascade through paid, approved, or unrelated business records. */
+function academy_admin_delete_student(int $admin,int $student,string $confirmation,string $confirmedEmail):void {
+ academy_admin_assert($admin);
+ if($student<1||$student===$admin||$confirmation!=='DELETE')throw new InvalidArgumentException('Type DELETE to confirm permanent removal.');
+ academy_admin_transaction(function()use($admin,$student,$confirmedEmail){
+  $u=db_one("SELECT id,email FROM users WHERE id=:id AND role='student' AND deleted_at IS NULL FOR UPDATE",['id'=>$student]);
+  if(!$u||!hash_equals(strtolower($u['email']),strtolower(trim($confirmedEmail))))throw new InvalidArgumentException('Student or confirmation email does not match.');
+  if(db_one('SELECT id FROM academy_graduates WHERE student_id=:id LIMIT 1',['id'=>$student])||db_one('SELECT id FROM academy_certificates WHERE student_id=:id LIMIT 1',['id'=>$student]))throw new InvalidArgumentException('Permanent deletion is blocked: this student has approved training or certificate/payment records.');
+  // Allow only explicitly reviewed Academy and personal authentication dependencies.
+  $allowed=['academy_enrollments.student_id','academy_certification_requests.student_id','academy_lesson_progress.student_id','academy_exam_starts.student_id','academy_assessment_retakes.student_id','academy_assessment_submissions.student_id','academy_admin_history.student_id','notifications.user_id','notification_email_outbox.user_id','otp_codes.user_id','otp_dispatch_queue.user_id','trusted_devices.user_id','password_resets.user_id','announcement_reads.user_id'];
+  $refs=db_all("SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME='users' AND REFERENCED_COLUMN_NAME='id'");
+  foreach($refs as $ref){
+   $table=$ref['TABLE_NAME'];$col=$ref['COLUMN_NAME'];
+   if(in_array($table.'.'.$col,$allowed,true))continue;
+   if(!preg_match('/^[A-Za-z0-9_]+$/D',$table)||!preg_match('/^[A-Za-z0-9_]+$/D',$col))throw new InvalidArgumentException('Unrecognized account dependency. Deletion blocked.');
+   if(db_one("SELECT 1 FROM \x60".$table."\x60 WHERE \x60".$col."\x60=:id LIMIT 1",['id'=>$student]))throw new InvalidArgumentException('Permanent deletion is blocked by linked business or administrative records.');
+  }
+  db_execute('DELETE f FROM academy_assignment_files f JOIN academy_assessment_submissions s ON s.id=f.submission_id WHERE s.student_id=:id',['id'=>$student]);
+  foreach(['academy_exam_starts','academy_assessment_retakes','academy_assessment_submissions','academy_lesson_progress','academy_certification_requests','academy_enrollments','academy_admin_history'] as $table)db_execute('DELETE FROM '.$table.' WHERE student_id=:id',['id'=>$student]);
+  // Personal authentication and notification foreign keys cascade with the account.
+  db_execute('INSERT INTO academy_student_deletions(deleted_student_id,admin_id,deleted_at) VALUES(:student,:admin,:at)',['student'=>$student,'admin'=>$admin,'at'=>now()]);
+  if(db_query("DELETE FROM users WHERE id=:id AND role='student'",['id'=>$student])->rowCount()!==1)throw new RuntimeException('Student deletion was not completed.');
+ });
+}
