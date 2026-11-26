@@ -63,14 +63,64 @@ function academy_assessment_publish(int $course,int $lesson,int $id,bool $publis
  if(!academy_lesson_in_course($course,$lesson))throw new InvalidArgumentException('Lesson unavailable.');
  db_execute('UPDATE academy_assessments SET published=:published WHERE id=:id AND lesson_id=:lesson',['published'=>$published?1:0,'id'=>$id,'lesson'=>$lesson]);
 }
-function academy_exam_start(int $student,int $course,int $lesson,int $id):bool{
+/** One staff-approved retake per assessment. The original attempt is archived. */
+function academy_attempt_generation(int $student,int $id):int{
+ return db_one('SELECT assessment_id FROM academy_assessment_retakes WHERE assessment_id=:id AND student_id=:student',compact('id','student'))?1:0;
+}
+/** Serialize grants, starts and submissions for the same student/assessment. */
+function academy_attempt_locked(int $student,int $id,callable $callback):mixed{
+ $lock='iwga-attempt-'.$id.'-'.$student;
+ $r=db_one('SELECT GET_LOCK(:lock,5) acquired',['lock'=>$lock]);
+ if((int)($r['acquired']??0)!==1)throw new RuntimeException('Assessment is busy. Please try again.');
+ try{return $callback();}finally{db_one('SELECT RELEASE_LOCK(:lock) released',['lock'=>$lock]);}
+}
+function academy_exam_start(int $student,int $course,int $lesson,int $id,int $generation=0):bool{
+ return academy_attempt_locked($student,$id,function()use($student,$course,$lesson,$id,$generation){
+  if($generation!==academy_attempt_generation($student,$id))throw new InvalidArgumentException('Assessment changed. Reopen it before starting.');
+  return academy_exam_start_current($student,$course,$lesson,$id);
+ });
+}
+function academy_assessment_submit(int $student,int $course,int $lesson,int $id,array $data):bool{
+ $generation=filter_var($data['attempt_generation']??'0',FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>1]]);
+ if($generation===false)throw new InvalidArgumentException('Invalid assessment attempt.');
+ return academy_attempt_locked($student,$id,function()use($student,$course,$lesson,$id,$data,$generation){
+  if($generation!==academy_attempt_generation($student,$id))throw new InvalidArgumentException('Assessment changed. Reopen it before submitting.');
+  return academy_assessment_submit_current($student,$course,$lesson,$id,$data);
+ });
+}
+function academy_grant_retake(int $admin,int $student,int $course,int $lesson,int $id,string $reason):bool{
+ $reason=academy_learning_text($reason,500,true);
+ if(!db_one("SELECT id FROM users WHERE id=:id AND role='admin' AND status='active' AND account_state='active' AND deleted_at IS NULL",['id'=>$admin]))throw new InvalidArgumentException('Administrator authorization required.');
+ return academy_attempt_locked($student,$id,function()use($admin,$student,$course,$lesson,$id,$reason){
+  $own=!db()->inTransaction();
+  if($own)db()->beginTransaction();
+  try{
+   if(!academy_learning_lesson($student,$course,$lesson))throw new InvalidArgumentException('Student does not have access to this lesson.');
+   $a=db_one("SELECT * FROM academy_assessments WHERE id=:id AND lesson_id=:lesson AND published=1 AND kind IN ('quiz','exam') FOR UPDATE",compact('id','lesson'));
+   if(!$a)throw new InvalidArgumentException('Only published quizzes and exams are eligible.');
+   if(academy_attempt_generation($student,$id)!==0)throw new InvalidArgumentException('A retake has already been granted.');
+   $submission=db_one('SELECT * FROM academy_assessment_submissions WHERE assessment_id=:id AND student_id=:student FOR UPDATE',compact('id','student'));
+   $timer=db_one('SELECT *,UNIX_TIMESTAMP() server_epoch FROM academy_exam_starts WHERE assessment_id=:id AND student_id=:student FOR UPDATE',compact('id','student'));
+   $failed=$submission&&$submission['score_percent']!==null&&(int)$submission['score_percent']<(int)$a['pass_percent'];
+   $expired=!$submission&&$timer&&$a['kind']==='exam'&&(int)$a['duration_minutes']>0&&(int)$timer['deadline_epoch']<=(int)$timer['server_epoch'];
+   if(!$failed&&!$expired)throw new InvalidArgumentException('Retakes require a failed result or expired timed exam.');
+   db_execute('INSERT INTO academy_assessment_retakes(assessment_id,student_id,granted_by,reason,prior_submission,prior_timer,granted_at) VALUES(:id,:student,:admin,:reason,:submission,:timer,:at)',[
+    'id'=>$id,'student'=>$student,'admin'=>$admin,'reason'=>$reason,'submission'=>$submission?json_encode($submission,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE):null,'timer'=>$timer?json_encode($timer,JSON_THROW_ON_ERROR):null,'at'=>now()]);
+   db_execute('DELETE FROM academy_assessment_submissions WHERE assessment_id=:id AND student_id=:student',compact('id','student'));
+   db_execute('DELETE FROM academy_exam_starts WHERE assessment_id=:id AND student_id=:student',compact('id','student'));
+   if($own)db()->commit();
+   return true;
+  }catch(Throwable $e){if($own&&db()->inTransaction())db()->rollBack();throw $e;}
+ });
+}
+function academy_exam_start_current(int $student,int $course,int $lesson,int $id):bool{
  if(!academy_learning_lesson($student,$course,$lesson))throw new InvalidArgumentException('Exam unavailable.');
  // Atomic authorization and INSERT IGNORE ensure refreshes never extend a deadline.
  db_query("INSERT IGNORE INTO academy_exam_starts(assessment_id,student_id,started_epoch,deadline_epoch) SELECT a.id,en.student_id,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()+a.duration_minutes*60 FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id JOIN academy_courses c ON c.id=m.course_id JOIN academy_enrollments en ON en.course_id=c.id JOIN users u ON u.id=en.student_id LEFT JOIN academy_assessment_submissions s ON s.assessment_id=a.id AND s.student_id=en.student_id WHERE a.id=:id AND l.id=:lesson AND c.id=:course AND en.student_id=:student AND a.kind='exam' AND a.duration_minutes>0 AND a.published=1 AND l.published=1 AND m.published=1 AND lc.published=1 AND c.active=1 AND en.status IN ('enrolled','completed') AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL AND s.id IS NULL",compact('id','lesson','course','student'));
  $r=db_one("SELECT t.deadline_epoch,UNIX_TIMESTAMP() server_epoch FROM academy_exam_starts t JOIN academy_assessments a ON a.id=t.assessment_id WHERE t.assessment_id=:id AND t.student_id=:student AND a.lesson_id=:lesson AND a.published=1 AND a.duration_minutes>0 AND NOT EXISTS(SELECT 1 FROM academy_assessment_submissions s WHERE s.assessment_id=t.assessment_id AND s.student_id=t.student_id)",compact('id','student','lesson'));
  return $r!==null&&(int)$r['deadline_epoch']>(int)$r['server_epoch'];
 }
-function academy_assessment_submit(int $student,int $course,int $lesson,int $id,array $data):bool{
+function academy_assessment_submit_current(int $student,int $course,int $lesson,int $id,array $data):bool{
  if(!academy_learning_lesson($student,$course,$lesson))throw new InvalidArgumentException('Assessment unavailable.');
  $a=db_one('SELECT * FROM academy_assessments WHERE id=:id AND lesson_id=:lesson AND published=1',compact('id','lesson'));
  if(!$a)throw new InvalidArgumentException('Assessment unavailable.');
