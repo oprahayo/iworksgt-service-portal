@@ -154,6 +154,7 @@ if($tab==='requests'){
                     ac_admin_enrollment_action($r,'student',$id);
                     if($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
                 }
+                echo '<a class="ac-secondary" href="/academy.php?action=transcript&amp;student='.$id.'&amp;course='.(int)$r['id'].'">Download transcript</a>';
                 if($r['enrollment_id']){
                     $progress=academy_admin_progress($id,(int)$r['id']);$pct=$progress['total']?(int)round(100*$progress['completed']/$progress['total']):0;
                     echo '<details class="ac-contact" data-ac-popup><summary>View progress · '.$pct.'%</summary><p><strong>'.$progress['completed'].' of '.$progress['total'].' lessons completed</strong></p><progress max="100" value="'.$pct.'" style="width:100%"></progress>';
