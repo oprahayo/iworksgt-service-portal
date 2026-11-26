@@ -5,7 +5,7 @@ declare(strict_types=1);
 /** First-party raster logo generated from the approved current brand artwork. */
 function iworks_email_logo_markup(): string
 {
-    return '<img src="https://portal.iworksgt.com/assets/branding/iworks-email-logo.png" width="248" alt="iWorks Global" style="display:block;margin:0 auto;width:248px;max-width:100%;height:auto;border:0;color:#17212e;font-size:18px;">';
+    return '<img src="https://portal.iworksgt.com/assets/branding/iworks-email-logo.png" width="240" alt="iWorks Global" style="display:block;margin:0 auto;width:240px;max-width:100%;height:auto;border:0;color:#17212e;font-size:18px;">';
 }
 
 /** All content is plain text unless constructed here. Only first-party URLs become actions. */
@@ -27,6 +27,10 @@ function iworks_email_html(string $subject, string $plain): string
     $reset = $security && stripos($title, 'reset') !== false;
     $support = (bool)preg_match('/support|ticket|reply/i', $title);
     $certificate = (bool)preg_match('/certificate/i', $title);
+    $category = $security ? 'ACCOUNT SECURITY' : '';
+    if (!$security && preg_match('/certificate|certification|academy|course|enrollment|assessment|exam|training/i', $title)) $category = 'iWORKS GLOBAL ACADEMY';
+    elseif (!$security && preg_match('/payment|invoice|commission|withdrawal|payout|receipt/i', $title)) $category = 'BILLING & PAYMENTS';
+    elseif (!$security && $support) $category = 'CUSTOMER SUPPORT';
     $body = '';
     $action = null;
     if ($otp) {
@@ -39,10 +43,10 @@ function iworks_email_html(string $subject, string $plain): string
         if (preg_match('/^This code expires in [^\r\n]+$/mi', $plain, $expiryMatch)) {
             $expiry = '<p style="margin:14px 0 0;color:#667085;font-size:13px;">'.$esc(trim($expiryMatch[0])).'</p>';
         }
-        $body = $greeting.'<p style="margin:0 0 22px;">Use this code to verify your identity.</p>'
-            .'<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#f5f5f7" style="background:#f5f5f7;border-radius:12px;padding:24px 8px;">'
-            .'<span style="font-family:Arial,Helvetica,sans-serif;color:#1d1d1f;font-size:34px;font-weight:700;letter-spacing:5px;white-space:nowrap;user-select:all;-webkit-user-select:all;">'.$esc($code[1]).'</span>'
-            .'<p style="margin:8px 0 0;color:#667085;font-size:12px;line-height:1.4;">Select or press and hold to copy</p></td></tr></table>'
+        $body = $greeting.'<p style="margin:0 0 22px;">Use this verification code to verify your account.</p>'
+            .'<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#fff4eb" style="background:#fff4eb;border:1px solid #ffd4b5;border-radius:8px;padding:18px 8px;">'
+            .'<span style="font-family:Arial,Helvetica,sans-serif;color:#1d1d1f;font-size:32px;font-weight:700;letter-spacing:5px;white-space:nowrap;user-select:all;-webkit-user-select:all;">'.$esc($code[1]).'</span>'
+            .'<p style="margin:8px 0 0;color:#667085;font-size:12px;line-height:1.4;">Copy code: select or press and hold</p></td></tr></table>'
             .$expiry.'<p style="margin:26px 0 0;color:#667085;font-size:13px;">If you did not request this code, ignore this email.</p>';
     } else {
         foreach (preg_split('/\r\n|\n|\r/', $plain) ?: [] as $line) {
@@ -63,15 +67,16 @@ function iworks_email_html(string $subject, string $plain): string
     $button = $action===null ? '' : '<table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0" style="margin:22px auto 0;"><tr><td bgcolor="#b94a00" style="background:#b94a00;border-radius:8px;"><a href="'.$esc($action[1]).'" style="display:inline-block;padding:14px 26px;color:#ffffff;font-weight:bold;font-size:15px;text-decoration:none;">'.$esc($action[0]).'</a></td></tr></table>';
     return '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'.$esc($title).'</title>'
         .'<style>@media only screen and (max-width:620px){.iw-mail-shell{padding:12px 8px!important}.iw-mail-card{padding:24px 20px!important}.iw-mail-title{font-size:24px!important}}</style></head>'
-        .'<body style="margin:0;padding:0;background:#f5f5f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,Arial,Helvetica,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f7"><tr><td align="center" class="iw-mail-shell" style="padding:32px 16px;">'
-        .'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width:600px;border:1px solid #e5e5e7;border-radius:14px;background:#ffffff;">'
-        .'<tr><td height="4" bgcolor="#ff6600" style="background:#ff6600;border-radius:13px 13px 0 0;font-size:1px;">&nbsp;</td></tr>'
-        .'<tr><td align="center" class="iw-mail-card" style="padding:36px 40px 18px;">'.iworks_email_logo_markup().'</td></tr>'
-        .'<tr><td align="center" class="iw-mail-card" style="padding:16px 40px 34px;text-align:center;">'
-        .'<h1 class="iw-mail-title" style="font-size:28px;line-height:1.25;letter-spacing:-.5px;color:#1d1d1f;margin:0 0 20px;">'.$esc($title).'</h1>'
+        .'<body style="margin:0;padding:0;background:#f2f4f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,Arial,Helvetica,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f2f4f7"><tr><td align="center" class="iw-mail-shell" style="padding:24px 12px;">'
+        .'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width:460px;border:1px solid #e1e5eb;border-radius:10px;background:#ffffff;">'
+        .'<tr><td height="4" bgcolor="#ff6600" style="background:#ff6600;border-radius:9px 9px 0 0;font-size:1px;">&nbsp;</td></tr>'
+        .'<tr><td align="center" class="iw-mail-card" style="padding:28px 26px 12px;">'.iworks_email_logo_markup().'</td></tr>'
+        .'<tr><td align="center" class="iw-mail-card" style="padding:12px 26px 26px;text-align:center;">'
+        .($category === '' ? '' : '<p style="margin:0 0 10px;font-size:11px;letter-spacing:1.2px;font-weight:bold;color:#a94300;">'.$esc($category).'</p>')
+        .'<h1 class="iw-mail-title" style="font-size:26px;line-height:1.25;letter-spacing:-.5px;color:#1d1d1f;margin:0 0 20px;">'.$esc($title).'</h1>'
         .'<div style="font-size:16px;line-height:1.6;color:#424245;text-align:center;">'.$body.'</div>'.$button
         .'</td></tr>'
-        .'<tr><td align="center" style="padding:17px 24px;border-top:1px solid #ececef;font-size:12px;line-height:1.6;color:#86868b;">iWorks Global Limited</td></tr>'
+        .'<tr><td align="center" style="padding:14px 20px;border-top:1px solid #ececef;font-size:12px;line-height:1.6;color:#86868b;">&copy; iWorks Global</td></tr>'
         .'</table></td></tr></table></body></html>';
 }
 
