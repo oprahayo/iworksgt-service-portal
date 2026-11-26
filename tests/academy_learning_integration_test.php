@@ -30,7 +30,7 @@ try{
  academy_learning_save($cid,'module',['title'=>'Module 1','position'=>'10','published'=>'1']);$mid=db_last_id();
  academy_learning_save($cid,'lesson',['module'=>$mid,'title'=>'Draft secret','position'=>'20','body'=>'Private draft']);
  $draft=db_last_id();
- academy_learning_save($cid,'lesson',['module'=>$mid,'title'=>'Published lesson','position'=>'10','body'=>'<script>alert(1)</script>','video_url'=>'https://example.com/video','material_url'=>'https://example.com/resource.pdf','published'=>'1']);
+ academy_learning_save($cid,'lesson',['module'=>$mid,'title'=>'Published lesson','position'=>'10','body'=>"<script>alert(1)</script>\n\nStep 1: Plan a campaign\nChoose a goal.\n[[visual|Example campaign|Objective|Leads|Status|Draft]]\n\nQuick knowledge check\n[[check|Which objective fits enquiries?|Leads.]]\n[[source|https://example.com/guide]]",'video_url'=>'https://example.com/video','material_url'=>'https://example.com/resource.pdf','published'=>'1']);
  $lid=db_last_id();
  expect(academy_learning_lessons($sid,$cid)===[],'Unpublished course hidden');
  academy_learning_save($cid,'course',['description'=>'Fixture course','published'=>'1']);
@@ -103,6 +103,7 @@ try{
  expect(str_contains($html,'ac-study-directory')&&str_contains($html,'Lesson 1 of 1')&&str_contains($html,'aria-current="page"')&&str_contains($html,'Last published lesson'),'Study navigation shows real lesson position and boundaries');
  expect(str_contains($html,'Academic results')&&str_contains($html,'3 of 4 submitted')&&str_contains($html,'Good work'),'Own course academic results rendered');
  expect(str_contains($html,'1 of 1 lessons completed')&&str_contains($html,'Watch lesson video')&&!str_contains($html,'<script>alert(1)</script>')&&!str_contains($html,'Draft secret'),'Student view renders escaped published content and progress');
+ expect(str_contains($html,'class="ac-lesson-visual"')&&str_contains($html,'class="ac-lesson-check"')&&str_contains($html,'Read official guide'),'Illustrated lesson and self-check render in actual view');
  expect(str_contains($html,'Download PDF')&&str_contains($html,'Result: 100%')&&str_contains($html,'Result: 85%')&&!str_contains($html,'Hidden assessment'),'Published assessment results visible; drafts hidden');
  academy_learning_save($cid,'module',['title'=>'Second module','position'=>'30']);
  $GLOBALS['fixtureRole']='admin';define('IWORKS_ACADEMY_BUILDER',true);

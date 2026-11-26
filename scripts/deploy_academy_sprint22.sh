@@ -5,6 +5,7 @@ umask 077
 SHA="$1"
 [[ "$SHA" =~ ^[a-f0-9]{40}$ ]]
 BASE=5d9690385a7565df8d36ade22bb1c49229bd75e8
+PRIOR=673a12c0aa94f5f0dfcd3d22dd99d0cc2b5ccaa1
 REPO=https://raw.githubusercontent.com/oprahayo/iworksgt-service-portal
 PUBLIC="$(readlink -f "$HOME/public_html")"
 ROOT="$(readlink -f "$PUBLIC/portal.iworksgt.com")"
@@ -37,17 +38,20 @@ echo "Using PHP CLI: $PHP"
 curl -fsSL --retry 2 "https://api.github.com/repos/oprahayo/iworksgt-service-portal/actions/runs?head_sha=$SHA&per_page=30" -o "$WORK/ci.json"
 "$PHP" -r '$j=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);foreach($j["workflow_runs"]??[] as $r){if(($r["name"]??"")==="CI"&&($r["head_sha"]??"")===$argv[2]&&($r["conclusion"]??"")==="success")exit(0);}fwrite(STDERR,"BLOCK pinned CI has not passed\n");exit(3);' "$WORK/ci.json" "$SHA"
 : > "$WORK/changes"
-for f in assets/css/academy-compact.css views/academy-learning.php views/academy-builder.php app/academy_learning.php academy.php; do
+for f in assets/css/academy-compact.css views/academy-admin.php views/academy-learning.php views/academy-builder.php app/academy_learning.php academy.php; do
  [[ -f "$ROOT/$f" && ! -L "$ROOT/$f" ]]
  mkdir -p "$WORK/target/$(dirname "$f")"
  curl -fsSL --retry 2 "$REPO/$SHA/$f" -o "$WORK/target/$f"
  case "$f" in *.php) "$PHP" -l "$WORK/target/$f";; esac
  if cmp -s "$ROOT/$f" "$WORK/target/$f"; then continue; fi
  curl -fsSL --retry 2 "$REPO/$BASE/$f" -o "$WORK/base"
- cmp -s "$ROOT/$f" "$WORK/base" || { echo "BLOCK source drift $f; complete Sprint 21 first"; exit 3; }
+ if ! cmp -s "$ROOT/$f" "$WORK/base"; then
+  curl -fsSL --retry 2 "$REPO/$PRIOR/$f" -o "$WORK/base"
+  cmp -s "$ROOT/$f" "$WORK/base" || { echo "BLOCK source drift $f; reconcile Sprint 20 or 21 first"; exit 3; }
+ fi
  echo "$f" >> "$WORK/changes"
 done
-for f in app/academy_admin.php app/academy_assessments.php app/academy_transcript.php views/academy-admin.php views/academy-student.php views/academy-assessments.php assets/js/academy-actions.js; do
+for f in app/academy_admin.php app/academy_assessments.php app/academy_transcript.php views/academy-student.php views/academy-assessments.php assets/js/academy-actions.js; do
  curl -fsSL --retry 2 "$REPO/$BASE/$f" -o "$WORK/prior"
  cmp -s "$ROOT/$f" "$WORK/prior" || { echo "BLOCK prerequisite differs: $f"; exit 3; }
 done

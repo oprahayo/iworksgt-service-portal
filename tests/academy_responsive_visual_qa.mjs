@@ -202,6 +202,17 @@ try{
 
         if(await canvas.evaluate(el=>getComputedStyle(el).backgroundColor)!=='rgb(241, 244, 248)')throw Error('Admin background lacks the approved visual hierarchy');
       }
+      if(file==='student-learning.html'){
+        const illustration=page.locator('.ac-lesson-visual svg');
+        if(await illustration.count()!==1||!await illustration.isVisible())throw Error('Illustrated lesson missing');
+        const b=await illustration.boundingBox();
+        if(!b||b.width>width||b.x<0||b.x+b.width>width+1)throw Error('Lesson image exceeds viewport');
+        const check=page.locator('.ac-lesson-check');
+        if(await check.evaluate(el=>el.open)||await check.getByText('Answer:',{exact:true}).isVisible())throw Error('Self-check answer visible before reveal');
+        await check.locator('summary').click();
+        if(!await check.getByText('Answer:',{exact:true}).isVisible())throw Error('Self-check answer failed to reveal');
+        await check.locator('summary').click();
+      }
       if(file==='admin-courses.html'){
         const rows=page.locator('.ac-admin-course-row');
         if(await rows.count()<2)throw Error('Course catalogue rows missing');
