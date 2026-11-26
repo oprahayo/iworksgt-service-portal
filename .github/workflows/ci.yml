@@ -160,6 +160,7 @@ jobs:
           bash -n scripts/deploy_academy_sprint9b.sh
           bash -n scripts/deploy_academy_sprint10.sh
           bash -n scripts/deploy_academy_sprint11.sh
+          bash -n scripts/deploy_academy_sprint12.sh
           php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
@@ -252,7 +253,7 @@ jobs:
         env:
           ACADEMY_VISUAL_FIXTURES: '1'
         run: |
-          for tab in students student enrollments courses certificates requests; do
+          for tab in students student enrollments courses certificates requests analytics; do
             php tests/academy_admin_render_test.php "$tab"
           done
 
