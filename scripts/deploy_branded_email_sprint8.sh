@@ -40,7 +40,14 @@ for f in app/support_email.php app/helpers.php app/academy.php; do
   if [[ "$root" == "$PUBLIC" && ( "$f" == app/academy.php || ! -f "$root/$f" || "$root/$f" -ef "$ROOT/$f" ) ]]; then continue; fi
   [[ -f "$root/$f" && ! -L "$root/$f" ]]
   if cmp -s "$root/$f" "$WORK/target/$f"; then continue; fi
-  cmp -s "$root/$f" "$WORK/base.php" || { echo "BLOCK source drift: $root/$f. Complete previous sprint first."; exit 3; }
+  matched=0
+  if cmp -s "$root/$f" "$WORK/base.php"; then matched=1; fi
+  for prior in 69d59a4c23ba1b75ad184f97b1597df834345ef5 effdb546930f8b944a182d794f0d5db00e810631; do
+   if [[ "$matched" == 1 ]]; then break; fi
+   curl -fsSL --retry 2 "$REPO/$prior/$f" -o "$WORK/prior.php"
+   if cmp -s "$root/$f" "$WORK/prior.php"; then matched=1; fi
+  done
+  [[ "$matched" == 1 ]] || { echo "BLOCK unrecognized prior mail source: $root/$f"; exit 3; }
   printf '%s|%s\n' "$root" "$f" >> "$WORK/manifest"
   tag=portal; [[ "$root" != "$PUBLIC" ]] || tag=public
   mkdir -p "$BACKUP/$tag/app"
