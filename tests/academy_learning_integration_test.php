@@ -103,9 +103,11 @@ try{
  expect(str_contains($html,'Academic results')&&str_contains($html,'3 of 4 submitted')&&str_contains($html,'Good work'),'Own course academic results rendered');
  expect(str_contains($html,'1 of 1 lessons completed')&&str_contains($html,'Watch lesson video')&&!str_contains($html,'<script>alert(1)</script>')&&!str_contains($html,'Draft secret'),'Student view renders escaped published content and progress');
  expect(str_contains($html,'Download PDF')&&str_contains($html,'Result: 100%')&&str_contains($html,'Result: 85%')&&!str_contains($html,'Hidden assessment'),'Published assessment results visible; drafts hidden');
+ academy_learning_save($cid,'module',['title'=>'Second module','position'=>'30']);
  $GLOBALS['fixtureRole']='admin';define('IWORKS_ACADEMY_BUILDER',true);
  ob_start();require __DIR__.'/../views/academy-builder.php';$builder=ob_get_clean();
  expect(str_contains($builder,'Draft secret')&&str_contains($builder,'Save lesson')&&str_contains($builder,'Save course settings'),'Builder renders editable draft content');
+ expect(str_contains($builder,'ac-module-group" open')&&str_contains($builder,'Second module')&&str_contains($builder,'1/2 lessons published'),'Module groups show real publication totals');
  expect(str_contains($builder,'Private PDF materials')&&str_contains($builder,'Add quiz, exam or assignment')&&str_contains($builder,'Save grade'),'Admin authoring and review rendered');
  if(getenv('ACADEMY_VISUAL_FIXTURES')==='1'){
    $dir=__DIR__.'/../docs/visual-qa/academy';if(!is_dir($dir))mkdir($dir,0755,true);
