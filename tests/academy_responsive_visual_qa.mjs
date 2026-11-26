@@ -161,6 +161,22 @@ try{
         if(!await action.getByText('Question 2 of 2',{exact:true}).isVisible())throw Error('Question did not advance');
         await action.getByRole('button',{name:'Previous'}).click();
         if(!await action.locator('fieldset:visible input').first().isChecked())throw Error('Previous answer lost');
+
+        await action.getByRole('button',{name:'Next question'}).click();
+        if(await action.getByRole('button',{name:'Submit assessment'}).isVisible())throw Error('Submission exposed before review');
+        await action.getByRole('button',{name:'Review answers'}).click();
+        if(!await action.getByText('Question 2 of 2',{exact:true}).isVisible())throw Error('Unanswered final question advanced');
+        await action.locator('fieldset:visible input').first().check();
+        await action.getByRole('button',{name:'Review answers'}).click();
+        if(!await action.getByRole('heading',{name:'Review your answers'}).isVisible()||await action.locator('.ac-quiz-review-row').count()!==2)throw Error('Answer review missing');
+        if(await action.locator('.ac-quiz-meter').evaluate(el=>el.value)!==2)throw Error('Question progress incorrect');
+        await action.getByRole('button',{name:'Edit question 1'}).click();
+        await action.locator('fieldset:visible input').nth(1).check();
+        await action.getByRole('button',{name:'Next question'}).click();
+        if(!await action.locator('fieldset:visible input').first().isChecked())throw Error('Second answer lost after editing first');
+        await action.getByRole('button',{name:'Review answers'}).click();
+        if(!await action.getByRole('button',{name:'Submit assessment'}).isVisible())throw Error('Reviewed answers cannot be submitted');
+
         await page.mouse.click(1,1);await action.waitFor({state:'hidden'});
       }
       if(file==='admin-builder.html'){
