@@ -165,6 +165,10 @@ try{
         if(await action.locator('input[name=duration_minutes]').isVisible()||await action.locator('textarea[name=questions]').isVisible())throw Error('Assignment shows irrelevant fields');
         await action.getByRole('button',{name:'Close action'}).click();await action.waitFor({state:'hidden'});
       }
+      if(file.startsWith('admin-')){
+        const canvas=page.locator('.ac-admin');
+        if(await canvas.evaluate(el=>getComputedStyle(el).backgroundColor)!=='rgb(241, 244, 248)')throw Error('Admin background lacks the approved visual hierarchy');
+      }
       if(file==='admin-students.html'){
         const rows=page.locator('.ac-roster-row');
         if(await rows.count()<1)throw Error('Student directory rows missing');
@@ -174,6 +178,11 @@ try{
         if(!href?.includes('tab=student')||!href.includes('id='))throw Error('Student row must open profile');
       }
       if(file==='admin-student.html'){
+        const deletion=page.locator('.ac-profile-danger summary');
+        await deletion.click();const danger=page.locator('.ac-action-dialog');await danger.waitFor({state:'visible'});
+        if(!await danger.getByText('Deletion is unavailable because approved training, certificate or payment records must be preserved.',{exact:true}).isVisible()||await danger.getByRole('button',{name:'Permanently delete student'}).count())throw Error('Protected student deletion not blocked in UI');
+        await page.keyboard.press('Escape');await danger.waitFor({state:'hidden'});
+
         const courses=page.locator('.ac-profile-course');
         if(await courses.count()<1||await courses.evaluateAll(els=>els.some(el=>el.open)))throw Error('Course history must start collapsed');
         const target=courses.filter({has:page.locator('summary').filter({hasText:'Change status'})}).first();
