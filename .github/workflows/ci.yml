@@ -161,6 +161,7 @@ jobs:
           bash -n scripts/deploy_academy_sprint10.sh
           bash -n scripts/deploy_academy_sprint11.sh
           bash -n scripts/deploy_academy_sprint12.sh
+          bash -n scripts/deploy_academy_sprint13.sh
           php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
