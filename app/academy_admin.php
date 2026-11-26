@@ -77,3 +77,20 @@ function academy_admin_progress(int $student,int $course):array {
  $lessons=db_all("SELECT l.title,p.completed_at FROM academy_lessons l JOIN academy_modules m ON m.id=l.module_id LEFT JOIN academy_lesson_progress p ON p.lesson_id=l.id AND p.student_id=:student WHERE m.course_id=:course AND m.published=1 AND l.published=1 ORDER BY m.position,l.position,l.id",compact('student','course'));
  return ['total'=>(int)($counts['total']??0),'completed'=>(int)($counts['completed']??0),'results'=>$results,'lessons'=>$lessons];
 }
+
+/** First-grade only from the centralized queue. A stale review cannot overwrite
+ * a grade saved by another administrator or the course builder. */
+function academy_admin_grade_pending(int $admin,int $submission,array $data):array {
+ academy_admin_assert($admin);
+ $score=filter_var($data['score']??'',FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>100]]);
+ if($score===false)throw new InvalidArgumentException('Enter a score from 0 to 100.');
+ $feedback=academy_learning_text($data['feedback']??'',10000);
+ return academy_admin_transaction(function()use($admin,$submission,$score,$feedback){
+  $r=db_one("SELECT s.id,s.student_id,s.score_percent,a.title,a.pass_percent FROM academy_assessment_submissions s JOIN academy_assessments a ON a.id=s.assessment_id JOIN users u ON u.id=s.student_id WHERE s.id=:id AND a.kind='assignment' AND u.role='student' AND u.deleted_at IS NULL FOR UPDATE",['id'=>$submission]);
+  if(!$r||$r['score_percent']!==null)throw new InvalidArgumentException('Assignment unavailable or already graded. Refresh the review queue.');
+  $count=db_query('UPDATE academy_assessment_submissions SET score_percent=:score,feedback=:feedback,graded_by=:admin,graded_at=:at WHERE id=:id AND score_percent IS NULL',['score'=>$score,'feedback'=>$feedback,'admin'=>$admin,'at'=>now(),'id'=>$submission])->rowCount();
+  if($count!==1)throw new InvalidArgumentException('Assignment already graded. Refresh the review queue.');
+  academy_admin_record($admin,(int)$r['student_id'],'assignment',$submission,'awaiting grading',(string)$score.'%','Initial grade saved from review queue.');
+  return ['student'=>(int)$r['student_id'],'title'=>$r['title'],'score'=>$score,'passed'=>$score>=(int)$r['pass_percent']];
+ });
+}
