@@ -50,8 +50,8 @@
 .academy-workspace .ac-admin .ac-history-panel>summary{font-size:13px;min-height:36px}
 @media(max-width:760px){
  .academy-workspace .ac-student .ac-lms-layout{grid-template-columns:minmax(0,1fr);gap:7px}
- .academy-workspace .ac-admin .ac-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:10px;max-width:100%;scrollbar-width:thin}
- .academy-workspace .ac-admin .ac-tabs a{flex:0 0 auto;min-height:44px;padding:10px 2px;font-size:12px}
+ .academy-workspace .ac-admin .ac-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 6px;max-width:100%}
+ .academy-workspace .ac-admin .ac-tabs a{min-height:44px;padding:8px 2px;font-size:11px;white-space:normal;text-align:center;overflow-wrap:anywhere}
  .academy-workspace .ac-admin .ac-table td,.academy-workspace .ac-admin .ac-table th{padding:0}
  .academy-workspace .ac-admin .ac-table tbody tr{padding:7px 0;gap:4px 8px}
  .academy-workspace .ac-admin .ac-table td:last-child .ac-secondary,.academy-workspace .ac-admin .ac-table td:last-child .ac-primary,.academy-workspace .ac-admin .ac-table td:last-child summary{min-height:44px}
