@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 const dir=resolve('docs/visual-qa/academy');
 const files=(await readdir(dir)).filter(f=>f.endsWith('.html'));
-if(files.length!==12)throw Error('Expected all twelve real Academy view fixtures; got '+files.length);
+if(files.length!==13)throw Error('Expected all thirteen real Academy view fixtures; got '+files.length);
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 await mkdir(dir,{recursive:true});
 try{
@@ -165,6 +165,11 @@ try{
         if(await action.locator('input[name=duration_minutes]').isVisible()||await action.locator('textarea[name=questions]').isVisible())throw Error('Assignment shows irrelevant fields');
         await action.getByRole('button',{name:'Close action'}).click();await action.waitFor({state:'hidden'});
       }
+      if(file==='admin-analytics.html'){
+        const strip=page.locator('.ac-metric-strip');
+        const bounds=await strip.boundingBox();
+        if(await strip.locator('.ac-metric').count()!==4||!bounds||bounds.height>100||bounds.width>width+1)throw Error('Analytics metric strip must stay compact');
+      }
       if(file==='admin-requests.html'){
         await page.locator('details[data-ac-popup]').filter({has:page.locator('summary').filter({hasText:'Decline request'})}).first().locator('summary').click();
         const action=page.locator('.ac-action-dialog');await action.waitFor({state:'visible'});
@@ -189,11 +194,11 @@ try{
       if(!metrics.panels||metrics.studentSurfaceErrors||metrics.boxed||metrics.scroll>width+2||metrics.bad.length||metrics.tableOverflow)throw Error('Academy layout overflow or unwanted card: '+file+' at '+width);
       if(file==='student-dashboard.html'&&(metrics.stats.length!==3||Math.max(...metrics.stats.map(x=>x.top))-Math.min(...metrics.stats.map(x=>x.top))>1||metrics.stats.some(x=>x.height>90||x.width<70)))throw Error('Dashboard metrics must occupy exactly one compact row: '+width);
       if(width<=390&&file==='student-dashboard.html'&&(metrics.availableTop>650||metrics.courseRows.some(x=>x>100)))throw Error('Dashboard content too tall on phone: '+JSON.stringify(metrics));
-      if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-enrollments.html','admin-requests.html','student-learning.html','admin-builder.html'].includes(file)){
+      if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-enrollments.html','admin-requests.html','admin-student.html','admin-analytics.html','student-learning.html','admin-builder.html'].includes(file)){
         await page.screenshot({path:resolve(dir,file.replace('.html','-'+width+'.png')),fullPage:true,animations:'disabled'});
       }
     }
     await page.close();
   }
 }finally{await browser.close();}
-console.log('All twelve Academy views passed purposeful-panel and responsive checks at four viewport widths.');
+console.log('All thirteen Academy views passed purposeful-panel and responsive checks at four viewport widths.');
