@@ -94,3 +94,17 @@ function academy_admin_grade_pending(int $admin,int $submission,array $data):arr
   return ['student'=>(int)$r['student_id'],'title'=>$r['title'],'score'=>$score,'passed'=>$score>=(int)$r['pass_percent']];
  });
 }
+
+/** Advisory evidence only: never grants course completion or certification.
+ * A course without published lessons cannot be marked ready by an empty checklist. */
+function academy_completion_summary(int $total,int $completed,array $results):array {
+ $total=max(0,$total);$completed=max(0,min($total,$completed));
+ $passed=0;$failed=0;$awaiting=0;$missing=0;
+ foreach($results as $r){
+  if(($r['submitted_at']??null)===null){$missing++;continue;}
+  if(($r['score_percent']??null)===null){$awaiting++;continue;}
+  if((int)$r['score_percent']>=(int)$r['pass_percent'])$passed++;else $failed++;
+ }
+ $assessments=count($results);
+ return ['lessons'=>$total,'completed'=>$completed,'assessments'=>$assessments,'passed'=>$passed,'failed'=>$failed,'awaiting'=>$awaiting,'missing'=>$missing,'ready'=>$total>0&&$completed===$total&&$passed===$assessments];
+}
