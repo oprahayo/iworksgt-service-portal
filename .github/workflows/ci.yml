@@ -154,6 +154,8 @@ jobs:
           php tests/admin_transition_contract_test.php
           php tests/job_support_refresh_contract_test.php
           php tests/support_reply_email_test.php
+          php tests/branded_transactional_email_test.php
+          bash -n scripts/deploy_branded_email_sprint8.sh
           php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
