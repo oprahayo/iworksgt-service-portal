@@ -74,7 +74,7 @@ $status=(string)($_GET['status']??'');
 $page=max(1,min(100000,(int)($_GET['p']??1)));
 $notice=flash('academy_admin_notice');$error=flash('academy_admin_error');
 ac_head('Academy');
-echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
+echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/academy.php?action=register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
 foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates','analytics'=>'Analytics'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
 echo '</nav>';
 if($tab==='requests'){
@@ -195,6 +195,15 @@ if($tab==='analytics'){
         echo '<section class="ac-panel ac-profile-overview"><div class="ac-profile-identity"><span class="ac-roster-avatar ac-profile-avatar" aria-hidden="true">'.e(ac_admin_student_initials($u['full_name'])).'</span><div class="ac-profile-identity-copy"><h2>'.e($u['full_name']).'</h2><p>'.e($u['email']).'</p><p>'.e((string)($u['phone']?:'No phone added')).'</p></div><div class="ac-profile-state">';ac_admin_status(ac_admin_student_state($u));echo '</div></div><div class="ac-profile-shortcuts">';
         echo '<details class="ac-contact" data-ac-popup><summary>Edit student profile</summary>';ac_admin_post('edit_student','student',$id);echo '<label>Full name<input name="name" maxlength="150" value="'.e($u['full_name']).'" required></label><label>Phone<input name="phone" maxlength="40" value="'.e((string)$u['phone']).'" required></label><p>Email verification and issued certificate details are not changed here.</p><label>Reason for correction<textarea name="reason" maxlength="500" rows="2" required></textarea></label><button>Save profile</button></form></details>';
         ac_admin_link('Review student requests','requests',['student'=>$id],'ac-secondary');ac_admin_link('Certificates','certificates',['student'=>$id],'ac-secondary');echo '</div>';
+        $protected=(bool)(db_one('SELECT id FROM academy_graduates WHERE student_id=:id LIMIT 1',['id'=>$id])||db_one('SELECT id FROM academy_certificates WHERE student_id=:id LIMIT 1',['id'=>$id]));
+        echo '<div class="ac-profile-danger"><details class="ac-contact" data-ac-popup><summary>Delete student</summary><p><strong>Permanent account deletion</strong></p>';
+        if($protected)echo '<p>Deletion is unavailable because approved training, certificate or payment records must be preserved.</p>';
+        else{
+            echo '<p>This permanently removes the student account, course applications, learning progress, submissions and uploaded assignments. It cannot be undone from the portal. Linked business records may prevent deletion.</p>';
+            ac_admin_post('delete_student','student',$id);echo '<label>Confirm student email<input type="email" name="confirm_email" maxlength="190" required autocomplete="off" placeholder="'.e($u['email']).'"></label><label>Type DELETE to confirm<input name="confirm_delete" maxlength="6" pattern="DELETE" required autocomplete="off"></label><button class="ac-danger">Permanently delete student</button></form>';
+        }
+        echo '</details></div>';
+
         echo '</section><section class="ac-panel ac-profile-courses">';
         $rows=db_all("SELECT c.id,c.title,c.colour,c.active,en.id AS enrollment_id,en.status AS enrollment_status,g.id AS graduate_id,g.duration,ce.status AS certificate_status,ce.certificate_number
             FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student
