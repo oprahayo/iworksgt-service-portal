@@ -89,6 +89,8 @@ jobs:
         run: |
           bash -n scripts/deploy_academy_digital_marketing.sh
           php scripts/seed_academy_digital_marketing.php --check
+          php scripts/upgrade_academy_digital_marketing.php --check
+          bash -n scripts/deploy_academy_sprint22.sh
           php tests/academy_smoke_test.php
           php tests/academy_payment_lifecycle_test.php
           php tests/crypto_conversion_test.php
@@ -289,6 +291,9 @@ jobs:
           php scripts/seed_academy_digital_marketing.php "$PWD" --backup-confirmed
           php scripts/seed_academy_digital_marketing.php "$PWD" --backup-confirmed
           php tests/academy_digital_marketing_seed_test.php
+          php scripts/upgrade_academy_digital_marketing.php "$PWD" --backup-confirmed
+          php scripts/upgrade_academy_digital_marketing.php "$PWD" --backup-confirmed
+          php tests/academy_digital_marketing_seed_test.php --illustrated
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

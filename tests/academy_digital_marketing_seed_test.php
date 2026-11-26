@@ -21,4 +21,14 @@ foreach($assessments as $a){
  if($a['kind']==='assignment'&&($n!==0||(int)$a['pass_percent']!==70))throw new RuntimeException('Invalid assignment');
 }
 if($counts!==['quiz'=>8,'exam'=>1,'assignment'=>1])throw new RuntimeException('Incorrect assessment types');
+require_once __DIR__.'/../app/academy_learning.php';
+if(in_array('--illustrated',$argv,true)){
+ foreach($lessons as $lesson){
+  $rendered=academy_lesson_render($lesson['body']);
+  if(substr_count($rendered,'class="ac-lesson-visual"')!==3||substr_count($rendered,'class="ac-lesson-check"')!==2||!str_contains($rendered,'Step 3:')||!str_contains($rendered,'Read official guide'))throw new RuntimeException('Illustrated lesson incomplete');
+ }
+ $attack=academy_lesson_render("<script>alert(1)</script>\n[[source|javascript:alert(1)]]\n[[visual|<script>|A|B|C|D]]");
+ if(str_contains($attack,'<script>')||str_contains($attack,'href="javascript:'))throw new RuntimeException('Unsafe lesson markup');
+ echo "PASS 48 rendered SVG teaching examples, 32 checks and markup escaping.\n";
+}
 echo "PASS real MySQL Digital Marketing import, repeat safety, content and assessment integrity.\n";

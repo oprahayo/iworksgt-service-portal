@@ -300,3 +300,19 @@
  .academy-workspace .ac-admin .ac-admin-course-actions>a,.academy-workspace .ac-admin .ac-course-settings>summary{min-height:44px}
 }
 @media(prefers-reduced-motion:no-preference){.academy-workspace .ac-admin .ac-admin-course-row{transition:background-color .15s ease}.academy-workspace .ac-admin .ac-admin-course-row:hover{background:#f8fafc}}
+
+/* Sprint 22: readable illustrated lessons and inline self-checks. */
+.academy-workspace .ac-lesson-body{font-size:15px;line-height:1.75;overflow-wrap:anywhere}
+.academy-workspace .ac-lesson-body p{margin:0 0 13px}
+.academy-workspace .ac-lesson-body h3,.academy-workspace .ac-learning-assessment-heading{font-size:15px;line-height:1.4;margin:20px 0 7px;color:var(--ac-ink)}
+.academy-workspace .ac-lesson-visual{margin:12px 0 20px;max-width:540px}
+.academy-workspace .ac-lesson-visual svg{display:block;width:100%;height:auto}
+.academy-workspace .ac-lesson-visual figcaption{font-size:11px;color:var(--ac-muted);margin-top:5px}
+.academy-workspace .ac-lesson-check{border:1px solid var(--ac-line);border-radius:8px;background:#fff;margin:7px 0;padding:0 10px}
+.academy-workspace .ac-lesson-check>summary{min-height:44px;padding:10px 0;cursor:pointer;font-size:13px;font-weight:600;line-height:1.5}
+.academy-workspace .ac-lesson-check>p{font-size:13px;padding:8px;background:#fff4eb;border-radius:5px}
+.academy-workspace .ac-lesson-source{font-size:13px}
+.academy-workspace .ac-author-help{margin:8px 0;border:1px solid var(--ac-line);border-radius:6px;padding:6px 9px}
+.academy-workspace .ac-author-help>summary{min-height:38px;display:flex;align-items:center;font-size:13px;cursor:pointer}
+.academy-workspace .ac-author-help code{font-size:11px;overflow-wrap:anywhere;white-space:normal}
+@media(max-width:760px){.academy-workspace .ac-lesson-body{font-size:14px;line-height:1.75}.academy-workspace .ac-lesson-visual{margin-inline:0}}

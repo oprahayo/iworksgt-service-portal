@@ -66,3 +66,30 @@ function academy_learning_complete(int $student,int $course,int $lesson):bool{
     $count=db_query("INSERT IGNORE INTO academy_lesson_progress(student_id,lesson_id,completed_at) SELECT en.student_id,l.id,:completed FROM academy_lessons l JOIN academy_modules m ON m.id=l.module_id JOIN academy_learning_courses lc ON lc.course_id=m.course_id JOIN academy_courses c ON c.id=m.course_id JOIN academy_enrollments en ON en.course_id=c.id JOIN users u ON u.id=en.student_id WHERE l.id=:lesson AND c.id=:course AND en.student_id=:student AND en.status IN ('enrolled','completed') AND c.active=1 AND lc.published=1 AND m.published=1 AND l.published=1 AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL",['completed'=>now(),'lesson'=>$lesson,'course'=>$course,'student'=>$student])->rowCount();
     return $count===1;
 }
+
+/** Safe lesson markup: no user-supplied HTML or SVG is executed. */
+function academy_lesson_render(string $body):string{
+    $escape=static fn(string $s):string=>htmlspecialchars($s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+    $out='';$paragraph=[];
+    $flush=static function()use(&$paragraph,&$out,$escape):void{if($paragraph){$out.='<p>'.nl2br($escape(implode("\n",$paragraph))).'</p>';$paragraph=[];}};
+    foreach(preg_split('/\R/u',$body)?:[] as $line){
+        $line=trim($line);if($line===''){$flush();continue;}
+        if(preg_match('/^\[\[(visual|check|source)\|(.+)\]\]$/u',$line,$m)){
+            $parts=explode('|',$m[2]);
+            // Visual fields may include a literal pipe only if escaped by the author as a slash; otherwise treat as ordinary text.
+            if($m[1]==='visual'&&count($parts)===5&&max(array_map('mb_strlen',$parts))<=90){
+                $flush();[$title,$label1,$value1,$label2,$value2]=$parts;
+                $svgText=static function(string $value,int $y,string $fill,int $size,int $weight=400)use($escape):string{
+                    $len=mb_strlen($value);$size=min($size,max(9,(int)floor(310/max(1,$len)*1.65)));
+                    return '<text x="24" y="'.$y.'" fill="'.$fill.'" font-size="'.$size.'" font-weight="'.$weight.'">'.$escape($value).'</text>';
+                };
+                $out.='<figure class="ac-lesson-visual"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 176" role="img" aria-label="'.$escape($title.': '.$label1.' — '.$value1.'; '.$label2.' — '.$value2).'" font-family="system-ui,sans-serif"><rect x="1" y="1" width="358" height="174" rx="12" fill="#fff" stroke="#d7dee8"/><path d="M1 34V13Q1 1 13 1H347Q359 1 359 13V34Z" fill="#243347"/>'.$svgText($title,23,'#ffffff',14,650).'<rect x="16" y="46" width="328" height="50" rx="7" fill="#f3f5f8"/><rect x="16" y="106" width="328" height="50" rx="7" fill="#fff2e8" stroke="#ebad82"/>'.$svgText($label1,63,'#475569',11,600).$svgText($value1,83,'#182638',14,650).$svgText($label2,123,'#8e3b0d',11,600).$svgText($value2,144,'#182638',14,650).'</svg><figcaption>Illustrated example · '.$escape($title).'</figcaption></figure>';continue;
+            }
+            if($m[1]==='check'&&count($parts)===2){$flush();$out.='<details class="ac-lesson-check"><summary>'.$escape($parts[0]).'</summary><p><strong>Answer:</strong> '.$escape($parts[1]).'</p></details>';continue;}
+            if($m[1]==='source'&&count($parts)===1&&strlen($parts[0])<=1000){try{$url=academy_learning_url($parts[0]);}catch(InvalidArgumentException $e){$url='';}if($url!==''){$flush();$out.='<p class="ac-lesson-source"><a href="'.$escape($url).'" target="_blank" rel="noopener noreferrer">Read official guide · '.$escape((string)parse_url($url,PHP_URL_HOST)).'</a></p>';continue;}}
+        }
+        if(preg_match('/^(Step [1-9][0-9]*: .+|Try it yourself|Quick knowledge check|Further reading)$/u',$line)){$flush();$out.='<h3>'.$escape($line).'</h3>';continue;}
+        $paragraph[]=$line;
+    }
+    $flush();return $out;
+}
