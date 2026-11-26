@@ -165,6 +165,28 @@ try{
         if(await action.locator('input[name=duration_minutes]').isVisible()||await action.locator('textarea[name=questions]').isVisible())throw Error('Assignment shows irrelevant fields');
         await action.getByRole('button',{name:'Close action'}).click();await action.waitFor({state:'hidden'});
       }
+      if(file==='admin-students.html'){
+        const rows=page.locator('.ac-roster-row');
+        if(await rows.count()<1)throw Error('Student directory rows missing');
+        const sizes=await rows.evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
+        if(sizes.some(h=>h>105))throw Error('Student directory rows too tall');
+        const href=await rows.first().getAttribute('href');
+        if(!href?.includes('tab=student')||!href.includes('id='))throw Error('Student row must open profile');
+      }
+      if(file==='admin-student.html'){
+        const courses=page.locator('.ac-profile-course');
+        if(await courses.count()<1||await courses.evaluateAll(els=>els.some(el=>el.open)))throw Error('Course history must start collapsed');
+        const target=courses.filter({has:page.locator('summary').filter({hasText:'Change status'})}).first();
+        await target.locator(':scope > summary').click();
+        const change=target.getByText('Change status',{exact:true});
+        await change.click();
+        const popup=page.locator('.ac-action-dialog');await popup.waitFor({state:'visible'});
+        if(!await popup.locator('select[name=status]').isVisible()||!await popup.locator('textarea[name=reason]').isVisible())throw Error('Enrollment correction missing');
+        const bounds=await popup.boundingBox();
+        if(!bounds||bounds.width>461||bounds.width>width-20)throw Error('Profile action dialog too wide');
+        await page.keyboard.press('Escape');await popup.waitFor({state:'hidden'});
+        await target.locator(':scope > summary').click();
+      }
       if(file==='admin-analytics.html'){
         const strip=page.locator('.ac-metric-strip');
         const bounds=await strip.boundingBox();
