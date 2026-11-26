@@ -60,3 +60,17 @@
  .academy-workspace .ac-admin .ac-metric strong{font-size:18px}
  .academy-workspace .ac-admin .ac-metric small{font-size:10px}
 }
+
+/* Sprint 15: small dashboard shortcuts and collapsed content groups. */
+.academy-workspace .ac-admin .ac-quick-links{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:0 0 10px;padding:0 0 7px;border-bottom:1px solid var(--ac-line)}
+.academy-workspace .ac-admin .ac-quick-links a{font-size:12px;display:inline-flex;align-items:center;gap:5px;min-height:34px;color:var(--ac-primary);text-decoration:none}
+.academy-workspace .ac-student .ac-resume-row span{min-width:0;flex:1}
+.academy-workspace .ac-student .ac-resume-row small{display:block;font-size:11px;color:var(--ac-muted);line-height:1.4;overflow-wrap:anywhere}
+.academy-workspace .ac-lms .ac-module-group{margin:7px 0;padding:0;border:1px solid var(--ac-line);border-radius:7px;background:transparent}
+.academy-workspace .ac-lms .ac-module-summary{padding:8px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-height:40px;cursor:pointer;color:var(--ac-ink)}
+.academy-workspace .ac-lms .ac-module-summary strong{font-size:13px}
+.academy-workspace .ac-lms .ac-module-summary small{font-size:11px;color:var(--ac-muted);margin-left:auto}
+.academy-workspace .ac-lms .ac-module-summary::before{content:"+";font-size:16px;color:var(--ac-primary);line-height:1}
+.academy-workspace .ac-lms .ac-module-group[open]>.ac-module-summary::before{content:"−"}
+.academy-workspace .ac-lms .ac-module-body{padding:0 10px 7px;min-width:0;border-top:1px solid var(--ac-line)}
+@media(max-width:760px){.academy-workspace .ac-admin .ac-quick-links a,.academy-workspace .ac-lms .ac-module-summary{min-height:44px}.academy-workspace .ac-lms .ac-module-summary small{margin-left:0}}
