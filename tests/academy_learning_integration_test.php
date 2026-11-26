@@ -100,6 +100,7 @@ try{
  $course=academy_learning_access($sid,$cid);$_GET=['lesson'=>$lid];define('IWORKS_ACADEMY_LEARNING_VIEW',true);
  ob_start();require __DIR__.'/../views/academy-learning.php';$html=ob_get_clean();
  expect(str_contains($html,'How to study your course'),'Learning guidance rendered');
+ expect(str_contains($html,'ac-study-directory')&&str_contains($html,'Lesson 1 of 1')&&str_contains($html,'aria-current="page"')&&str_contains($html,'Last published lesson'),'Study navigation shows real lesson position and boundaries');
  expect(str_contains($html,'Academic results')&&str_contains($html,'3 of 4 submitted')&&str_contains($html,'Good work'),'Own course academic results rendered');
  expect(str_contains($html,'1 of 1 lessons completed')&&str_contains($html,'Watch lesson video')&&!str_contains($html,'<script>alert(1)</script>')&&!str_contains($html,'Draft secret'),'Student view renders escaped published content and progress');
  expect(str_contains($html,'Download PDF')&&str_contains($html,'Result: 100%')&&str_contains($html,'Result: 85%')&&!str_contains($html,'Hidden assessment'),'Published assessment results visible; drafts hidden');
