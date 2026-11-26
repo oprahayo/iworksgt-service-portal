@@ -43,6 +43,7 @@ if($screen==='dashboard'){
     $learning=count(array_filter($courseRows,fn($c)=>$c['enrollment_status']==='enrolled'));
     $issued=count(array_filter($graduates,fn($g)=>$g['certificate_status']==='issued'));
     $ready=count(array_filter($graduates,fn($g)=>$g['certificate_status']===null||$g['certificate_status']==='pending'));
+    $resume=db_one("SELECT c.id,c.title,COUNT(l.id) total,COALESCE(SUM(p.lesson_id IS NOT NULL),0) completed FROM academy_enrollments en JOIN academy_courses c ON c.id=en.course_id AND c.active=1 JOIN academy_learning_courses lc ON lc.course_id=c.id AND lc.published=1 JOIN academy_modules m ON m.course_id=c.id AND m.published=1 JOIN academy_lessons l ON l.module_id=m.id AND l.published=1 JOIN users u ON u.id=en.student_id AND u.role='student' AND u.status='active' AND u.account_state='active' AND u.deleted_at IS NULL AND u.email_verified_at IS NOT NULL LEFT JOIN academy_lesson_progress p ON p.lesson_id=l.id AND p.student_id=en.student_id WHERE en.student_id=:student AND en.status IN ('enrolled','completed') GROUP BY c.id,c.title,en.updated_at ORDER BY (COUNT(l.id)>SUM(p.lesson_id IS NOT NULL)) DESC,en.updated_at DESC,c.id LIMIT 1",['student'=>$studentId]);
     echo '<header class="iw-ops-page-head ac-student-welcome"><div><h1>Welcome, '.e($first?:'student').'</h1><p>Manage your learning and certification.</p></div></header>';
     ac_guide('dashboard',$studentId,empty($_SESSION['academy_course_intent']));
     echo '<div class="ac-student-stats" aria-label="Your Academy progress">';
@@ -61,12 +62,15 @@ if($screen==='dashboard'){
     echo '<div class="ac-dashboard-columns"><div class="ac-dashboard-actions">';
     {
         echo '<section class="ac-student-panel"><h2>Things to do</h2><div class="ac-task-list">';
+        if($resume){
+            echo '<div class="ac-resume-row"><span><strong>Continue learning</strong><small>'.e($resume['title']).' · '.(int)$resume['completed'].'/'.(int)$resume['total'].' lessons</small></span><a class="ac-student-link" href="/academy.php?action=learn&amp;course='.(int)$resume['id'].'">Open course</a></div>';
+        }
         if(trim((string)($user['phone']??''))===''){echo '<div><span><strong>Complete your profile</strong></span>';ac_student_link('profile','Edit profile');echo '</div>';}
         if($ready>0){echo '<div><span><strong>Certificate action required</strong></span>';echo '<a class="ac-student-link" href="/academy.php?action=certificates#ac-certificate-history">My Certificates</a>';echo '</div>';}
         if($pending>0){echo '<div><span><strong>'.(int)$pending.' pending application'.($pending===1?'':'s').'</strong></span>';ac_student_link('courses','View status');echo '</div>';}
         if(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning===0){
             echo '<div><span><strong>Choose your next step</strong></span><a class="ac-student-link" href="#available-courses">Explore courses</a></div>';
-        }elseif(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning>0){
+        }elseif(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning>0&&!$resume){
             echo '<div><span><strong>Continue your learning journey</strong></span>';ac_student_link('courses','My Courses');echo '</div>';
         }
         echo '</div></section>';
