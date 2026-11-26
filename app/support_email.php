@@ -80,11 +80,38 @@ function iworks_email_html(string $subject, string $plain): string
         .'</table></td></tr></table></body></html>';
 }
 
-/** MIME alternative body, reusable inside certificate attachment messages. */
-function iworks_email_alternative_body(string $boundary, string $plain, string $html): string
+/** Local approved PNG, never fetched from the network during mail delivery. */
+function iworks_email_logo_bytes(): ?string
 {
-    return '--'.$boundary."\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
-        .quoted_printable_encode($plain)."\r\n--".$boundary."\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
+    $path = __DIR__.'/../assets/branding/iworks-email-logo.png';
+    if (!is_readable($path) || !is_file($path) || filesize($path)>524288) return null;
+    $data=file_get_contents($path);
+    return is_string($data) && str_starts_with($data,"\x89PNG\r\n\x1a\n") ? $data : null;
+}
+
+/** MIME alternative with a related, inline PNG in the HTML branch.
+ * Preserve the plain fallback and existing attachment-safe API.
+ */
+function iworks_email_alternative_body(string $boundary, string $plain, string $html, ?string $logo = null): string
+{
+    $result='--'.$boundary."\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
+        .quoted_printable_encode($plain)."\r\n--".$boundary."\r\n";
+    $remote='https://portal.iworksgt.com/assets/branding/iworks-email-logo.png';
+    if (str_contains($html,$remote)) {
+        $logo=$logo??iworks_email_logo_bytes();
+        if ($logo!==null && str_starts_with($logo,"\x89PNG\r\n\x1a\n")) {
+            $related='iworks-logo-'.bin2hex(random_bytes(16));
+            $cid='iworks-logo-'.bin2hex(random_bytes(12)).'@iworksgt.com';
+            $html=str_replace($remote,'cid:'.$cid,$html);
+            $result.='Content-Type: multipart/related; type="text/html"; boundary="'.$related."\"\r\n\r\n"
+                .'--'.$related."\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
+                .quoted_printable_encode($html)."\r\n--".$related."\r\nContent-Type: image/png; name=\"iworks-email-logo.png\"\r\n"
+                ."Content-Transfer-Encoding: base64\r\nContent-ID: <".$cid.">\r\nContent-Disposition: inline; filename=\"iworks-email-logo.png\"\r\n\r\n"
+                .chunk_split(base64_encode($logo)).'--'.$related."--\r\n";
+            return $result.'--'.$boundary."--\r\n";
+        }
+    }
+    return $result."Content-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
         .quoted_printable_encode($html)."\r\n--".$boundary."--\r\n";
 }
 
