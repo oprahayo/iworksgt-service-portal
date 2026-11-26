@@ -222,3 +222,28 @@
 .academy-workspace .ac-admin .ac-tabs a[data-ac-icon]{min-width:0}
 .academy-workspace .ac-admin .ac-roster-state{min-width:0}
 .academy-workspace .ac-admin .ac-quick-links a[data-ac-icon]::before{margin:0}
+
+/* Sprint 19: compact study workspace. Keep the lesson itself in focus. */
+.academy-workspace .ac-study-progress{border:1px solid var(--ac-line);background:#fff;border-radius:7px;padding:8px 10px;margin:8px 0}
+.academy-workspace .ac-study-progress>div{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}
+.academy-workspace .ac-study-progress>div>span{font-weight:650;color:var(--ac-primary);font-variant-numeric:tabular-nums}
+.academy-workspace .ac-study-progress progress{display:block;width:100%;height:5px;margin-top:6px;accent-color:var(--ac-primary)}
+.academy-workspace .ac-study-layout{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(0,2fr);align-items:start;gap:10px}
+.academy-workspace .ac-student section.ac-study-outline,.academy-workspace .ac-student section.ac-study-reading{min-width:0;padding:10px;margin:0 0 8px}
+.academy-workspace .ac-study-directory>summary{display:flex;align-items:center;gap:5px;cursor:pointer;min-height:40px;font-size:13px;font-weight:650;list-style:none}
+.academy-workspace .ac-study-directory>summary::-webkit-details-marker{display:none}
+.academy-workspace .ac-study-directory>summary::before{margin:0}
+.academy-workspace .ac-study-directory>summary small{font-size:11px;color:var(--ac-muted);font-weight:400;margin-left:auto}
+.academy-workspace .ac-study-directory[open]>summary .ac-course-chevron{transform:rotate(90deg)}
+.academy-workspace .ac-study-directory h3{font-size:12px;color:var(--ac-muted);margin:10px 0 3px}
+.academy-workspace .ac-study-directory .ac-lms-lesson{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 5px;min-width:0}
+.academy-workspace .ac-study-directory .ac-lms-lesson>span{font-size:12px;min-width:0;overflow-wrap:anywhere}
+.academy-workspace .ac-study-directory .ac-lms-lesson small{font-size:10px;flex:none;color:var(--ac-muted)}
+.academy-workspace .ac-study-heading{margin:0 0 10px}
+.academy-workspace .ac-study-heading small{display:block;font-size:11px;color:var(--ac-muted);margin:0 0 3px}
+.academy-workspace .ac-study-heading h2{font-size:17px;line-height:1.4}
+.academy-workspace .ac-study-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--ac-line);margin-top:12px;padding-top:6px}
+.academy-workspace .ac-study-nav a{font-size:12px;min-height:44px;display:inline-flex;align-items:center}
+.academy-workspace .ac-study-end{font-size:11px;color:var(--ac-muted)}
+@media(max-width:760px){.academy-workspace .ac-study-layout{grid-template-columns:minmax(0,1fr);gap:0}.academy-workspace .ac-study-directory>summary{min-height:44px}.academy-workspace .ac-study-directory .ac-lms-lesson{min-height:44px}.academy-workspace .ac-study-heading h2{font-size:16px}}
+@media(prefers-reduced-motion:no-preference){.academy-workspace .ac-study-directory[open]>.ac-lms-lesson{animation:ac-content-reveal 140ms ease-out}}
