@@ -5,7 +5,7 @@ declare(strict_types=1);
 /** First-party raster logo generated from the approved current brand artwork. */
 function iworks_email_logo_markup(): string
 {
-    return '<img src="https://portal.iworksgt.com/assets/branding/iworks-email-logo.png" width="270" alt="iWORKS GLOBAL" style="display:block;width:270px;max-width:100%;height:auto;border:0;color:#17212e;font-weight:700;font-size:20px;">';
+    return '<img src="https://portal.iworksgt.com/assets/branding/iworks-email-logo.png" width="248" alt="iWorks Global" style="display:block;margin:0 auto;width:248px;max-width:100%;height:auto;border:0;color:#17212e;font-size:18px;">';
 }
 
 /** All content is plain text unless constructed here. Only first-party URLs become actions. */
@@ -22,43 +22,56 @@ function iworks_email_html(string $subject, string $plain): string
 {
     $esc = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $title = trim($subject) ?: 'An update from iWorks Global';
-    $category = 'ACCOUNT UPDATE';
     $security = (bool)preg_match('/\b(?:otp|verify your .*account|reset .*password|security code)\b/i', $title);
-    if ($security) $category = 'ACCOUNT SECURITY';
-    elseif (preg_match('/certificate|certification|academy|course|enrollment|assessment|exam|training/i', $title)) $category = 'iWORKS GLOBAL ACADEMY';
-    elseif (preg_match('/payment|invoice|commission|withdrawal|payout|receipt/i', $title)) $category = 'BILLING & PAYMENTS';
-    elseif (preg_match('/support|ticket|reply/i', $title)) $category = 'CUSTOMER SUPPORT';
-    elseif (preg_match('/job|order|service|document/i', $title)) $category = 'SERVICE UPDATE';
+    $otp = $security && preg_match('/^\s*Your OTP code is:\s*([0-9]{4,10})\s*$/mi', $plain, $code);
+    $reset = $security && stripos($title, 'reset') !== false;
+    $support = (bool)preg_match('/support|ticket|reply/i', $title);
+    $certificate = (bool)preg_match('/certificate/i', $title);
     $body = '';
     $action = null;
-    foreach (preg_split('/\r\n|\n|\r/', $plain) ?: [] as $line) {
-        if (trim($line) === '') { $body .= '<div style="height:12px;line-height:12px;">&nbsp;</div>'; continue; }
-        if ($security && preg_match('/^\s*Your OTP code is:\s*([0-9]{4,10})\s*$/iD', $line, $m)) {
-            $body .= '<p style="margin:0 0 8px;">Your one-time code is:</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#fff4eb" style="background:#fff4eb;border:1px solid #ffd4b5;border-radius:8px;padding:20px;color:#17212e;font-size:32px;font-weight:bold;letter-spacing:7px;">'.$esc($m[1]).'</td></tr></table>';
-            continue;
+    if ($otp) {
+        $title = preg_match('/verify/i', $title) ? 'Verify your account' : 'Your verification code';
+        $greeting = '';
+        if (preg_match('/^Hello ([^\r\n]+),\s*$/mi', $plain, $greetingMatch)) {
+            $greeting = '<p style="margin:0 0 14px;">Hello '.$esc($greetingMatch[1]).',</p>';
         }
-        if (preg_match('~^\s*(?:(Open|View and reply|Verify|Download|Reset password):\s*)?(https://[^\s]+)\s*$~iD', $line, $m) && iworks_email_safe_url($m[2])) {
-            $url = $m[2];
-            $label = $m[1] ?: ($security && stripos($title,'reset')!==false ? 'Reset password' : 'Open portal');
-            if (strcasecmp($label,'Open')===0) $label='Open portal';
-            if ($action===null) $action=[$label,$url];
-            $body .= '<p style="margin:0 0 8px;word-break:break-all;overflow-wrap:anywhere;font-size:13px;"><a style="color:#a94300;text-decoration:underline;" href="'.$esc($url).'">'.$esc($line).'</a></p>';
-            continue;
+        $expiry = '';
+        if (preg_match('/^This code expires in [^\r\n]+$/mi', $plain, $expiryMatch)) {
+            $expiry = '<p style="margin:14px 0 0;color:#667085;font-size:13px;">'.$esc(trim($expiryMatch[0])).'</p>';
         }
-        $body .= '<p style="margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;">'.$esc($line).'</p>';
+        $body = $greeting.'<p style="margin:0 0 22px;">Use this code to verify your identity.</p>'
+            .'<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#f5f5f7" style="background:#f5f5f7;border-radius:12px;padding:24px 8px;">'
+            .'<span style="font-family:Arial,Helvetica,sans-serif;color:#1d1d1f;font-size:34px;font-weight:700;letter-spacing:5px;white-space:nowrap;user-select:all;-webkit-user-select:all;">'.$esc($code[1]).'</span>'
+            .'<p style="margin:8px 0 0;color:#667085;font-size:12px;line-height:1.4;">Select or press and hold to copy</p></td></tr></table>'
+            .$expiry.'<p style="margin:26px 0 0;color:#667085;font-size:13px;">If you did not request this code, ignore this email.</p>';
+    } else {
+        foreach (preg_split('/\r\n|\n|\r/', $plain) ?: [] as $line) {
+            if (trim($line) === '') continue;
+            if (preg_match('/^\s*(?:Warmly,|The iworks\s*global Team)\s*$/iD', $line)) continue;
+            if (preg_match('~^\s*(?:(Open|View and reply|Verify|Download|Reset password):\s*)?(https://[^\s]+)\s*$~iD', $line, $m) && iworks_email_safe_url($m[2])) {
+                // No redundant links or footer navigation. Only actions required
+                // to complete password recovery, support replies or verification.
+                if ($action===null && ($reset || $support || ($certificate && strcasecmp($m[1],'Verify')===0))) {
+                    $label = $reset ? 'Reset password' : ($support ? 'View and reply' : 'Verify certificate');
+                    $action=[$label,$m[2]];
+                }
+                continue;
+            }
+            $body .= '<p style="margin:0 0 14px;white-space:pre-wrap;overflow-wrap:anywhere;">'.$esc($line).'</p>';
+        }
     }
-    $button = $action===null ? '' : '<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:20px 0 12px;"><tr><td bgcolor="#b94a00" style="background:#b94a00;border-radius:6px;"><a href="'.$esc($action[1]).'" style="display:inline-block;padding:14px 24px;color:#ffffff;font-weight:bold;font-size:16px;text-decoration:none;border-radius:6px;">'.$esc($action[0]).'</a></td></tr></table>';
+    $button = $action===null ? '' : '<table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0" style="margin:22px auto 0;"><tr><td bgcolor="#b94a00" style="background:#b94a00;border-radius:8px;"><a href="'.$esc($action[1]).'" style="display:inline-block;padding:14px 26px;color:#ffffff;font-weight:bold;font-size:15px;text-decoration:none;">'.$esc($action[0]).'</a></td></tr></table>';
     return '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'.$esc($title).'</title>'
-        .'<style>@media only screen and (max-width:620px){.iw-mail-shell{padding:12px 8px!important}.iw-mail-card{padding:24px 18px!important}.iw-mail-title{font-size:24px!important}}</style></head>'
-        .'<body style="margin:0;padding:0;background:#f2f4f7;color:#344054;font-family:Arial,Helvetica,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f2f4f7"><tr><td align="center" class="iw-mail-shell" style="padding:32px 16px;">'
-        .'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width:600px;border:1px solid #e1e5eb;border-radius:10px;background:#ffffff;">'
-        .'<tr><td height="5" bgcolor="#ff6600" style="background:#ff6600;border-radius:9px 9px 0 0;font-size:1px;">&nbsp;</td></tr>'
-        .'<tr><td class="iw-mail-card" style="padding:34px 36px 14px;">'.iworks_email_logo_markup().'</td></tr>'
-        .'<tr><td class="iw-mail-card" style="padding:14px 36px 30px;"><p style="margin:0 0 10px;font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#a94300;">'.$esc($category).'</p>'
-        .'<h1 class="iw-mail-title" style="font-size:28px;line-height:1.3;color:#17212e;margin:0 0 22px;">'.$esc($title).'</h1>'
-        .'<div style="font-size:16px;line-height:1.65;color:#344054;">'.$body.'</div>'.$button
-        .'<p style="margin:24px 0 0;font-size:14px;color:#475467;">The iWorks Global Team</p></td></tr>'
-        .'<tr><td class="iw-mail-card" bgcolor="#fafafa" style="padding:20px 36px;border-top:1px solid #e4e7ec;font-size:13px;line-height:1.7;color:#667085;border-radius:0 0 9px 9px;">iWorks Global Limited<br><a href="https://iworksgt.com" style="color:#a94300;text-decoration:underline;">iworksgt.com</a> &nbsp;|&nbsp; <a href="https://portal.iworksgt.com" style="color:#a94300;text-decoration:underline;">Client portal</a><br>This is a service-related email from iWorks Global.</td></tr>'
+        .'<style>@media only screen and (max-width:620px){.iw-mail-shell{padding:12px 8px!important}.iw-mail-card{padding:24px 20px!important}.iw-mail-title{font-size:24px!important}}</style></head>'
+        .'<body style="margin:0;padding:0;background:#f5f5f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,Arial,Helvetica,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f7"><tr><td align="center" class="iw-mail-shell" style="padding:32px 16px;">'
+        .'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width:600px;border:1px solid #e5e5e7;border-radius:14px;background:#ffffff;">'
+        .'<tr><td height="4" bgcolor="#ff6600" style="background:#ff6600;border-radius:13px 13px 0 0;font-size:1px;">&nbsp;</td></tr>'
+        .'<tr><td align="center" class="iw-mail-card" style="padding:36px 40px 18px;">'.iworks_email_logo_markup().'</td></tr>'
+        .'<tr><td align="center" class="iw-mail-card" style="padding:16px 40px 34px;text-align:center;">'
+        .'<h1 class="iw-mail-title" style="font-size:28px;line-height:1.25;letter-spacing:-.5px;color:#1d1d1f;margin:0 0 20px;">'.$esc($title).'</h1>'
+        .'<div style="font-size:16px;line-height:1.6;color:#424245;text-align:center;">'.$body.'</div>'.$button
+        .'</td></tr>'
+        .'<tr><td align="center" style="padding:17px 24px;border-top:1px solid #ececef;font-size:12px;line-height:1.6;color:#86868b;">iWorks Global Limited</td></tr>'
         .'</table></td></tr></table></body></html>';
 }
 
