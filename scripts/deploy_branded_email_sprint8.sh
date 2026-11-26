@@ -42,7 +42,7 @@ for f in app/support_email.php app/helpers.php app/academy.php; do
   if cmp -s "$root/$f" "$WORK/target/$f"; then continue; fi
   matched=0
   if cmp -s "$root/$f" "$WORK/base.php"; then matched=1; fi
-  for prior in 69d59a4c23ba1b75ad184f97b1597df834345ef5 effdb546930f8b944a182d794f0d5db00e810631; do
+  for prior in 69d59a4c23ba1b75ad184f97b1597df834345ef5 effdb546930f8b944a182d794f0d5db00e810631 5ec9cc4969935cb8a0952094fc7a1391022457eb; do
    if [[ "$matched" == 1 ]]; then break; fi
    curl -fsSL --retry 2 "$REPO/$prior/$f" -o "$WORK/prior.php"
    if cmp -s "$root/$f" "$WORK/prior.php"; then matched=1; fi
