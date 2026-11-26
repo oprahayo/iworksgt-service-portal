@@ -149,12 +149,16 @@ try {
             require_csrf();
             $mode=(string)($_POST['mode']??'');
             $tab=(string)($_POST['return_tab']??'students');
-            if(!in_array($tab,['students','student','enrollments','courses','certificates','requests'],true))$tab='students';
+            if(!in_array($tab,['students','student','enrollments','courses','certificates','requests','analytics'],true))$tab='students';
             $studentId=(int)($_POST['student_id']??0);
             $destination=$base.'?'.http_build_query(['action'=>'admin','tab'=>$tab]+($tab==='student'&&$studentId>0?['id'=>$studentId]:[]));
             $error='';$success='';
             try{
-                if($mode==='create_course'){
+                if($mode==='grade_pending'){
+                    $result=academy_admin_grade_pending((int)current_user()['id'],(int)($_POST['id']??0),$_POST);
+                    $success='Assignment grade saved.';
+                    academy_notice($result['student'],'Assignment graded',$result['title'].': '.$result['score'].'%. Open your course to view feedback.','courses');
+                }elseif($mode==='create_course'){
                     $title=trim((string)($_POST['title']??''));$colour=(string)($_POST['colour']??'');
                     $slug=trim(preg_replace('/[^a-z0-9]+/','-',strtolower($title)),'-');
                     if($title===''||mb_strlen($title)>160||$slug===''||strlen($slug)>100||!in_array($colour,['orange','purple','green','blue'],true))$error='Enter a course title and select a valid certificate colour.';
