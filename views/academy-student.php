@@ -67,7 +67,7 @@ if($screen==='dashboard'){
         }
         if(trim((string)($user['phone']??''))===''){echo '<div><span><strong>Complete your profile</strong></span>';ac_student_link('profile','Edit profile');echo '</div>';}
         if($ready>0){echo '<div><span><strong>Certificate action required</strong></span>';echo '<a class="ac-student-link" href="/academy.php?action=certificates#ac-certificate-history">My Certificates</a>';echo '</div>';}
-        if($pending>0){echo '<div><span><strong>'.(int)$pending.' pending application'.($pending===1?'':'s').'</strong></span>';ac_student_link('courses','View status');echo '</div>';}
+        if($pending>0&&!$resume){echo '<div><span><strong>'.(int)$pending.' pending application'.($pending===1?'':'s').'</strong></span>';ac_student_link('courses','View status');echo '</div>';}
         if(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning===0){
             echo '<div><span><strong>Choose your next step</strong></span><a class="ac-student-link" href="#available-courses">Explore courses</a></div>';
         }elseif(trim((string)($user['phone']??''))!==''&&$ready===0&&$pending===0&&$learning>0&&!$resume){
