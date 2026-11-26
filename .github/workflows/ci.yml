@@ -171,6 +171,7 @@ jobs:
           bash -n scripts/deploy_academy_sprint18.sh
           bash -n scripts/deploy_academy_sprint19.sh
           bash -n scripts/deploy_academy_sprint20.sh
+          bash -n scripts/deploy_academy_sprint21.sh
           node --check assets/js/academy-actions.js
           php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php

@@ -202,6 +202,23 @@ try{
 
         if(await canvas.evaluate(el=>getComputedStyle(el).backgroundColor)!=='rgb(241, 244, 248)')throw Error('Admin background lacks the approved visual hierarchy');
       }
+      if(file==='admin-courses.html'){
+        const rows=page.locator('.ac-admin-course-row');
+        if(await rows.count()<2)throw Error('Course catalogue rows missing');
+        const hosting=rows.filter({hasText:'Web Hosting & Server Administration'});
+        if(!await hosting.getByText('Learning published',{exact:true}).isVisible()||!await hosting.getByText('1 published lessons',{exact:true}).isVisible())throw Error('Published counts missing or draft counted');
+        const settings=hosting.locator('.ac-course-settings');
+        if(await settings.locator('select').isVisible())throw Error('Course settings exposed by default');
+        await settings.locator('summary').click();
+        const dialog=page.locator('.ac-action-dialog');await dialog.waitFor({state:'visible'});
+        if(!await dialog.locator('select[name=colour]').isVisible()||!await dialog.getByRole('button',{name:'Save',exact:true}).isVisible())throw Error('Settings popup missing');
+        await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+        if(await settings.locator('select').isVisible())throw Error('Settings not collapsed');
+        await page.locator('.ac-catalogue-create summary').click();await dialog.waitFor({state:'visible'});
+        if(!await dialog.locator('input[name=title]').isVisible())throw Error('Create course popup missing');
+        await page.mouse.click(1,1);await dialog.waitFor({state:'hidden'});
+        if(!(await hosting.getByRole('link',{name:'Course builder'}).getAttribute('href'))?.includes('action=builder'))throw Error('Builder route missing');
+      }
       if(file==='admin-students.html'){
         const rows=page.locator('.ac-roster-row');
         if(await rows.count()<1)throw Error('Student directory rows missing');
@@ -270,7 +287,7 @@ try{
       if(!metrics.panels||metrics.studentSurfaceErrors||metrics.boxed||metrics.scroll>width+2||metrics.bad.length||metrics.tableOverflow)throw Error('Academy layout overflow or unwanted card: '+file+' at '+width);
       if(file==='student-dashboard.html'&&(metrics.stats.length!==3||Math.max(...metrics.stats.map(x=>x.top))-Math.min(...metrics.stats.map(x=>x.top))>1||metrics.stats.some(x=>x.height>90||x.width<70)))throw Error('Dashboard metrics must occupy exactly one compact row: '+width);
       if(width<=390&&file==='student-dashboard.html'&&(metrics.availableTop>650||metrics.courseRows.some(x=>x>100)))throw Error('Dashboard content too tall on phone: '+JSON.stringify(metrics));
-      if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-enrollments.html','admin-requests.html','admin-student.html','admin-analytics.html','student-learning.html','admin-builder.html'].includes(file)){
+      if((width===390||width===1440)&&['student-dashboard.html','student-certificates.html','admin-students.html','admin-courses.html','admin-enrollments.html','admin-requests.html','admin-student.html','admin-analytics.html','student-learning.html','admin-builder.html'].includes(file)){
         await page.screenshot({path:resolve(dir,file.replace('.html','-'+width+'.png')),fullPage:true,animations:'disabled'});
       }
     }

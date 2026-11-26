@@ -275,14 +275,26 @@ if($tab==='analytics'){
     }
     ac_admin_pager('enrollments',$page,$total,['q'=>$query,'status'=>$status]);echo '</section>';
 }elseif($tab==='courses'){
-    echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>Courses</h2><p>Manage the course catalogue and certificate colours.</p></div></div><details class="ac-create"><summary>Add a course</summary>';
-    ac_admin_post('create_course','courses');echo '<div class="ac-fields"><label>Course title<input name="title" maxlength="160" required></label><label>Certificate colour<select name="colour">';ac_admin_colour_options();echo '</select></label></div><button>Create Course</button></form></details>';
-    $rows=db_all("SELECT c.*,(SELECT COUNT(*) FROM academy_enrollments en WHERE en.course_id=c.id AND en.status<>'cancelled') AS enrolled_count,(SELECT COUNT(*) FROM academy_graduates g WHERE g.course_id=c.id) AS completed_count FROM academy_courses c ORDER BY c.title");
+    echo '<section class="ac-panel ac-admin-catalogue"><div class="ac-panel-title"><div><h2>Courses</h2><p>Manage learning content and certificate settings.</p></div><details class="ac-create ac-catalogue-create" data-ac-popup><summary data-ac-icon="plus">Add a course</summary>';
+    ac_admin_post('create_course','courses');echo '<label>Course title<input name="title" maxlength="160" required></label><label>Certificate colour<select name="colour">';ac_admin_colour_options();echo '</select></label><button>Create Course</button></form></details></div>';
+    $rows=db_all("SELECT c.*,COALESCE(lc.published,0) learning_published,
+      (SELECT COUNT(*) FROM academy_enrollments en WHERE en.course_id=c.id AND en.status IN ('enrolled','completed')) AS enrolled_count,
+      (SELECT COUNT(*) FROM academy_graduates g WHERE g.course_id=c.id) AS completed_count,
+      (SELECT COUNT(*) FROM academy_modules m WHERE m.course_id=c.id AND m.published=1) AS module_count,
+      (SELECT COUNT(*) FROM academy_lessons l JOIN academy_modules m ON m.id=l.module_id WHERE m.course_id=c.id AND m.published=1 AND l.published=1) AS lesson_count,
+      (SELECT COUNT(*) FROM academy_assessments a JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id WHERE m.course_id=c.id AND m.published=1 AND l.published=1 AND a.published=1) AS assessment_count,
+      (SELECT COUNT(*) FROM academy_lessons l JOIN academy_modules m ON m.id=l.module_id WHERE m.course_id=c.id) AS total_lessons
+      FROM academy_courses c LEFT JOIN academy_learning_courses lc ON lc.course_id=c.id ORDER BY c.title");
     if(!$rows)ac_admin_empty('No courses yet.');
     else{
-        ac_admin_table(['Course','Students','Completed','Certificate colour','Action']);
-        foreach($rows as $c){echo '<tr role="row"><td role="cell"><strong>'.e($c['title']).'</strong><small>'.($c['active']?'Active':'Inactive').'</small></td><td role="cell" data-label="Students">'.(int)$c['enrolled_count'].'</td><td role="cell" data-label="Completed">'.(int)$c['completed_count'].'</td><td role="cell" colspan="2">';ac_admin_post('colour','courses');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><div class="ac-inline"><span class="ac-swatch ac-swatch-'.e($c['colour']).'" aria-hidden="true"></span><select name="colour" aria-label="Certificate colour for '.e($c['title']).'">';ac_admin_colour_options($c['colour']);echo '</select><button class="ac-secondary">Save</button></div></form><a class="ac-link" href="/academy.php?action=builder&amp;course='.(int)$c['id'].'">Course builder</a></td></tr>';}
-        ac_admin_table_end();
+        echo '<div class="ac-catalogue-count">'.count($rows).' courses</div><div class="ac-admin-course-list">';
+        foreach($rows as $c){
+            $courseId=(int)$c['id'];$published=(bool)$c['active']&&(bool)$c['learning_published']&&(int)$c['lesson_count']>0;
+            $state=!(bool)$c['active']?'Inactive':($published?'Learning published':((int)$c['total_lessons']>0?'Learning draft':'No lessons yet'));
+            echo '<article class="ac-admin-course-row"><div class="ac-admin-course-info"><div class="ac-admin-course-heading"><span class="ac-admin-course-icon" data-ac-icon="courses" aria-hidden="true"></span><div><h3>'.e($c['title']).'</h3><span class="ac-course-publish-state'.($published?' is-published':'').'">'.e($state).'</span></div></div><div class="ac-admin-course-counts"><span><strong>'.(int)$c['module_count'].'</strong> published modules</span><span><strong>'.(int)$c['lesson_count'].'</strong> published lessons</span><span><strong>'.(int)$c['assessment_count'].'</strong> assessments</span></div><small class="ac-admin-course-students">'.(int)$c['enrolled_count'].' enrolled · '.(int)$c['completed_count'].' approved</small></div><div class="ac-admin-course-actions"><a class="ac-primary" data-ac-icon="edit" href="/academy.php?action=builder&amp;course='.$courseId.'">Course builder</a><details class="ac-course-settings" data-ac-popup><summary data-ac-icon="gear">Settings<span class="ac-visually-hidden"> for '.e($c['title']).'</span></summary><p>Certificate colour for '.e($c['title']).'</p>';
+            ac_admin_post('colour','courses');echo '<input type="hidden" name="course" value="'.$courseId.'"><label>Certificate colour<select name="colour" aria-label="Certificate colour for '.e($c['title']).'">';ac_admin_colour_options($c['colour']);echo '</select></label><button>Save</button></form></details></div></article>';
+        }
+        echo '</div>';
     }
     echo '</section>';
 }else{

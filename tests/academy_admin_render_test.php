@@ -26,6 +26,13 @@ try{
     db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'6 weeks',:admin,'2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id'],'admin'=>$admin['id']]);
     $course=db_one("SELECT id FROM academy_courses WHERE slug='hosting'");
     db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'requested','2026-11-25 12:00:00','2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id']]);
+    if($tab==='courses'){
+        db_execute("INSERT INTO academy_learning_courses(course_id,description,published,updated_at) VALUES(:course,'Published fixture',1,'2026-11-25 12:00:00') ON DUPLICATE KEY UPDATE published=1",['course'=>$course['id']]);
+        db_execute("INSERT INTO academy_modules(course_id,title,published) VALUES(:id,'Visible module',1)",['id'=>$course['id']]);$module=db_last_id();
+        db_execute("INSERT INTO academy_lessons(module_id,title,body,published) VALUES(:id,'Visible lesson','Lesson content',1)",['id'=>$module]);$lesson=db_last_id();
+        db_execute("INSERT INTO academy_lessons(module_id,title,body,published) VALUES(:id,'Draft lesson','Draft content',0)",['id'=>$module]);
+        db_execute("INSERT INTO academy_assessments(lesson_id,kind,title,instructions,questions_json,published,created_at) VALUES(:id,'assignment','Published exercise','Submit work','[]',1,'2026-11-25 12:00:00')",['id'=>$lesson]);
+    }
     if($tab==='analytics'){
         db_execute("INSERT INTO academy_modules(course_id,title,published) VALUES(:id,'Review fixture',1)",['id'=>$course['id']]);$module=db_last_id();
         db_execute("INSERT INTO academy_lessons(module_id,title,body,published) VALUES(:id,'Practical lesson','',1)",['id'=>$module]);$lesson=db_last_id();
@@ -57,7 +64,7 @@ try{
       'students'=>['CI Test student','student@academy.invalid','View student','Verified','ac-roster-row','ac-roster-avatar','Newest first','/academy.php?action=register'],
       'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status','Download transcript','ac-profile-identity','ac-profile-metrics','ac-profile-course-head','Delete student','Deletion is unavailable because approved training'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
-      'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
+      'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course','Learning published','No lessons yet','<strong>1</strong> published modules','<strong>1</strong> published lessons','<strong>1</strong> assessments','Course builder','ac-course-settings'],
       'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student','Learning evidence','Review needed','Download academic transcript','Assignments to grade','Manage course content'],
       'certificates'=>['CI Test student','Digital Marketing','Ready to certify','Not started','Verify payment','Retry email'],
       default=>throw new RuntimeException('Unknown test tab')
