@@ -33,7 +33,7 @@ else{
         ac_assessment_student((int)$user['id'],$cid,$lid);
         $completed=false;foreach($lessons as $l)if((int)$l['id']===$lid)$completed=(bool)$l['completed'];
         if($completed)echo '<p>Lesson completed.</p>';
-        else{ac_form('lesson_complete');echo '<input type="hidden" name="course" value="'.$cid.'"><input type="hidden" name="lesson" value="'.$lid.'"><button>Mark as complete</button></form>';}
+        else{ac_form('lesson_complete');echo '<input type="hidden" name="course" value="'.$cid.'"><input type="hidden" name="lesson" value="'.$lid.'"><button data-ac-icon="check">Mark as complete</button></form>';}
         $next=false;foreach($lessons as $l){if($next){echo '<p><a class="ac-student-link" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$l['id'].'">Next lesson</a></p>';break;}if((int)$l['id']===$lid)$next=true;}
     }
     echo '</section></div>';
@@ -53,7 +53,7 @@ else{
     $completion=academy_completion_summary($total,$done,$results);
     $request=db_one('SELECT status FROM academy_certification_requests WHERE student_id=:student AND course_id=:course',['student'=>(int)$user['id'],'course'=>$cid]);
     $approved=db_one('SELECT id FROM academy_graduates WHERE student_id=:student AND course_id=:course',['student'=>(int)$user['id'],'course'=>$cid]);
-    echo '<section class="ac-student-panel"><details data-ac-popup class="ac-contact"><summary>Completion checklist · '.$completion['completed'].'/'.$completion['lessons'].' lessons</summary><p><strong>'.($completion['ready']?'Published learning checklist complete':'Learning checklist in progress').'</strong></p><p>Lessons: '.$completion['completed'].' / '.$completion['lessons'].'</p><p>Assessments passed: '.$completion['passed'].' / '.$completion['assessments'].'</p>';
+    echo '<section class="ac-student-panel"><details data-ac-popup class="ac-contact"><summary data-ac-icon="grade">Completion checklist · '.$completion['completed'].'/'.$completion['lessons'].' lessons</summary><p><strong>'.($completion['ready']?'Published learning checklist complete':'Learning checklist in progress').'</strong></p><p>Lessons: '.$completion['completed'].' / '.$completion['lessons'].'</p><p>Assessments passed: '.$completion['passed'].' / '.$completion['assessments'].'</p>';
     if($completion['missing'])echo '<p>Not submitted: '.$completion['missing'].'</p>';
     if($completion['awaiting'])echo '<p>Awaiting grading: '.$completion['awaiting'].'</p>';
     if($completion['failed'])echo '<p>Not passed: '.$completion['failed'].'</p>';
