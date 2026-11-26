@@ -104,5 +104,21 @@ try{
    $dir=__DIR__.'/../docs/visual-qa/academy';if(!is_dir($dir))mkdir($dir,0755,true);
    foreach(['student-learning'=>$html,'admin-builder'=>$builder] as $name=>$body)file_put_contents($dir.'/'.$name.'.html','<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../../../assets/css/app.css"><link rel="stylesheet" href="../../../assets/css/admin-workspace-refresh.css"><link rel="stylesheet" href="../../../assets/css/academy.css"><style>:root{--brand-primary:#e65c00}body{font:16px system-ui,sans-serif;background:#f6f8fb;margin:0}.fixture-shell{min-width:0;margin-left:240px;padding:24px}@media(max-width:991px){.fixture-shell{margin-left:0;padding:12px}}</style></head><body><main class="fixture-shell"><div class="academy-workspace">'.str_replace(['/assets/js/academy-guide.js?v=4','/assets/js/academy-actions.js?v=1'],['../../../assets/js/academy-guide.js?v=4','../../../assets/js/academy-actions.js?v=1'],$body).'</div></main></body></html>');
  }
+ // Retake only after failure; preserve original attempt and prevent replay.
+ $denied=false;try{academy_grant_retake($admin,$sid,$cid,$lid,$quiz,'Passed quiz');}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Passed result cannot be reopened');
+ $denied=false;try{academy_grant_retake($sid,$sid,$cid,$lid,$exam,'Unauthorized');}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Student cannot grant retake');
+ expect(academy_grant_retake($admin,$sid,$cid,$lid,$exam,'Approved after failed result'),'Admin approves one retake');
+ $archived=db_one('SELECT prior_submission,reason,granted_by FROM academy_assessment_retakes WHERE assessment_id=:id AND student_id=:student',['id'=>$exam,'student'=>$sid]);
+ expect((int)json_decode($archived['prior_submission'],true)['score_percent']===0&&(int)$archived['granted_by']===$admin,'Original failed result retained in audit');
+ expect(academy_attempt_generation($sid,$exam)===1,'New attempt generation');
+ $denied=false;try{academy_exam_start($sid,$cid,$lid,$exam);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Stale form cannot start retake');
+ expect(academy_exam_start($sid,$cid,$lid,$exam,1),'Approved retake starts fresh timer');
+ expect(academy_assessment_submit($sid,$cid,$lid,$exam,['answers'=>['1'],'attempt_generation'=>'1']),'Retake submission');
+ $denied=false;try{academy_grant_retake($admin,$sid,$cid,$lid,$exam,'Again');}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'No second retake');
+ $expired=academy_assessment_create($cid,$lid,['kind'=>'exam','duration_minutes'=>'10','title'=>'Expired fixture','questions'=>'Q | A | B | C | D | 1','published'=>'1']);
+ expect(academy_exam_start($sid,$cid,$lid,$expired),'Start expiring exam');
+ db_execute('UPDATE academy_exam_starts SET deadline_epoch=UNIX_TIMESTAMP()-1 WHERE assessment_id=:id AND student_id=:student',['id'=>$expired,'student'=>$sid]);
+ expect(academy_grant_retake($admin,$sid,$cid,$lid,$expired,'Expired during exam'),'Expired exam eligible');
+ expect(academy_exam_start($sid,$cid,$lid,$expired,1),'Expired exam receives a new timer');
  echo "PASS LMS draft isolation, approved access, editing, progress, safe links and both real views.\n";
 }finally{db()->rollBack();}
