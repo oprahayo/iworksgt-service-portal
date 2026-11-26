@@ -16,16 +16,16 @@ ac_guide('learn',(int)$user['id']);
 if($notice=flash('academy_student_notice'))echo '<p class="ac-student-notice" role="status">'.e($notice).'</p>';
 if(!$total){echo '<section class="ac-student-panel"><h2>Your learning area</h2><p>Course lessons and modules have not been published yet. You will be able to access them here when available.</p></section>';}
 else{
-    echo '<p>'.e((string)$course['description']).'</p><div class="ac-lms-progress"><strong>'.$done.' of '.$total.' lessons completed</strong><progress value="'.$done.'" max="'.$total.'"></progress></div><div class="ac-lms-layout"><section class="ac-student-panel"><h2>Course content</h2>';
+    echo '<details class="ac-course-about"><summary>About this course</summary><p>'.e((string)$course['description']).'</p></details><div class="ac-lms-progress"><strong>'.$done.' of '.$total.' lessons completed</strong><progress value="'.$done.'" max="'.$total.'"></progress></div><div class="ac-lms-layout"><section class="ac-student-panel ac-outline-panel"><details class="ac-course-outline"><summary><i class="bi bi-list-ul" aria-hidden="true"></i> Course content <span>'.$total.' lessons</span></summary><div class="ac-outline-list">';
     $module=0;
     foreach($lessons as $l){
         if($module!==(int)$l['module_id']){$module=(int)$l['module_id'];echo '<h3>'.e($l['module_title']).'</h3>';}
         echo '<a class="ac-lms-lesson'.((int)$l['id']===$lid?' active':'').'" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$l['id'].'">'.e($l['title']).'<span>'.($l['completed']?'Completed':'Open').'</span></a>';
     }
-    echo '</section><section class="ac-student-panel">';
+    echo '</div></details></section><section class="ac-student-panel ac-focus-lesson">';
     if(!$lesson)echo '<p>Lesson unavailable. Choose a published lesson.</p>';
     else{
-        echo '<h2>'.e($lesson['title']).'</h2><div class="ac-lesson-body">'.nl2br(e($lesson['body'])).'</div>';
+        echo '<h2>'.e($lesson['title']).'</h2><div class="ac-lesson-body">';foreach(preg_split('/\R\s*\R/',trim((string)$lesson['body'])) as $paragraph){if(trim($paragraph)!=='')echo '<p>'.nl2br(e($paragraph)).'</p>';}echo '</div>';
         if($embed=academy_video_embed($lesson['video_url']))echo '<div class="ac-lms-video"><iframe src="'.e($embed).'" title="Lesson video" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
         if($lesson['video_url']!=='')echo '<p><a class="ac-student-link" href="'.e(academy_learning_url($lesson['video_url'])).'" target="_blank" rel="noopener noreferrer">Watch lesson video</a></p>';
         if($lesson['material_url']!=='')echo '<p><a class="ac-student-link" href="'.e(academy_learning_url($lesson['material_url'])).'" target="_blank" rel="noopener noreferrer">Open learning material</a></p>';

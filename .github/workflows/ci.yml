@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'academy/sprint-9-digital-marketing']
   pull_request:
     branches: [main]
 

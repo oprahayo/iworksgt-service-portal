@@ -442,3 +442,40 @@ body.portal-authenticated.role-student .portal-topbar.ac-student-topbar,.ac-stud
  .academy-workspace .ac-cert-activity .ac-cert-chevron{grid-column:3;grid-row:1/3;align-self:center}
  .academy-workspace .ac-cert-activity .ac-cert-next{display:none}
 }
+
+/* Sprint 9: focused reading and distinct administrative hierarchy. */
+.academy-workspace .ac-admin{background:#edf2f7;border:1px solid #dbe3ed;border-radius:14px;padding:16px;min-width:0}
+.academy-workspace .ac-admin .ac-intro{background:#23374d;color:#fff;border-radius:10px;padding:14px;align-items:center}
+.academy-workspace .ac-admin .ac-intro p{color:#fff;margin:0}
+.academy-workspace .ac-admin .ac-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:6px;background:#dfe7f0;border-radius:10px;border:0;margin:10px 0 14px}
+.academy-workspace .ac-admin .ac-tabs a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 6px;border:0;border-radius:7px;text-align:center;font-size:13px;color:#334155;white-space:normal}
+.academy-workspace .ac-admin .ac-tabs a.active{background:#fff;color:#9a3412;box-shadow:inset 0 -2px #e65c00;font-weight:650}
+.academy-workspace .ac-admin section.ac-panel,.academy-workspace .ac-admin section.ac-request-shell{background:#fff;border:1px solid #dbe3ed;border-radius:10px;padding:14px;margin:0 0 12px;box-shadow:none}
+.academy-workspace .ac-admin .ac-request-row{background:#fff;border:1px solid #dbe3ed;border-radius:9px;padding:12px}
+.academy-workspace .ac-admin .ac-table-wrap{min-width:0}
+.academy-workspace .ac-admin .ac-table th{background:#e9eff6;color:#334155}
+.academy-workspace .ac-registration-share{max-width:100%;min-width:0}
+.academy-workspace .ac-registration-share[open]{background:#fff;color:#23374d;padding:10px;border-radius:8px}
+.academy-workspace .ac-registration-share small{display:block;max-width:340px;color:#475569}
+.academy-workspace .ac-registration-share summary{gap:8px;cursor:pointer;min-height:44px}
+.academy-workspace .ac-lms .ac-lms-layout{display:flex;flex-direction:column;gap:10px;max-width:780px;margin-inline:auto}
+.academy-workspace .ac-lms .ac-outline-panel{padding:0!important;margin:0!important;border:1px solid #dbe3ed!important;border-radius:9px!important;background:#fff!important}
+.academy-workspace .ac-course-outline summary,.academy-workspace .ac-course-about summary{cursor:pointer;padding:12px;min-height:44px;font-size:14px;font-weight:650;color:#334155}
+.academy-workspace .ac-course-outline summary span{float:right;color:#64748b;font-size:12px;font-weight:400}
+.academy-workspace .ac-outline-list{padding:0 12px 12px;max-height:45vh;overflow:auto;overscroll-behavior:contain}
+.academy-workspace .ac-course-about{margin:0 0 8px}
+.academy-workspace .ac-course-about p{padding:0 12px 8px}
+.academy-workspace .ac-lms section.ac-focus-lesson{padding:18px!important;background:#fff!important;border:1px solid #dbe3ed!important;border-radius:10px!important;margin:0!important}
+.academy-workspace .ac-focus-lesson .ac-lesson-body{line-height:1.7;max-width:68ch;overflow-wrap:anywhere}
+.academy-workspace .ac-focus-lesson .ac-lesson-body p{font-size:16px;line-height:1.7;color:#27384a;margin:0 0 1em}
+.academy-workspace .ac-lms h1{font-size:clamp(22px,4vw,30px)}
+@media(max-width:600px){
+ .academy-workspace .ac-admin{padding:8px;border-radius:10px}
+ .academy-workspace .ac-admin .ac-intro{padding:10px}
+ .academy-workspace .ac-admin .ac-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ .academy-workspace .ac-admin .ac-tabs a:last-child{grid-column:1/-1}
+ .academy-workspace .ac-admin section.ac-panel,.academy-workspace .ac-admin section.ac-request-shell{padding:10px}
+ .academy-workspace .ac-lms section.ac-focus-lesson{padding:13px!important}
+ .academy-workspace .ac-lms .ac-focus-lesson button{min-height:44px;max-width:100%}
+}
+@media(prefers-reduced-motion:no-preference){.academy-workspace .ac-outline-list,.academy-workspace .ac-course-about[open] p{animation:ac-guide-enter .18s ease-out}}
