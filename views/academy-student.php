@@ -14,8 +14,8 @@ function ac_student_courses(array $courses,bool $dashboard=false):void{
     foreach($courses as $c){
         $status=(string)($c['enrollment_status']??'');
         echo '<article class="ac-course-card">'.($dashboard?'':'<span class="ac-catalogue-icon" aria-hidden="true"><i class="bi bi-book"></i></span>').'<div class="ac-course-copy"><h3>'.e($c['title']).'</h3>';if($status!=='')echo '<p class="ac-course-status">'.e(ac_student_status($status)).'</p>';echo '</div>';
-        if(in_array($status,['enrolled','completed'],true)&&$c['active'])echo '<a class="btn btn-sm btn-outline-primary ac-course-action" href="/academy.php?action=learn&amp;course='.(int)$c['id'].'">Open course</a>';
-        elseif($status==='') {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><input type="hidden" name="return_to" value="'.($dashboard?'dashboard':'courses').'"><button class="btn btn-sm btn-outline-primary ac-course-action" aria-label="Apply for course: '.e($c['title']).'">Apply<span class="ac-full-label"> for course</span></button></form>';}
+        if(in_array($status,['enrolled','completed'],true)&&$c['active'])echo '<a class="btn btn-sm btn-outline-primary ac-course-action" href="/academy.php?action=learn&amp;course='.(int)$c['id'].'" data-ac-icon="play">Open course</a>';
+        elseif($status==='') {ac_form('enroll');echo '<input type="hidden" name="course" value="'.(int)$c['id'].'"><input type="hidden" name="return_to" value="'.($dashboard?'dashboard':'courses').'"><button data-ac-icon="plus" class="btn btn-sm btn-outline-primary ac-course-action" aria-label="Apply for course: '.e($c['title']).'">Apply<span class="ac-full-label"> for course</span></button></form>';}
         elseif($status==='requested')echo '<small>In review</small>';
         elseif(!$c['active'])echo '<small>Course no longer accepting applications.</small>';
         echo '</article>';
@@ -48,7 +48,7 @@ if($screen==='dashboard'){
     ac_guide('dashboard',$studentId,empty($_SESSION['academy_course_intent']));
     echo '<div class="ac-student-stats" aria-label="Your Academy progress">';
     foreach([['Pending applications',$pending,'courses','bi-hourglass-split'],['My active courses',$learning,'courses','bi-book'],['Certificates issued',$issued,'certificates','bi-award']] as [$label,$count,$dest,$icon]){
-        echo '<a href="/academy.php?action='.$dest.'" aria-label="'.e($label).': '.$count.'"><strong>'.$count.'</strong><small>'.e(['Pending applications'=>'Pending applications','My active courses'=>'Active courses','Certificates issued'=>'Certificates'][$label]).'</small></a>';
+        echo '<a href="/academy.php?action='.$dest.'" aria-label="'.e($label).': '.$count.'"><strong data-ac-icon="'.e(match($icon){'bi-hourglass-split'=>'clock','bi-book'=>'courses',default=>'certificates'}).'">'.$count.'</strong><small>'.e(['Pending applications'=>'Pending applications','My active courses'=>'Active courses','Certificates issued'=>'Certificates'][$label]).'</small></a>';
     }
     echo '</div>';
     $intent=(int)($_SESSION['academy_course_intent']??0);
