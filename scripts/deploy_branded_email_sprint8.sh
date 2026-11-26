@@ -78,7 +78,7 @@ while IFS='|' read -r root f; do
  mv -f "$stage" "$root/$f"
  cmp -s "$root/$f" "$WORK/target/$f"
 done < "$WORK/manifest"
-php -r 'require $argv[1];$h=iworks_email_html("Your iWorks GT login OTP","Your OTP code is: 123456");if(!str_contains($h,"123456")||!str_contains($h,"iworks-email-logo.png"))exit(1);' "$ROOT/app/support_email.php"
+php -r 'require $argv[1];$logo=iworks_email_logo_bytes();$html=iworks_email_html("Your iWorks GT login OTP","Your OTP code is: 123456");$mime=iworks_email_alternative_body("installed-check","Synthetic check",$html);if(!$logo||!str_contains($mime,"Content-Type: image/png")||!str_contains($mime,"Content-ID: <")||!str_contains(quoted_printable_decode($mime),"src=\"cid:"))exit(1);echo "PASS actual installed inline logo\n";' "$ROOT/app/support_email.php"
 trap - ERR
 echo "PASS branded mail installed. Backup: $BACKUP"
 echo 'No live email was sent. Test using your own account.'
