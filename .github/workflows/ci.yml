@@ -165,6 +165,7 @@ jobs:
           bash -n scripts/deploy_academy_sprint14.sh
           bash -n scripts/deploy_academy_sprint15.sh
           bash -n scripts/deploy_academy_sprint16.sh
+          bash -n scripts/deploy_academy_sprint17.sh
           php tests/mail_envelope_sender_test.php
           php tests/f01_mail_metadata_test.php
           php tests/f02_job_file_authorization_test.php
@@ -248,6 +249,8 @@ jobs:
           php scripts/migrate_academy_admin_history.php --backup-confirmed
           php scripts/migrate_academy_assignment_files.php --backup-confirmed
           php scripts/migrate_academy_assignment_files.php --backup-confirmed
+          php scripts/migrate_academy_student_deletions.php --backup-confirmed
+          php scripts/migrate_academy_student_deletions.php --backup-confirmed
       - name: Verify real database constraints and simulated gateway issuance
         run: php tests/academy_database_integration_test.php
 
