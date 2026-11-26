@@ -6,7 +6,7 @@ function ac_admin_url(string $tab='students',array $params=[]):string{
     return '/academy.php?'.http_build_query(['action'=>'admin','tab'=>$tab]+$params);
 }
 function ac_admin_link(string $label,string $tab,array $params=[],string $class='ac-link'):void{
-    echo '<a class="'.e($class).'" href="'.e(ac_admin_url($tab,$params)).'">'.e($label).'</a>';
+    echo '<a class="'.e($class).'" data-ac-icon="'.e(match($tab){'student','students'=>'students','requests'=>'requests','certificates'=>'certificates','analytics'=>'analytics','courses'=>'courses','enrollments'=>'enrollments',default=>'arrow'}).'" href="'.e(ac_admin_url($tab,$params)).'">'.e($label).'</a>';
 }
 function ac_admin_status(string $status):void{
     $labels=['requested'=>'New request','enrolled'=>'Enrolled','completed'=>'Completed','cancelled'=>'Cancelled','ready'=>'Ready to certify','pending'=>'Payment pending','issued'=>'Issued','revoked'=>'Revoked','unverified'=>'Email unverified','verified'=>'Verified','inactive'=>'Inactive','none'=>'Not yet enrolled','sent'=>'Sent','queued'=>'Awaiting email'];
@@ -74,12 +74,12 @@ $status=(string)($_GET['status']??'');
 $page=max(1,min(100000,(int)($_GET['p']??1)));
 $notice=flash('academy_admin_notice');$error=flash('academy_admin_error');
 ac_head('Academy');
-echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/academy.php?action=register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
-foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates','analytics'=>'Analytics'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
+echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" data-ac-icon="register" href="/academy.php?action=register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
+foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates','analytics'=>'Analytics'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a data-ac-icon="'.e($key).'" href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
 echo '</nav>';
 if($tab==='requests'){
     $grading=ac_admin_count("SELECT COUNT(*) n FROM academy_assessment_submissions s JOIN academy_assessments a ON a.id=s.assessment_id JOIN users u ON u.id=s.student_id WHERE a.kind='assignment' AND s.score_percent IS NULL AND u.role='student' AND u.deleted_at IS NULL");
-    echo '<div class="ac-quick-links" aria-label="Academy quick actions"><a href="/academy.php?action=admin&amp;tab=analytics#assignment-review">Assignments to grade <strong>'.number_format($grading).'</strong></a><a href="/academy.php?action=admin&amp;tab=analytics">Learning analytics</a><a href="/academy.php?action=admin&amp;tab=courses">Manage course content</a></div>';
+    echo '<div class="ac-quick-links" aria-label="Academy quick actions"><a data-ac-icon="grade" href="/academy.php?action=admin&amp;tab=analytics#assignment-review">Assignments to grade <strong>'.number_format($grading).'</strong></a><a data-ac-icon="analytics" href="/academy.php?action=admin&amp;tab=analytics">Learning analytics</a><a data-ac-icon="courses" href="/academy.php?action=admin&amp;tab=courses">Manage course content</a></div>';
 }
 
 if($notice)echo '<div class="ac-message" role="status">'.e($notice).'</div>';
@@ -120,7 +120,7 @@ if($tab==='analytics'){
       ac_admin_table(['Student','Assignment','Submitted','Action']);
       foreach($pending as $item){
         echo '<tr role="row"><td role="cell"><strong>'.e($item['full_name']).'</strong></td><td role="cell" data-label="Assignment"><strong>'.e($item['title']).'</strong><small>'.e($item['course_title']).'</small></td><td role="cell" data-label="Submitted">'.e(date('d M Y',strtotime($item['submitted_at']))).'</td><td role="cell"><div class="ac-actions">';
-        echo '<details class="ac-contact" data-ac-popup><summary>Review assignment</summary><p><strong>'.e($item['full_name']).'</strong> · '.e($item['title']).'</p><p>Pass mark: '.(int)$item['pass_percent'].'%</p>';
+        echo '<details class="ac-contact" data-ac-popup><summary data-ac-icon="grade">Review assignment</summary><p><strong>'.e($item['full_name']).'</strong> · '.e($item['title']).'</p><p>Pass mark: '.(int)$item['pass_percent'].'%</p>';
         $response=json_decode($item['response_json'],true);if(is_string($response)&&$response!=='')echo '<details class="ac-assignment-response"><summary>Written response</summary><div class="ac-lesson-body">'.nl2br(e($response)).'</div></details>';
         if($item['filename'])echo '<p><a class="ac-link" href="/academy.php?action=assignment_file&amp;course='.(int)$item['course_id'].'&amp;lesson='.(int)$item['lesson_id'].'&amp;id='.(int)$item['id'].'">Download submitted PDF</a><small>'.e($item['filename']).'</small></p>';
         ac_admin_post('grade_pending','analytics');echo '<input type="hidden" name="id" value="'.(int)$item['id'].'"><label>Score (%)<input type="number" name="score" min="0" max="100" required></label><label>Feedback<textarea name="feedback" rows="3" maxlength="10000"></textarea></label><button>Save grade</button></form></details>';
@@ -151,7 +151,7 @@ if($tab==='analytics'){
             $learning=db_one("SELECT en.status,lc.published FROM academy_enrollments en JOIN academy_learning_courses lc ON lc.course_id=en.course_id WHERE en.student_id=:student AND en.course_id=:course AND en.status IN ('enrolled','completed')",['student'=>(int)$r['student_id'],'course'=>(int)$r['course_id']]);
             if($learning&&$learning['published']){
                 $progress=academy_admin_progress((int)$r['student_id'],(int)$r['course_id']);$summary=academy_completion_summary($progress['total'],$progress['completed'],$progress['results']);
-                echo '<details class="ac-contact" data-ac-popup><summary>Learning evidence · '.($summary['ready']?'Checklist complete':'Review needed').'</summary><p>Lessons completed: '.$summary['completed'].' / '.$summary['lessons'].'</p><p>Assessments passed: '.$summary['passed'].' / '.$summary['assessments'].'</p><p>Not submitted: '.$summary['missing'].' · Awaiting grading: '.$summary['awaiting'].' · Not passed: '.$summary['failed'].'</p><small>Advisory evidence from currently published content. It does not replace administrator review.</small><p><a class="ac-link" href="/academy.php?action=transcript&amp;student='.(int)$r['student_id'].'&amp;course='.(int)$r['course_id'].'">Download academic transcript</a></p></details>';
+                echo '<details class="ac-contact" data-ac-popup><summary data-ac-icon="grade">Learning evidence · '.($summary['ready']?'Checklist complete':'Review needed').'</summary><p>Lessons completed: '.$summary['completed'].' / '.$summary['lessons'].'</p><p>Assessments passed: '.$summary['passed'].' / '.$summary['assessments'].'</p><p>Not submitted: '.$summary['missing'].' · Awaiting grading: '.$summary['awaiting'].' · Not passed: '.$summary['failed'].'</p><small>Advisory evidence from currently published content. It does not replace administrator review.</small><p><a class="ac-link" href="/academy.php?action=transcript&amp;student='.(int)$r['student_id'].'&amp;course='.(int)$r['course_id'].'">Download academic transcript</a></p></details>';
             }else echo '<small>No active published learning record. Review training evidence separately.</small>';
             echo '<div class="ac-review-actions"><details class="ac-contact" data-ac-popup><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><button>Approve for certification</button></form></details>';
             echo '<details class="ac-contact" data-ac-popup><summary>Decline request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline (shown to student)<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details></div>';
@@ -193,10 +193,10 @@ if($tab==='analytics'){
     if(!$u)ac_admin_empty('Student not found.');
     else{
         echo '<section class="ac-panel ac-profile-overview"><div class="ac-profile-identity"><span class="ac-roster-avatar ac-profile-avatar" aria-hidden="true">'.e(ac_admin_student_initials($u['full_name'])).'</span><div class="ac-profile-identity-copy"><h2>'.e($u['full_name']).'</h2><p>'.e($u['email']).'</p><p>'.e((string)($u['phone']?:'No phone added')).'</p></div><div class="ac-profile-state">';ac_admin_status(ac_admin_student_state($u));echo '</div></div><div class="ac-profile-shortcuts">';
-        echo '<details class="ac-contact" data-ac-popup><summary>Edit student profile</summary>';ac_admin_post('edit_student','student',$id);echo '<label>Full name<input name="name" maxlength="150" value="'.e($u['full_name']).'" required></label><label>Phone<input name="phone" maxlength="40" value="'.e((string)$u['phone']).'" required></label><p>Email verification and issued certificate details are not changed here.</p><label>Reason for correction<textarea name="reason" maxlength="500" rows="2" required></textarea></label><button>Save profile</button></form></details>';
+        echo '<details class="ac-contact" data-ac-popup><summary data-ac-icon="edit">Edit student profile</summary>';ac_admin_post('edit_student','student',$id);echo '<label>Full name<input name="name" maxlength="150" value="'.e($u['full_name']).'" required></label><label>Phone<input name="phone" maxlength="40" value="'.e((string)$u['phone']).'" required></label><p>Email verification and issued certificate details are not changed here.</p><label>Reason for correction<textarea name="reason" maxlength="500" rows="2" required></textarea></label><button>Save profile</button></form></details>';
         ac_admin_link('Review student requests','requests',['student'=>$id],'ac-secondary');ac_admin_link('Certificates','certificates',['student'=>$id],'ac-secondary');echo '</div>';
         $protected=(bool)(db_one('SELECT id FROM academy_graduates WHERE student_id=:id LIMIT 1',['id'=>$id])||db_one('SELECT id FROM academy_certificates WHERE student_id=:id LIMIT 1',['id'=>$id]));
-        echo '<div class="ac-profile-danger"><details class="ac-contact" data-ac-popup><summary>Delete student</summary><p><strong>Permanent account deletion</strong></p>';
+        echo '<div class="ac-profile-danger"><details class="ac-contact" data-ac-popup><summary data-ac-icon="delete">Delete student</summary><p><strong>Permanent account deletion</strong></p>';
         if($protected)echo '<p>Deletion is unavailable because approved training, certificate or payment records must be preserved.</p>';
         else{
             echo '<p>This permanently removes the student account, course applications, learning progress, submissions and uploaded assignments. It cannot be undone from the portal. Linked business records may prevent deletion.</p>';
@@ -219,7 +219,7 @@ if($tab==='analytics'){
             foreach($rows as $r){
                 $progress=$r['enrollment_id']?academy_admin_progress($id,(int)$r['id']):null;
                 $pct=$progress&&$progress['total']?(int)round(100*$progress['completed']/$progress['total']):null;
-                echo '<details class="ac-profile-course"><summary class="ac-profile-course-head"><span class="ac-course-glyph" aria-hidden="true"><i class="bi bi-book"></i></span><span class="ac-profile-course-copy"><strong>'.e($r['title']).'</strong><span class="ac-profile-course-meta">';ac_admin_status((string)($r['enrollment_status']??'completed'));if($r['duration'])echo '<small> · '.e($r['duration']).'</small>';echo '</span></span><span class="ac-profile-course-result">';
+                echo '<details class="ac-profile-course"><summary class="ac-profile-course-head"><span class="ac-course-glyph" data-ac-icon="courses" aria-hidden="true"></span><span class="ac-profile-course-copy"><strong>'.e($r['title']).'</strong><span class="ac-profile-course-meta">';ac_admin_status((string)($r['enrollment_status']??'completed'));if($r['duration'])echo '<small> · '.e($r['duration']).'</small>';echo '</span></span><span class="ac-profile-course-result">';
                 if($r['graduate_id'])ac_admin_status(ac_admin_certificate_state($r));
                 if($pct!==null)echo '<small>'.$pct.'% lessons</small>';
                 echo '</span><span class="ac-course-chevron" aria-hidden="true">›</span></summary><div class="ac-profile-course-body">';
@@ -234,11 +234,11 @@ if($tab==='analytics'){
                     ac_admin_enrollment_action($r,'student',$id);
                     if($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
                 }
-                echo '<a class="ac-secondary" href="/academy.php?action=transcript&amp;student='.$id.'&amp;course='.(int)$r['id'].'">Download transcript</a>';
+                echo '<a class="ac-secondary" data-ac-icon="download" href="/academy.php?action=transcript&amp;student='.$id.'&amp;course='.(int)$r['id'].'">Download transcript</a>';
                 if($progress){
                     $pct=$pct??0;
                     $summary=academy_completion_summary($progress['total'],$progress['completed'],$progress['results']);
-                    echo '<details class="ac-contact" data-ac-popup><summary>View progress · '.$pct.'%</summary><p><strong>'.$progress['completed'].' of '.$progress['total'].' lessons completed</strong></p><progress max="100" value="'.$pct.'" style="width:100%"></progress>';
+                    echo '<details class="ac-contact" data-ac-popup><summary data-ac-icon="analytics">View progress · '.$pct.'%</summary><p><strong>'.$progress['completed'].' of '.$progress['total'].' lessons completed</strong></p><progress max="100" value="'.$pct.'" style="width:100%"></progress>';
                     foreach($progress['lessons'] as $lesson)echo '<p>'.e($lesson['title']).' · '.($lesson['completed_at']?'Completed':'Not completed').'</p>';
                     echo '<h4>Assessments</h4><p>'.$summary['passed'].' of '.$summary['assessments'].' passed · '.$summary['awaiting'].' awaiting grading · '.$summary['missing'].' not submitted</p>';if(!$progress['results'])echo '<p>No published assessments.</p>';
                     foreach($progress['results'] as $result){echo '<p><strong>'.e($result['title']).'</strong> · '.($result['score_percent']!==null?(int)$result['score_percent'].'% · '.((int)$result['score_percent']>=(int)$result['pass_percent']?'Passed':'Not passed'):($result['submitted_at']?'Awaiting grading':'Not submitted')).'</p>';if($result['granted_at']){$prior=json_decode((string)$result['prior_submission'],true);echo '<small>Retake approved · '.(is_array($prior)?'Original result: '.(int)$prior['score_percent'].'%':'Original exam expired').'</small>';}}
@@ -248,7 +248,7 @@ if($tab==='analytics'){
             }
             echo '</div>';
         }
-        echo '</section><section class="ac-panel"><details class="ac-history-panel" data-ac-popup><summary>Administrator activity</summary>';
+        echo '</section><section class="ac-panel"><details class="ac-history-panel" data-ac-popup><summary data-ac-icon="history">Administrator activity</summary>';
         $history=db_all('SELECT h.*,u.full_name admin_name FROM academy_admin_history h JOIN users u ON u.id=h.admin_id WHERE h.student_id=:student ORDER BY h.id DESC LIMIT 50',['student'=>$id]);
         if(!$history)ac_admin_empty('No administrative corrections recorded.');
         foreach($history as $event)echo '<div class="ac-lms-submission"><strong>'.e(ucfirst(str_replace('_',' ',$event['entity_type']))).': '.e($event['old_state']).' → '.e($event['new_state']).'</strong><p>'.nl2br(e($event['reason'])).'</p><small>'.e($event['admin_name']).' · '.e($event['changed_at']).'</small></div>';
