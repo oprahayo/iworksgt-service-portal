@@ -312,4 +312,4 @@ if($tab==='analytics'){
     }
     ac_admin_pager('certificates',$page,$total,['q'=>$query,'status'=>$status,'student'=>$student]);echo '</section>';
 }
-echo '</div><script src="/assets/js/academy-actions.js?v=1" defer></script>';ac_end();
+echo '</div><script src="/assets/js/academy-actions.js?v=20" defer></script>';ac_end();
