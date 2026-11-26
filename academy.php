@@ -96,6 +96,16 @@ try {
         require __DIR__.'/views/partials/footer.php';
         exit;
     }
+    if ($action==='assignment_file'){
+        require_roles(['admin','student']);
+        if(!method_is('GET')){http_response_code(405);exit;}
+        $viewer=current_user();$admin=has_role(['admin']);
+        if(!$admin&&!is_email_verified($viewer)){http_response_code(403);exit;}
+        $file=academy_assignment_file_download((int)$viewer['id'],(int)($_GET['course']??0),(int)($_GET['lesson']??0),(int)($_GET['id']??0),$admin);
+        if(!$file){http_response_code(404);exit('Assignment file unavailable.');}
+        header('Content-Type: application/octet-stream');header('Content-Disposition: attachment; filename="'.preg_replace('/[^A-Za-z0-9._-]/','_',$file['filename']).'"');
+        header('Content-Length: '.strlen($file['content']));header('X-Content-Type-Options: nosniff');header('Cross-Origin-Resource-Policy: same-origin');header("Content-Security-Policy: default-src 'none'; sandbox");echo $file['content'];exit;
+    }
     if ($action==='builder'){
         require_roles(['admin']);
         $cid=(int)(method_is('POST')?($_POST['course']??0):($_GET['course']??0));
@@ -237,7 +247,7 @@ try {
         if(!method_is('POST')){http_response_code(405);exit;}
         require_csrf();$cid=(int)($_POST['course']??0);$lid=(int)($_POST['lesson']??0);$id=(int)($_POST['id']??0);
         if(!academy_learning_lesson((int)$user['id'],$cid,$lid)){http_response_code(403);exit('Assessment unavailable.');}
-        try{$saved=academy_assessment_submit((int)$user['id'],$cid,$lid,$id,$_POST);flash('academy_student_notice',$saved?'Assessment submitted.':'No new submission saved; check your assessment status.');}
+        try{$attachment=academy_assignment_upload_read($_FILES['assignment_file']??[]);$saved=academy_assessment_submit((int)$user['id'],$cid,$lid,$id,$_POST,$attachment);flash('academy_student_notice',$saved?'Assessment submitted.':'No new submission saved; check your assessment status.');}
         catch(InvalidArgumentException $e){flash('academy_student_notice',$e->getMessage());}
         redirect($base.'?action=learn&course='.$cid.'&lesson='.$lid);
     }
