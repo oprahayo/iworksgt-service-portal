@@ -136,5 +136,29 @@ try{
  expect(academy_learning_access($oid,$cid)!==null&&academy_admin_progress($oid,$cid)['completed']===1,'Access restored without losing progress');
  $denied=false;try{academy_admin_enrollment($admin,$enid,'cancelled','enrolled','Stale form',$oid);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Stale status rejected');
  expect((int)db_one("SELECT COUNT(*) n FROM academy_admin_history WHERE student_id=:student AND entity_type='enrollment' AND entity_id=:id",['student'=>$oid,'id'=>$enid])['n']===4,'Each correction audited');
+ // Private assignment file is atomic with its owning submission.
+ $attachment=['filename'=>'student-work.pdf','content'=>$pdf];
+ $fileAssignment=academy_assessment_create($cid,$lid,['kind'=>'assignment','title'=>'PDF practical','instructions'=>'Submit your work.','published'=>'1']);
+ $denied=false;try{academy_assessment_submit($sid,$cid,$lid,$fileAssignment,['response'=>'']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Empty assignment rejected');
+ $denied=false;try{academy_assessment_submit($sid,$cid,$lid,$fileAssignment,['response'=>''],['filename'=>'fake.pdf','content'=>'<script>fake</script>']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Invalid PDF rejected');
+ expect(!db_one('SELECT id FROM academy_assessment_submissions WHERE assessment_id=:id',['id'=>$fileAssignment]),'Invalid file creates no submission');
+ expect(academy_assessment_submit($sid,$cid,$lid,$fileAssignment,['response'=>''],$attachment),'PDF-only submission accepted');
+ $fid=(int)db_one('SELECT id FROM academy_assessment_submissions WHERE assessment_id=:id AND student_id=:student',['id'=>$fileAssignment,'student'=>$sid])['id'];
+ expect(academy_assignment_file_download($sid,$cid,$lid,$fid)['content']===$pdf,'Owner receives exact PDF bytes');
+ expect(academy_assignment_file_download($oid,$cid,$lid,$fid)===null,'Other enrolled student denied');
+ expect(academy_assignment_file_download($sid,$cid,$draft,$fid)===null,'Wrong lesson denied');
+ expect(academy_assignment_file_download($sid,$cid,$lid,$fid,true)===null,'Forged admin flag denied');
+ expect(academy_assignment_file_download($admin,$cid,$lid,$fid,true)['filename']==='student-work.pdf','Administrator can review PDF');
+ expect(!academy_assessment_submit($sid,$cid,$lid,$fileAssignment,['response'=>'Duplicate'],$attachment),'Duplicate submission denied');
+ expect((int)db_one('SELECT COUNT(*) n FROM academy_assignment_files WHERE submission_id=:id',['id'=>$fid])['n']===1,'Exactly one file per submission');
+ academy_assignment_grade($admin,$cid,$lid,$fid,['score'=>'90','feedback'=>'PDF reviewed']);
+ expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE id=:id',['id'=>$fid])['score_percent']===90,'Existing grading works with attachment');
+ $mixed=academy_assessment_create($cid,$lid,['kind'=>'assignment','title'=>'Mixed practical','instructions'=>'Submit text and file.','published'=>'1']);
+ expect(academy_assessment_submit($sid,$cid,$lid,$mixed,['response'=>'Written explanation'],$attachment),'Text and PDF accepted together');
+ $denied=false;try{academy_assessment_submit($sid,$cid,$lid,$practice,['answers'=>['0','1']],$attachment);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Quiz attachments rejected');
+ ob_start();ac_assessment_student($sid,$cid,$lid);$studentFiles=ob_get_clean();
+ expect(str_contains($studentFiles,'Your submitted PDF')&&str_contains($studentFiles,'student-work.pdf'),'Student attachment visible in existing popup');
+ ob_start();ac_assessment_admin($cid,$lid);$adminFiles=ob_get_clean();
+ expect(str_contains($adminFiles,'Download submitted PDF')&&str_contains($adminFiles,'student-work.pdf'),'Administrator attachment visible alongside grading');
  echo "PASS LMS draft isolation, approved access, editing, progress, safe links and both real views.\n";
 }finally{db()->rollBack();}
