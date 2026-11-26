@@ -1365,30 +1365,11 @@ function iworks_mail_envelope_parameters(string $sender): ?string
 
 function send_email(string $to, string $subject, string $message): bool
 {
-    $to = trim($to);
-    if ($to === '') {
+    if (!email_enabled() || !filter_var(trim($to), FILTER_VALIDATE_EMAIL)) {
         return false;
     }
-
-    log_email_message($to, $subject, $message);
-
-    if (!email_enabled()) {
-        return false;
-    }
-
-    $fromEmail = trim(setting('mail_from_email', 'no-reply@iworksgt.com'));
-    $envelope = iworks_mail_envelope_parameters($fromEmail);
-    if ($envelope === null) {
-        return false;
-    }
-    $fromName = trim(setting('mail_from_name', app_name()));
-    $headers = [];
-    $headers[] = 'MIME-Version: 1.0';
-    $headers[] = 'Content-Type: text/plain; charset=UTF-8';
-    $headers[] = 'From: ' . $fromName . ' <' . $fromEmail . '>';
-    $headers[] = 'Reply-To: ' . $fromEmail;
-
-    return @mail($to, $subject, $message, implode("\r\n", $headers), $envelope);
+    require_once __DIR__ . '/support_email.php';
+    return iworks_send_html_email($to, $subject, $message, iworks_email_html($subject, $message));
 }
 
 function sso_secret(): string
