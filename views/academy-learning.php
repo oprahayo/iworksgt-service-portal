@@ -73,4 +73,4 @@ else{
     echo '</details></section>';
 
 }
-echo '</div><script src="/assets/js/academy-actions.js?v=20" defer></script>';ac_end();
+echo '</div><script src="/assets/js/academy-actions.js?v=1&amp;rev=20" defer></script>';ac_end();
