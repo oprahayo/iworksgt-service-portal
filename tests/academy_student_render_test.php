@@ -33,11 +33,19 @@ try{
             db_execute("INSERT INTO academy_certificates(graduate_id,student_id,certificate_number,student_name,course_title,duration,colour,amount_minor,payment_reference,checkout_url,status,issued_at,created_at) VALUES(:g,:s,:number,'CI Test Student',:title,'16 Weeks',:colour,10200000,:ref,:url,:status,:issued,'2026-11-25 12:00:00')",['g'=>$graduate,'s'=>$user['id'],'number'=>'IWGA-2026-'.$number,'title'=>$fixture['title'],'colour'=>$fixture['colour'],'ref'=>'IWGA-'.str_repeat(strtolower($number[0]),32),'url'=>'https://checkout.paystack.com/fixture','status'=>$status,'issued'=>$status==='issued'?'2026-11-25 12:05:00':null]);
         }
     }
+    if($action==='dashboard'){
+        db_execute("UPDATE users SET status='active',account_state='active',email_verified_at='2026-11-25 12:00:00' WHERE id=:id",['id'=>$user['id']]);
+        $resumeCourse=db_one("SELECT id FROM academy_courses WHERE slug='wordpress'");
+        db_execute("UPDATE academy_enrollments SET status='enrolled' WHERE student_id=:student AND course_id=:course",['student'=>$user['id'],'course'=>$resumeCourse['id']]);
+        db_execute("INSERT INTO academy_learning_courses(course_id,description,published,updated_at) VALUES(:course,'Dashboard fixture',1,'2026-11-25 12:00:00') ON DUPLICATE KEY UPDATE published=1",['course'=>$resumeCourse['id']]);
+        db_execute("INSERT INTO academy_modules(course_id,title,published) VALUES(:course,'Dashboard module',1)",['course'=>$resumeCourse['id']]);$mid=db_last_id();
+        db_execute("INSERT INTO academy_lessons(module_id,title,body,published) VALUES(:module,'Resume lesson','Fixture',1)",['module'=>$mid]);
+    }
     $_SESSION=[];
     define('IWORKS_ACADEMY_STUDENT_VIEW',true);
     ob_start();require __DIR__.'/../views/academy-student.php';$html=ob_get_clean();
     $expected=match($action){
-        'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request certification'],
+        'dashboard'=>['Welcome, CI','Pending applications','Things to do','Already completed training with iWorks?','Available courses','Request certification','Continue learning','0/1 lessons'],
         'courses'=>['My courses &amp; applications','Pending application','Explore courses','Apply for course'],
         'certificates'=>['Certificate history','Submit certification request','Get Certificate','Digital Marketing','Certificate revoked','Administrator query','Training could not be verified.','Check Payment','Continue Payment','Download Certificate'],
         'profile'=>['Personal information','student@academy.invalid','Save profile'],
