@@ -50,6 +50,18 @@ else{
         }
         echo '<small>Download a dated academic transcript above. It is not an issued certificate.</small></div></details></section>';
     }
-    if($done===$total)echo '<p>All published lessons completed. The Academy administrator reviews training completion separately before certification.</p>';
+    $completion=academy_completion_summary($total,$done,$results);
+    $request=db_one('SELECT status FROM academy_certification_requests WHERE student_id=:student AND course_id=:course',['student'=>(int)$user['id'],'course'=>$cid]);
+    $approved=db_one('SELECT id FROM academy_graduates WHERE student_id=:student AND course_id=:course',['student'=>(int)$user['id'],'course'=>$cid]);
+    echo '<section class="ac-student-panel"><details data-ac-popup class="ac-contact"><summary>Completion checklist · '.$completion['completed'].'/'.$completion['lessons'].' lessons</summary><p><strong>'.($completion['ready']?'Published learning checklist complete':'Learning checklist in progress').'</strong></p><p>Lessons: '.$completion['completed'].' / '.$completion['lessons'].'</p><p>Assessments passed: '.$completion['passed'].' / '.$completion['assessments'].'</p>';
+    if($completion['missing'])echo '<p>Not submitted: '.$completion['missing'].'</p>';
+    if($completion['awaiting'])echo '<p>Awaiting grading: '.$completion['awaiting'].'</p>';
+    if($completion['failed'])echo '<p>Not passed: '.$completion['failed'].'</p>';
+    if($approved)echo '<p>Training already approved.</p><a class="ac-student-link" href="/academy.php?action=certificates">My certificates</a>';
+    elseif(($request['status']??'')==='pending')echo '<p>Certification request awaiting administrator review.</p><a class="ac-student-link" href="/academy.php?action=certificates#ac-certificate-history">Track request</a>';
+    elseif($completion['ready'])echo '<p>Your published learning records are ready for review. Certification still requires administrator approval.</p><a class="ac-student-link" href="/academy.php?action=certificates#ac-new-certificate">Request certification</a>';
+    else echo '<small>Complete remaining learning activities. Your administrator reviews training separately.</small>';
+    echo '</details></section>';
+
 }
 echo '</div><script src="/assets/js/academy-actions.js?v=1" defer></script>';ac_end();
