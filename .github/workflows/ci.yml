@@ -260,6 +260,12 @@ jobs:
         env:
           ACADEMY_VISUAL_FIXTURES: '1'
         run: php tests/academy_learning_integration_test.php
+      - name: Import complete Digital Marketing course twice in isolated MySQL
+        run: |
+          test "$DB_NAME" = academy_ci
+          php scripts/seed_academy_digital_marketing.php "$PWD" --backup-confirmed
+          php scripts/seed_academy_digital_marketing.php "$PWD" --backup-confirmed
+          php tests/academy_digital_marketing_seed_test.php
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
