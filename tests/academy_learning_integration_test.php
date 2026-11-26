@@ -6,6 +6,7 @@ require __DIR__.'/../app/db.php';
 require __DIR__.'/../app/academy_learning.php';
 require __DIR__.'/../app/academy_assessments.php';
 require __DIR__.'/../app/academy_admin.php';
+require __DIR__.'/../app/academy_transcript.php';
 require __DIR__.'/../views/academy-assessments.php';
 function csrf_token():string{return 'fixture';}
 function now():string{return '2026-11-25 12:00:00';}
@@ -160,5 +161,19 @@ try{
  expect(str_contains($studentFiles,'Your submitted PDF')&&str_contains($studentFiles,'student-work.pdf'),'Student attachment visible in existing popup');
  ob_start();ac_assessment_admin($cid,$lid);$adminFiles=ob_get_clean();
  expect(str_contains($adminFiles,'Download submitted PDF')&&str_contains($adminFiles,'student-work.pdf'),'Administrator attachment visible alongside grading');
+ $transcript=academy_transcript_data($sid,$sid,$cid);
+ expect($transcript!==null&&$transcript['completed']===1&&$transcript['total']===1,'Own transcript contains real progress');
+ expect(!str_contains(json_encode($transcript),'Hidden assessment'),'Draft assessment excluded');
+ expect(str_contains(json_encode($transcript),'90% - Passed')&&str_contains(json_encode($transcript),'retake approved'),'Real grades and retake history included');
+ expect(academy_transcript_data($oid,$sid,$cid)===null,'Cross-student transcript denied');
+ expect(academy_transcript_data($sid,$sid,0)===null,'Wrong course denied');
+ expect(academy_transcript_data($admin,$sid,$cid,true)!==null,'Administrator can access student transcript');
+ $denied=false;try{academy_transcript_data($sid,$sid,$cid,true);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Forged administrator transcript denied');
+ academy_admin_enrollment($admin,$enid,'enrolled','cancelled','Check cancelled transcript',$oid);
+ expect(academy_transcript_data($oid,$oid,$cid)===null,'Cancelled student transcript denied');
+ expect(academy_transcript_data($admin,$oid,$cid,true)!==null,'Administrator retains historical transcript');
+ academy_learning_save($cid,'course',['description'=>'Temporarily unpublished']);
+ expect(academy_transcript_data($sid,$sid,$cid)['results']===[],'Unpublished learning content not exposed to student');
+ expect(str_contains($html,'Download academic transcript (PDF)'),'Course transcript link present');
  echo "PASS LMS draft isolation, approved access, editing, progress, safe links and both real views.\n";
 }finally{db()->rollBack();}
