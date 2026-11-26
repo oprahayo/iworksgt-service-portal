@@ -26,6 +26,13 @@ try{
     db_execute("INSERT INTO academy_graduates(student_id,course_id,duration,approved_by,approved_at) VALUES(:student,:course,'6 weeks',:admin,'2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id'],'admin'=>$admin['id']]);
     $course=db_one("SELECT id FROM academy_courses WHERE slug='hosting'");
     db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'requested','2026-11-25 12:00:00','2026-11-25 12:00:00')",['student'=>$id,'course'=>$course['id']]);
+    if($tab==='analytics'){
+        db_execute("INSERT INTO academy_modules(course_id,title,published) VALUES(:id,'Review fixture',1)",['id'=>$course['id']]);$module=db_last_id();
+        db_execute("INSERT INTO academy_lessons(module_id,title,body,published) VALUES(:id,'Practical lesson','',1)",['id'=>$module]);$lesson=db_last_id();
+        db_execute("INSERT INTO academy_assessments(lesson_id,kind,title,instructions,questions_json,published,created_at) VALUES(:id,'assignment','Practical review fixture','Submit work','[]',1,'2026-11-25 12:00:00')",['id'=>$lesson]);$assessment=db_last_id();
+        db_execute("INSERT INTO academy_assessment_submissions(assessment_id,student_id,response_json,feedback,submitted_at) VALUES(:assessment,:student,:response,'','2026-11-25 12:00:00')",['assessment'=>$assessment,'student'=>$id,'response'=>json_encode('Sample written response <safe>')]);$submission=db_last_id();
+        db_execute("INSERT INTO academy_assignment_files(submission_id,filename,content,size_bytes,uploaded_at) VALUES(:id,'work.pdf','%PDF-fixture',12,'2026-11-25 12:00:00')",['id'=>$submission]);
+    }
     if($tab==='certificates'){
         $other=db_one("SELECT id FROM users WHERE email='other@academy.invalid'");
         foreach([['backend','pending','B'],['fullstack','issued','C']] as [$slug,$state,$suffix]){
@@ -42,7 +49,7 @@ try{
     require __DIR__.'/../views/academy-admin.php';
     $html=ob_get_clean();
     $expected=match($tab){
-      'analytics'=>['Learning overview','Active enrollments','Awaiting grading','Certificates issued','Course progress','Completion rate','Web Hosting'],
+      'analytics'=>['Learning overview','Active enrollments','Awaiting grading','Certificates issued','Course progress','Completion rate','Web Hosting','Assignment review','Practical review fixture','Review assignment','Download submitted PDF','Save grade','Sample written response &lt;safe&gt;'],
       'students'=>['CI Test student','student@academy.invalid','View student','Verified'],
       'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status','Download transcript'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
