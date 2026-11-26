@@ -34,4 +34,4 @@ foreach($modules as $index=>$m){
     foreach(db_all('SELECT * FROM academy_lessons WHERE module_id=:module ORDER BY position,id',['module'=>$mid]) as $l)ac_build_lesson($cid,$mid,$l);
     ac_build_lesson($cid,$mid);echo '</div></details>';
 }
-echo '</section></div><script src="/assets/js/academy-actions.js?v=20" defer></script>';ac_end();
+echo '</section></div><script src="/assets/js/academy-actions.js?v=1&amp;rev=20" defer></script>';ac_end();
