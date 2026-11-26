@@ -85,6 +85,11 @@ try{
  $admin=(int)db_one("SELECT id FROM users WHERE email='admin@academy.invalid'")['id'];
  academy_assignment_grade($admin,$cid,$lid,(int)$sub['id'],['score'=>'85','feedback'=>'Good work']);
  expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE id=:id',['id'=>$sub['id']])['score_percent']===85,'Assignment manual grade saved');
+ $empty=academy_completion_summary(0,0,[]);expect(!$empty['ready'],'Empty course not marked ready');
+ expect(academy_completion_summary(1,1,[])['ready'],'Completed course with no published assessments ready for review');
+ $check=academy_completion_summary(2,1,[['submitted_at'=>null,'score_percent'=>null,'pass_percent'=>60],['submitted_at'=>now(),'score_percent'=>null,'pass_percent'=>60],['submitted_at'=>now(),'score_percent'=>59,'pass_percent'=>60],['submitted_at'=>now(),'score_percent'=>60,'pass_percent'=>60]]);
+ expect(!$check['ready']&&$check['passed']===1&&$check['failed']===1&&$check['awaiting']===1&&$check['missing']===1,'Checklist distinguishes unsubmitted, ungraded, failed and passed');
+ expect(academy_completion_summary(1,1,[['submitted_at'=>now(),'score_percent'=>60,'pass_percent'=>60]])['ready'],'Exact pass mark counts');
  $results=academy_course_results($sid,$cid);
  expect(count($results)===3,'Only published assessment results shown');
  expect(academy_course_results($oid,$cid)===[],'Unapproved student denied results');
@@ -184,5 +189,6 @@ try{
  academy_learning_save($cid,'course',['description'=>'Temporarily unpublished']);
  expect(academy_transcript_data($sid,$sid,$cid)['results']===[],'Unpublished learning content not exposed to student');
  expect(str_contains($html,'Download academic transcript (PDF)'),'Course transcript link present');
+ expect(str_contains($html,'Completion checklist')&&str_contains($html,'Learning checklist in progress')&&str_contains($html,'Not submitted: 1'),'Student sees real remaining activity without automatic approval');
  echo "PASS LMS draft isolation, approved access, editing, progress, safe links and both real views.\n";
 }finally{db()->rollBack();}
