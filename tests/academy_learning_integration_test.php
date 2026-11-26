@@ -172,6 +172,15 @@ try{
  academy_admin_enrollment($admin,$enid,'enrolled','cancelled','Check cancelled transcript',$oid);
  expect(academy_transcript_data($oid,$oid,$cid)===null,'Cancelled student transcript denied');
  expect(academy_transcript_data($admin,$oid,$cid,true)!==null,'Administrator retains historical transcript');
+ // Central queue: first-grade-only, no stale overwrites, audit.
+ $mid=(int)db_one('SELECT id FROM academy_assessment_submissions WHERE assessment_id=:id AND student_id=:student',['id'=>$mixed,'student'=>$sid])['id'];
+ $denied=false;try{academy_admin_grade_pending($sid,$mid,['score'=>'75']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Student cannot grade pending work');
+ $denied=false;try{academy_admin_grade_pending($admin,$mid,['score'=>'101']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Invalid queue grade rejected');
+ $grade=academy_admin_grade_pending($admin,$mid,['score'=>'78','feedback'=>'Reviewed in queue']);
+ expect($grade['student']===$sid&&$grade['score']===78&&$grade['passed'],'Queue grade saved for correct student');
+ $denied=false;try{academy_admin_grade_pending($admin,$mid,['score'=>'10']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Stale queue form cannot overwrite grade');
+ expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE id=:id',['id'=>$mid])['score_percent']===78,'Grade preserved');
+ expect((int)db_one("SELECT COUNT(*) n FROM academy_admin_history WHERE entity_type='assignment' AND entity_id=:id AND student_id=:student",['id'=>$mid,'student'=>$sid])['n']===1,'Initial grade audited');
  academy_learning_save($cid,'course',['description'=>'Temporarily unpublished']);
  expect(academy_transcript_data($sid,$sid,$cid)['results']===[],'Unpublished learning content not exposed to student');
  expect(str_contains($html,'Download academic transcript (PDF)'),'Course transcript link present');
