@@ -73,6 +73,11 @@ ac_head('Academy');
 echo '<div class="ac-admin"><div class="ac-intro"><p>Manage students, courses and certificates.</p><a class="ac-secondary" href="/student/register" target="_blank" rel="noopener">Student registration link</a></div><nav class="ac-tabs" aria-label="Academy sections">';
 foreach(['requests'=>'Certification requests','students'=>'Students','enrollments'=>'Enrollments','courses'=>'Courses','certificates'=>'Certificates','analytics'=>'Analytics'] as $key=>$label){$active=$key===$tab||($key==='students'&&$tab==='student');echo '<a href="'.e(ac_admin_url($key)).'"'.($active?' class="active" aria-current="page"':'').'>'.e($label).($key==='requests'?' ('.ac_admin_count("SELECT COUNT(*) n FROM academy_certification_requests WHERE status='pending'").')':'').'</a>';}
 echo '</nav>';
+if($tab==='requests'){
+    $grading=ac_admin_count("SELECT COUNT(*) n FROM academy_assessment_submissions s JOIN academy_assessments a ON a.id=s.assessment_id JOIN users u ON u.id=s.student_id WHERE a.kind='assignment' AND s.score_percent IS NULL AND u.role='student' AND u.deleted_at IS NULL");
+    echo '<div class="ac-quick-links" aria-label="Academy quick actions"><a href="/academy.php?action=admin&amp;tab=analytics#assignment-review">Assignments to grade <strong>'.number_format($grading).'</strong></a><a href="/academy.php?action=admin&amp;tab=analytics">Learning analytics</a><a href="/academy.php?action=admin&amp;tab=courses">Manage course content</a></div>';
+}
+
 if($notice)echo '<div class="ac-message" role="status">'.e($notice).'</div>';
 if($error)echo '<div class="ac-message ac-error" role="alert">'.e($error).'</div>';
 if(!academy_checkout_enabled()&&in_array($tab,['students','student','certificates'],true))echo '<div class="ac-callout">Payments are off. Student approvals are available.</div>';
