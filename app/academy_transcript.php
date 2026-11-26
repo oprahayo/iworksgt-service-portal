@@ -8,9 +8,9 @@ function academy_transcript_data(int $viewer,int $student,int $course,bool $admi
  }elseif($viewer!==$student)return null;
  $u=db_one("SELECT id,full_name,status,account_state,email_verified_at FROM users WHERE id=:student AND role='student' AND deleted_at IS NULL",compact('student'));
  if(!$u||(!$admin&&($u['status']!=='active'||$u['account_state']!=='active'||!$u['email_verified_at'])))return null;
- $r=db_one("SELECT c.title,en.status,g.id graduate_id,g.duration,ce.status certificate_status FROM academy_courses c LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id WHERE c.id=:course AND (en.id IS NOT NULL OR g.id IS NOT NULL)",['en_student'=>$student,'g_student'=>$student,'course'=>$course]);
+ $r=db_one("SELECT c.title,c.active,COALESCE(lc.published,0) learning_published,en.status,g.id graduate_id,g.duration,ce.status certificate_status FROM academy_courses c LEFT JOIN academy_learning_courses lc ON lc.course_id=c.id LEFT JOIN academy_enrollments en ON en.course_id=c.id AND en.student_id=:en_student LEFT JOIN academy_graduates g ON g.course_id=c.id AND g.student_id=:g_student LEFT JOIN academy_certificates ce ON ce.graduate_id=g.id WHERE c.id=:course AND (en.id IS NOT NULL OR g.id IS NOT NULL)",['en_student'=>$student,'g_student'=>$student,'course'=>$course]);
  if(!$r||(!$admin&&!in_array($r['status'],['enrolled','completed'],true)&&!($r['graduate_id']&&$r['status']===null)))return null;
- $progress=academy_admin_progress($student,$course);
+ $progress=($admin||($r['active']&&$r['learning_published']))?academy_admin_progress($student,$course):['total'=>0,'completed'=>0,'results'=>[]];
  $results=[];
  foreach($progress['results'] as $item){
   $result=$item['score_percent']!==null?(int)$item['score_percent'].'% - '.((int)$item['score_percent']>=(int)$item['pass_percent']?'Passed':'Not passed'):($item['submitted_at']?'Awaiting grading':'Not submitted');
