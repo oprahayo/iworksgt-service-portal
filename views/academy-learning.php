@@ -13,6 +13,7 @@ if($lid&&!$lesson)http_response_code(404);
 ac_head($course['title']);
 echo '<div class="ac-student ac-lms"><a class="ac-student-link" href="/academy.php?action=courses">Back to My Courses</a><h1>'.e($course['title']).'</h1>';
 ac_guide('learn',(int)$user['id']);
+echo '<p><a class="ac-student-link" href="/academy.php?action=transcript&amp;course='.$cid.'">Download academic transcript (PDF)</a></p>';
 if($notice=flash('academy_student_notice'))echo '<p class="ac-student-notice" role="status">'.e($notice).'</p>';
 if(!$total){echo '<section class="ac-student-panel"><h2>Your learning area</h2><p>Course lessons and modules have not been published yet. You will be able to access them here when available.</p></section>';}
 else{
@@ -47,7 +48,7 @@ else{
             if($r['feedback']!==' '&&!empty($r['feedback']))echo '<p class="ac-result-feedback">'.nl2br(e($r['feedback'])).'</p>';
             echo '</article>';
         }
-        echo '<small>These are your learning results, not an official transcript or certificate.</small></div></details></section>';
+        echo '<small>Download a dated academic transcript above. It is not an issued certificate.</small></div></details></section>';
     }
     if($done===$total)echo '<p>All published lessons completed. The Academy administrator reviews training completion separately before certification.</p>';
 }
