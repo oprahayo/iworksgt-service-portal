@@ -83,10 +83,14 @@ function iworks_email_html(string $subject, string $plain): string
 /** Local approved PNG, never fetched from the network during mail delivery. */
 function iworks_email_logo_bytes(): ?string
 {
-    $path = __DIR__.'/../assets/branding/iworks-email-logo.png';
-    if (!is_readable($path) || !is_file($path) || filesize($path)>524288) return null;
-    $data=file_get_contents($path);
-    return is_string($data) && str_starts_with($data,"\x89PNG\r\n\x1a\n") ? $data : null;
+    $roots=[dirname(__DIR__), dirname(__DIR__).'/portal.iworksgt.com'];
+    foreach ($roots as $root) {
+        $path=$root.'/assets/branding/iworks-email-logo.png';
+        if (!is_readable($path) || !is_file($path) || filesize($path)>524288) continue;
+        $data=file_get_contents($path);
+        if (is_string($data) && str_starts_with($data,"\x89PNG\r\n\x1a\n")) return $data;
+    }
+    return null;
 }
 
 /** MIME alternative with a related, inline PNG in the HTML branch.
