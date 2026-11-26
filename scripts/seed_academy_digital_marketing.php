@@ -4,7 +4,7 @@ declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit(2);}
 $data=json_decode(<<<'COURSE_JSON'
 {
-  "description": "Digital Marketing Foundations — iWorks Academy. Beginner reading course: 8 modules, 16 lessons, 8 quizzes, a final exam and practical campaign project. No paid tools or advertising spend required.",
+  "description": "Digital Marketing Foundations — iWorks Academy. Beginner reading course: 8 modules, 16 lessons, 8 quizzes, a timed practice exam and practical campaign project. No paid tools or advertising spend required.",
   "modules": [
     {
       "title": "Marketing foundations",
@@ -345,7 +345,7 @@ $data=json_decode(<<<'COURSE_JSON'
         },
         {
           "title": "Trust and final project",
-          "body": "Marketing must be accurate and respectful. Disclose sponsored or affiliate relationships where required, use licensed content and never invent customer reviews. Collect only necessary data for a clear purpose. Avoid spam, deceptive scarcity and unsupported promises. Review relevant rules and platform policies before publishing. For your final project, choose a fictional or authorised business. Prepare an audience profile, SMART goal, offer, landing-page outline, seven-day calendar, sample email, mock ad budget, UTM link and measurement plan. Include a privacy checklist. The final exam tests concepts; the project is separately graded. Certification follows existing Academy review.\n\nPractice: Compile your work into one text submission. No real advertising spend is required.",
+          "body": "Marketing must be accurate and respectful. Disclose sponsored or affiliate relationships where required, use licensed content and never invent customer reviews. Collect only necessary data for a clear purpose. Avoid spam, deceptive scarcity and unsupported promises. Review relevant rules and platform policies before publishing. For your final project, choose a fictional or authorised business. Prepare an audience profile, SMART goal, offer, landing-page outline, seven-day calendar, sample email, mock ad budget, UTM link and measurement plan. Include a privacy checklist. The timed practice exam tests concepts; the project is separately graded. Certification follows existing Academy review.\n\nPractice: Compile your work into one text submission. No real advertising spend is required.",
           "url": "https://academy.hubspot.com/courses/digital-marketing"
         }
       ],
@@ -593,7 +593,7 @@ try{
   }
   $add($last,'quiz','Module '.($i+1).' knowledge check','Choose one answer per question. Review the lessons before submitting.',$m['quiz'],60,0);
  }
- $add($last,'exam','Digital Marketing final examination','Answer all 16 questions. You have 25 minutes. Submit before the deadline.',$data['exam'],70,25);
+ $add($last,'exam','Digital Marketing timed practice examination','Answer all 16 questions. You have 25 minutes. Submit before the deadline. This is a formative practice examination; certification requires separate administrator review.',$data['exam'],70,25);
  $add($last,'assignment','Practical 30-day campaign project','Choose a fictional or authorised business. Submit a text plan covering: audience and SMART goal; offer and landing-page outline; seven-day content calendar; sample welcome email and mock ad; budget ceiling and stop rule; UTM link; metrics and review plan; privacy and permissions. Rubric: strategy 25, content and channels 25, measurement and budget 25, ethics and clarity 25. No real ad spend or personal data.',[],70,0);
  $p->commit();echo "PASS Digital Marketing published: 16 lessons, 8 quizzes, 1 exam, 1 project.\n";
 }catch(Throwable $e){if($p->inTransaction())$p->rollBack();throw $e;}

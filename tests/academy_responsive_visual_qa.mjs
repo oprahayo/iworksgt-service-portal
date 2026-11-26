@@ -138,6 +138,11 @@ try{
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Certificate history overflows viewport');
       }
       if(file==='student-learning.html'){
+        const outline=page.locator('.ac-course-outline');
+        if(await outline.count()!==1||await outline.locator('.ac-outline-list').isVisible())throw Error('Course outline must start collapsed');
+        await outline.locator('summary').click();
+        if(!await outline.locator('.ac-outline-list').isVisible()||await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Course outline failed to expand or overflows');
+        await outline.locator('summary').click();
         const results=page.locator('.ac-results-panel details');
         await results.locator('summary').click();
         if(await results.locator('.ac-result-row').count()!==4||!await results.getByText('100% · Passed',{exact:true}).isVisible())throw Error('Academic results not available');
@@ -165,6 +170,13 @@ try{
         if(await action.locator('input[name=duration_minutes]').isVisible()||await action.locator('textarea[name=questions]').isVisible())throw Error('Assignment shows irrelevant fields');
         await action.getByRole('button',{name:'Close action'}).click();await action.waitFor({state:'hidden'});
       }
+      if(file==='admin-students.html'){
+        const admin=page.locator('.ac-admin'),intro=admin.locator('.ac-intro'),share=admin.locator('.ac-registration-share');
+        if(await admin.evaluate(el=>getComputedStyle(el).backgroundColor)!=='rgb(237, 242, 247)'||await intro.evaluate(el=>getComputedStyle(el).backgroundColor)!=='rgb(35, 55, 77)')throw Error('Admin hierarchy missing');
+        await share.locator('summary').click();
+        if(await share.locator('input').inputValue()!=='https://portal.iworksgt.com/student/register'||await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2))throw Error('Registration sharing fails or overflows');
+        await share.locator('summary').click();
+      }
       if(file==='admin-requests.html'){
         await page.locator('details[data-ac-popup]').filter({has:page.locator('summary').filter({hasText:'Decline request'})}).first().locator('summary').click();
         const action=page.locator('.ac-action-dialog');await action.waitFor({state:'visible'});
@@ -183,7 +195,7 @@ try{
         const tasks=root.querySelector('.ac-dashboard-actions');const available=root.querySelector('#available-courses');
         const courseRows=[...root.querySelectorAll('.ac-course-card')].map(el=>el.getBoundingClientRect().height);
         const studentPanels=[...root.querySelectorAll('.ac-student-panel,.ac-request-shell,.ac-catalogue-grid .ac-course-card')];
-        return {studentSurfaceErrors:studentPanels.filter(transparent).length,stats,courseRows,availableTop:available?available.getBoundingClientRect().top-(document.querySelector('.ac-student-topbar')?.getBoundingClientRect().height??0):null,viewport:innerWidth,scroll:document.documentElement.scrollWidth,panels:panels.length+studentPanels.length,boxed:panels.filter(el=>!transparent(el)).length,bad,tableOverflow:[...root.querySelectorAll('.ac-table-wrap')].some(el=>el.scrollWidth>el.clientWidth+2)};
+        return {studentSurfaceErrors:studentPanels.filter(transparent).length,stats,courseRows,availableTop:available?available.getBoundingClientRect().top-(document.querySelector('.ac-student-topbar')?.getBoundingClientRect().height??0):null,viewport:innerWidth,scroll:document.documentElement.scrollWidth,panels:panels.length+studentPanels.length,boxed:panels.filter(el=>!transparent(el)&&!el.matches('.ac-admin section.ac-panel')).length,bad,tableOverflow:[...root.querySelectorAll('.ac-table-wrap')].some(el=>el.scrollWidth>el.clientWidth+2)};
       });
       console.log(file,width,JSON.stringify(metrics));
       if(!metrics.panels||metrics.studentSurfaceErrors||metrics.boxed||metrics.scroll>width+2||metrics.bad.length||metrics.tableOverflow)throw Error('Academy layout overflow or unwanted card: '+file+' at '+width);
