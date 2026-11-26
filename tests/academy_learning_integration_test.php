@@ -188,6 +188,23 @@ try{
  $denied=false;try{academy_admin_grade_pending($admin,$mid,['score'=>'10']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Stale queue form cannot overwrite grade');
  expect((int)db_one('SELECT score_percent FROM academy_assessment_submissions WHERE id=:id',['id'=>$mid])['score_percent']===78,'Grade preserved');
  expect((int)db_one("SELECT COUNT(*) n FROM academy_admin_history WHERE entity_type='assignment' AND entity_id=:id AND student_id=:student",['id'=>$mid,'student'=>$sid])['n']===1,'Initial grade audited');
+ // Permanent deletion is explicitly confirmed and restricted to eligible students.
+ db_execute("INSERT INTO users(full_name,email,phone,password_hash,role,status,account_state,email_verified_at,created_at) VALUES('Deletion fixture','deletion-fixture@academy.invalid','1234567890',:hash,'student','active','active',:verified,:created)",['hash'=>password_hash('fixture-password-123',PASSWORD_DEFAULT),'verified'=>now(),'created'=>now()]);
+ $deleteId=db_last_id();
+ db_execute("INSERT INTO academy_enrollments(student_id,course_id,status,created_at,updated_at) VALUES(:student,:course,'enrolled',:created,:updated)",['student'=>$deleteId,'course'=>$cid,'created'=>now(),'updated'=>now()]);
+ expect(academy_learning_complete($deleteId,$cid,$lid),'Deletion fixture records progress');
+ expect(academy_assessment_submit($deleteId,$cid,$lid,$mixed,['response'=>'Fixture deletion'],$attachment),'Deletion fixture has private assignment');
+ $deleteSubmission=(int)db_one('SELECT id FROM academy_assessment_submissions WHERE student_id=:student AND assessment_id=:assessment',['student'=>$deleteId,'assessment'=>$mixed])['id'];
+ $denied=false;try{academy_admin_delete_student($sid,$deleteId,'DELETE','deletion-fixture@academy.invalid');}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Nonadministrator deletion denied');
+ $denied=false;try{academy_admin_delete_student($admin,$deleteId,'DELETE','wrong@academy.invalid');}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Wrong email denied');
+ $denied=false;try{academy_admin_delete_student($admin,$deleteId,'delete','deletion-fixture@academy.invalid');}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Exact confirmation required');
+ $denied=false;try{academy_admin_delete_student($admin,$sid,'DELETE',$user['email']);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Approved training protected');
+ academy_admin_delete_student($admin,$deleteId,'DELETE','deletion-fixture@academy.invalid');
+ expect(!db_one('SELECT id FROM users WHERE id=:id',['id'=>$deleteId]),'Student account physically removed');
+ expect(!db_one('SELECT student_id FROM academy_lesson_progress WHERE student_id=:id',['id'=>$deleteId]),'Learning progress removed');
+ expect(!db_one('SELECT submission_id FROM academy_assignment_files WHERE submission_id=:id',['id'=>$deleteSubmission]),'Private attachment removed');
+ expect(!db_one('SELECT id FROM academy_assessment_submissions WHERE student_id=:id',['id'=>$deleteId]),'Assignment submission removed');
+ expect((int)db_one('SELECT admin_id FROM academy_student_deletions WHERE deleted_student_id=:id',['id'=>$deleteId])['admin_id']===$admin,'Minimal deletion receipt preserved');
  academy_learning_save($cid,'course',['description'=>'Temporarily unpublished']);
  expect(academy_transcript_data($sid,$sid,$cid)['results']===[],'Unpublished learning content not exposed to student');
  expect(str_contains($html,'Download academic transcript (PDF)'),'Course transcript link present');
