@@ -165,19 +165,32 @@ try{
         if(await action.locator('input[name=duration_minutes]').isVisible()||await action.locator('textarea[name=questions]').isVisible())throw Error('Assignment shows irrelevant fields');
         await action.getByRole('button',{name:'Close action'}).click();await action.waitFor({state:'hidden'});
       }
+      if(file==='student-dashboard.html'){
+        const icons=page.locator('.ac-student-stats strong[data-ac-icon]');
+        if(await icons.count()!==3)throw Error('Student dashboard icons missing');
+        if(!await icons.first().evaluate(el=>getComputedStyle(el,'::before').maskImage.startsWith('url(')))throw Error('Dashboard icon asset missing');
+      }
       if(file.startsWith('admin-')){
         const canvas=page.locator('.ac-admin');
+        const nav=canvas.locator('.ac-tabs a[data-ac-icon]');
+        if(await nav.count()&&await nav.count()!==6)throw Error('Admin navigation icons incomplete');
+        if(await nav.count()&&!await nav.first().evaluate(el=>getComputedStyle(el,'::before').maskImage.startsWith('url(')))throw Error('Admin navigation icon asset missing');
+
         if(await canvas.evaluate(el=>getComputedStyle(el).backgroundColor)!=='rgb(241, 244, 248)')throw Error('Admin background lacks the approved visual hierarchy');
       }
       if(file==='admin-students.html'){
         const rows=page.locator('.ac-roster-row');
         if(await rows.count()<1)throw Error('Student directory rows missing');
         const sizes=await rows.evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
-        if(sizes.some(h=>h>105))throw Error('Student directory rows too tall');
+        if(sizes.some(h=>h>105))throw Error('Student directory rows too tall: '+width+' '+JSON.stringify(sizes));
         const href=await rows.first().getAttribute('href');
         if(!href?.includes('tab=student')||!href.includes('id='))throw Error('Student row must open profile');
       }
       if(file==='admin-student.html'){
+        await page.emulateMedia({reducedMotion:'reduce'});
+        if(!await page.locator('.ac-course-chevron').first().evaluate(el=>getComputedStyle(el).transitionDuration==='0s'))throw Error('Reduced motion preference ignored');
+        await page.emulateMedia({reducedMotion:'no-preference'});
+
         const deletion=page.locator('.ac-profile-danger summary');
         await deletion.click();const danger=page.locator('.ac-action-dialog');await danger.waitFor({state:'visible'});
         if(!await danger.getByText('Deletion is unavailable because approved training, certificate or payment records must be preserved.',{exact:true}).isVisible()||await danger.getByRole('button',{name:'Permanently delete student'}).count())throw Error('Protected student deletion not blocked in UI');
