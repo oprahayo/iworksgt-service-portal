@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sprint 10: private assignment PDF uploads and downloads.
+# Cumulative Sprint 9–11 recovery from approved earlier releases.
 set -Eeuo pipefail
 umask 077
 SHA="$1"
@@ -30,14 +30,17 @@ trap finish EXIT
 WORK="$(mktemp -d "$OPS/recovery11-stage-XXXXXXXX")"
 BACKUP="$(mktemp -d "$OPS/recovery11-backup-XXXXXXXX")"
 echo "=== Cumulative Academy recovery through Sprint 11 ==="
+PHP=php
+if [[ -x /opt/cpanel/ea-php82/root/usr/bin/php ]]; then PHP=/opt/cpanel/ea-php82/root/usr/bin/php; fi
+"$PHP" -r 'if(PHP_VERSION_ID<80200||!extension_loaded("pdo_mysql")||!extension_loaded("fileinfo"))exit(3);'
 curl -fsSL --retry 2 "https://api.github.com/repos/oprahayo/iworksgt-service-portal/actions/runs?head_sha=$SHA&per_page=30" -o "$WORK/ci.json"
-php -r '$j=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);foreach($j["workflow_runs"]??[] as $r){if(($r["name"]??"")==="CI"&&($r["head_sha"]??"")===$argv[2]&&($r["conclusion"]??"")==="success")exit(0);}fwrite(STDERR,"BLOCK pinned CI has not passed\n");exit(3);' "$WORK/ci.json" "$SHA"
+"$PHP" -r '$j=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);foreach($j["workflow_runs"]??[] as $r){if(($r["name"]??"")==="CI"&&($r["head_sha"]??"")===$argv[2]&&($r["conclusion"]??"")==="success")exit(0);}fwrite(STDERR,"BLOCK pinned CI has not passed\n");exit(3);' "$WORK/ci.json" "$SHA"
 : > "$WORK/changes"
 for f in app/academy_assessments.php views/academy-assessments.php views/academy-admin.php views/academy-learning.php views/academy-student.php academy.php; do
  [[ -f "$ROOT/$f" && ! -L "$ROOT/$f" ]]
  mkdir -p "$WORK/target/$(dirname "$f")"
  curl -fsSL --retry 2 "$REPO/$SHA/$f" -o "$WORK/target/$f"
- php -l "$WORK/target/$f"
+ "$PHP" -l "$WORK/target/$f"
  if cmp -s "$ROOT/$f" "$WORK/target/$f"; then continue; fi
  matched=0
  for ref in "$BASE" a47a590ae6749336ddbc1e17a990980841bf8d45 7e03b770355161af3b2358f815026dd008e99541 49ed55de7ff64b0385318b224d0e0b5c8e7ec1b4 a3450229ae279f1c76f8dd4428437eb72d548a38 687479e3e4604ca6251398ab509c5093b6c6af3e; do
@@ -49,13 +52,27 @@ done
 for f in scripts/migrate_academy_retakes.php scripts/migrate_academy_admin_history.php scripts/migrate_academy_assignment_files.php scripts/cpanel_finalize_db.php app/academy_admin.php app/academy_transcript.php scripts/render_academy_transcript.py; do
  mkdir -p "$WORK/target/$(dirname "$f")"
  curl -fsSL --retry 2 "$REPO/$SHA/$f" -o "$WORK/target/$f"
- case "$f" in *.php) php -l "$WORK/target/$f";; *.sh) bash -n "$WORK/target/$f";; esac
+ case "$f" in *.php) "$PHP" -l "$WORK/target/$f";; *.sh) bash -n "$WORK/target/$f";; esac
 done
 # Check previously approved watermark and email integration before upgrading.
-for f in app/academy.php app/support_email.php app/helpers.php scripts/render_academy_preview.py app/academy_learning.php app/academy_requests.php assets/js/academy-actions.js assets/css/academy.css; do
+for f in app/academy_learning.php app/academy_requests.php assets/js/academy-actions.js assets/css/academy.css; do
  curl -fsSL --retry 2 "$REPO/$SHA/$f" -o "$WORK/dependency"
  cmp -s "$ROOT/$f" "$WORK/dependency" || { echo "BLOCK earlier dependency differs: $f"; [[ ! -f "$ROOT/$f" ]] || sha256sum "$ROOT/$f"; exit 3; }
 done
+# Repair the approved email release if needed, using its existing guarded installer.
+MAIL_READY=1
+for f in app/academy.php app/support_email.php app/helpers.php; do
+ curl -fsSL --retry 2 "$REPO/$SHA/$f" -o "$WORK/dependency"
+ if ! cmp -s "$ROOT/$f" "$WORK/dependency"; then MAIL_READY=0; fi
+done
+if [[ ! -r "$ROOT/assets/branding/iworks-email-logo.png" ]]; then MAIL_READY=0; fi
+curl -fsSL --retry 2 "$REPO/$SHA/scripts/render_academy_preview.py" -o "$WORK/dependency"
+cmp -s "$ROOT/scripts/render_academy_preview.py" "$WORK/dependency" || { echo "BLOCK prior certificate watermark renderer differs; reconcile Sprint 7C first"; exit 3; }
+if [[ "$MAIL_READY" != 1 ]]; then
+ curl -fsSL --retry 2 "$REPO/$SHA/scripts/deploy_branded_email_sprint8.sh" -o "$WORK/mail.sh"
+ bash -n "$WORK/mail.sh"
+ bash "$WORK/mail.sh" "$SHA"
+fi
 for f in app/academy_admin.php app/academy_transcript.php scripts/render_academy_transcript.py; do
  [[ ! -L "$ROOT/$f" ]]
  if [[ -e "$ROOT/$f" ]]; then cmp -s "$ROOT/$f" "$WORK/target/$f" || { echo "BLOCK unexpected helper $f"; exit 3; }; fi
@@ -66,11 +83,11 @@ LOGO="$ROOT/assets/branding/iworks-email-logo.png"
 [[ -x "$PY" && -r "$LOGO" && -r "$FONTS/Lato-Regular.ttf" && -r "$FONTS/Lato-Bold.ttf" ]] || { echo 'BLOCK transcript prerequisites'; exit 3; }
 printf '%s' '{"student":"ACADEMY TEST STUDENT","course":"Web Development","status":"Enrolled","approval":"Not yet approved","certificate":"Not issued","generated":"Synthetic recovery check","completed":1,"total":3,"results":[]}' > "$WORK/fixture.json"
 "$PY" -I "$WORK/target/scripts/render_academy_transcript.py" "$WORK/fixture.json" "$WORK/fixture.pdf" "$FONTS" "$LOGO"
-php -r 'if(substr(file_get_contents($argv[1]),0,5)!=="%PDF-")exit(1);echo "PASS transcript renderer\n";' "$WORK/fixture.pdf"
+"$PHP" -r 'if(substr(file_get_contents($argv[1]),0,5)!=="%PDF-")exit(1);echo "PASS transcript renderer\n";' "$WORK/fixture.pdf"
 # Verify prior timed assessment schema and make a private encrypted database backup.
-php -r 'require $argv[1];db_one("SELECT assessment_id,student_id,deadline_epoch FROM academy_exam_starts LIMIT 1");db_one("SELECT id,duration_minutes FROM academy_assessments LIMIT 1");if(!class_exists("finfo"))exit(3);echo "PASS previous Academy schema\n";' "$ROOT/app/bootstrap.php"
+"$PHP" -r 'require $argv[1];db_one("SELECT assessment_id,student_id,deadline_epoch FROM academy_exam_starts LIMIT 1");db_one("SELECT id,duration_minutes FROM academy_assessments LIMIT 1");if(!class_exists("finfo"))exit(3);echo "PASS previous Academy schema\n";' "$ROOT/app/bootstrap.php"
 for tool in mysqldump gzip openssl sha256sum; do command -v "$tool" >/dev/null; done
-php "$WORK/target/scripts/cpanel_finalize_db.php" client-options "$ROOT" "$WORK/mysql.cnf" "$WORK/db-name"
+"$PHP" "$WORK/target/scripts/cpanel_finalize_db.php" client-options "$ROOT" "$WORK/mysql.cnf" "$WORK/db-name"
 DB="$(cat "$WORK/db-name")"
 mysqldump --defaults-extra-file="$WORK/mysql.cnf" --single-transaction --quick --skip-lock-tables --no-tablespaces --routines --events --triggers "$DB" | gzip -6 > "$WORK/database.sql.gz"
 gzip -t "$WORK/database.sql.gz"
@@ -83,10 +100,10 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass "file:$KEY" -in "$BACKUP/
 sha256sum "$BACKUP/database.sql.gz.enc" > "$BACKUP/database.sql.gz.enc.sha256"
 rm -f "$WORK/database.sql.gz" "$WORK/mysql.cnf"
 echo "PASS encrypted database backup: $BACKUP"
-php "$WORK/target/scripts/migrate_academy_retakes.php" "$ROOT" --backup-confirmed
-php "$WORK/target/scripts/migrate_academy_admin_history.php" "$ROOT" --backup-confirmed
-php "$WORK/target/scripts/migrate_academy_assignment_files.php" "$ROOT" --backup-confirmed
-php -r 'require $argv[1];db_one("SELECT submission_id,filename,size_bytes FROM academy_assignment_files LIMIT 1");echo "PASS private assignment file schema\n";' "$ROOT/app/bootstrap.php"
+"$PHP" "$WORK/target/scripts/migrate_academy_retakes.php" "$ROOT" --backup-confirmed
+"$PHP" "$WORK/target/scripts/migrate_academy_admin_history.php" "$ROOT" --backup-confirmed
+"$PHP" "$WORK/target/scripts/migrate_academy_assignment_files.php" "$ROOT" --backup-confirmed
+"$PHP" -r 'require $argv[1];db_one("SELECT submission_id,filename,size_bytes FROM academy_assignment_files LIMIT 1");echo "PASS private assignment file schema\n";' "$ROOT/app/bootstrap.php"
 for f in app/academy_admin.php app/academy_transcript.php scripts/render_academy_transcript.py; do
  if [[ ! -e "$ROOT/$f" ]]; then install -m 0644 "$WORK/target/$f" "$ROOT/$f"; fi
 done
@@ -100,7 +117,7 @@ if [[ -s "$WORK/changes" ]]; then
   chmod --reference="$ROOT/$f" "$stage"
   mv -f "$stage" "$ROOT/$f"
   cmp -s "$ROOT/$f" "$WORK/target/$f"
-  php -l "$ROOT/$f"
+  "$PHP" -l "$ROOT/$f"
  done < "$WORK/changes"
 fi
 for action in admin learn builder assignment_file transcript; do
