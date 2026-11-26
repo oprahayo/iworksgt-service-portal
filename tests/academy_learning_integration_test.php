@@ -5,6 +5,8 @@ function app_config():array{return ['db'=>['host'=>getenv('DB_HOST'),'port'=>330
 require __DIR__.'/../app/db.php';
 require __DIR__.'/../app/academy_learning.php';
 require __DIR__.'/../app/academy_assessments.php';
+require __DIR__.'/../app/academy_admin.php';
+require __DIR__.'/../app/academy.php';
 require __DIR__.'/../views/academy-assessments.php';
 function csrf_token():string{return 'fixture';}
 function now():string{return '2026-11-25 12:00:00';}
@@ -120,5 +122,18 @@ try{
  db_execute('UPDATE academy_exam_starts SET deadline_epoch=UNIX_TIMESTAMP()-1 WHERE assessment_id=:id AND student_id=:student',['id'=>$expired,'student'=>$sid]);
  expect(academy_grant_retake($admin,$sid,$cid,$lid,$expired,'Expired during exam'),'Expired exam eligible');
  expect(academy_exam_start($sid,$cid,$lid,$expired,1),'Expired exam receives a new timer');
+ $en=db_one('SELECT id,status FROM academy_enrollments WHERE student_id=:student AND course_id=:course',['student'=>$sid,'course'=>$cid]);
+ $enid=(int)$en['id'];$old=$en['status'];
+ expect($old==='enrolled','Fixture has active enrollment');
+ academy_admin_enrollment($admin,$enid,'enrolled','cancelled','Fixture cancellation',$sid);
+ expect(academy_learning_access($sid,$cid)===null,'Cancellation blocks course access');
+ expect(academy_admin_progress($sid,$cid)['completed']===1,'Admin sees preserved cancelled progress');
+ $denied=false;try{academy_admin_enrollment($admin,$enid,'cancelled','enrolled','Wrong student',$oid);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Cross-student correction denied');
+ academy_admin_enrollment($admin,$enid,'cancelled','requested','Reopen mistaken cancellation',$sid);
+ expect(academy_learning_access($sid,$cid)===null,'Pending review does not grant access');
+ academy_admin_enrollment($admin,$enid,'requested','enrolled','Approve restored enrollment',$sid);
+ expect(academy_learning_access($sid,$cid)!==null&&academy_admin_progress($sid,$cid)['completed']===1,'Access restored without losing progress');
+ $denied=false;try{academy_admin_enrollment($admin,$enid,'cancelled','enrolled','Stale form',$sid);}catch(InvalidArgumentException $e){$denied=true;}expect($denied,'Stale status rejected');
+ expect((int)db_one("SELECT COUNT(*) n FROM academy_admin_history WHERE student_id=:student AND entity_type='enrollment' AND entity_id=:id",['student'=>$sid,'id'=>$enid])['n']===3,'Each correction audited');
  echo "PASS LMS draft isolation, approved access, editing, progress, safe links and both real views.\n";
 }finally{db()->rollBack();}
