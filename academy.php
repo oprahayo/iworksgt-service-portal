@@ -107,6 +107,10 @@ try {
                 if($mode==='material')academy_material_upload($cid,$lesson,$_FILES['material']??[]);
                 elseif($mode==='assessment')academy_assessment_create($cid,$lesson,$_POST);
                 elseif($mode==='assessment_publish')academy_assessment_publish($cid,$lesson,$id,($_POST['published']??'')==='1');
+                elseif($mode==='grant_retake'){
+                    academy_grant_retake((int)current_user()['id'],(int)($_POST['student']??0),$cid,$lesson,$id,(string)($_POST['reason']??''));
+                    academy_notice((int)$_POST['student'],'Assessment retake approved','An administrator approved one additional attempt. Open your course to start.','courses');
+                }
                 elseif($mode==='grade')academy_assignment_grade((int)current_user()['id'],$cid,$lesson,$id,$_POST);
                 else academy_learning_save($cid,$mode,$_POST);
                 flash('academy_admin_notice','Learning content saved.');
@@ -217,7 +221,7 @@ try {
     if ($action==='exam_start'){
         if(!method_is('POST')){http_response_code(405);exit;}
         require_csrf();$cid=(int)($_POST['course']??0);$lid=(int)($_POST['lesson']??0);$id=(int)($_POST['id']??0);
-        try{if(!academy_exam_start((int)$user['id'],$cid,$lid,$id))flash('academy_student_notice','Exam unavailable, completed or expired.');}
+        try{if(!academy_exam_start((int)$user['id'],$cid,$lid,$id,(int)($_POST['attempt_generation']??0)))flash('academy_student_notice','Exam unavailable, completed or expired.');}
         catch(InvalidArgumentException $e){flash('academy_student_notice',$e->getMessage());}
         redirect($base.'?action=learn&course='.$cid.'&lesson='.$lid.'#ac-assessment-'.$id);
     }
