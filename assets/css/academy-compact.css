@@ -137,3 +137,29 @@
  .academy-workspace .ac-course-glyph{width:26px;height:26px}
  .academy-workspace .ac-profile-course-body{padding:0 2px 8px 31px}
 }
+
+/* Sprint 17: clear visual hierarchy, without increasing the approved density. */
+.academy-workspace .ac-admin{--ac-line:#e0e5ec;--ac-muted:#526174;--ac-ink:#243347;--ac-canvas:#f1f4f8;--ac-paper:#fff;background:var(--ac-canvas);border:1px solid #e0e5ec;border-radius:10px;padding:12px;min-width:0}
+.academy-workspace .ac-admin .ac-intro{margin:0 0 8px}
+.academy-workspace .ac-admin .ac-tabs{background:var(--ac-paper);border:1px solid var(--ac-line);border-radius:7px;padding:0 9px;gap:12px}
+.academy-workspace .ac-admin .ac-tabs a.active{color:#b54708}
+.academy-workspace .ac-admin .ac-roster-list,.academy-workspace .ac-admin .ac-profile-course-list,.academy-workspace .ac-admin .ac-table-wrap{background:var(--ac-paper);border:1px solid var(--ac-line);border-radius:7px}
+.academy-workspace .ac-admin .ac-roster-row{padding-inline:9px}
+.academy-workspace .ac-admin .ac-roster-row:last-child,.academy-workspace .ac-admin .ac-profile-course:last-child{border-bottom:0}
+.academy-workspace .ac-admin .ac-profile-identity{background:var(--ac-paper);border:1px solid var(--ac-line);border-radius:7px;padding:10px;margin-bottom:8px}
+.academy-workspace .ac-admin .ac-profile-metrics,.academy-workspace .ac-admin .ac-metric-strip{background:var(--ac-paper);border:1px solid var(--ac-line);border-radius:7px}
+.academy-workspace .ac-admin .ac-profile-course-head{padding-inline:9px}
+.academy-workspace .ac-admin .ac-profile-course[open]>.ac-profile-course-head{background:#f8fafc}
+.academy-workspace .ac-admin .ac-table td:first-child,.academy-workspace .ac-admin .ac-table th:first-child{padding-left:7px}
+.academy-workspace .ac-admin .ac-profile-danger{margin:7px 0 0;padding-top:5px;border-top:1px solid var(--ac-line)}
+.academy-workspace .ac-admin .ac-profile-danger summary{display:inline-flex;align-items:center;min-height:32px;color:#a62525;font-size:12px;padding:4px 0}
+.academy-workspace .ac-admin .ac-profile-danger details{margin:0;padding:0}
+.academy-workspace .ac-action-dialog .ac-danger{background:#b42318;color:#fff}
+@media(max-width:760px){
+ .academy-workspace .ac-admin{padding:8px;border-radius:8px}
+ .academy-workspace .ac-admin .ac-tabs{padding:0 5px;gap:2px 4px}
+ .academy-workspace .ac-admin .ac-roster-row{padding-inline:6px}
+ .academy-workspace .ac-admin .ac-table-wrap{padding:0 6px}
+ .academy-workspace .ac-admin .ac-table td:first-child,.academy-workspace .ac-admin .ac-table th:first-child{padding-left:0}
+ .academy-workspace .ac-admin .ac-profile-danger summary{min-height:44px}
+}
