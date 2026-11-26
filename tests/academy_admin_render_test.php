@@ -54,8 +54,8 @@ try{
     $html=ob_get_clean();
     $expected=match($tab){
       'analytics'=>['Learning overview','Active enrollments','Awaiting grading','Certificates issued','Course progress','Completion rate','Web Hosting','Assignment review','Practical review fixture','Review assignment','Download submitted PDF','Save grade','Sample written response &lt;safe&gt;'],
-      'students'=>['CI Test student','student@academy.invalid','View student','Verified'],
-      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status','Download transcript'],
+      'students'=>['CI Test student','student@academy.invalid','View student','Verified','ac-roster-row','ac-roster-avatar','Newest first'],
+      'student'=>['CI Test student','Review student requests','name="student_id"','Ready to certify','Training duration','Edit duration','Duration locked after checkout starts.','Revoked','Edit student profile','View progress','Administrator activity','Change status','Download transcript','ac-profile-identity','ac-profile-metrics','ac-profile-course-head'],
       'enrollments'=>['CI Test student','Web Hosting','New request','Accept'],
       'courses'=>['Add a course','WordPress &amp; CMS Web Design','Certificate colour','Create Course'],
       'requests'=>['Certification requests','Certificate name','Approve for certification','Decline and notify student','Learning evidence','Review needed','Download academic transcript','Assignments to grade','Manage course content'],
