@@ -17,16 +17,21 @@ echo '<p><a class="ac-student-link" href="/academy.php?action=transcript&amp;cou
 if($notice=flash('academy_student_notice'))echo '<p class="ac-student-notice" role="status">'.e($notice).'</p>';
 if(!$total){echo '<section class="ac-student-panel"><h2>Your learning area</h2><p>Course lessons and modules have not been published yet. You will be able to access them here when available.</p></section>';}
 else{
-    echo '<p>'.e((string)$course['description']).'</p><div class="ac-lms-progress"><strong>'.$done.' of '.$total.' lessons completed</strong><progress value="'.$done.'" max="'.$total.'"></progress></div><div class="ac-lms-layout"><section class="ac-student-panel"><h2>Course content</h2>';
+    $pct=(int)round(100*$done/$total);
+    $currentIndex=null;foreach($lessons as $i=>$l)if((int)$l['id']===$lid){$currentIndex=$i;break;}
+    echo '<div class="ac-study-progress"><div><strong>'.$done.' of '.$total.' lessons completed</strong><span>'.$pct.'%</span></div><progress value="'.$done.'" max="'.$total.'" aria-label="Course lesson progress"></progress></div>';
+    echo '<div class="ac-study-layout"><section class="ac-student-panel ac-study-outline"><details class="ac-study-directory"><summary data-ac-icon="courses">Course content <small>'.$total.' lessons</small><span class="ac-course-chevron" aria-hidden="true">›</span></summary>';
+    if(!empty($course['description']))echo '<p>'.e((string)$course['description']).'</p>';
     $module=0;
     foreach($lessons as $l){
         if($module!==(int)$l['module_id']){$module=(int)$l['module_id'];echo '<h3>'.e($l['module_title']).'</h3>';}
-        echo '<a class="ac-lms-lesson'.((int)$l['id']===$lid?' active':'').'" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$l['id'].'">'.e($l['title']).'<span>'.($l['completed']?'Completed':'Open').'</span></a>';
+        $selected=(int)$l['id']===$lid;
+        echo '<a class="ac-lms-lesson'.($selected?' active':'').'"'.($selected?' aria-current="page"':'').' href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$l['id'].'"><span data-ac-icon="'.($l['completed']?'check':'lesson').'">'.e($l['title']).'</span><small>'.($l['completed']?'Completed':($selected?'Current':'Open')).'</small></a>';
     }
-    echo '</section><section class="ac-student-panel">';
+    echo '</details></section><section class="ac-student-panel ac-study-reading">';
     if(!$lesson)echo '<p>Lesson unavailable. Choose a published lesson.</p>';
     else{
-        echo '<h2>'.e($lesson['title']).'</h2><div class="ac-lesson-body">'.nl2br(e($lesson['body'])).'</div>';
+        echo '<div class="ac-study-heading"><small>Lesson '.($currentIndex+1).' of '.$total.' · '.e($lesson['module_title']).'</small><h2>'.e($lesson['title']).'</h2></div><div class="ac-lesson-body">'.nl2br(e($lesson['body'])).'</div>';
         if($embed=academy_video_embed($lesson['video_url']))echo '<div class="ac-lms-video"><iframe src="'.e($embed).'" title="Lesson video" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
         if($lesson['video_url']!=='')echo '<p><a class="ac-student-link" href="'.e(academy_learning_url($lesson['video_url'])).'" target="_blank" rel="noopener noreferrer">Watch lesson video</a></p>';
         if($lesson['material_url']!=='')echo '<p><a class="ac-student-link" href="'.e(academy_learning_url($lesson['material_url'])).'" target="_blank" rel="noopener noreferrer">Open learning material</a></p>';
@@ -34,7 +39,11 @@ else{
         $completed=false;foreach($lessons as $l)if((int)$l['id']===$lid)$completed=(bool)$l['completed'];
         if($completed)echo '<p>Lesson completed.</p>';
         else{ac_form('lesson_complete');echo '<input type="hidden" name="course" value="'.$cid.'"><input type="hidden" name="lesson" value="'.$lid.'"><button data-ac-icon="check">Mark as complete</button></form>';}
-        $next=false;foreach($lessons as $l){if($next){echo '<p><a class="ac-student-link" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$l['id'].'">Next lesson</a></p>';break;}if((int)$l['id']===$lid)$next=true;}
+        echo '<nav class="ac-study-nav" aria-label="Lesson navigation">';
+        if($currentIndex!==null&&$currentIndex>0)echo '<a class="ac-student-link" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$lessons[$currentIndex-1]['id'].'">‹ Previous lesson</a>';else echo '<span></span>';
+        if($currentIndex!==null&&isset($lessons[$currentIndex+1]))echo '<a class="ac-student-link" data-ac-icon="arrow" href="/academy.php?action=learn&amp;course='.$cid.'&amp;lesson='.(int)$lessons[$currentIndex+1]['id'].'">Next lesson</a>';
+        else echo '<span class="ac-study-end">Last published lesson</span>';
+        echo '</nav>';
     }
     echo '</section></div>';
     $results=academy_course_results((int)$user['id'],$cid);
