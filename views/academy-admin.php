@@ -17,6 +17,17 @@ function ac_admin_post(string $mode,string $tab,int $student=0):void{
     echo '<input type="hidden" name="mode" value="'.e($mode).'"><input type="hidden" name="return_tab" value="'.e($tab).'">';
     if($student>0)echo '<input type="hidden" name="student_id" value="'.$student.'">';
 }
+function ac_admin_enrollment_action(array $r,string $tab,int $student=0):void{
+    $state=(string)($r['enrollment_status']??$r['status']??'');
+    $id=(int)($r['enrollment_id']??$r['id']??0);
+    $options=match($state){'requested'=>['enrolled'=>'Accept','cancelled'=>'Cancel'],'enrolled'=>['requested'=>'Return to review','cancelled'=>'Cancel'],'cancelled'=>['enrolled'=>'Restore enrollment','requested'=>'Reopen request'],default=>[]};
+    if(!$id||!$options)return;
+    echo '<details class="ac-contact" data-ac-popup><summary>'.($state==='cancelled'?'Restore / reopen':'Change status').'</summary>';
+    ac_admin_post('enrollment',$tab,$student);
+    echo '<input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="expected" value="'.e($state).'"><label>New status<select name="status" required><option value="">Choose status</option>';
+    foreach($options as $value=>$label)echo '<option value="'.e($value).'">'.e($label).'</option>';
+    echo '</select></label><label>Reason for change<textarea name="reason" maxlength="500" rows="2" required></textarea></label><button>Save status</button></form></details>';
+}
 function ac_admin_empty(string $message):void{echo '<div class="ac-empty">'.e($message).'</div>';}
 function ac_admin_table(array $headers):void{
     echo '<div class="ac-table-wrap"><table class="ac-table" role="table"><thead role="rowgroup"><tr role="row">';
@@ -85,6 +96,9 @@ if($tab==='requests'){
             echo '<div class="ac-review-actions"><details class="ac-contact" data-ac-popup><summary>Approve request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="approved"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_recommended_weeks($r['slug'])??'')).'"></label><button>Approve for certification</button></form></details>';
             echo '<details class="ac-contact" data-ac-popup><summary>Decline request</summary>';ac_admin_post('review_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><input type="hidden" name="decision" value="declined"><label>Reason for decline (shown to student)<textarea name="reason" maxlength="2000" rows="3" required></textarea></label><button class="ac-secondary">Decline and notify student</button></form></details></div>';
         }
+        if($r['status']==='declined'){
+            echo '<details class="ac-contact" data-ac-popup><summary>Reopen request</summary>';ac_admin_post('reopen_request','requests');echo '<input type="hidden" name="request" value="'.(int)$r['id'].'"><input type="hidden" name="attempt" value="'.(int)$r['attempts'].'"><label>Reason for reopening<textarea name="reason" maxlength="500" rows="2" required></textarea></label><button>Return to review</button></form></details>';
+        }
         ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');echo '</article>';
     }
     echo '</div>';ac_admin_pager('requests',$page,$total,['q'=>$query,'status'=>$status,'student'=>$student]);echo '</section>';
@@ -116,6 +130,7 @@ if($tab==='requests'){
     if(!$u)ac_admin_empty('Student not found.');
     else{
         echo '<section class="ac-panel"><div class="ac-panel-title"><div><h2>'.e($u['full_name']).'</h2><p>'.e($u['email']).' · '.e((string)($u['phone']??'')).'</p></div>';ac_admin_status(ac_admin_student_state($u));echo '</div>';
+        echo '<details class="ac-contact" data-ac-popup><summary>Edit student profile</summary>';ac_admin_post('edit_student','student',$id);echo '<label>Full name<input name="name" maxlength="150" value="'.e($u['full_name']).'" required></label><label>Phone<input name="phone" maxlength="40" value="'.e((string)$u['phone']).'" required></label><p>Email verification and issued certificate details are not changed here.</p><label>Reason for correction<textarea name="reason" maxlength="500" rows="2" required></textarea></label><button>Save profile</button></form></details>';
         echo '<div class="ac-approval"><h3>Certification requests</h3><p>Students submit their own requests. Review and approve or decline from the request queue.</p>';ac_admin_link('Review student requests','requests',['student'=>$id],'ac-primary');echo '</div>';
         echo '</section><section class="ac-panel">';
         $rows=db_all("SELECT c.id,c.title,c.colour,c.active,en.id AS enrollment_id,en.status AS enrollment_status,g.id AS graduate_id,g.duration,ce.status AS certificate_status,ce.certificate_number
@@ -135,12 +150,26 @@ if($tab==='requests'){
                     if(!$r['certificate_status']){echo '<details class="ac-contact" data-ac-popup><summary>Edit duration</summary>';ac_admin_post('edit_duration','student',$id);echo '<input type="hidden" name="graduate" value="'.(int)$r['graduate_id'].'"><label>Training duration (weeks)<input type="number" name="duration" min="1" max="104" required value="'.e((string)(academy_duration_weeks((string)$r['duration'])??'')).'"></label><button>Save duration</button></form></details>';}
                     else echo '<small>Duration locked after checkout starts.</small>';
                 }
-                elseif($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
-                else echo '—';
+                else{
+                    ac_admin_enrollment_action($r,'student',$id);
+                    if($r['active'])ac_admin_link('Review requests','requests',['student'=>$id],'ac-secondary');
+                }
+                if($r['enrollment_id']){
+                    $progress=academy_admin_progress($id,(int)$r['id']);$pct=$progress['total']?(int)round(100*$progress['completed']/$progress['total']):0;
+                    echo '<details class="ac-contact" data-ac-popup><summary>View progress · '.$pct.'%</summary><p><strong>'.$progress['completed'].' of '.$progress['total'].' lessons completed</strong></p><progress max="100" value="'.$pct.'" style="width:100%"></progress>';
+                    foreach($progress['lessons'] as $lesson)echo '<p>'.e($lesson['title']).' · '.($lesson['completed_at']?'Completed':'Not completed').'</p>';
+                    echo '<h4>Assessments</h4>';if(!$progress['results'])echo '<p>No published assessments.</p>';
+                    foreach($progress['results'] as $result){echo '<p><strong>'.e($result['title']).'</strong> · '.($result['score_percent']!==null?(int)$result['score_percent'].'% · '.((int)$result['score_percent']>=(int)$result['pass_percent']?'Passed':'Not passed'):($result['submitted_at']?'Awaiting grading':'Not submitted')).'</p>';if($result['granted_at']){$prior=json_decode((string)$result['prior_submission'],true);echo '<small>Retake approved · '.(is_array($prior)?'Original result: '.(int)$prior['score_percent'].'%':'Original exam expired').'</small>';}}
+                    echo '</details>';
+                }
                 echo '</td></tr>';
             }
             ac_admin_table_end();
         }
+        echo '</section><section class="ac-panel"><h3>Administrator activity</h3>';
+        $history=db_all('SELECT h.*,u.full_name admin_name FROM academy_admin_history h JOIN users u ON u.id=h.admin_id WHERE h.student_id=:student ORDER BY h.id DESC LIMIT 50',['student'=>$id]);
+        if(!$history)ac_admin_empty('No administrative corrections recorded.');
+        foreach($history as $event)echo '<div class="ac-lms-submission"><strong>'.e(ucfirst(str_replace('_',' ',$event['entity_type']))).': '.e($event['old_state']).' → '.e($event['new_state']).'</strong><p>'.nl2br(e($event['reason'])).'</p><small>'.e($event['admin_name']).' · '.e($event['changed_at']).'</small></div>';
         echo '</section>';
     }
 }elseif($tab==='enrollments'){
@@ -157,8 +186,7 @@ if($tab==='requests'){
     else{
         ac_admin_table(['Student','Course','Status','Action']);
         foreach($rows as $r){echo '<tr role="row"><td role="cell"><strong>'.e($r['full_name']).'</strong><small>'.e($r['email']).'</small></td><td role="cell" data-label="Course">'.e($r['title']).'</td><td role="cell" data-label="Status">';ac_admin_status($r['status']);echo '</td><td role="cell"><div class="ac-actions">';
-            if($r['status']==='requested'){ac_admin_post('enrollment','enrollments');echo '<input type="hidden" name="id" value="'.(int)$r['id'].'"><input type="hidden" name="status" value="enrolled"><button>Accept</button></form>';}
-            if(in_array($r['status'],['requested','enrolled'],true)){ac_admin_post('enrollment','enrollments');echo '<input type="hidden" name="id" value="'.(int)$r['id'].'"><input type="hidden" name="status" value="cancelled"><button class="ac-secondary">Cancel</button></form>';}
+            ac_admin_enrollment_action($r,'enrollments');
             ac_admin_link('View student','student',['id'=>(int)$r['student_id'],'course'=>(int)$r['course_id']],'ac-secondary');echo '</div></td></tr>';
         }
         ac_admin_table_end();
@@ -195,7 +223,7 @@ if($tab==='requests'){
             echo '</td><td role="cell"><div class="ac-actions">';ac_admin_link('View student','student',['id'=>(int)$r['student_id']],'ac-secondary');
             if($st==='pending'){ac_admin_post('verify_payment','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><button>Verify payment</button></form>';}
             if($st==='issued'&&!$r['email_sent_at']){ac_admin_post('retry_email','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><button class="ac-secondary">Retry email</button></form>';}
-            if($st==='issued'){echo '<details class="ac-danger-details" data-ac-popup><summary>Revoke</summary>';ac_admin_post('revoke','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><label class="ac-check"><input type="checkbox" name="confirm_revoke" value="1" required> I confirm revocation.</label><button class="ac-danger">Revoke certificate</button></form></details>';}
+            if($st==='issued'){echo '<details class="ac-danger-details" data-ac-popup><summary>Revoke</summary>';ac_admin_post('revoke','certificates');echo '<input type="hidden" name="id" value="'.(int)$r['certificate_id'].'"><label>Reason for revocation<textarea name="reason" maxlength="500" rows="2" required></textarea></label><label class="ac-check"><input type="checkbox" name="confirm_revoke" value="1" required> I confirm revocation.</label><button class="ac-danger">Revoke certificate</button></form></details>';}
             echo '</div></td></tr>';
         }
         ac_admin_table_end();
