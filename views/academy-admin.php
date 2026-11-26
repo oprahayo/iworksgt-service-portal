@@ -85,7 +85,7 @@ if($tab==='analytics'){
       ['Certificates issued',ac_admin_count("SELECT COUNT(*) n FROM academy_certificates ce JOIN users u ON u.id=ce.student_id WHERE ce.status='issued' AND u.role='student' AND u.deleted_at IS NULL")]
     ];
     echo '<div class="ac-metric-strip">';
-    foreach($metrics as [$label,$value])echo '<div class="ac-metric"><strong>'.number_format($value).'</strong><small>'.e($label).'</small></div>';
+    foreach($metrics as [$label,$value])echo '<div class="ac-metric"><strong>'.number_format($value).'</strong><small>'.($label==='Awaiting grading'?'<a href="#assignment-review">Awaiting grading</a>':e($label)).'</small></div>';
     echo '</div><h3>Course progress</h3><p>Completed enrollments and outstanding course applications.</p>';
     $rows=db_all("SELECT c.id,c.title,c.active,COALESCE(x.pending,0) pending,COALESCE(x.enrolled,0) enrolled,COALESCE(x.completed,0) completed,COALESCE(x.cancelled,0) cancelled FROM academy_courses c LEFT JOIN (SELECT en.course_id,SUM(en.status='requested') pending,SUM(en.status='enrolled') enrolled,SUM(en.status='completed') completed,SUM(en.status='cancelled') cancelled FROM academy_enrollments en JOIN users u ON u.id=en.student_id WHERE u.role='student' AND u.deleted_at IS NULL GROUP BY en.course_id) x ON x.course_id=c.id ORDER BY c.title");
     if(!$rows)ac_admin_empty('No courses available.');
@@ -100,6 +100,28 @@ if($tab==='analytics'){
       ac_admin_table_end();
     }
     echo '<small>Completion rate = completed ÷ (enrolled + completed). Counts represent current records, not a historical trend.</small></section>';
+    echo '<section class="ac-panel" id="assignment-review"><div class="ac-panel-title"><div><h2>Assignment review</h2><p>Grade pending work without opening individual course lessons.</p></div></div>';
+    ac_admin_search('analytics',$query);
+    [$where,$params]=ac_admin_search_params($query,['u.full_name','u.email','c.title','a.title']);
+    $from=" FROM academy_assessment_submissions s JOIN academy_assessments a ON a.id=s.assessment_id JOIN academy_lessons l ON l.id=a.lesson_id JOIN academy_modules m ON m.id=l.module_id JOIN academy_courses c ON c.id=m.course_id JOIN users u ON u.id=s.student_id LEFT JOIN academy_assignment_files f ON f.submission_id=s.id WHERE a.kind='assignment' AND s.score_percent IS NULL AND u.role='student' AND u.deleted_at IS NULL".$where;
+    $total=ac_admin_count('SELECT COUNT(*) n'.$from,$params);$page=min($page,max(1,(int)ceil($total/25)));$offset=($page-1)*25;
+    $pending=db_all('SELECT s.id,s.student_id,s.submitted_at,s.response_json,u.full_name,c.id course_id,c.title course_title,l.id lesson_id,a.title,a.pass_percent,f.filename'.$from.' ORDER BY s.submitted_at ASC,s.id ASC LIMIT 25 OFFSET '.$offset,$params);
+    if(!$pending)ac_admin_empty('No assignments awaiting grading in this view.');
+    else{
+      ac_admin_table(['Student','Assignment','Submitted','Action']);
+      foreach($pending as $item){
+        echo '<tr role="row"><td role="cell"><strong>'.e($item['full_name']).'</strong></td><td role="cell" data-label="Assignment"><strong>'.e($item['title']).'</strong><small>'.e($item['course_title']).'</small></td><td role="cell" data-label="Submitted">'.e(date('d M Y',strtotime($item['submitted_at']))).'</td><td role="cell"><div class="ac-actions">';
+        echo '<details class="ac-contact" data-ac-popup><summary>Review assignment</summary><p><strong>'.e($item['full_name']).'</strong> · '.e($item['title']).'</p><p>Pass mark: '.(int)$item['pass_percent'].'%</p>';
+        $response=json_decode($item['response_json'],true);if(is_string($response)&&$response!=='')echo '<details class="ac-assignment-response"><summary>Written response</summary><div class="ac-lesson-body">'.nl2br(e($response)).'</div></details>';
+        if($item['filename'])echo '<p><a class="ac-link" href="/academy.php?action=assignment_file&amp;course='.(int)$item['course_id'].'&amp;lesson='.(int)$item['lesson_id'].'&amp;id='.(int)$item['id'].'">Download submitted PDF</a><small>'.e($item['filename']).'</small></p>';
+        ac_admin_post('grade_pending','analytics');echo '<input type="hidden" name="id" value="'.(int)$item['id'].'"><label>Score (%)<input type="number" name="score" min="0" max="100" required></label><label>Feedback<textarea name="feedback" rows="3" maxlength="10000"></textarea></label><button>Save grade</button></form></details>';
+        ac_admin_link('Student','student',['id'=>(int)$item['student_id']],'ac-link');
+        echo '</div></td></tr>';
+      }
+      ac_admin_table_end();
+    }
+    ac_admin_pager('analytics',$page,$total,['q'=>$query]);echo '</section>';
+
 }elseif($tab==='requests'){
     echo '<section class="ac-request-shell"><div class="ac-request-heading"><div><h2>Certification requests</h2><p>Review completed training and decide whether to approve certification.</p></div></div>';
     $options=['pending'=>'Awaiting review','approved'=>'Approved','declined'=>'Declined'];
