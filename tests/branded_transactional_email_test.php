@@ -20,6 +20,16 @@ $plain='Hello, your code is 123456.';
 $mime=iworks_email_alternative_body('fixture-boundary',$plain,$otp);
 verify(str_contains($mime,'Content-Type: text/plain')&&str_contains($mime,'Content-Type: text/html')&&str_contains($mime,'--fixture-boundary--'),'Multipart alternative structure');
 verify(str_contains(quoted_printable_decode($mime),$plain),'Plain fallback preserved');
+// Test the actual approved source raster in a non-delivery MIME fixture.
+// The deployment test uses the cropped official logo if installed.
+$logo=iworks_email_logo_bytes()??file_get_contents(__DIR__.'/../assets/branding/iworks-social-share.png');
+verify(is_string($logo)&&str_starts_with($logo,"\x89PNG\r\n\x1a\n"),'Approved PNG source available');
+$related=iworks_email_alternative_body('fixture-inline',$plain,$otp,$logo);
+$decoded=quoted_printable_decode($related);
+verify(str_contains($related,'Content-Type: multipart/related')&&str_contains($related,'Content-Disposition: inline; filename="iworks-email-logo.png"'),'PNG is embedded inline in HTML alternative');
+verify(preg_match('/Content-ID: <([^>]+)>/',$related,$cid)===1&&str_contains($decoded,'src="cid:'.$cid[1].'"'),'Image markup and MIME Content-ID match');
+verify(!str_contains($decoded,'https://portal.iworksgt.com/assets/branding/iworks-email-logo.png'),'Embedded email does not rely on remote image loading');
+verify(preg_match('/Content-Disposition: inline; filename="iworks-email-logo.png"\r\n\r\n([A-Za-z0-9+\/=\r\n]+)\r\n--/',$related,$payload)===1&&base64_decode(preg_replace('/\s+/','',$payload[1]),true)===$logo,'Inline asset bytes match approved PNG exactly');
 $academy=file_get_contents(__DIR__.'/../app/academy.php');
 verify(str_contains($academy,'multipart/mixed')&&str_contains($academy,'multipart/alternative')&&str_contains($academy,'application/pdf')&&str_contains($academy,'iworks_email_html'),'Nested branded certificate with PDF');
 echo "PASS shared branded email rendering, safe actions and attachment contract\n";
