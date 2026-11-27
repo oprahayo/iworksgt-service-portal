@@ -2229,7 +2229,7 @@ function save_website_lead(array $input): int
     );
 
     $leadId = db_last_id();
-    $targetUrl = url('frontend', ['slug' => 'contact']);
+    $targetUrl = url('website_inbox', ['lead_id' => $leadId]);
     notify_roles(
         ['admin', 'agent'],
         'New website quote/enquiry',
@@ -8946,6 +8946,12 @@ function handle_gateway_webhook(string $provider, string $rawPayload, array $hea
         $reference = trim((string) ($payload['data']['reference'] ?? ''));
         if ($reference === '') {
             return ['success' => false, 'status_code' => 400, 'message' => 'Missing Paystack reference.'];
+        }
+
+        if (preg_match('/^IWGA-[a-f0-9]{32}$/D', $reference)) {
+            require_once __DIR__ . '/academy.php';
+            $confirmed = academy_confirm($reference);
+            return ['success' => $confirmed, 'status_code' => $confirmed ? 200 : 503, 'message' => $confirmed ? 'Academy payment confirmed.' : 'Academy payment verification pending.'];
         }
 
         $payment = find_gateway_payment_by_reference_any($provider, $reference);

@@ -35,7 +35,8 @@ $check(str_contains($widget,'data-live-endpoint=') && str_contains($widget,'iwAs
 $check(str_contains($staffJs,"setInterval(poll,5000)") && str_contains($staffJs,"Enable sound alerts"),'Staff inbox should poll with user-activated audio.');
 $check(str_contains($staffJs,"AudioContext") && str_contains($staffJs,"document.visibilityState"),'Audio and presence polling must respect browser capabilities.');
 $check(str_contains($staff,'iwLiveInbox') && str_contains($staff,'Live chat database is not installed'),'Admin should have a transparent migration prompt.');
-$check(str_contains($staff,"has_role(['admin'])") && str_contains($staff,"url('messages')"),'Live inbox should send agents to team messages but protect admin-only support tickets.');
+$nav=$read('views/partials/communications-nav.php');
+$check(str_contains($staff,'communications-nav.php') && str_contains($nav,"if(has_role(['admin']))") && str_contains($nav,"['messages','Team messages'") && str_contains($nav,"['support','Support tickets'"),'Shared communications navigation must link team messages and protect admin-only support tickets.');
 $check(str_contains($read('views/messages.php'),"url('live_inbox')") && str_contains($read('views/support.php'),"url('live_inbox')"),'Messages and Support should link to the live visitor inbox.');
 foreach(['iw_live_threads','iw_live_messages','iw_live_staff_presence'] as $table) {
     $check(str_contains($schema,'CREATE TABLE IF NOT EXISTS '.$table),'Fresh schema missing '.$table);

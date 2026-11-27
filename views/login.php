@@ -13,13 +13,14 @@
     <div><label for="iwLoginEmail">Email address</label><input id="iwLoginEmail" name="email" type="email" autocomplete="email" value="<?= e(old_input('email')) ?>" placeholder="you@example.com" required></div>
     <div><label for="iwLoginPassword">Password</label><div class="iw-auth-password"><input id="iwLoginPassword" name="password" type="password" autocomplete="current-password" placeholder="Your password" required><button type="button" data-iw-password="iwLoginPassword" aria-label="Show password"><i class="bi bi-eye" aria-hidden="true"></i></button></div></div>
     <div class="iw-auth-form-options">
-      <label class="iw-auth-remember"><input type="checkbox" name="remember_30days" value="1" <?= checked_if(!empty($_POST['remember_30days'])) ?>> Remember this device</label>
+      <label class="iw-auth-remember"><input type="checkbox" name="remember_30days" value="1" <?= checked_if(!empty($_POST['remember_30days'])) ?>> Trust this device for 30 days</label>
       <a href="<?= e(url('forgot_password')) ?>" target="_top">Forgot password?</a>
     </div>
     <button class="iw-auth-submit" type="submit">Sign in <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
     <?php if (google_auth_ready()): ?><a class="iw-auth-google" href="<?= e(portal_url('google_start')) ?>"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a><?php endif; ?>
   </form>
   <p class="iw-auth-switch">New to iWorks? <a href="<?= e(url('register', !empty($_GET['embed']) ? ['embed'=>'1'] : [])) ?>"<?= !empty($_GET['embed']) ? ' data-iw-auth-switch="register"' : '' ?>>Create an account</a></p>
+  <p class="iw-auth-switch">Joining iWorks Academy? <a href="<?= e(portal_absolute_url('student/register')) ?>" target="_top">Register as a student</a></p>
 </section>
 <script>
 <?php if (empty($iwEmbeddedPublicAuth)): ?>

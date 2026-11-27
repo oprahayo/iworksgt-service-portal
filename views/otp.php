@@ -44,8 +44,9 @@ $otpCooldown = max(0, (int) ($otpResendCooldownRemaining ?? 0));
           </div>
 
           <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="remember_30days" name="remember_30days" value="1" <?= checked_if(($_SESSION['pending_otp_remember'] ?? '0') === '1') ?>>
-            <label class="form-check-label" for="remember_30days">Trust this device for 30 days (skip OTP)</label>
+            <input type="hidden" name="remember_30days" value="0">
+            <input class="form-check-input" type="checkbox" id="remember_30days" name="remember_30days" value="1" <?= checked_if(!empty($pendingOtp['remember'])) ?>>
+            <label class="form-check-label" for="remember_30days">Trust this private device for 30 days (skip repeat OTP)</label>
           </div>
 
           <button class="btn btn-primary w-100" type="submit">Verify and continue</button>

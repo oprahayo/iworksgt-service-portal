@@ -37,4 +37,11 @@ check_oauth(str_contains($settings, 'Authorized redirect URI'), 'Admin must prov
 check_oauth(!str_contains($settings, 'value="<?= e(google_client_secret()) ?>"'), 'Admin must not echo saved secret into form HTML.');
 check_oauth(str_contains($router, "\$clientSecret = google_client_secret()"), 'Blank settings secret must preserve existing secret.');
 check_oauth(str_contains($auth, 'google_oauth_redirect_problems()'), 'Authorize only a verified portal callback route.');
+$academyView=file_get_contents($root.'/views/academy-register.php');
+$academyEntry=file_get_contents($root.'/academy.php');
+check_oauth(str_contains($academyView,"portal_url('google_start',['academy'=>'1'])"),'Student Google registration explicitly selects Academy');
+check_oauth(str_contains($academyEntry,"/views/partials/header.php")&&str_contains($academyEntry,"/views/academy-register.php"),'Student registration uses native portal frame');
+check_oauth(str_contains($auth,"'role' => \$academy ? 'student' : 'client'"),'New Google user created with the correct role');
+check_oauth(str_contains($auth,"if (\$academy && (\$user['role'] ?? '') !== 'student')"),'Academy sign-in cannot convert an existing staff or client account');
+check_oauth(str_contains($router,"authenticate_with_google_code(\$code, \$academyGoogle)"),'State-validated OAuth callback uses Academy intent');
 echo "google_oauth_contract_test passed\n";

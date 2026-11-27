@@ -737,6 +737,7 @@ function otp_recovery_context_from_cookie(): ?array
     return [
         'user_id' => $claims['u'],
         'purpose' => $claims['p'],
+        'remember' => ($claims['r'] ?? false) === true,
         'created_at' => date('Y-m-d H:i:s', $claims['t']),
         'recovery_cookie' => $raw,
         'recovery_key' => (string) $user['password_hash'],
@@ -768,12 +769,13 @@ function otp_submission_csrf_valid(): bool
     return strlen($token) === 64 && $expected !== '' && hash_equals($expected, $token);
 }
 
-function otp_recovery_build_cookie(int $userId, string $purpose, array $user, ?int $issuedAt = null): string
+function otp_recovery_build_cookie(int $userId, string $purpose, array $user, ?int $issuedAt = null, bool $remember = false): string
 {
     $claims = json_encode([
         'v' => 1,
         'u' => $userId,
         'p' => $purpose,
+        'r' => $remember,
         't' => $issuedAt ?? time(),
         'n' => bin2hex(random_bytes(16)),
     ], JSON_UNESCAPED_SLASHES);
@@ -785,7 +787,7 @@ function otp_recovery_build_cookie(int $userId, string $purpose, array $user, ?i
     return $body.'.'.$signature;
 }
 
-function set_pending_otp(int $userId, string $purpose): void
+function set_pending_otp(int $userId, string $purpose, bool $remember = false): void
 {
     if (!in_array($purpose, ['login', 'verify_email'], true)) {
         throw new InvalidArgumentException('Invalid OTP purpose.');
@@ -797,9 +799,10 @@ function set_pending_otp(int $userId, string $purpose): void
     $_SESSION['pending_otp'] = [
         'user_id' => $userId,
         'purpose' => $purpose,
+        'remember' => $remember,
         'created_at' => now(),
     ];
-    $value = otp_recovery_build_cookie($userId, $purpose, $user);
+    $value = otp_recovery_build_cookie($userId, $purpose, $user, null, $remember);
     setcookie(otp_recovery_cookie_name(), $value, [
         'expires' => time() + otp_recovery_ttl_seconds(),
         'path' => '/',
@@ -817,7 +820,7 @@ function pending_otp_context(): ?array
     $cookie = otp_recovery_context_from_cookie();
     if ($cookie) {
         return ['user_id' => $cookie['user_id'],
-            'purpose' => $cookie['purpose'], 'created_at' => $cookie['created_at']];
+            'purpose' => $cookie['purpose'], 'remember' => $cookie['remember'], 'created_at' => $cookie['created_at']];
     }
     // Backwards compatibility for browsers that block non-session cookies.
     $pending = $_SESSION['pending_otp'] ?? null;
@@ -845,7 +848,7 @@ function clear_pending_otp(): void
     unset($_COOKIE[otp_recovery_cookie_name()]);
 }
 
-function start_otp_challenge(int $userId, string $purpose): void
+function start_otp_challenge(int $userId, string $purpose, bool $remember = false): void
 {
     $actor = $userId . '|' . iworks_auth_ip();
     if (!iworks_auth_limit_allows('otp_request', $actor, 6, 3600)) {
@@ -867,7 +870,7 @@ function start_otp_challenge(int $userId, string $purpose): void
         }
         otp_queue_dispatch_kick();
     }
-    set_pending_otp($userId, $purpose);
+    set_pending_otp($userId, $purpose, $remember);
 }
 
 function verify_otp_code(int $userId, string $purpose, string $code): bool
@@ -928,9 +931,10 @@ function verify_otp_code(int $userId, string $purpose, string $code): bool
     }
 }
 
-function trusted_device_cookie_name(): string
+function trusted_device_cookie_name(?int $userId = null): string
 {
-    return 'iworksgt_trusted_device';
+    // Keep separate host-only tokens for the user's admin and student accounts.
+    return 'iworksgt_trusted_device'.($userId===null?'':'_'.$userId);
 }
 
 function remember_device_days(): int
@@ -938,74 +942,53 @@ function remember_device_days(): int
     return 30;
 }
 
-function set_trusted_device_cookie(string $token): void
+function set_trusted_device_cookie(string $token, int $userId, int $expires): bool
 {
-    $expires = time() + (remember_device_days() * 86400);
-    $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-
-    setcookie(trusted_device_cookie_name(), $token, [
-        'expires' => $expires,
-        'path' => '/',
-        'secure' => $isSecure,
-        'httponly' => true,
-        'samesite' => 'Lax',
+    $name=trusted_device_cookie_name($userId);
+    $ok=setcookie($name,$token,[
+        'expires'=>$expires,'path'=>'/',
+        'secure'=>otp_recovery_cookie_secure(),'httponly'=>true,'samesite'=>'Lax',
     ]);
-
-    $_COOKIE[trusted_device_cookie_name()] = $token;
+    if($ok)$_COOKIE[$name]=$token;
+    return $ok;
 }
 
 function remember_trusted_device(int $userId): void
 {
-    $token = bin2hex(random_bytes(32));
-
+    $token=bin2hex(random_bytes(32));
+    $expires=time()+remember_device_days()*86400;
     db_execute(
         'INSERT INTO trusted_devices (user_id, token_hash, user_agent, ip_address, expires_at, created_at, last_used_at)
          VALUES (:user_id, :token_hash, :user_agent, :ip_address, :expires_at, :created_at, :last_used_at)',
-        [
-            'user_id' => $userId,
-            'token_hash' => hash('sha256', $token),
-            'user_agent' => substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
-            'ip_address' => substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 80),
-            'expires_at' => date('Y-m-d H:i:s', strtotime('+' . remember_device_days() . ' days')),
-            'created_at' => now(),
-            'last_used_at' => now(),
-        ]
+        ['user_id'=>$userId,'token_hash'=>hash('sha256',$token),
+         'user_agent'=>substr((string)($_SERVER['HTTP_USER_AGENT']??''),0,255),
+         'ip_address'=>substr((string)($_SERVER['REMOTE_ADDR']??''),0,80),
+         'expires_at'=>date('Y-m-d H:i:s',$expires),'created_at'=>now(),'last_used_at'=>now()]
     );
-
-    set_trusted_device_cookie($token);
+    if(!set_trusted_device_cookie($token,$userId,$expires)){
+        db_execute('DELETE FROM trusted_devices WHERE user_id=:user_id AND token_hash=:token_hash',['user_id'=>$userId,'token_hash'=>hash('sha256',$token)]);
+        error_log('Trusted device cookie could not be set.');
+    }
 }
 
 function has_valid_trusted_device(int $userId): bool
 {
-    $token = $_COOKIE[trusted_device_cookie_name()] ?? '';
-    if (!is_string($token) || trim($token) === '') {
-        return false;
+    // Password verification and account eligibility must already have passed.
+    $name=trusted_device_cookie_name($userId);
+    $legacy=trusted_device_cookie_name();
+    foreach([$name,$legacy] as $cookie){
+        $token=$_COOKIE[$cookie]??'';
+        if(!is_string($token)||!preg_match('/^[a-f0-9]{64}$/D',$token))continue;
+        $record=db_one('SELECT id,expires_at FROM trusted_devices WHERE user_id=:user_id AND token_hash=:token_hash LIMIT 1',['user_id'=>$userId,'token_hash'=>hash('sha256',$token)]);
+        if(!$record)continue;
+        $expires=strtotime((string)$record['expires_at']);
+        if($expires===false||$expires<=time())continue;
+        db_execute('UPDATE trusted_devices SET last_used_at=:last_used_at WHERE id=:id',['last_used_at'=>now(),'id'=>$record['id']]);
+        // Migrate an existing valid legacy token without extending its expiry.
+        if($cookie===$legacy)set_trusted_device_cookie($token,$userId,$expires);
+        return true;
     }
-
-    $record = db_one(
-        'SELECT * FROM trusted_devices
-         WHERE user_id = :user_id AND token_hash = :token_hash
-         ORDER BY id DESC LIMIT 1',
-        [
-            'user_id' => $userId,
-            'token_hash' => hash('sha256', $token),
-        ]
-    );
-
-    if (!$record) {
-        return false;
-    }
-
-    if (strtotime((string) $record['expires_at']) < time()) {
-        return false;
-    }
-
-    db_execute('UPDATE trusted_devices SET last_used_at = :last_used_at WHERE id = :id', [
-        'last_used_at' => now(),
-        'id' => $record['id'],
-    ]);
-
-    return true;
+    return false;
 }
 
 function can_view_full_bank_details(array $viewer, array $agent): bool
@@ -1349,7 +1332,7 @@ function fetch_google_user_profile(string $accessToken): array
     ];
 }
 
-function find_or_create_google_user(array $profile): array
+function find_or_create_google_user(array $profile, bool $academy = false): array
 {
     $email = strtolower(trim((string) ($profile['email'] ?? '')));
     if ($email === '') {
@@ -1358,6 +1341,9 @@ function find_or_create_google_user(array $profile): array
 
     $user = find_user_by_email($email);
     if ($user) {
+        if ($academy && ($user['role'] ?? '') !== 'student') {
+            throw new RuntimeException('This Google account already belongs to a different iWorks workspace. Sign in normally or use a separate student email.');
+        }
         if (($user['status'] ?? 'active') !== 'active' || ($user['account_state'] ?? 'active') !== 'active') {
             throw new RuntimeException('Your account is not active. Contact support.');
         }
@@ -1391,7 +1377,7 @@ function find_or_create_google_user(array $profile): array
         'last_name' => $lastName,
         'email' => $email,
         'password' => bin2hex(random_bytes(16)),
-        'role' => 'client',
+        'role' => $academy ? 'student' : 'client',
         'email_verified' => true,
     ]);
 
@@ -1403,7 +1389,7 @@ function find_or_create_google_user(array $profile): array
     return $created;
 }
 
-function authenticate_with_google_code(string $code): array
+function authenticate_with_google_code(string $code, bool $academy = false): array
 {
     if (!google_auth_ready()) {
         throw new RuntimeException('Google authentication is currently disabled.');
@@ -1412,5 +1398,5 @@ function authenticate_with_google_code(string $code): array
     $accessToken = exchange_google_code_for_access_token($code);
     $profile = fetch_google_user_profile($accessToken);
 
-    return find_or_create_google_user($profile);
+    return find_or_create_google_user($profile, $academy);
 }

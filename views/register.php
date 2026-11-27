@@ -27,8 +27,8 @@ $oldStateValue = (string) old_input('state_region');
         <div><label for="iwLastName">Last name *</label><input id="iwLastName" name="last_name" autocomplete="family-name" value="<?= e(old_input('last_name')) ?>" required maxlength="100"></div>
         <div class="iw-auth-full"><label for="iwRegisterEmail">Email *</label><input id="iwRegisterEmail" type="email" name="email" autocomplete="email" value="<?= e(old_input('email')) ?>" required maxlength="190"></div>
         <div class="iw-auth-full"><label for="iwPhone">Phone *</label><input id="iwPhone" type="tel" name="phone" autocomplete="tel" value="<?= e(old_input('phone')) ?>" required maxlength="30" placeholder="+234..."></div>
-        <div><label for="iwPassword">Password *</label><input id="iwPassword" type="password" name="password" autocomplete="new-password" minlength="6" required></div>
-        <div><label for="iwConfirmPassword">Confirm password *</label><input id="iwConfirmPassword" type="password" name="confirm_password" autocomplete="new-password" minlength="6" required></div>
+        <div><label for="iwPassword">Password *</label><div class="iw-auth-password"><input id="iwPassword" type="password" name="password" autocomplete="new-password" minlength="6" required><button type="button" data-iw-password="iwPassword" aria-controls="iwPassword" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button></div></div>
+        <div><label for="iwConfirmPassword">Confirm password *</label><div class="iw-auth-password"><input id="iwConfirmPassword" type="password" name="confirm_password" autocomplete="new-password" minlength="6" required><button type="button" data-iw-password="iwConfirmPassword" aria-controls="iwConfirmPassword" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button></div></div>
       </div>
     </fieldset>
 
@@ -155,4 +155,7 @@ $oldStateValue = (string) old_input('state_region');
     });
   });
 })();
+</script>
+<script>
+(function(){document.querySelectorAll('[data-iw-password]').forEach(function(button){button.addEventListener('click',function(){var input=document.getElementById(button.getAttribute('data-iw-password'));if(!input)return;var visible=input.type==='password';input.type=visible?'text':'password';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.setAttribute('aria-pressed',String(visible));button.querySelector('i').className=visible?'bi bi-eye-slash':'bi bi-eye';});});})();
 </script>

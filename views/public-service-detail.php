@@ -43,7 +43,21 @@ $actionUrl = $isEnquiry
 $actionHelp = $isEnquiry;
 $isWebsiteBuild = $serviceSlug === 'website-design-development';
 $isScumlSupport = $serviceSlug === 'scuml-document-support';
-if ($isWebsiteBuild) {
+$isAcademyTraining = $serviceSlug === 'pro-training';
+$academyCourses = [];
+if ($isAcademyTraining) {
+    try {
+        $academyCourses = db_all('SELECT slug,title FROM academy_courses WHERE active=1 ORDER BY title');
+    } catch (Throwable $e) {
+        // Public training remains available if the Academy schema is unavailable.
+        $academyCourses = [];
+    }
+}
+if ($isAcademyTraining) {
+    $actionText = 'Explore training courses';
+    $actionUrl = '#iwAcademyCourses';
+    $actionHelp = false;
+} elseif ($isWebsiteBuild) {
     $actionText = 'Choose a website package';
     $actionUrl = '#iwWebsitePackagesTitle';
     $actionHelp = false;
@@ -154,7 +168,30 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
       </section>
     <?php endif; ?>
 
-    <?php if ($isEnquiry && !$isWebsiteBuild): ?>
+    <?php if ($isAcademyTraining): ?>
+      <section class="iw-website-launch-packages" id="iwAcademyCourses" aria-labelledby="iwAcademyCoursesTitle">
+        <div class="iw-website-launch-heading">
+          <h2 id="iwAcademyCoursesTitle">Learn with iWorks Global Academy</h2>
+          <p>Choose a digital skills course and submit an application. Track your application in your student account. Training access depends on administrator approval and course availability.</p>
+        </div>
+        <?php if ($academyCourses): ?>
+          <div class="iw-website-launch-grid">
+            <?php foreach ($academyCourses as $academyCourse): ?>
+              <article class="iw-website-launch-choice">
+                <strong><?= e($academyCourse['title']) ?></strong>
+                <small>Applications open for review. Course content and schedules are being prepared.</small>
+                <a class="iw-cac-public-choose" href="<?= e(portal_absolute_url('academy.php?'.http_build_query(['action'=>'apply','course'=>$academyCourse['slug']]))) ?>">Apply for course <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+              </article>
+            <?php endforeach; ?>
+          </div>
+        <?php else: ?>
+          <p>Contact our training team for upcoming course availability.</p>
+        <?php endif; ?>
+        <p class="iw-website-launch-notice">Already completed your iWorks training? <a href="<?= e(portal_absolute_url('student/register')) ?>">Register for certificate services</a>. Applying for training does not charge you or automatically qualify you for a certificate.</p>
+      </section>
+    <?php endif; ?>
+
+    <?php if ($isEnquiry && !$isWebsiteBuild && !$isAcademyTraining): ?>
       <section class="iw-website-launch-packages" aria-labelledby="iwSpecialistTitle">
         <div class="iw-website-launch-heading">
           <h2 id="iwSpecialistTitle">Request a tailored quote</h2>
@@ -217,7 +254,7 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
           <div class="iw-scuml-price-block">
             <span>iWORKS standard guidance fee</span>
             <strong><?= e((string)$pricing['display']) ?></strong>
-            <?php if ($pricing['tax_note'] !== ''): ?><small><?= e((string)$pricing['tax_note']) ?></small><?php endif; ?>
+            <?php if (!$isAcademyTraining && $pricing['tax_note'] !== ''): ?><small><?= e((string)$pricing['tax_note']) ?></small><?php endif; ?>
             <a class="iw-product-cta" href="<?= e($actionUrl) ?>">Apply for support</a>
             <small>EFCC application &amp; certificate: <strong>FREE</strong>. The iWORKS fee is independent of government registration.</small>
           </div>
@@ -253,8 +290,8 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
     <div class="iw-product-layout">
       <aside class="iw-product-side" aria-label="Service pricing and next step">
         <div class="iw-product-order">
-          <span class="iw-product-price-caption"><?= e((string) $pricing['label']) ?></span>
-          <div class="iw-product-price"><?= e((string) $pricing['display']) ?></div>
+          <span class="iw-product-price-caption"><?= $isAcademyTraining ? 'Training applications' : e((string) $pricing['label']) ?></span>
+          <div class="iw-product-price"><?= $isAcademyTraining ? 'Apply for a course' : e((string) $pricing['display']) ?></div>
           <?php if ($pricing['tax_note'] !== ''): ?>
             <p class="iw-product-tax"><?= e((string) $pricing['tax_note']) ?></p>
           <?php endif; ?>
@@ -267,7 +304,7 @@ foreach (is_array($publicServices ?? null) ? $publicServices : [] as $item) {
               <?= e($actionText) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>
           <?php endif; ?>
-          <p class="iw-product-order-note"><?= $isEnquiry
+          <p class="iw-product-order-note"><?= ($isEnquiry || $isAcademyTraining)
               ? 'We will review your requirements and confirm the scope and fees before proceeding.'
               : 'Enter your requirements securely and track each update in your iWorks account.' ?></p>
           <div class="iw-product-order-help">

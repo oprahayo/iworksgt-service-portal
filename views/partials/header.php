@@ -46,7 +46,13 @@ if ($user && (string) ($user['role'] ?? '') === 'client') {
 }
 
 $sidebarItems = [];
-if ($user && (string)($user['role'] ?? '') === 'author') {
+if ($user && (string)($user['role'] ?? '') === 'student') {
+    $sidebarItems = [
+        ['page'=>'academy','label'=>'Dashboard','icon'=>'bi-speedometer2','url'=>'/academy.php?action=dashboard'],
+        ['page'=>'academy_courses','label'=>'My Courses','icon'=>'bi-book','url'=>'/academy.php?action=courses'],
+        ['page'=>'academy_certificates','label'=>'My Certificates','icon'=>'bi-award','url'=>'/academy.php?action=certificates'],
+    ];
+} elseif ($user && (string)($user['role'] ?? '') === 'author') {
     $sidebarItems = [
         ['page'=>'dashboard','label'=>'Dashboard','icon'=>'bi-speedometer2','url'=>url('dashboard')],
         ['page'=>'blog','label'=>'Insights','icon'=>'bi-journal-richtext','url'=>url('blog')],
@@ -73,7 +79,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
         ];
     }
 
-    if (has_role(['client', 'admin', 'finance'])) {
+    if (has_role(['client', 'finance'])) {
         $sidebarItems[] = [
             'page' => 'support',
             'label' => 'Support',
@@ -102,16 +108,10 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
 
     if (has_role(['admin', 'agent'])) {
         $sidebarItems[] = [
-            'page' => 'live_inbox',
-            'label' => 'Website Live Chat',
-            'icon' => 'bi-chat-dots-fill',
-            'url' => url('live_inbox'),
-        ];
-        $sidebarItems[] = [
-            'page' => 'messages',
-            'label' => 'Messages',
-            'icon' => 'bi-chat-dots',
-            'url' => url('messages'),
+            'page' => 'website_inbox',
+            'label' => 'Communications',
+            'icon' => 'bi-inboxes',
+            'url' => url('website_inbox'),
         ];
         $sidebarItems[] = [
             'page' => 'blog',
@@ -149,6 +149,7 @@ if ($user && (string)($user['role'] ?? '') === 'author') {
     }
 
     if (has_role(['admin'])) {
+        $sidebarItems[] = ['page'=>'academy','label'=>'Academy','icon'=>'bi-mortarboard','url'=>'/academy.php?action=admin'];
         $sidebarItems[] = [
             'page' => 'forms',
             'label' => 'Forms',
@@ -191,7 +192,7 @@ if ($user && (string)($user['role'] ?? '') === 'admin') {
     $sidebarItems[] = ['page'=>'system_health','label'=>'System health','icon'=>'bi-heart-pulse','url'=>url('system_health')];
 }
 $sidebarPriority = [
-    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'live_inbox'=>25, 'messages'=>30, 'community'=>40,
+    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'website_inbox'=>25, 'live_inbox'=>25, 'messages'=>30, 'community'=>40,
     'services'=>50, 'forms'=>60,
     'blog'=>70, 'editorial_showcase'=>80, 'frontend'=>90, 'media'=>100,
     'invoices'=>110, 'payments'=>120, 'payouts'=>130, 'withdrawals'=>140,
@@ -207,6 +208,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <?php if (!empty($academyGuestRegistration)): ?><base href="<?= e(portal_absolute_url('')) ?>"><?php endif; ?>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($title ?: app_name()) ?></title>
   <meta name="description" content="<?= e($seoDescriptionText) ?>">
@@ -238,6 +240,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <?php if ($currentPage === 'dashboard' && $user && in_array((string)($user['role'] ?? ''),['admin','finance'],true)): ?><link rel="stylesheet" href="assets/css/dashboard-transactions.css?v=20261116-transactions1"><?php endif; ?>
   <?php if ($currentPage === 'payments' && $user && in_array((string)($user['role'] ?? ''),['admin','finance'],true)): ?><link rel="stylesheet" href="assets/css/payment-review-mobile.css?v=20261116-payment2"><?php endif; ?>
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
+  <?php if (in_array($currentPage,['website_inbox','live_inbox','messages','support','frontend'],true)): ?><link rel="stylesheet" href="assets/css/communications-workspace.css?v=20261127-1"><?php endif; ?>
   <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
   <?php if ($user && $currentPage === 'job'): ?><link rel="stylesheet" href="assets/css/job-workspace.css?v=20261113b"><?php endif; ?>
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
@@ -245,6 +248,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <link rel="stylesheet" href="assets/css/auth-compact.css?v=20261112c">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/iworks-responsive-logo.css?v=20261113-logo1">
+  <?php if (($user['role']??'')==='student' || in_array($currentPage, ['academy','academy_courses','academy_certificates','academy_profile'], true)): ?><link rel="stylesheet" href="/assets/css/academy.css?v=17"><?php endif; ?>
   <?php require __DIR__ . '/portal-transition-head.php'; ?>
   <style>
     :root {
@@ -279,9 +283,9 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
     <nav class="sidebar-nav">
       <?php
         $portalGroups = [
-          'dashboard'=>'OVERVIEW',
+          'dashboard'=>'OVERVIEW','academy'=>'ACADEMY','academy_courses'=>'ACADEMY','academy_certificates'=>'ACADEMY','academy_profile'=>'ACADEMY',
           'jobs'=>'SERVICE DELIVERY','support'=>'SERVICE DELIVERY',
-          'messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
+          'website_inbox'=>'COMMUNICATION','messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
           'services'=>'SERVICE CATALOGUE','forms'=>'SERVICE CATALOGUE',
           'blog'=>'WEBSITE CONTENT','editorial_showcase'=>'WEBSITE CONTENT','frontend'=>'WEBSITE CONTENT','media'=>'WEBSITE CONTENT',
           'invoices'=>'FINANCE','payments'=>'FINANCE','payouts'=>'FINANCE','withdrawals'=>'FINANCE',
@@ -293,7 +297,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
       <?php foreach ($sidebarItems as $item): ?>
         <?php $group=$portalGroups[$item['page']]??'ADMINISTRATION';
           if ($group!==$lastGroup): ?><span class="iw-admin-nav-label"><?= e($group) ?></span><?php $lastGroup=$group; endif; ?>
-        <a class="sidebar-link <?= $currentPage === $item['page'] ? 'active' : '' ?>" href="<?= e($item['url']) ?>" title="<?= e($item['label']) ?>">
+        <a class="sidebar-link <?= ($currentPage === $item['page'] || ($item['page']==='website_inbox' && in_array($currentPage,['live_inbox','messages','support'],true))) ? 'active' : '' ?>" href="<?= e($item['url']) ?>" title="<?= e($item['label']) ?>">
           <i class="bi <?= e($item['icon']) ?>"></i>
           <span class="sidebar-label"><?= e($item['label']) ?></span>
         </a>
@@ -305,10 +309,12 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
         <span class="sidebar-label">View website</span>
       </a>
+      <?php if (($user['role']??'') !== 'student'): ?>
       <a class="sidebar-link <?= $currentPage === 'profile' ? 'active' : '' ?>" href="<?= e(url('profile')) ?>" title="My Profile">
         <i class="bi bi-person-circle"></i>
         <span class="sidebar-label">My Profile</span>
       </a>
+      <?php endif; ?>
       <a class="sidebar-link" href="logout.php" title="Logout">
         <i class="bi bi-box-arrow-right"></i>
         <span class="sidebar-label">Logout</span>
@@ -319,6 +325,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <div class="portal-main">
+    <?php if (($user['role']??'')==='student'): require __DIR__.'/academy-student-topbar.php'; else: ?>
     <header class="portal-topbar">
       <div class="d-flex align-items-center gap-2">
         <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" id="sidebarOpenBtn" aria-label="Open menu">
@@ -331,7 +338,9 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
       </div>
 
       <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+        <?php if (($user['role']??'') !== 'student'): ?>
         <a class="btn btn-sm btn-outline-secondary iw-ops-preview-link" href="<?= e(public_url($publicPreviewPage)) ?>" title="Open corresponding public website page in this tab"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-md-inline">View website</span></a>
+        <?php endif; ?>
         <a class="btn btn-sm btn-outline-secondary position-relative" id="topbarNotificationBtn" href="<?= e(url('notifications')) ?>" title="Notifications">
           <i class="bi bi-bell"></i>
           <span
@@ -343,10 +352,11 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
             <?= (int) $unreadCount ?>
           </span>
         </a>
-        <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('profile')) ?>"><?= e($user['full_name']) ?></a>
+        <a class="btn btn-sm btn-outline-secondary" href="<?= e(($user['role']??'')==='student'?'/academy.php?action=profile':url('profile')) ?>"><?= e($user['full_name']) ?></a>
         <a class="btn btn-sm btn-primary" href="logout.php">Logout</a>
       </div>
     </header>
+    <?php endif; ?>
 
     <main class="portal-content">
       <?php if ($msg = flash('success')): ?>
@@ -381,7 +391,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
 <?php else: ?>
 <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= e(url('login')) ?>">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= e(public_url('home')) ?>">
       <picture class="iw-auth-brand-picture">
         <source media="(max-width:575.98px)" srcset="<?= e(portal_absolute_url('assets/branding/iworks-compact.svg')) ?>?v=20261113-logo1">
         <img src="<?= e(portal_absolute_url('assets/branding/iworks-desktop.svg')) ?>?v=20261113-logo1" alt="<?= e(brand_name()) ?>" class="brand-logo" width="204" height="19" decoding="async">

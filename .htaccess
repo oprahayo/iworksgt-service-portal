@@ -21,6 +21,9 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+RewriteRule ^verify/?$ academy.php?action=verify [L,QSA]
+RewriteRule ^student/register/?$ academy.php?action=register [L,QSA]
+RewriteRule ^student/?$ academy.php [L,QSA]
 # Search engine discovery endpoints.
 RewriteRule ^sitemap\.xml$ index.php?page=seo_sitemap [L,QSA]
 RewriteRule ^robots\.txt$ index.php?page=seo_robots [L,QSA]

@@ -532,6 +532,17 @@ try {
         iworks_order_intent_capture($_GET);
     }
 
+    // Student accounts have an independent workspace and must not inherit staff permissions.
+    if (is_logged_in() && user_role() === 'student' && !$isPublicPageRoute) {
+        if (in_array((string)$page, ['dashboard','login','register','otp','profile'], true)) {
+            redirect('https://portal.iworksgt.com/academy.php');
+        }
+        if (!in_array((string)$page, ['public_auth_status','notifications','realtime'], true)) {
+            http_response_code(403);
+            exit('Student accounts can access their own Academy dashboard only.');
+        }
+    }
+
     // Editorial-only accounts must never inherit access to jobs, payments,
     // other users, settings or staff operations through broadly-allowed routes.
     if (is_logged_in() && user_role() === 'author'
@@ -629,7 +640,7 @@ try {
                             redirect(url('login'));
                         }
 
-                        start_otp_challenge((int) $user['id'], 'verify_email');
+                        start_otp_challenge((int) $user['id'], 'verify_email', $remember30Days);
                         $_SESSION['pending_otp_remember'] = $remember30Days ? '1' : '0';
                         flash('success', 'Enter the 6-digit OTP sent to your email to verify your account.');
                         redirect(url('otp'));
@@ -646,7 +657,7 @@ try {
                         redirect(url('login'));
                     }
 
-                    start_otp_challenge((int) $user['id'], 'login');
+                    start_otp_challenge((int) $user['id'], 'login', $remember30Days);
                     $_SESSION['pending_otp_remember'] = $remember30Days ? '1' : '0';
                     flash('success', 'Enter the 6-digit OTP sent to your email.');
                     redirect(url('otp'));
@@ -658,6 +669,32 @@ try {
             require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-header.php' : '/views/partials/header.php');
             require __DIR__ . '/views/login.php';
             require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-footer.php' : '/views/partials/footer.php');
+            break;
+
+        case 'website_inbox':
+            require_roles(['admin','agent']);
+            require_once __DIR__.'/app/website_inbox.php';
+            $user = current_user();
+            $inboxQuery = iw_website_inbox_filters($_GET);
+            $leadId = max(0,(int)($_GET['lead_id'] ?? 0));
+            if (method_is('POST')) {
+                require_csrf();
+                $leadId = max(0,(int)($_POST['lead_id'] ?? 0));
+                try {
+                    iw_website_inbox_update($user,$leadId,(string)($_POST['status'] ?? ''));
+                    flash('success','Enquiry status updated.');
+                } catch (InvalidArgumentException $e) {
+                    flash('error',$e->getMessage());
+                }
+                redirect(url('website_inbox',$inboxQuery+['lead_id'=>$leadId]));
+            }
+            $inbox = iw_website_inbox_list($user,$inboxQuery);
+            $selectedLead = $leadId ? iw_website_inbox_get($user,$leadId) : null;
+            if ($leadId && !$selectedLead) http_response_code(404);
+            $title = 'Communications - ' . app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/website-inbox.php';
+            require __DIR__.'/views/partials/footer.php';
             break;
 
         case 'frontend':
@@ -741,7 +778,6 @@ try {
         }
         $mediaAssets = list_media_assets(200);
         $pageRevisions = $pageData ? list_page_revisions((string) $pageData['id'], 10) : [];
-        $websiteLeads = list_website_leads(20);
         $title = 'Frontend Editor - ' . app_name();
         require __DIR__ . '/views/partials/header.php';
         require __DIR__ . '/views/frontend-editor.php';
@@ -933,7 +969,9 @@ try {
             }
 
             try {
-                redirect(google_oauth_authorization_url());
+                $googleUrl = google_oauth_authorization_url();
+                $_SESSION['google_oauth_academy'] = (($_GET['academy'] ?? '') === '1');
+                redirect($googleUrl);
             } catch (Throwable $e) {
                 flash('error', $e->getMessage());
                 redirect(url('login'));
@@ -945,10 +983,12 @@ try {
                 redirect(iworks_post_login_destination(current_user()));
             }
 
+            $academyGoogle = ($_SESSION['google_oauth_academy'] ?? false) === true;
+            unset($_SESSION['google_oauth_academy']);
             $oauthError = trim((string) ($_GET['error'] ?? ''));
             if ($oauthError !== '') {
                 flash('error', 'Google sign-in failed: ' . str_replace('_', ' ', $oauthError) . '.');
-                redirect(url('login'));
+                redirect($academyGoogle ? portal_absolute_url('student/register') : url('login'));
             }
 
             $state = trim((string) ($_GET['state'] ?? ''));
@@ -959,7 +999,7 @@ try {
                     throw new RuntimeException('Invalid Google sign-in state. Please try again.');
                 }
 
-                $user = authenticate_with_google_code($code);
+                $user = authenticate_with_google_code($code, $academyGoogle);
                 login_user((int) $user['id']);
                 remember_trusted_device((int) $user['id']);
 
@@ -967,7 +1007,7 @@ try {
                 redirect(iworks_post_login_destination(current_user()));
             } catch (Throwable $e) {
                 flash('error', $e->getMessage());
-                redirect(url('login'));
+                redirect($academyGoogle ? portal_absolute_url('student/register') : url('login'));
             }
             break;
 
@@ -1128,7 +1168,7 @@ try {
                     ]);
 
                     $_SESSION['pending_otp_remember'] = !empty($_POST['remember_30days']) ? '1' : '0';
-                    start_otp_challenge($userId, 'verify_email');
+                    start_otp_challenge($userId, 'verify_email', !empty($_POST['remember_30days']));
                     flash('success', 'Account created. Enter the 6-digit OTP sent to your email to continue.');
                     redirect(url('otp'));
                 }
@@ -1180,7 +1220,7 @@ try {
                             throw new RuntimeException('Please wait ' . $cooldownRemaining . ' second(s) before requesting another OTP.');
                         }
 
-                        start_otp_challenge((int) $otpUser['id'], (string) $pendingOtp['purpose']);
+                        start_otp_challenge((int) $otpUser['id'], (string) $pendingOtp['purpose'], !empty($pendingOtp['remember']));
                         flash('success', 'A new OTP code was queued for delivery.');
                         redirect(url('otp'));
                     }
@@ -1216,7 +1256,7 @@ try {
                             mark_email_verified((int) $otpUser['id']);
                         }
 
-                        $rememberFlag = !empty($_POST['remember_30days']) || (($_SESSION['pending_otp_remember'] ?? '0') === '1');
+                        $rememberFlag = array_key_exists('remember_30days', $_POST) ? $_POST['remember_30days'] === '1' : !empty($pendingOtp['remember']);
 
                         login_user((int) $otpUser['id']);
 
@@ -1334,6 +1374,7 @@ try {
             require_login();
             header('Content-Type: application/json');
             $scope = strtolower(trim((string) ($_GET['scope'] ?? 'notifications')));
+            if (user_role() === 'student' && $scope !== 'notifications') { http_response_code(403); echo json_encode(['success'=>false,'message'=>'Scope denied']); break; }
             $user = current_user();
 
             if ($scope === 'chat_typing') {
@@ -3067,6 +3108,17 @@ try {
                 if ($notification) {
                     mark_notification_read($openNotificationId, (int) $user['id']);
                     $target = trim((string) ($notification['target_url'] ?? ''));
+                    if (in_array((string)$user['role'],['admin','agent'],true)
+                        && (string)($notification['title'] ?? '') === 'New website quote/enquiry') {
+                        // Historical notifications had no lead ID; open the complete enquiry inbox.
+                        $parsed = parse_url($target);
+                        $query = [];
+                        parse_str((string)($parsed['query'] ?? ''),$query);
+                        if (($query['page'] ?? '') === 'website_inbox' && (int)($query['lead_id'] ?? 0)>0) {
+                            redirect(url('website_inbox',['lead_id'=>(int)$query['lead_id']]));
+                        }
+                        redirect(url('website_inbox'));
+                    }
                     if ($target !== '') {
                         redirect($target);
                     }
