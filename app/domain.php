@@ -2229,7 +2229,7 @@ function save_website_lead(array $input): int
     );
 
     $leadId = db_last_id();
-    $targetUrl = url('frontend', ['slug' => 'contact']);
+    $targetUrl = url('website_inbox', ['lead_id' => $leadId]);
     notify_roles(
         ['admin', 'agent'],
         'New website quote/enquiry',

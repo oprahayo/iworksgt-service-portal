@@ -3,7 +3,6 @@ $pages = is_array($pages ?? null) ? $pages : [];
 $pageData = $pageData ?? [];
 $mediaAssets = is_array($mediaAssets ?? null) ? $mediaAssets : [];
 $pageRevisions = is_array($pageRevisions ?? null) ? $pageRevisions : [];
-$websiteLeads = is_array($websiteLeads ?? null) ? $websiteLeads : [];
 
 $layout = is_array($pageData['layout'] ?? null) ? $pageData['layout'] : [];
 $seo = is_array($pageData['seo'] ?? null) ? $pageData['seo'] : [];
@@ -51,12 +50,13 @@ foreach ($mediaAssets as $asset) {
 }
 ?>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+<section class="iw-editor-workspace"><div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 iw-editor-heading">
   <div>
     <h1 class="h4 mb-0">Frontend Editor</h1>
-    <small class="text-muted">Edit public pages and publish updates.</small>
+    <small class="text-muted">Edit public pages and publish updates. Customer messages are managed separately.</small>
   </div>
   <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-secondary btn-sm" href="<?= e(url('website_inbox')) ?>"><i class="bi bi-inboxes"></i> Communications</a>
     <a class="btn btn-outline-secondary btn-sm" href="<?= e(url('frontend_preview', ['slug' => $slug])) ?>" target="_blank">Preview</a>
     <form method="post" action="<?= e(url('frontend', ['slug' => $slug])) ?>">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -67,7 +67,7 @@ foreach ($mediaAssets as $asset) {
   </div>
 </div>
 
-<div class="row g-3">
+<div class="row g-3 iw-editor-columns">
   <div class="col-lg-3">
     <div class="card mb-3">
       <div class="card-body">
@@ -102,9 +102,8 @@ foreach ($mediaAssets as $asset) {
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-body">
-        <h2 class="h6">Media library</h2>
+    <details class="card iw-editor-media">
+      <summary class="card-body fw-semibold">Media library</summary><div class="card-body">
         <div class="media-grid">
           <?php foreach ($mediaAssets as $asset): ?>
             <div class="media-item">
@@ -117,7 +116,7 @@ foreach ($mediaAssets as $asset) {
           <?php endif; ?>
         </div>
       </div>
-    </div>
+    </details>
   </div>
 
   <div class="col-lg-9">
@@ -126,9 +125,8 @@ foreach ($mediaAssets as $asset) {
       <input type="hidden" name="form_action" value="save_page_draft">
       <input type="hidden" name="slug" value="<?= e($slug) ?>">
 
-      <div class="card mb-3">
+      <details class="card mb-3 iw-editor-settings"><summary class="card-body fw-semibold">Page settings and SEO</summary>
         <div class="card-body">
-          <h2 class="h6">Page settings</h2>
           <div class="row g-2">
             <div class="col-md-6">
               <label class="form-label">Title</label>
@@ -148,11 +146,11 @@ foreach ($mediaAssets as $asset) {
             </div>
           </div>
         </div>
-      </div>
+      </details>
 
       <div class="card mb-3">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
             <h2 class="h6 mb-0">Page blocks</h2>
             <div class="d-flex gap-2">
               <select class="form-select form-select-sm" id="blockTypeSelect">
@@ -177,8 +175,10 @@ foreach ($mediaAssets as $asset) {
                   </div>
                 </div>
                 <input type="hidden" name="blocks[<?= (int) $index ?>][type]" value="<?= e($blockType) ?>">
+                <details class="iw-editor-block-fields"><summary>Edit section</summary>
                 <?php $renderBlockTemplates = false; ?>
                 <?php include __DIR__ . '/frontend-editor-blocks.php'; ?>
+                </details>
               </div>
             <?php endforeach; ?>
           </div>
@@ -192,9 +192,8 @@ foreach ($mediaAssets as $asset) {
       </div>
     </form>
 
-    <div class="card mt-3">
+    <details class="card mt-3 iw-editor-revisions"><summary class="card-body fw-semibold">Publication history</summary>
       <div class="card-body">
-        <h2 class="h6">Revisions</h2>
         <div class="table-responsive">
           <table class="table table-sm align-middle">
             <thead>
@@ -227,43 +226,10 @@ foreach ($mediaAssets as $asset) {
           </table>
         </div>
       </div>
-    </div>
+    </details>
 
-    <div class="card mt-3">
-      <div class="card-body">
-        <h2 class="h6">Recent Website Enquiries</h2>
-        <div class="table-responsive">
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Page</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($websiteLeads as $lead): ?>
-                <tr>
-                  <td>
-                    <div class="fw-semibold"><?= e((string) ($lead['full_name'] ?? '')) ?></div>
-                    <?php if (!empty($lead['phone'])): ?><div class="small text-muted"><?= e((string) $lead['phone']) ?></div><?php endif; ?>
-                  </td>
-                  <td><?= e((string) ($lead['email'] ?? '')) ?></td>
-                  <td><?= e((string) ($lead['page_slug'] ?? 'contact')) ?></td>
-                  <td><?= e((string) ($lead['created_at'] ?? '')) ?></td>
-                </tr>
-              <?php endforeach; ?>
-              <?php if (!$websiteLeads): ?>
-                <tr><td colspan="4" class="text-muted">No website enquiries yet.</td></tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
   </div>
-</div>
+</div></section>
 
 <template id="blockTemplate">
   <div class="block-card" data-index="__index__">
@@ -276,7 +242,7 @@ foreach ($mediaAssets as $asset) {
       </div>
     </div>
     <input type="hidden" name="blocks[__index__][type]" value="__type__">
-    __body__
+    <details class="iw-editor-block-fields" open><summary>Edit section</summary>__body__</details>
   </div>
 </template>
 
@@ -648,6 +614,7 @@ foreach ($mediaAssets as $asset) {
     addBlock(blockTypeSelect.value);
   });
 
+  editorForm?.addEventListener('invalid', function(event){ var closed=event.target.closest('details:not([open])'); while(closed){closed.open=true;closed=closed.parentElement.closest('details:not([open])');} },true);
   editorForm?.addEventListener('submit', function () {
     document.querySelectorAll('[data-wysiwyg]').forEach(syncWysiwyg);
   });

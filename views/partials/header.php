@@ -79,7 +79,7 @@ if ($user && (string)($user['role'] ?? '') === 'student') {
         ];
     }
 
-    if (has_role(['client', 'admin', 'finance'])) {
+    if (has_role(['client', 'finance'])) {
         $sidebarItems[] = [
             'page' => 'support',
             'label' => 'Support',
@@ -108,16 +108,10 @@ if ($user && (string)($user['role'] ?? '') === 'student') {
 
     if (has_role(['admin', 'agent'])) {
         $sidebarItems[] = [
-            'page' => 'live_inbox',
-            'label' => 'Website Live Chat',
-            'icon' => 'bi-chat-dots-fill',
-            'url' => url('live_inbox'),
-        ];
-        $sidebarItems[] = [
-            'page' => 'messages',
-            'label' => 'Messages',
-            'icon' => 'bi-chat-dots',
-            'url' => url('messages'),
+            'page' => 'website_inbox',
+            'label' => 'Communications',
+            'icon' => 'bi-inboxes',
+            'url' => url('website_inbox'),
         ];
         $sidebarItems[] = [
             'page' => 'blog',
@@ -198,7 +192,7 @@ if ($user && (string)($user['role'] ?? '') === 'admin') {
     $sidebarItems[] = ['page'=>'system_health','label'=>'System health','icon'=>'bi-heart-pulse','url'=>url('system_health')];
 }
 $sidebarPriority = [
-    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'live_inbox'=>25, 'messages'=>30, 'community'=>40,
+    'dashboard'=>0, 'jobs'=>10, 'support'=>20, 'website_inbox'=>25, 'live_inbox'=>25, 'messages'=>30, 'community'=>40,
     'services'=>50, 'forms'=>60,
     'blog'=>70, 'editorial_showcase'=>80, 'frontend'=>90, 'media'=>100,
     'invoices'=>110, 'payments'=>120, 'payouts'=>130, 'withdrawals'=>140,
@@ -246,6 +240,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
   <?php if ($currentPage === 'dashboard' && $user && in_array((string)($user['role'] ?? ''),['admin','finance'],true)): ?><link rel="stylesheet" href="assets/css/dashboard-transactions.css?v=20261116-transactions1"><?php endif; ?>
   <?php if ($currentPage === 'payments' && $user && in_array((string)($user['role'] ?? ''),['admin','finance'],true)): ?><link rel="stylesheet" href="assets/css/payment-review-mobile.css?v=20261116-payment2"><?php endif; ?>
   <link rel="stylesheet" href="assets/css/admin-editorial.css?v=20261112a">
+  <?php if (in_array($currentPage,['website_inbox','live_inbox','messages','support','frontend'],true)): ?><link rel="stylesheet" href="assets/css/communications-workspace.css?v=20261127-1"><?php endif; ?>
   <?php if ($user && (string)($user['role'] ?? '') !== 'client'): ?><link rel="stylesheet" href="assets/css/admin-workspace-refresh.css?v=20261113a"><?php endif; ?>
   <?php if ($user && $currentPage === 'job'): ?><link rel="stylesheet" href="assets/css/job-workspace.css?v=20261113b"><?php endif; ?>
   <?php if (!$user && in_array($currentPage, ['login', 'register', 'forgot_password'], true)): ?>
@@ -290,7 +285,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
         $portalGroups = [
           'dashboard'=>'OVERVIEW','academy'=>'ACADEMY','academy_courses'=>'ACADEMY','academy_certificates'=>'ACADEMY','academy_profile'=>'ACADEMY',
           'jobs'=>'SERVICE DELIVERY','support'=>'SERVICE DELIVERY',
-          'messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
+          'website_inbox'=>'COMMUNICATION','messages'=>'COMMUNICATION','live_inbox'=>'COMMUNICATION','community'=>'COMMUNICATION',
           'services'=>'SERVICE CATALOGUE','forms'=>'SERVICE CATALOGUE',
           'blog'=>'WEBSITE CONTENT','editorial_showcase'=>'WEBSITE CONTENT','frontend'=>'WEBSITE CONTENT','media'=>'WEBSITE CONTENT',
           'invoices'=>'FINANCE','payments'=>'FINANCE','payouts'=>'FINANCE','withdrawals'=>'FINANCE',
@@ -302,7 +297,7 @@ $publicPreviewPage = $publicPreviewRoutes[$currentPage] ?? 'home';
       <?php foreach ($sidebarItems as $item): ?>
         <?php $group=$portalGroups[$item['page']]??'ADMINISTRATION';
           if ($group!==$lastGroup): ?><span class="iw-admin-nav-label"><?= e($group) ?></span><?php $lastGroup=$group; endif; ?>
-        <a class="sidebar-link <?= $currentPage === $item['page'] ? 'active' : '' ?>" href="<?= e($item['url']) ?>" title="<?= e($item['label']) ?>">
+        <a class="sidebar-link <?= ($currentPage === $item['page'] || ($item['page']==='website_inbox' && in_array($currentPage,['live_inbox','messages','support'],true))) ? 'active' : '' ?>" href="<?= e($item['url']) ?>" title="<?= e($item['label']) ?>">
           <i class="bi <?= e($item['icon']) ?>"></i>
           <span class="sidebar-label"><?= e($item['label']) ?></span>
         </a>

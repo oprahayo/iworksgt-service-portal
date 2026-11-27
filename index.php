@@ -671,6 +671,32 @@ try {
             require __DIR__ . ($embeddedAuth ? '/views/partials/auth-embed-footer.php' : '/views/partials/footer.php');
             break;
 
+        case 'website_inbox':
+            require_roles(['admin','agent']);
+            require_once __DIR__.'/app/website_inbox.php';
+            $user = current_user();
+            $inboxQuery = iw_website_inbox_filters($_GET);
+            $leadId = max(0,(int)($_GET['lead_id'] ?? 0));
+            if (method_is('POST')) {
+                require_csrf();
+                $leadId = max(0,(int)($_POST['lead_id'] ?? 0));
+                try {
+                    iw_website_inbox_update($user,$leadId,(string)($_POST['status'] ?? ''));
+                    flash('success','Enquiry status updated.');
+                } catch (InvalidArgumentException $e) {
+                    flash('error',$e->getMessage());
+                }
+                redirect(url('website_inbox',$inboxQuery+['lead_id'=>$leadId]));
+            }
+            $inbox = iw_website_inbox_list($user,$inboxQuery);
+            $selectedLead = $leadId ? iw_website_inbox_get($user,$leadId) : null;
+            if ($leadId && !$selectedLead) http_response_code(404);
+            $title = 'Communications - ' . app_name();
+            require __DIR__.'/views/partials/header.php';
+            require __DIR__.'/views/website-inbox.php';
+            require __DIR__.'/views/partials/footer.php';
+            break;
+
         case 'frontend':
             require_roles(['admin']);
             $slug = trim((string) ($_GET['slug'] ?? 'home'));
@@ -752,7 +778,6 @@ try {
         }
         $mediaAssets = list_media_assets(200);
         $pageRevisions = $pageData ? list_page_revisions((string) $pageData['id'], 10) : [];
-        $websiteLeads = list_website_leads(20);
         $title = 'Frontend Editor - ' . app_name();
         require __DIR__ . '/views/partials/header.php';
         require __DIR__ . '/views/frontend-editor.php';
@@ -3083,6 +3108,17 @@ try {
                 if ($notification) {
                     mark_notification_read($openNotificationId, (int) $user['id']);
                     $target = trim((string) ($notification['target_url'] ?? ''));
+                    if (in_array((string)$user['role'],['admin','agent'],true)
+                        && (string)($notification['title'] ?? '') === 'New website quote/enquiry') {
+                        // Historical notifications had no lead ID; open the complete enquiry inbox.
+                        $parsed = parse_url($target);
+                        $query = [];
+                        parse_str((string)($parsed['query'] ?? ''),$query);
+                        if (($query['page'] ?? '') === 'website_inbox' && (int)($query['lead_id'] ?? 0)>0) {
+                            redirect(url('website_inbox',['lead_id'=>(int)$query['lead_id']]));
+                        }
+                        redirect(url('website_inbox'));
+                    }
                     if ($target !== '') {
                         redirect($target);
                     }
