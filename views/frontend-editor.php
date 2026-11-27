@@ -69,9 +69,8 @@ foreach ($mediaAssets as $asset) {
 
 <div class="row g-3 iw-editor-columns">
   <div class="col-lg-3">
-    <div class="card mb-3">
+    <details class="card mb-3 iw-editor-pages" open><summary class="card-body fw-semibold">Pages · <?= e($titleValue) ?></summary>
       <div class="card-body">
-        <h2 class="h6">Pages</h2>
         <div class="list-group list-group-flush">
           <?php foreach ($pages as $p): ?>
             <a class="list-group-item list-group-item-action <?= $slug === $p['slug'] ? 'active' : '' ?>" href="<?= e(url('frontend', ['slug' => (string) $p['slug']])) ?>">
@@ -84,7 +83,7 @@ foreach ($mediaAssets as $asset) {
           <?php endforeach; ?>
         </div>
       </div>
-    </div>
+    </details>
 
     <div class="card mb-3" id="frontendUploadMedia">
       <div class="card-body">

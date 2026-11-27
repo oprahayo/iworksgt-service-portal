@@ -10,7 +10,7 @@ $leadStates=['new'=>'New','reviewed'=>'Reviewed','closed'=>'Closed'];
     <a href="<?= e(url('website_inbox',['status'=>$value])) ?>" class="<?= $filters['status']===$value?'is-active':'' ?>"><span><?= e($label) ?></span><strong><?= (int)$inbox['counts'][$value] ?></strong></a>
   <?php endforeach; ?>
   </div>
-  <div class="iw-enquiry-grid<?= $selectedLead?' has-selection':'' ?>">
+  <div class="iw-enquiry-grid<?= $leadId?' has-selection':'' ?>">
     <aside class="iw-enquiry-list">
       <div class="iw-enquiry-list-head"><h2>Website enquiries</h2><a href="<?= e(url('website_inbox')) ?>">All (<?= array_sum($inbox['counts']) ?>)</a></div>
       <form class="iw-enquiry-search" method="get" action="index.php">
@@ -42,13 +42,13 @@ $leadStates=['new'=>'New','reviewed'=>'Reviewed','closed'=>'Closed'];
         <dl class="iw-enquiry-contact"><div><dt>Email</dt><dd><?= e($email) ?></dd></div><div><dt>Phone</dt><dd><?= e((string)($lead['phone']?:'Not supplied')) ?></dd></div><div><dt>Company</dt><dd><?= e((string)($lead['company_name']?:'Not supplied')) ?></dd></div></dl>
         <h3>Original message</h3><div class="iw-enquiry-message"><?= e((string)$lead['message']) ?></div>
         <div class="iw-enquiry-actions">
-        <?php if(filter_var($email,FILTER_VALIDATE_EMAIL)): ?><a class="btn btn-primary" href="<?= e('mailto:'.$email.'?subject='.rawurlencode('Re: iWorks website enquiry #'.$id)) ?>"><i class="bi bi-reply"></i> Reply by email</a><?php endif; ?>
+        <?php if(filter_var($email,FILTER_VALIDATE_EMAIL)): ?><a class="btn btn-primary" href="<?= e('mailto:'.str_replace('%40','@',rawurlencode($email)).'?subject='.rawurlencode('Re: iWorks website enquiry #'.$id)) ?>"><i class="bi bi-reply"></i> Reply by email</a><?php endif; ?>
         <form method="post" action="<?= e(url('website_inbox',$filters+['lead_id'=>$id])) ?>">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><input type="hidden" name="lead_id" value="<?= $id ?>">
           <label class="visually-hidden" for="leadState">Enquiry status</label><select id="leadState" class="form-select" name="status"><?php foreach($leadStates as $k=>$v): ?><option value="<?= e($k) ?>"<?= $lead['status']===$k?' selected':'' ?>><?= e($v) ?></option><?php endforeach; ?></select>
           <button class="btn btn-outline-secondary">Save status</button>
         </form></div><small class="text-muted">Email replies open your email application. Mark the enquiry reviewed or closed when handled.</small>
-      <?php else: ?><div class="iw-enquiry-placeholder"><i class="bi bi-envelope-open"></i><h2><?= $leadId?'Enquiry not found':'Select an enquiry' ?></h2><p>Open a message to see the full enquiry and contact details.</p></div><?php endif; ?>
+      <?php else: ?><?php if($leadId): ?><a class="iw-enquiry-back" href="<?= e(url('website_inbox',$filters)) ?>"><i class="bi bi-arrow-left"></i> Back to enquiries</a><?php endif; ?><div class="iw-enquiry-placeholder"><i class="bi bi-envelope-open"></i><h2><?= $leadId?'Enquiry not found':'Select an enquiry' ?></h2><p>Open a message to see the full enquiry and contact details.</p></div><?php endif; ?>
     </article>
   </div>
 </section>
